@@ -93,7 +93,7 @@ jobs:
           echo "RUN_COMMIT_TIME=${GIT_COMMIT_TIME}" >> $GITHUB_ENV
 
       - name: Build Image ${{ matrix.name }} and push
-        uses: docker/build-push-action@v3.0.0
+        uses: docker/build-push-action@v3.2.0
         if: ${{ env.RUN_PUSH == 'true' }}
         id: docker_build_and_push
         with:
@@ -111,7 +111,7 @@ jobs:
             RACE=${{ inputs.race }}
 
       - name: Build Image ${{ matrix.name }} and output docker
-        uses: docker/build-push-action@v3.0.0
+        uses: docker/build-push-action@v3.2.0
         if: ${{ env.RUN_PUSH != 'true' }}
         id: docker_build_and_save
         with:
