@@ -5,7 +5,6 @@ package metrics
 
 import (
 	"fmt"
-	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	otelprometheus "go.opentelemetry.io/otel/exporters/prometheus"
 	"go.opentelemetry.io/otel/metric"
@@ -78,7 +77,10 @@ func RunMetricsServer(enabled bool, meterName string, metricPort int32, metricMa
 	// The exporter embeds a default OpenTelemetry Reader and
 	// implements prometheus.Collector, allowing it to be used as
 	// both a Reader and Collector.
-	exporter := otelprometheus.New()
+	exporter, err := otelprometheus.New()
+	if err != nil {
+		logger.Sugar().Fatalf("failed to generate prometheus exporter, reason=%v", err)
+	}
 
 	// Default view for other instruments
 	defaultView, err := view.New(view.MatchInstrumentName("*"))
@@ -86,17 +88,10 @@ func RunMetricsServer(enabled bool, meterName string, metricPort int32, metricMa
 		logger.Sugar().Fatalf("failed to generate view, reason=%v", err)
 	}
 
-	provider := metricsdk.NewMeterProvider(metricsdk.WithReader(exporter, defaultView, histogramBucketsView))
+	provider := metricsdk.NewMeterProvider(metricsdk.WithReader(exporter, histogramBucketsView, defaultView))
 	globalMeter := provider.Meter(meterName)
 
-	registry := prometheus.NewRegistry()
-	err = registry.Register(exporter.Collector)
-	if err != nil {
-		logger.Sugar().Fatalf("error registering collector: %v", err)
-	}
-
-	// http.Handle("/metrics", promhttp.Handler())
-	http.Handle("/metrics", promhttp.HandlerFor(registry, promhttp.HandlerOpts{}))
+	http.Handle("/metrics", promhttp.Handler())
 
 	RegisterMetricInstance(metricMapping, globalMeter, logger)
 
