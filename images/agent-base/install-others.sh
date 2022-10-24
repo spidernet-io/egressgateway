@@ -16,6 +16,8 @@ packages=(
   libmnl0
   #bash-completion
   iptables
+  ipset
+  iproute2
 )
 
 TARGETARCH="$1"
