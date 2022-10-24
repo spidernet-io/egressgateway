@@ -28,7 +28,7 @@ require (
 	golang.org/x/net v0.0.0-20220826154423-83b083e8dc8b
 	gopkg.in/yaml.v3 v3.0.1
 	k8s.io/apimachinery v0.25.3
-	k8s.io/client-go v0.25.0
+	k8s.io/client-go v0.25.3
 	k8s.io/code-generator v0.25.3
 	sigs.k8s.io/controller-runtime v0.13.0
 	sigs.k8s.io/controller-tools v0.10.0
@@ -123,7 +123,7 @@ require (
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
-	k8s.io/api v0.25.0 // indirect
+	k8s.io/api v0.25.3 // indirect
 	k8s.io/apiextensions-apiserver v0.25.0 // indirect
 	k8s.io/component-base v0.25.0 // indirect
 	k8s.io/gengo v0.0.0-20211129171323-c02415ce4185 // indirect
