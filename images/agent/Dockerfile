@@ -1,7 +1,7 @@
 # Copyright 2022 Authors of spidernet-io
 # SPDX-License-Identifier: Apache-2.0
 
-ARG BASE_IMAGE=ghcr.io/spidernet-io/egressgateway/agent-base:4c76490f78c45ccd7aa063bedf2b1acbf8e29964
+ARG BASE_IMAGE=ghcr.io/spidernet-io/egressgateway/agent-base:5a80d2d30c430d6bfd116a80bb05ccf5656d3ab5
 ARG GOLANG_IMAGE=docker.io/library/golang:1.19@sha256:25de7b6b28219279a409961158c547aadd0960cf2dcbc533780224afa1157fd4
 
 # TARGETARCH is an automatic platform ARG enabled by Docker BuildKit.
