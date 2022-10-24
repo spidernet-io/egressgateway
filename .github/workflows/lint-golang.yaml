@@ -189,7 +189,7 @@ jobs:
 
       - name: Upload Coverage Artifact
         if: ${{ steps.unitest.outcome == 'failure' }}
-        uses: actions/upload-artifact@v3.1.0
+        uses: actions/upload-artifact@v3.1.1
         with:
           name: coverage.out
           path: ${{ env.COVERAGE_REPORT_PATH }}
@@ -197,7 +197,7 @@ jobs:
 
       - name: Upload Report Artifact
         if: ${{ steps.unitest.outcome == 'failure' }}
-        uses: actions/upload-artifact@v3.1.0
+        uses: actions/upload-artifact@v3.1.1
         with:
           name: unitestreport.json
           path: ${{ env.UNITEST_REPORT_PATH }}
