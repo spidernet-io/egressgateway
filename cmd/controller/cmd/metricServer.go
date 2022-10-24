@@ -6,6 +6,7 @@ package cmd
 import (
 	pkgmetric "github.com/spidernet-io/egressgateway/pkg/metrics"
 	"go.opentelemetry.io/otel/metric/instrument/syncfloat64"
+	"go.opentelemetry.io/otel/sdk/instrumentation"
 	"go.opentelemetry.io/otel/sdk/metric/aggregation"
 	"go.opentelemetry.io/otel/sdk/metric/view"
 )
@@ -32,6 +33,7 @@ func RunMetricsServer(meterName string) {
 		// This will accept wildcards of * for zero or more characters, and ? for
 		// exactly one character. A name of "*" (default) will match all instruments.
 		view.MatchInstrumentName("*duration*"),
+		view.MatchInstrumentationScope(instrumentation.Scope{Name: meterName}),
 		// With* to modify instruments
 		view.WithSetAggregation(aggregation.ExplicitBucketHistogram{
 			Boundaries: []float64{1, 10, 20, 50},
