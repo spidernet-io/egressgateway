@@ -1,0 +1,56 @@
+name: Auto Licnese Lint
+
+on:
+  pull_request:
+    paths:
+      - '**.go'
+      - '**.sh'
+  push:
+    branches:
+      - main
+    paths:
+      - '**.go'
+      - '**.sh'
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: 'sha, ref, branch'
+        required: true
+        default: main
+
+permissions: read-all
+
+# for each pr, queue all workflows
+# concurrency:
+#   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.event.after }}
+#   cancel-in-progress: true
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checking Ref
+        id: version
+        shell: bash
+        run: |
+          if ${{ github.event_name == 'workflow_dispatch' }}; then
+            tag_name=${{ github.event.inputs.ref }}
+            echo "RUN_REF=${tag_name}" >> $GITHUB_ENV
+          elif ${{ github.event_name == 'push' }} ; then
+            echo "RUN_REF=${{ github.sha }}" >> $GITHUB_ENV
+          else
+            echo "RUN_REF=${{ github.event.pull_request.head.sha }}" >> $GITHUB_ENV
+          fi
+
+      - name: Checkout Source Code
+        uses: actions/checkout@v3
+        with:
+          persist-credentials: false
+          ref: ${{ env.RUN_REF }}
+
+      - name: Check License Header
+        id: checklicense
+        uses: apache/skywalking-eyes@main
+        with:
+          log: debug
+          config: .github/licenserc.yaml

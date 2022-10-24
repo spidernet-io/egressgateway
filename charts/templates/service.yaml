@@ -1,0 +1,65 @@
+{{- if .Values.egressgatewayAgent.prometheus.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Values.egressgatewayAgent.name | trunc 63 | trimSuffix "-" }}
+  namespace: {{ .Release.Namespace | quote }}
+  {{- if or .Values.global.commonAnnotations .Values.egressgatewayAgent.service.annotations }}
+  annotations:
+    {{- if .Values.global.commonAnnotations }}
+    {{- include "tplvalues.render" ( dict "value" .Values.global.commonAnnotations "context" $ ) | nindent 4 }}
+    {{- end }}
+    {{- if .Values.egressgatewayAgent.service.annotations }}
+    {{- include "tplvalues.render" ( dict "value" .Values.egressgatewayAgent.service.annotations "context" $ ) | nindent 4 }}
+    {{- end }}
+  {{- end }}
+  labels:
+    {{- if .Values.global.commonLabels }}
+    {{- include "tplvalues.render" ( dict "value" .Values.global.commonLabels "context" $ ) | nindent 4 }}
+    {{- end }}
+    {{- include "project.egressgatewayAgent.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.egressgatewayAgent.service.type }}
+  ports:
+    - name: metrics
+      port: {{ .Values.egressgatewayAgent.prometheus.port }}
+      targetPort: metrics
+      protocol: TCP
+  selector:
+    {{- include "project.egressgatewayAgent.selectorLabels" . | nindent 4 }}
+{{- end }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Values.egressgatewayController.name | trunc 63 | trimSuffix "-" }}
+  namespace: {{ .Release.Namespace | quote }}
+  {{- if or .Values.global.commonAnnotations .Values.egressgatewayController.service.annotations }}
+  annotations:
+    {{- if .Values.global.commonAnnotations }}
+    {{- include "tplvalues.render" ( dict "value" .Values.global.commonAnnotations "context" $ ) | nindent 4 }}
+    {{- end }}
+    {{- if .Values.egressgatewayController.service.annotations }}
+    {{- include "tplvalues.render" ( dict "value" .Values.egressgatewayController.service.annotations "context" $ ) | nindent 4 }}
+    {{- end }}
+  {{- end }}
+  labels:
+    {{- if .Values.global.commonLabels }}
+    {{- include "tplvalues.render" ( dict "value" .Values.global.commonLabels "context" $ ) | nindent 4 }}
+    {{- end }}
+    {{- include "project.egressgatewayController.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.egressgatewayController.service.type }}
+  ports:
+    {{- if .Values.egressgatewayController.prometheus.enabled }}
+    - name: metrics
+      port: {{ .Values.egressgatewayController.prometheus.port }}
+      targetPort: metrics
+      protocol: TCP
+    {{- end }}
+    - name: webhook
+      port: {{ .Values.egressgatewayController.webhookPort }}
+      targetPort: webhook
+      protocol: TCP
+  selector:
+    {{- include "project.egressgatewayController.selectorLabels" . | nindent 4 }}

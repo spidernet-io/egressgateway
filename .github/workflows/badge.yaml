@@ -1,0 +1,61 @@
+name: Badge Status
+
+# ====modify====
+env:
+  CODESTATUSSCRIPT: "./tools/golang/codeCoverage.sh"
+  BADGE_CODELINE_FILENAME:
+  BADGE_CODELINE_ID:
+  BADGE_COMMENT_FILENAME:
+  BADGE_COMMENT_ID:
+
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  update-badges:
+    name: Update Badges
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v2
+
+      - name: Download cloc
+        run: sudo apt-get update -y && sudo apt-get install -y cloc
+
+      - name: Get the Numbers
+        shell: bash
+        run: |
+          TOOL_PATH=${{ env.CODESTATUSSCRIPT }}
+          CODE_LINES=$(  ${TOOL_PATH} --code-lines )
+          COMMENT_PERCENTAGE=$(  ${TOOL_PATH} --comment-percent )
+          echo "CODE_LINES=${CODE_LINES}" >> $GITHUB_ENV
+          echo "COMMENT_PERCENTAGE=${COMMENT_PERCENTAGE}" >> $GITHUB_ENV
+
+      - name: Create Lines-of-Code-Badge
+        if: ${{ env.BADGE_CODELINE_ID != '' }}
+        uses: schneegans/dynamic-badges-action@v1.6.0
+        with:
+          auth: ${{ secrets.WELAN_PAT }}
+          gistID: ${{ env.BADGE_CODELINE_ID }}
+          filename: ${{ env.BADGE_CODELINE_FILENAME }}
+          label: Code Lines
+          message: ${{ env.CODE_LINES }}
+          color: lightgrey
+
+      - name: Create Comments-Badge
+        if: ${{ env.BADGE_COMMENT_LINE != '' }}
+        uses: schneegans/dynamic-badges-action@v1.6.0
+        with:
+          auth: ${{ secrets.WELAN_PAT }}
+          gistID: ${{ env.BADGE_COMMENT_LINE }}
+          filename: ${{ env.BADGE_COMMENT_FILENAME }}
+          label: Comments
+          message: ${{ env.COMMENT_PERCENTAGE }}%
+          valColorRange: ${{ env.COMMENT_PERCENTAGE }}
+          maxColorRange: 100
+          minColorRange: 0
+

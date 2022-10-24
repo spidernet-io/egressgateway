@@ -1,0 +1,170 @@
+
+GO_VERSION := 1.19
+
+REGISTER ?= ghcr.io
+GIT_REPO ?= spidernet-io/egressgateway
+
+
+
+#======================
+
+SHELL := /bin/bash
+.SHELLFLAGS := -eu -o pipefail -c
+
+ROOT_DIR := $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
+RELATIVE_DIR := $(shell echo $(realpath .) | sed "s;$(ROOT_DIR)[/]*;;")
+
+INSTALL = install
+
+PREFIX?=/usr
+BINDIR?=$(PREFIX)/bin
+TARGETARCH ?= amd64
+
+DESTDIR_BIN ?= $(ROOT_DIR)/output/$(TARGETARCH)/bin
+DESTDIR_BASH_COMPLETION ?= $(ROOT_DIR)/output/$(TARGETARCH)/bash-completion
+
+CHART_DIR := $(ROOT_DIR)/charts
+DESTDIR_CHART ?= $(ROOT_DIR)/output/chart
+
+UNITEST_OUTPUT ?= $(ROOT_DIR)/output/test
+DOC_OUTPUT ?= $(ROOT_DIR)/output/docs
+
+GO_MAJOR_AND_MINOR_VERSION := $(shell  grep  -o -E '^[0-9]+\.[0-9]+'  <<< "${GO_VERSION}" )
+GO_IMAGE_VERSION := $(shell awk -F. '{ z=$$3; if (z == "") z=0; print $$1 "." $$2 "." z}' <<< "${GO_VERSION}" )
+
+CONTAINER_ENGINE?=docker
+
+VERSION = $(shell cat $(dir $(lastword $(MAKEFILE_LIST)))/VERSION)
+
+GIT_COMMIT_VERSION = $(shell git show -s --format='format:%H')
+GIT_COMMIT_TIME = $(shell git show -s --format='format:%aI')
+
+FULL_BUILD_VERSION = $(VERSION) $(GIT_COMMIT_VERSION)
+
+
+#------------------
+
+# define a function replacing spaces with commas in a list
+empty :=
+space := $(empty) $(empty)
+comma := ,
+join-with-comma = $(subst $(space),$(comma),$(strip $1))
+
+
+#------------------
+
+GO ?= go
+
+GO_BUILD_FLAGS =
+GO_TEST_FLAGS =
+GO_CLEAN_FLAGS =
+GO_BUILD_LDFLAGS =
+# go build/test -tags values
+GO_TAGS_FLAGS = osusergo
+
+# This is declared here as it is needed to change the covermode depending on if
+# RACE is specified.
+GOTEST_COVER_OPTS =
+
+#strip binary
+ifeq ($(NOSTRIP),)
+    # Note: these options will not remove annotations needed for stack
+    # traces, so panic backtraces will still be readable.
+    #
+    # -w: Omit the DWARF symbol table.
+    # -s: Omit the symbol table and debug information.
+    GO_BUILD_LDFLAGS += -s -w
+endif
+
+
+GO_BUILD_FLAGS += -mod=vendor
+GO_TEST_FLAGS += -mod=vendor
+GO_CLEAN_FLAGS += -mod=vendor
+
+
+GO_BUILD = CGO_ENABLED=0 $(GO) build
+# Currently crosscompiling only enabled for arm64 targets
+CGO_CC =
+ifeq ($(GOARCH),arm64)
+    CGO_CC = CC=aarch64-linux-gnu-gcc
+endif
+GO_BUILD_WITH_CGO = CGO_ENABLED=1 $(CGO_CC) $(GO) build
+
+#data race and lock debug
+ifeq ($(RACE),1)
+    GO_BUILD_FLAGS += -race
+    GO_TEST_FLAGS += -race
+    GOTEST_COVER_OPTS += -covermode=atomic
+
+    # GO_BUILD becomes GO_BUILD_WITH_CGO as `-race` requires CGO
+    GO_BUILD = $(GO_BUILD_WITH_CGO)
+
+    ifeq ($(LOCKDEBUG),)
+        LOCKDEBUG=1
+    endif
+else
+    GOTEST_COVER_OPTS += -covermode=count
+endif
+
+ifneq ($(LOCKDEBUG),)
+    GO_TAGS_FLAGS += lockdebug
+endif
+
+
+GO_BUILD_FLAGS += -ldflags '$(GO_BUILD_LDFLAGS) $(EXTRA_GO_BUILD_LDFLAGS)' -tags=$(call join-with-comma,$(GO_TAGS_FLAGS)) $(EXTRA_GO_BUILD_FLAGS)
+GO_TEST_FLAGS += -tags=$(call join-with-comma,$(GO_TAGS_FLAGS))
+
+#no optimize  for binary
+ifeq ($(NOOPT),1)
+    GO_BUILD_FLAGS += -gcflags="all=-N -l"
+endif
+
+GO_BUILD += $(GO_BUILD_FLAGS)
+GO_BUILD_WITH_CGO += $(GO_BUILD_FLAGS)
+
+GO_TEST = $(GO) test $(GO_TEST_FLAGS)
+GO_CLEAN = $(GO) clean $(GO_CLEAN_FLAGS)
+GO_VET = $(GO) vet
+GO_LIST = $(GO) list
+
+
+GOFILES_EVAL := $(subst _$(ROOT_DIR)/,,$(shell $(GO_LIST) -find -e $(ROOT_DIR)/...))
+GOFILES ?= $(GOFILES_EVAL)
+
+# LINT_TRIVY_SEVERITY_LEVEL ?= CRITICAL,HIGH
+LINT_TRIVY_SEVERITY_LEVEL ?= CRITICAL
+
+OPENAPI_SDK_DIR :=  ${ROOT_DIR}/api/v1
+
+#===================== E2E
+
+
+PROJECT_IMAGE_VERSION ?= $(GIT_COMMIT_VERSION)
+ifeq ($(PROJECT_IMAGE_VERSION),)
+    PROJECT_IMAGE_VERSION = $(shell cat $(ROOT_DIR)/VERSION | tr -d ' ' | tr -d '\n' )
+endif
+
+#====== pyroscope
+PYROSCOPE_CONTAINER_NAME := pyroscope
+PYROSCOPE_IMAGE_NAME := pyroscope/pyroscope:latest
+PYROSCOPE_LOCAL_PORT := 8040
+
+E2E_KIND_CLUSTER_NAME ?= egressgateway
+E2E_RUNTIME_DIR := $(ROOT_DIR)/test/runtime
+E2E_KIND_KUBECONFIG_PATH := $(E2E_RUNTIME_DIR)/kubeconfig_$(E2E_KIND_CLUSTER_NAME).config
+E2E_LOG_FILE ?= $(E2E_RUNTIME_DIR)/e2edebugLog.txt
+E2E_GINKGO_REPORT_FILE ?= $(E2E_RUNTIME_DIR)/ginkgoreport.json
+
+E2E_GINKGO_LABELS ?=
+E2E_GINKGO_OPTION ?=
+E2E_TIMEOUT ?= 60m
+E2E_GINKGO_PROCS ?= 4
+
+# ipv4 or ipv6 or dual, default ipv4
+E2E_IP_FAMILY ?= dual
+
+E2E_KIND_IPV4_SERVICE_CIDR = 172.41.0.0/16
+E2E_KIND_IPV6_SERVICE_CIDR = fd41::/108
+
+E2E_KIND_IPV4_POD_CIDR = 172.40.0.0/16
+E2E_KIND_IPV6_POD_CIDR = fd40::/48

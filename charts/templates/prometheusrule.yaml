@@ -1,0 +1,53 @@
+{{- if .Values.egressgatewayAgent.prometheus.prometheusRule.install -}}
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: {{ .Values.egressgatewayAgent.name | trunc 63 | trimSuffix "-" }}
+  namespace: {{ default .Release.Namespace .Values.egressgatewayAgent.prometheus.prometheusRule.namespace }}
+  labels:
+    {{- include "project.egressgatewayAgent.labels" . | nindent 4 }}
+    {{- if .Values.global.commonLabels }}
+    {{- include "tplvalues.render" ( dict "value" .Values.global.commonLabels "context" $ ) | nindent 4 }}
+    {{- end }}
+    {{- if .Values.egressgatewayAgent.prometheus.prometheusRule.labels }}
+    {{- include "tplvalues.render" ( dict "value" .Values.egressgatewayAgent.prometheus.prometheusRule.labels "context" $ ) | nindent 4 }}
+    {{- end }}
+  {{- if or .Values.global.commonAnnotations .Values.egressgatewayAgent.prometheus.prometheusRule.annotations }}
+  annotations:
+    {{- if .Values.global.commonAnnotations }}
+    {{- include "tplvalues.render" ( dict "value" .Values.global.commonAnnotations "context" $ ) | nindent 4 }}
+    {{- end }}
+    {{- if .Values.egressgatewayAgent.prometheus.prometheusRule.annotations }}
+    {{- include "tplvalues.render" ( dict "value" .Values.egressgatewayAgent.prometheus.prometheusRule.annotations "context" $ ) | nindent 4 }}
+    {{- end }}
+  {{- end }}
+spec:
+  groups: []
+{{- end }}
+---
+{{- if .Values.egressgatewayController.prometheus.prometheusRule.install -}}
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: {{ .Values.egressgatewayController.name | trunc 63 | trimSuffix "-" }}
+  namespace: {{ default .Release.Namespace .Values.egressgatewayController.prometheus.prometheusRule.namespace }}
+  labels:
+    {{- include "project.egressgatewayController.labels" . | nindent 4 }}
+    {{- if .Values.global.commonLabels }}
+    {{- include "tplvalues.render" ( dict "value" .Values.global.commonLabels "context" $ ) | nindent 4 }}
+    {{- end }}
+    {{- if .Values.egressgatewayController.prometheus.prometheusRule.labels }}
+    {{- include "tplvalues.render" ( dict "value" .Values.egressgatewayController.prometheus.prometheusRule.labels "context" $ ) | nindent 4 }}
+    {{- end }}
+  {{- if or .Values.global.commonAnnotations .Values.egressgatewayController.prometheus.prometheusRule.annotations }}
+  annotations:
+    {{- if .Values.global.commonAnnotations }}
+    {{- include "tplvalues.render" ( dict "value" .Values.global.commonAnnotations "context" $ ) | nindent 4 }}
+    {{- end }}
+    {{- if .Values.egressgatewayController.prometheus.prometheusRule.annotations }}
+    {{- include "tplvalues.render" ( dict "value" .Values.egressgatewayController.prometheus.prometheusRule.annotations "context" $ ) | nindent 4 }}
+    {{- end }}
+  {{- end }}
+spec:
+  groups: []
+{{- end }}

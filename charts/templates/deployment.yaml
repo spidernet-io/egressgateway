@@ -1,0 +1,186 @@
+apiVersion: {{ include "capabilities.deployment.apiVersion" . }}
+kind: Deployment
+metadata:
+  name: {{ .Values.egressgatewayController.name | trunc 63 | trimSuffix "-" }}
+  namespace: {{ .Release.Namespace | quote }}
+  labels:
+    {{- include "project.egressgatewayController.labels" . | nindent 4 }}
+      {{- if .Values.global.commonLabels }}
+      {{- include "tplvalues.render" ( dict "value" .Values.global.commonLabels "context" $ ) | nindent 4 }}
+      {{- end }}
+  {{- if .Values.global.commonAnnotations }}
+  annotations:
+    {{- include "tplvalues.render" ( dict "value" .Values.global.commonAnnotations "context" $ ) | nindent 4 }}
+  {{- end }}
+spec:
+  replicas: {{ .Values.egressgatewayController.replicas }}
+  selector:
+    matchLabels:
+      {{- include "project.egressgatewayController.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      {{- if or .Values.egressgatewayController.podAnnotations .Values.global.commonAnnotations }}
+      annotations:
+        {{- if .Values.global.commonAnnotations }}
+        {{- include "tplvalues.render" ( dict "value" .Values.global.commonAnnotations "context" $ ) | nindent 8 }}
+        {{- end }}
+        {{- if .Values.egressgatewayController.podAnnotations }}
+        {{- include "tplvalues.render" ( dict "value" .Values.egressgatewayController.podAnnotations "context" $ ) | nindent 8 }}
+        {{- end }}
+        {{- end }}
+      labels:
+        {{- include "project.egressgatewayController.selectorLabels" . | nindent 8 }}
+        {{- if .Values.global.commonLabels }}
+        {{- include "tplvalues.render" ( dict "value" .Values.global.commonLabels "context" $ ) | nindent 8 }}
+        {{- end }}
+        {{- if .Values.egressgatewayController.podLabels }}
+        {{- include "tplvalues.render" ( dict "value" .Values.egressgatewayController.podLabels "context" $ ) | nindent 8 }}
+        {{- end }}
+    spec:
+      {{- if .Values.egressgatewayController.image.imagePullSecrets }}
+      imagePullSecrets:
+      {{- with .Values.egressgatewayController.image.imagePullSecrets }}
+      {{- toYaml . | trim | nindent 6 }}
+      {{- end }}
+      {{- end }}
+      serviceAccountName: {{ .Values.egressgatewayController.name | trunc 63 | trimSuffix "-" }}
+      priorityClassName: {{ default "system-node-critical" .Values.egressgatewayController.priorityClassName }}
+      {{- if .Values.egressgatewayController.hostnetwork }}
+      hostNetwork: true
+      dnsPolicy: ClusterFirstWithHostNet
+      {{- else }}
+      hostNetwork: false
+      dnsPolicy: ClusterFirst
+      {{- end }}
+      restartPolicy: Always
+      {{- with .Values.egressgatewayController.tolerations }}
+      tolerations:
+      {{- toYaml . | nindent 6 }}
+      {{- end }}
+      {{- with .Values.egressgatewayController.nodeSelector }}
+      nodeSelector:
+      {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- if .Values.egressgatewayController.affinity }}
+      affinity:
+      {{- include "tplvalues.render" (dict "value" .Values.egressgatewayController.affinity "context" $) | nindent 6 }}
+      {{- end }}
+      containers:
+        - name: {{ .Values.egressgatewayController.name | trunc 63 | trimSuffix "-" }}
+          image: {{ include "project.egressgatewayController.image" . | quote }}
+          imagePullPolicy: {{ .Values.egressgatewayController.image.pullPolicy }}
+          command:
+            - {{ .Values.egressgatewayController.cmdBinName }}
+          args:
+            - --config-path=/tmp/config-map/conf.yml
+            - --tls-ca-cert=/etc/tls/ca.crt
+            - --tls-server-cert=/etc/tls/tls.crt
+            - --tls-server-key=/etc/tls/tls.key
+          {{- with .Values.egressgatewayController.extraArgs }}
+          {{- toYaml . | trim | nindent 8 }}
+          {{- end }}
+          ports:
+          {{- if .Values.egressgatewayController.prometheus.enabled }}
+          - name: metrics
+            containerPort: {{ .Values.egressgatewayController.prometheus.port }}
+            protocol: TCP
+          {{- end }}
+          - name: http
+            containerPort: {{ .Values.egressgatewayController.healthServer.port }}
+            protocol: TCP
+          - name: webhook
+            containerPort: {{ .Values.egressgatewayController.webhookPort }}
+            protocol: TCP
+          {{- if semverCompare ">=1.20-0" .Capabilities.KubeVersion.Version }}
+          startupProbe:
+            httpGet:
+              path: /v1/healthy/startup
+              port: {{ .Values.egressgatewayController.healthServer.port }}
+              scheme: HTTP
+            failureThreshold: {{ .Values.egressgatewayController.healthServer.startupProbe.failureThreshold }}
+            periodSeconds: {{ .Values.egressgatewayController.healthServer.startupProbe.periodSeconds }}
+            successThreshold: 1
+          {{- end }}
+          livenessProbe:
+            httpGet:
+              path: /v1/healthy/liveness
+              port: {{ .Values.egressgatewayController.healthServer.port }}
+              scheme: HTTP
+            initialDelaySeconds: 60
+            periodSeconds: {{ .Values.egressgatewayController.healthServer.livenessProbe.periodSeconds }}
+            successThreshold: 1
+            failureThreshold: {{ .Values.egressgatewayController.healthServer.livenessProbe.failureThreshold }}
+            timeoutSeconds: 5
+          readinessProbe:
+            httpGet:
+              path: /v1/healthy/readiness
+              port: {{ .Values.egressgatewayController.healthServer.port }}
+              scheme: HTTP
+            initialDelaySeconds: 5
+            periodSeconds: {{ .Values.egressgatewayController.healthServer.readinessProbe.periodSeconds }}
+            successThreshold: 1
+            failureThreshold: {{ .Values.egressgatewayController.healthServer.readinessProbe.failureThreshold }}
+            timeoutSeconds: 5
+          {{- with .Values.egressgatewayController.resources }}
+          resources:
+          {{- toYaml . | trim | nindent 12 }}
+          {{- end }}
+          env:
+            - name: ENV_LOG_LEVEL
+              value: {{ .Values.egressgatewayController.debug.logLevel | quote }}
+            - name: ENV_ENABLED_METRIC
+              value: {{ .Values.egressgatewayController.prometheus.enabled | quote }}
+            - name: ENV_METRIC_HTTP_PORT
+              value: {{ .Values.egressgatewayController.prometheus.port | quote }}
+            - name: ENV_GOPS_LISTEN_PORT
+              value: {{ .Values.egressgatewayController.debug.gopsPort | quote }}
+            - name: ENV_WEBHOOK_PORT
+              value: {{ .Values.egressgatewayController.webhookPort | quote }}
+            - name: ENV_HTTP_PORT
+              value: {{ .Values.egressgatewayController.healthServer.port | quote }}
+            - name: ENV_POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: ENV_POD_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            {{- with .Values.egressgatewayController.extraEnv }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
+          {{- with .Values.egressgatewayController.securityContext }}
+          securityContext:
+          {{- toYaml . | nindent 10 }}
+          {{- end }}
+          volumeMounts:
+            - name: config-path
+              mountPath: /tmp/config-map
+              readOnly: true
+            - name: tls
+              mountPath: /etc/tls
+              readOnly: true
+            {{- if .Values.egressgatewayController.extraVolumes }}
+            {{- include "tplvalues.render" ( dict "value" .Values.egressgatewayController.extraVolumeMounts "context" $ ) | nindent 12 }}
+            {{- end }}
+      volumes:
+        # To read the configuration from the config map
+        - name: config-path
+          configMap:
+            name: {{ .Values.global.configName }}
+        - name: tls
+          projected:
+            defaultMode: 0400
+            sources:
+              - secret:
+                  name: {{ .Values.egressgatewayController.tls.secretName | trunc 63 | trimSuffix "-" }}
+                  items:
+                    - key: tls.crt
+                      path: tls.crt
+                    - key: tls.key
+                      path: tls.key
+                    - key: ca.crt
+                      path: ca.crt
+      {{- if .Values.egressgatewayController.extraVolumeMounts }}
+      {{- include "tplvalues.render" ( dict "value" .Values.egressgatewayController.extraVolumeMounts "context" $ ) | nindent 6 }}
+      {{- end }}

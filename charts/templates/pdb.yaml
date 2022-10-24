@@ -1,0 +1,21 @@
+{{- if .Values.egressgatewayController.podDisruptionBudget.enabled }}
+apiVersion: {{ include "capabilities.policy.apiVersion" . }}
+kind: PodDisruptionBudget
+metadata:
+  name: {{ .Values.egressgatewayController.name | trunc 63 | trimSuffix "-" }}
+  namespace: {{ .Release.Namespace }}
+  {{- if .Values.global.commonAnnotations }}
+  annotations:
+    {{- include "tplvalues.render" ( dict "value" .Values.global.commonAnnotations "context" $ ) | nindent 4 }}
+  {{- end }}
+  labels:
+    {{- include "project.egressgatewayController.labels" . | nindent 4 }}
+      {{- if .Values.global.commonLabels }}
+      {{- include "tplvalues.render" ( dict "value" .Values.global.commonLabels "context" $ ) | nindent 4 }}
+      {{- end }}
+spec:
+  minAvailable: {{ .Values.egressgatewayController.podDisruptionBudget.minAvailable }}
+  selector:
+    matchLabels:
+      {{- include "project.egressgatewayController.selectorLabels" . | nindent 6 }}
+{{- end }}

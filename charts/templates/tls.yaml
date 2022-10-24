@@ -1,0 +1,153 @@
+{{- if (eq .Values.egressgatewayController.tls.method "auto") }}
+{{- $_ := include "generate-ca-certs" . }}
+{{- end }}
+
+apiVersion: admissionregistration.k8s.io/v1
+kind: MutatingWebhookConfiguration
+metadata:
+  name: {{ .Values.egressgatewayController.name | trunc 63 | trimSuffix "-" }}
+  annotations:
+    {{- if (eq .Values.egressgatewayController.tls.method "certmanager") }}
+    cert-manager.io/inject-ca-from: {{ .Release.Namespace }}/{{ .Values.egressgatewayController.name | trunc 63 | trimSuffix "-" }}-server-certs
+    {{- end }}
+webhooks:
+  - admissionReviewVersions:
+      - v1
+    clientConfig:
+      service:
+        name: {{ .Values.egressgatewayController.name | trunc 63 | trimSuffix "-" }}
+        namespace: {{ .Release.Namespace }}
+        # ====modify==== the mutating route path : "/mutate-" + strings.ReplaceAll(gvk.Group, ".", "-") + "-" + gvk.Version + "-" + strings.ToLower(gvk.Kind)
+        path: "/mutate-egressgateway-spidernet-io-v1-egressgateway"
+        port: {{ .Values.egressgatewayController.webhookPort }}
+      {{- if (eq .Values.egressgatewayController.tls.method "provided") }}
+      caBundle: {{ .Values.egressgatewayController.tls.provided.tlsCa | required "missing tls.provided.tlsCa" }}
+      {{- else if (eq .Values.egressgatewayController.tls.method "auto") }}
+      caBundle: {{ .ca.Cert | b64enc }}
+      {{- end }}
+    failurePolicy: Fail
+    # ====modify====
+    name: egressgateway.egressgateway.spidernet.io
+    rules:
+      - apiGroups:
+          # ====modify====
+          - egressgateway.spidernet.io
+        apiVersions:
+          - v1
+        operations:
+          - CREATE
+          - UPDATE
+          - DELETE
+        resources:
+          # ====modify==== crdName
+          - egressgateways
+    sideEffects: None
+
+---
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingWebhookConfiguration
+metadata:
+  name: {{ .Values.egressgatewayController.name | trunc 63 | trimSuffix "-" }}
+  annotations:
+    {{- if (eq .Values.egressgatewayController.tls.method "certmanager") }}
+    cert-manager.io/inject-ca-from: {{ .Release.Namespace }}/{{ .Values.egressgatewayController.name | trunc 63 | trimSuffix "-" }}-server-certs
+    {{- end }}
+webhooks:
+  - admissionReviewVersions:
+      - v1
+    clientConfig:
+      service:
+        name: {{ .Values.egressgatewayController.name | trunc 63 | trimSuffix "-" }}
+        namespace: {{ .Release.Namespace }}
+        # ====modify==== the validate route path : "/validate-" + strings.ReplaceAll(gvk.Group, ".", "-") + "-" + gvk.Version + "-" + strings.ToLower(gvk.Kind)
+        path: "/validate-egressgateway-spidernet-io-v1-egressgateway"
+        port: {{ .Values.egressgatewayController.webhookPort }}
+      {{- if (eq .Values.egressgatewayController.tls.method "provided") }}
+      caBundle: {{ .Values.egressgatewayController.tls.provided.tlsCa | required "missing tls.provided.tlsCa" }}
+      {{- else if (eq .Values.egressgatewayController.tls.method "auto") }}
+      caBundle: {{ .ca.Cert | b64enc }}
+      {{- end }}
+    failurePolicy: Fail
+    # ====modify====
+    name: egressgateway.egressgateway.spidernet.io
+    rules:
+      - apiGroups:
+          # ====modify====
+          - egressgateway.spidernet.io
+        apiVersions:
+          - v1
+        operations:
+          - CREATE
+          - UPDATE
+          - DELETE
+        resources:
+          # ====modify==== crdName
+          - egressgateways
+    sideEffects: None
+
+{{- if eq .Values.egressgatewayController.tls.method "certmanager" -}}
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: {{ .Values.egressgatewayController.name | trunc 63 | trimSuffix "-" }}-server-certs
+  namespace: {{ .Release.Namespace }}
+spec:
+  issuerRef:
+    name: {{ .Values.egressgatewayController.tls.certmanager.issuerName | trunc 63 | trimSuffix "-" }}
+  secretName: {{ .Values.egressgatewayController.tls.secretName | trunc 63 | trimSuffix "-" }}
+  commonName: {{ .Values.egressgatewayController.name | trunc 63 | trimSuffix "-" }}.{{ .Release.Namespace }}.svc
+  dnsNames:
+    - {{ .Values.egressgatewayController.name | trunc 63 | trimSuffix "-" }}
+    - {{ .Values.egressgatewayController.name | trunc 63 | trimSuffix "-" }}.{{ .Release.Namespace }}
+    - {{ .Values.egressgatewayController.name | trunc 63 | trimSuffix "-" }}.{{ .Release.Namespace }}.svc
+    - {{ .Values.egressgatewayController.name | trunc 63 | trimSuffix "-" }}.{{ .Release.Namespace }}.svc.{{ .Values.global.clusterDnsDomain }}
+  {{- range $dns := .Values.egressgatewayController.tls.certmanager.extraDnsNames }}
+  - {{ $dns | quote }}
+  {{- end }}
+  {{- if .Values.egressgatewayController.tls.certmanager.extraIPAddresses }}
+  ipAddresses:
+  {{- range $ip := .Values.egressgatewayController.tls.certmanager.extraIPAddresses }}
+  - {{ $ip | quote }}
+  {{- end }}
+  {{- end }}
+  duration: {{ printf "%dh" (mul .Values.egressgatewayController.tls.certmanager.certValidityDuration 24) }}
+  {{- end }}
+
+{{- if (eq .Values.egressgatewayController.tls.method "provided") }}
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: {{ .Values.egressgatewayController.tls.secretName | trunc 63 | trimSuffix "-" }}
+  namespace: {{ .Release.Namespace }}
+type: kubernetes.io/tls
+data:
+  ca.crt:  {{ .Values.egressgatewayController.tls.provided.tlsCa | required "missing tls.provided.tlsCa" }}
+  tls.crt: {{ .Values.egressgatewayController.tls.provided.tlsCert | required "missing tls.provided.tlsCert" }}
+  tls.key: {{ .Values.egressgatewayController.tls.provided.tlsKey  | required "missing tls.provided.tlsKey"  }}
+  {{- end }}
+
+{{- if eq .Values.egressgatewayController.tls.method "auto" }}
+---
+{{- $cn := printf "spidernet.io" }}
+{{- $ip := .Values.egressgatewayController.tls.auto.extraIpAddresses }}
+{{- $dns1 := printf "%s.%s" .Values.egressgatewayController.name .Release.Namespace }}
+{{- $dns2 := printf "%s.%s.svc" .Values.egressgatewayController.name .Release.Namespace }}
+{{- $dns3 := printf "%s.%s.svc.%s" .Values.egressgatewayController.name .Release.Namespace .Values.global.clusterDnsDomain }}
+{{- $dns := prepend .Values.egressgatewayController.tls.auto.extraDnsNames $dns1 }}
+{{- $dns = prepend $dns $dns2 }}
+{{- $dns = prepend $dns $dns3 }}
+{{- $dns = prepend $dns $cn }}
+{{- $cert := genSignedCert $cn $ip $dns (.Values.egressgatewayController.tls.auto.certExpiration | int) .ca }}
+apiVersion: v1
+kind: Secret
+metadata:
+  name: {{ .Values.egressgatewayController.tls.secretName | trunc 63 | trimSuffix "-" }}
+  namespace: {{ .Release.Namespace }}
+type: kubernetes.io/tls
+data:
+  ca.crt:  {{ .ca.Cert | b64enc }}
+  tls.crt: {{ $cert.Cert | b64enc }}
+  tls.key: {{ $cert.Key  | b64enc }}
+{{- end }}

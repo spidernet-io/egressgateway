@@ -1,0 +1,20 @@
+name: Build Image Release
+
+on:
+  workflow_call:
+    inputs:
+      ref:
+        required: true
+        type: string
+
+permissions: write-all
+
+jobs:
+  call-workflow:
+    uses: ./.github/workflows/call-release-image.yaml
+    with:
+      ref: ${{ inputs.ref }}
+      push: "true"
+      upload: "false"
+      race: "0"
+    secrets: inherit

@@ -1,0 +1,59 @@
+name: Lint Code Spell
+
+on:
+  pull_request_target:
+    types:
+      - opened
+      - synchronize
+      - reopened
+  push:
+    branches:
+      - main
+  workflow_call:
+    inputs:
+      ref:
+        required: true
+        type: string
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: 'sha, tag, branch'
+        required: true
+        default: main
+
+jobs:
+  lint_spell:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Get Ref
+        id: get_ref
+        run: |
+          if ${{ inputs.ref != '' }} ; then
+              echo "trigger by workflow_call"
+              echo "RUN_REF=${{ inputs.ref }}" >> $GITHUB_ENV
+          elif ${{ github.event_name == 'workflow_dispatch' }} ; then
+              echo "trigger by workflow_dispatch"
+              echo "RUN_REF=${{ github.event.inputs.ref }}" >> $GITHUB_ENV
+          elif ${{ github.event_name == 'push' }} ; then
+              echo "trigger by push"
+              echo "RUN_REF=${{ github.sha }}" >> $GITHUB_ENV
+          else
+              echo "trigger by ${{ github.event_name }}"
+              echo "RUN_REF=${{ github.event.pull_request.head.sha }}" >> $GITHUB_ENV
+          fi
+
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+          ref: ${{ env.RUN_REF }}
+
+      - name: Set up Python
+        uses: actions/setup-python@v4.0.0
+        with:
+          python-version: 3.8
+          architecture: x64
+
+      - name: Run Code Lint
+        run: |
+          make lint_code_spell

@@ -1,0 +1,184 @@
+name: Call Release Image
+
+env:
+  ONLINE_REGISTER: ghcr.io
+  BUILD_PLATFORM: linux/amd64,linux/arm64
+  ONLINE_REGISTER_USER: ${{ github.actor }}
+  ONLINE_REGISTER_PASSWORD: ${{ secrets.GITHUB_TOKEN }}
+
+on:
+  workflow_call:
+    inputs:
+      ref:
+        required: true
+        type: string
+      # push image to ghcr
+      push:
+        required: true
+        type: string
+      # upload artifate
+      upload:
+        required: true
+        type: string
+      suffix:
+        required: false
+        type: string
+      race:
+        required: true
+        type: string
+
+permissions: write-all
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - name: agent
+            dockerfile: ./images/agent/Dockerfile
+            context: ./
+          - name: controller
+            dockerfile: ./images/controller/Dockerfile
+            context: ./
+
+    steps:
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2.0.0
+
+      - name: Login to online register
+        uses: docker/login-action@v2.0.0
+        with:
+          username: ${{ env.ONLINE_REGISTER_USER }}
+          password: ${{ env.ONLINE_REGISTER_PASSWORD }}
+          registry: ${{ env.ONLINE_REGISTER }}
+
+      - name: Getting Image Ref
+        id: prepare
+        run: |
+          if ${{ inputs.ref != '' }} ; then
+              echo "call by workflow_call"
+              image_ref=${{ inputs.ref }}
+              image_suffix=${{ inputs.suffix }}
+              image_push=${{ inputs.push }}
+              image_upload=${{ inputs.upload }}
+          else
+              echo "unexpected event: ${{ github.event_name }}"
+              exit 1
+          fi
+          echo "RUN_REF=${image_ref}" >> $GITHUB_ENV
+          [ -n "${image_suffix}" ] && echo "RUN_SUFFIX=-${image_suffix}" >> $GITHUB_ENV
+          echo "RUN_PUSH=${image_push}" >> $GITHUB_ENV
+          echo "RUN_UPLOAD=${image_upload}" >> $GITHUB_ENV
+          # it is invalid if the ref is branch name "xx/xx/xx"
+          echo "RUN_IMAGE_TAG=${image_ref##*/}" >> $GITHUB_ENV
+          exit 0
+
+      - name: Checkout Source Code
+        uses: actions/checkout@v3
+        with:
+          persist-credentials: false
+          ref: ${{ env.RUN_REF }}
+
+      - name: Lint Dockerfile Trivy
+        run: |
+          make lint_dockerfile_trivy
+
+      - name: Getting Build Arg
+        id: arg
+        run: |
+          GIT_COMMIT_VERSION=$( git show -s --format='format:%H')
+          GIT_COMMIT_TIME=$( git show -s --format='format:%aI')
+          echo "RUN_COMMIT_VER=${GIT_COMMIT_VERSION}" >> $GITHUB_ENV
+          echo "RUN_COMMIT_TIME=${GIT_COMMIT_TIME}" >> $GITHUB_ENV
+
+      - name: Build Image ${{ matrix.name }} and push
+        uses: docker/build-push-action@v3.0.0
+        if: ${{ env.RUN_PUSH == 'true' }}
+        id: docker_build_and_push
+        with:
+          context: ${{ matrix.context }}
+          file: ${{ matrix.dockerfile }}
+          github-token: ${{ secrets.WELAN_PAT }}
+          push: true
+          platforms: ${{ env.BUILD_PLATFORM }}
+          tags: |
+            ${{ env.ONLINE_REGISTER }}/${{ github.repository }}/${{ matrix.name }}${{ env.RUN_SUFFIX }}:${{ env.RUN_IMAGE_TAG }}
+          build-args: |
+            GIT_COMMIT_VERSION=${{ env.RUN_COMMIT_VER }}
+            GIT_COMMIT_TIME=${{ env.RUN_COMMIT_TIME }}
+            VERSION=${{ env.RUN_REF }}
+            RACE=${{ inputs.race }}
+
+      - name: Build Image ${{ matrix.name }} and output docker
+        uses: docker/build-push-action@v3.0.0
+        if: ${{ env.RUN_PUSH != 'true' }}
+        id: docker_build_and_save
+        with:
+          context: ${{ matrix.context }}
+          file: ${{ matrix.dockerfile }}
+          github-token: ${{ secrets.WELAN_PAT }}
+          outputs: type=tar,dest=/tmp/${{ matrix.name }}.tar
+          platforms: linux/amd64
+          tags: |
+            ${{ env.ONLINE_REGISTER }}/${{ github.repository }}/${{ matrix.name }}${{ env.RUN_SUFFIX }}:${{ env.RUN_IMAGE_TAG }}
+          build-args: |
+            GIT_COMMIT_VERSION=${{ env.RUN_COMMIT_VER }}
+            GIT_COMMIT_TIME=${{ env.RUN_COMMIT_TIME }}
+            VERSION=${{ env.RUN_REF }}
+            RACE=${{ inputs.race }}
+
+      - name: Image Release Digest
+        shell: bash
+        run: |
+          mkdir -p image-digest/
+          job_name=${{ matrix.name }}
+          job_name_capital=${job_name^^}
+          job_name_underscored=${job_name_capital//-/_}
+          if [ "${{ env.RUN_PUSH }}" == 'true' ]; then
+              DIGEST=${{ steps.docker_build_and_push.outputs.digest }}
+          else
+              DIGEST=${{ steps.docker_build_and_save.outputs.digest }}
+          fi
+          echo "${job_name_underscored}_DIGEST := \"${DIGEST}\"" > image-digest/makefile-digest.txt
+          echo "### ${{ matrix.name }}" > image-digest/${{ matrix.name }}.txt
+          echo "" >> image-digest/${{ matrix.name }}.txt
+          echo "\`${{ env.ONLINE_REGISTER }}/${{ github.repository }}/${{ matrix.name }}${{ env.RUN_SUFFIX }}:${{ env.RUN_IMAGE_TAG }}@${DIGEST}\`" >> image-digest/${{ matrix.name }}.txt
+          echo "" >> image-digest/${{ matrix.name }}.txt
+          # ====== Image Digests Output =============
+          cd image-digest/
+          echo "## Docker Manifests" > ../image-digest-output.txt
+          echo "" >> ../image-digest-output.txt
+          find -type f -not -name "makefile-digest.txt" | sort | xargs -d '\n' cat >> ../image-digest-output.txt
+          cd ..
+          # ======= Image Makefile Digests =======
+          cd image-digest/
+          echo "# File generated by .github/workflows/images-legacy-releases.yaml; DO NOT EDIT." > ../Makefile.digests
+          echo "# Copyright "$(date +'%Y')" " >> ../Makefile.digests
+          echo "# SPDX-License-Identifier: Apache-2.0" >> ../Makefile.digests
+          echo "" >> ../Makefile.digests
+          find -type f  -name "makefile-digest.txt" | sort | xargs -d '\n' cat >> ../Makefile.digests
+          cd ..
+
+      - name: Upload artifact digests
+        uses: actions/upload-artifact@v3.0.0
+        with:
+          name: image-digest-artifact-${{ env.RUN_IMAGE_TAG }}
+          path: image-digest-output.txt
+          retention-days: 1
+
+      - name: Upload artifact digests
+        uses: actions/upload-artifact@v3.0.0
+        with:
+          name: makefile-digest-artifact-${{ env.RUN_IMAGE_TAG }}
+          path: Makefile.digests
+          retention-days: 1
+
+      # Upload artifact race images tar
+      - name: Upload image artifact
+        if: ${{ env.RUN_UPLOAD == 'true' }}
+        uses: actions/upload-artifact@v3.1.0
+        with:
+          name: image-tar-${{ matrix.name }}
+          path: /tmp/${{ matrix.name }}.tar
+          retention-days: 1
