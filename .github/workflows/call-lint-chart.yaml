@@ -65,7 +65,7 @@ jobs:
       # https://github.com/actions/setup-python
       - name: Set up Python
         if: ${{ env.RUN_JUST_LINT_CHART == 'false' }}
-        uses: actions/setup-python@v4.0.0
+        uses: actions/setup-python@v4.3.0
         with:
           python-version: 3.8
           architecture: x64
