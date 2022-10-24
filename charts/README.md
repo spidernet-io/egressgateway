@@ -1,7 +1,0 @@
-# egressgateway
-
-## Introduction
-
-## Features
-
-## Parameters
