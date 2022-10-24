@@ -11,7 +11,7 @@ set -o nounset
 update-alternatives \
   --install /usr/sbin/iptables iptables /usr/sbin/iptables-wrapper 100 \
   --slave /usr/sbin/iptables-restore iptables-restore /usr/sbin/iptables-wrapper \
-  --slave /usr/sbin/iptables-save iptables-save /usr/sbin/iptables-wrapper && \
+  --slave /usr/sbin/iptables-save iptables-save /usr/sbin/iptables-wrapper
 
 update-alternatives \
   --install /usr/sbin/ip6tables ip6tables /usr/sbin/iptables-wrapper 100 \
