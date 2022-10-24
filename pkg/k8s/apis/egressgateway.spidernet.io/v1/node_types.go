@@ -19,7 +19,7 @@ type NodeStatus struct {
 }
 
 // scope(Namespaced or Cluster)
-// +kubebuilder:resource:categories={node},path="nodes",singular="node",scope="Cluster",shortName={nd}
+// +kubebuilder:resource:categories={node},path="nodes",singular="node",scope="Cluster"
 // +kubebuilder:printcolumn:JSONPath=".status.VxlanIPv4IP",description="tunnelIPv4",name="tunnelIPv4",type=string
 // +kubebuilder:printcolumn:JSONPath=".status.VxlanIPv6IP",description="tunnelIPv6",name="tunnelIPv6",type=string
 // +kubebuilder:object:root=true

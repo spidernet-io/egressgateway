@@ -14,8 +14,6 @@ spec:
     kind: Node
     listKind: NodeList
     plural: nodes
-    shortNames:
-    - nd
     singular: node
   scope: Cluster
   versions:
