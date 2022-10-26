@@ -15,4 +15,7 @@ type ConfigmapConfig struct {
 	TunnelIpv6Subnet string `yaml:"tunnelIpv6Subnet"`
 	TunnelInterface  string `yaml:"tunnelInterface"`
 	ForwardMethod    string `yaml:"forwardMethod"`
+
+	VxlanID      int `yaml:"VxlanID"`
+	VxlanUdpPort int `yaml:"vxlanUdpPort"`
 }
