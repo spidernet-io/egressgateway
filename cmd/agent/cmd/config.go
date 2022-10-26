@@ -7,6 +7,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"github.com/spidernet-io/egressgateway/pkg/logger"
+	"github.com/spidernet-io/egressgateway/pkg/types"
 	"gopkg.in/yaml.v3"
 	"os"
 	"reflect"
@@ -36,13 +37,7 @@ type Config struct {
 	TlsServerKeyPath  string
 
 	// from configmap
-	Configmap ConfigmapConfig
-}
-
-type ConfigmapConfig struct {
-	EnableIPv4      bool `yaml:"enableIPv4"`
-	EnableIPv6      bool `yaml:"enableIPv6"`
-	StartRouteTable int  `yaml:"startRouteTable"`
+	Configmap types.ConfigmapConfig
 }
 
 var globalConfig Config

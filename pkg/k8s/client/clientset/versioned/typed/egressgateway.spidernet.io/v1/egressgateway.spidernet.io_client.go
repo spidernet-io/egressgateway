@@ -15,7 +15,8 @@ import (
 
 type EgressgatewayV1Interface interface {
 	RESTClient() rest.Interface
-	EgressGatewaysGetter
+	EgressGatewayNodesGetter
+	EgressGatewayRulesGetter
 	NodesGetter
 }
 
@@ -24,8 +25,12 @@ type EgressgatewayV1Client struct {
 	restClient rest.Interface
 }
 
-func (c *EgressgatewayV1Client) EgressGateways() EgressGatewayInterface {
-	return newEgressGateways(c)
+func (c *EgressgatewayV1Client) EgressGatewayNodes() EgressGatewayNodeInterface {
+	return newEgressGatewayNodes(c)
+}
+
+func (c *EgressgatewayV1Client) EgressGatewayRules() EgressGatewayRuleInterface {
+	return newEgressGatewayRules(c)
 }
 
 func (c *EgressgatewayV1Client) Nodes() NodeInterface {

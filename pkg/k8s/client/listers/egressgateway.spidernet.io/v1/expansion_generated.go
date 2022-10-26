@@ -5,9 +5,13 @@
 
 package v1
 
-// EgressGatewayListerExpansion allows custom methods to be added to
-// EgressGatewayLister.
-type EgressGatewayListerExpansion interface{}
+// EgressGatewayNodeListerExpansion allows custom methods to be added to
+// EgressGatewayNodeLister.
+type EgressGatewayNodeListerExpansion interface{}
+
+// EgressGatewayRuleListerExpansion allows custom methods to be added to
+// EgressGatewayRuleLister.
+type EgressGatewayRuleListerExpansion interface{}
 
 // NodeListerExpansion allows custom methods to be added to
 // NodeLister.

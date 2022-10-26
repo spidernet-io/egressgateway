@@ -19,58 +19,58 @@ import (
 	cache "k8s.io/client-go/tools/cache"
 )
 
-// EgressGatewayInformer provides access to a shared informer and lister for
-// EgressGateways.
-type EgressGatewayInformer interface {
+// EgressGatewayRuleInformer provides access to a shared informer and lister for
+// EgressGatewayRules.
+type EgressGatewayRuleInformer interface {
 	Informer() cache.SharedIndexInformer
-	Lister() v1.EgressGatewayLister
+	Lister() v1.EgressGatewayRuleLister
 }
 
-type egressGatewayInformer struct {
+type egressGatewayRuleInformer struct {
 	factory          internalinterfaces.SharedInformerFactory
 	tweakListOptions internalinterfaces.TweakListOptionsFunc
 }
 
-// NewEgressGatewayInformer constructs a new informer for EgressGateway type.
+// NewEgressGatewayRuleInformer constructs a new informer for EgressGatewayRule type.
 // Always prefer using an informer factory to get a shared informer instead of getting an independent
 // one. This reduces memory footprint and number of connections to the server.
-func NewEgressGatewayInformer(client versioned.Interface, resyncPeriod time.Duration, indexers cache.Indexers) cache.SharedIndexInformer {
-	return NewFilteredEgressGatewayInformer(client, resyncPeriod, indexers, nil)
+func NewEgressGatewayRuleInformer(client versioned.Interface, resyncPeriod time.Duration, indexers cache.Indexers) cache.SharedIndexInformer {
+	return NewFilteredEgressGatewayRuleInformer(client, resyncPeriod, indexers, nil)
 }
 
-// NewFilteredEgressGatewayInformer constructs a new informer for EgressGateway type.
+// NewFilteredEgressGatewayRuleInformer constructs a new informer for EgressGatewayRule type.
 // Always prefer using an informer factory to get a shared informer instead of getting an independent
 // one. This reduces memory footprint and number of connections to the server.
-func NewFilteredEgressGatewayInformer(client versioned.Interface, resyncPeriod time.Duration, indexers cache.Indexers, tweakListOptions internalinterfaces.TweakListOptionsFunc) cache.SharedIndexInformer {
+func NewFilteredEgressGatewayRuleInformer(client versioned.Interface, resyncPeriod time.Duration, indexers cache.Indexers, tweakListOptions internalinterfaces.TweakListOptionsFunc) cache.SharedIndexInformer {
 	return cache.NewSharedIndexInformer(
 		&cache.ListWatch{
 			ListFunc: func(options metav1.ListOptions) (runtime.Object, error) {
 				if tweakListOptions != nil {
 					tweakListOptions(&options)
 				}
-				return client.EgressgatewayV1().EgressGateways().List(context.TODO(), options)
+				return client.EgressgatewayV1().EgressGatewayRules().List(context.TODO(), options)
 			},
 			WatchFunc: func(options metav1.ListOptions) (watch.Interface, error) {
 				if tweakListOptions != nil {
 					tweakListOptions(&options)
 				}
-				return client.EgressgatewayV1().EgressGateways().Watch(context.TODO(), options)
+				return client.EgressgatewayV1().EgressGatewayRules().Watch(context.TODO(), options)
 			},
 		},
-		&egressgatewayspidernetiov1.EgressGateway{},
+		&egressgatewayspidernetiov1.EgressGatewayRule{},
 		resyncPeriod,
 		indexers,
 	)
 }
 
-func (f *egressGatewayInformer) defaultInformer(client versioned.Interface, resyncPeriod time.Duration) cache.SharedIndexInformer {
-	return NewFilteredEgressGatewayInformer(client, resyncPeriod, cache.Indexers{cache.NamespaceIndex: cache.MetaNamespaceIndexFunc}, f.tweakListOptions)
+func (f *egressGatewayRuleInformer) defaultInformer(client versioned.Interface, resyncPeriod time.Duration) cache.SharedIndexInformer {
+	return NewFilteredEgressGatewayRuleInformer(client, resyncPeriod, cache.Indexers{cache.NamespaceIndex: cache.MetaNamespaceIndexFunc}, f.tweakListOptions)
 }
 
-func (f *egressGatewayInformer) Informer() cache.SharedIndexInformer {
-	return f.factory.InformerFor(&egressgatewayspidernetiov1.EgressGateway{}, f.defaultInformer)
+func (f *egressGatewayRuleInformer) Informer() cache.SharedIndexInformer {
+	return f.factory.InformerFor(&egressgatewayspidernetiov1.EgressGatewayRule{}, f.defaultInformer)
 }
 
-func (f *egressGatewayInformer) Lister() v1.EgressGatewayLister {
-	return v1.NewEgressGatewayLister(f.Informer().GetIndexer())
+func (f *egressGatewayRuleInformer) Lister() v1.EgressGatewayRuleLister {
+	return v1.NewEgressGatewayRuleLister(f.Informer().GetIndexer())
 }

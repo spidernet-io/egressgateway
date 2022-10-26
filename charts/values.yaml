@@ -37,6 +37,21 @@ feature:
   ## @param feature.startRouteTable start route table
   startRouteTable: 50
 
+  ## @param feature.iptablesMode iptables mode,["auto", "legacy", "nft"]
+  iptablesMode: "auto"
+
+  ## @param feature.datapathMode iptables mode,["iptables", "ebpf"]
+  datapathMode: "iptables"
+
+  ## @param feature.tunnelIpv4Subnet tunnel ipv4 subnet
+  tunnelIpv4Subnet: "172.31.0.0/16"
+
+  ## @param feature.tunnelIpv6Subnet tunnel ipv6 subnet
+  tunnelIpv6Subnet: "fd11::/112"
+
+  ## @param feature.tunnelInterface tunnel base on which interface ["interface=eth0", "defaultRouteInterface"]
+  tunnelInterface: "interface=eth0"
+
 ## @section egressgatewayAgent parameters
 ##
 egressgatewayAgent:
