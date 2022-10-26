@@ -11,8 +11,10 @@ import (
 
 // Interface provides access to all the informers in this group version.
 type Interface interface {
-	// EgressGateways returns a EgressGatewayInformer.
-	EgressGateways() EgressGatewayInformer
+	// EgressGatewayNodes returns a EgressGatewayNodeInformer.
+	EgressGatewayNodes() EgressGatewayNodeInformer
+	// EgressGatewayRules returns a EgressGatewayRuleInformer.
+	EgressGatewayRules() EgressGatewayRuleInformer
 	// Nodes returns a NodeInformer.
 	Nodes() NodeInformer
 }
@@ -28,9 +30,14 @@ func New(f internalinterfaces.SharedInformerFactory, namespace string, tweakList
 	return &version{factory: f, namespace: namespace, tweakListOptions: tweakListOptions}
 }
 
-// EgressGateways returns a EgressGatewayInformer.
-func (v *version) EgressGateways() EgressGatewayInformer {
-	return &egressGatewayInformer{factory: v.factory, tweakListOptions: v.tweakListOptions}
+// EgressGatewayNodes returns a EgressGatewayNodeInformer.
+func (v *version) EgressGatewayNodes() EgressGatewayNodeInformer {
+	return &egressGatewayNodeInformer{factory: v.factory, tweakListOptions: v.tweakListOptions}
+}
+
+// EgressGatewayRules returns a EgressGatewayRuleInformer.
+func (v *version) EgressGatewayRules() EgressGatewayRuleInformer {
+	return &egressGatewayRuleInformer{factory: v.factory, tweakListOptions: v.tweakListOptions}
 }
 
 // Nodes returns a NodeInformer.
