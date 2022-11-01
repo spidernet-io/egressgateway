@@ -37,23 +37,24 @@ fi
 
 
 RESUTL_CODE=0
-if [ "$TYPE"x == "gops"x ] ; then
+if [ "$TYPE"x == "system"x ] ; then
     echo ""
-    echo "=============== gops data of controller ============== "
-    for POD in $CONTROLLER_POD_LIST ; do
+    echo "=============== system data ============== "
+    for POD in $CONTROLLER_POD_LIST $AGENT_POD_LIST ; do
       echo ""
-      echo "---------${POD}--------"
+      echo "--------- gops ${COMPONENT_NAMESPACE}/${POD} "
+      # ====modify==== pid number
       kubectl exec ${POD} -n ${COMPONENT_NAMESPACE} --kubeconfig ${E2E_KUBECONFIG} -- gops stats 1
       kubectl exec ${POD} -n ${COMPONENT_NAMESPACE} --kubeconfig ${E2E_KUBECONFIG} -- gops memstats 1
-    done
 
-    echo ""
-    echo "=============== gops data of agent ============== "
-    for POD in $AGENT_POD_LIST ; do
       echo ""
-      echo "---------${POD}--------"
-      kubectl exec ${POD} -n ${COMPONENT_NAMESPACE} --kubeconfig ${E2E_KUBECONFIG} -- gops stats 1
-      kubectl exec ${POD} -n ${COMPONENT_NAMESPACE} --kubeconfig ${E2E_KUBECONFIG} -- gops memstats 1
+      echo "--------- ps ${COMPONENT_NAMESPACE}/${POD} "
+      kubectl exec ${POD} -n ${COMPONENT_NAMESPACE} --kubeconfig ${E2E_KUBECONFIG} -- ps aux
+
+      echo ""
+      echo "--------- fd of pids ${COMPONENT_NAMESPACE}/${POD} "
+      kubectl exec ${POD} -n ${COMPONENT_NAMESPACE} --kubeconfig ${E2E_KUBECONFIG} -- find /proc -print | grep -P '/proc/\d+/fd/' | grep -E -o "/proc/[0-9]+" | uniq -c | sort -rn | head
+
     done
 
 elif [ "$TYPE"x == "detail"x ] ; then
