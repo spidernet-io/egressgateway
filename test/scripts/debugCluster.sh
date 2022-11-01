@@ -19,8 +19,8 @@ echo "$CURRENT_FILENAME : E2E_KUBECONFIG $E2E_KUBECONFIG "
 # ====modify====
 COMPONENT_NAMESPACE="kube-system"
 COMPONENT_GOROUTINE_MAX=300
-CONTROLLER_LABEL="app.kubernetes.io/component=rocktemplate-controller"
-AGENT_LABEL="app.kubernetes.io/component=rocktemplate-agent"
+CONTROLLER_LABEL="app.kubernetes.io/component=egressgateway-controller"
+AGENT_LABEL="app.kubernetes.io/component=egressgateway-agent"
 
 
 CONTROLLER_POD_LIST=$( kubectl get pods --no-headers --kubeconfig ${E2E_KUBECONFIG}  --namespace ${COMPONENT_NAMESPACE} --selector ${CONTROLLER_LABEL} --output jsonpath={.items[*].metadata.name} )
@@ -74,7 +74,7 @@ elif [ "$TYPE"x == "detail"x ] ; then
     kubectl get events -n ${COMPONENT_NAMESPACE} --kubeconfig ${E2E_KUBECONFIG}
 
     echo ""
-    echo "=============== rocktemplate-controller describe ============== "
+    echo "=============== egressgateway-controller describe ============== "
     for POD in $CONTROLLER_POD_LIST ; do
       echo ""
       echo "--------- kubectl describe pod ${POD} -n ${COMPONENT_NAMESPACE}"
@@ -82,7 +82,7 @@ elif [ "$TYPE"x == "detail"x ] ; then
     done
 
     echo ""
-    echo "=============== rocktemplate-agent describe ============== "
+    echo "=============== egressgateway-agent describe ============== "
     for POD in $AGENT_POD_LIST ; do
       echo ""
       echo "---------kubectl describe pod ${POD} -n ${COMPONENT_NAMESPACE} "
@@ -90,7 +90,7 @@ elif [ "$TYPE"x == "detail"x ] ; then
     done
 
     echo ""
-    echo "=============== rocktemplate-controller logs ============== "
+    echo "=============== egressgateway-controller logs ============== "
     for POD in $CONTROLLER_POD_LIST ; do
       echo ""
       echo "---------kubectl logs ${POD} -n ${COMPONENT_NAMESPACE}"
@@ -100,7 +100,7 @@ elif [ "$TYPE"x == "detail"x ] ; then
     done
 
     echo ""
-    echo "=============== rocktemplate-agent logs ============== "
+    echo "=============== egressgateway-agent logs ============== "
     for POD in $AGENT_POD_LIST ; do
       echo ""
       echo "--------- kubectl logs ${POD} -n ${COMPONENT_NAMESPACE} "
@@ -115,7 +115,7 @@ elif [ "$TYPE"x == "detail"x ] ; then
 
     echo ""
     echo "=============== node log  ============== "
-    KIND_CLUSTER_NAME=${KIND_CLUSTER_NAME:-"rocktemplate"}
+    KIND_CLUSTER_NAME=${KIND_CLUSTER_NAME:-"egressgateway"}
     KIND_NODES=$(  kind get  nodes --name ${KIND_CLUSTER_NAME} )
     [ -z "$KIND_NODES" ] && echo "warning, failed to find nodes of kind cluster $KIND_CLUSTER_NAME " || true
     for NODE in $KIND_NODES ; do
