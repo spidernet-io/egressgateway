@@ -184,6 +184,7 @@ elif [ "$TYPE"x == "error"x ] ; then
         fi
 
         echo ""
+        echo "----- check process number in ${COMPONENT_NAMESPACE}/${POD}"
         PROCESS_NUM=` kubectl exec ${POD} -n ${COMPONENT_NAMESPACE} --kubeconfig ${E2E_KUBECONFIG} -- ps aux | wc -l `
         if [ -z "$PROCESS_NUM" ] ; then
             echo "warning, failed to find process in ${COMPONENT_NAMESPACE}/${POD} "
