@@ -19,6 +19,7 @@ echo "$CURRENT_FILENAME : E2E_KUBECONFIG $E2E_KUBECONFIG "
 # ====modify====
 COMPONENT_NAMESPACE="kube-system"
 COMPONENT_GOROUTINE_MAX=300
+COMPONENT_PS_PROCESS_MAX=50
 CONTROLLER_LABEL="app.kubernetes.io/component=egressgateway-controller"
 AGENT_LABEL="app.kubernetes.io/component=egressgateway-agent"
 
@@ -179,6 +180,15 @@ elif [ "$TYPE"x == "error"x ] ; then
             echo "warning, failed to find RESTARTS in ${COMPONENT_NAMESPACE}/${POD} "
         elif (( RESTARTS != 0 )) ; then
              echo "found pod restart event"
+             RESUTL_CODE=1
+        fi
+
+        echo ""
+        PROCESS_NUM=` kubectl exec ${POD} -n ${COMPONENT_NAMESPACE} --kubeconfig ${E2E_KUBECONFIG} -- ps aux | wc -l `
+        if [ -z "$PROCESS_NUM" ] ; then
+            echo "warning, failed to find process in ${COMPONENT_NAMESPACE}/${POD} "
+        elif (( PROCESS_NUM >= COMPONENT_PS_PROCESS_MAX )) ; then
+             echo "error, found ${PROCESS_NUM} process more than default $COMPONENT_PS_PROCESS_MAX "
              RESUTL_CODE=1
         fi
 
