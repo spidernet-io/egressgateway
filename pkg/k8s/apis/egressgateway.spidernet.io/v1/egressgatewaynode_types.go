@@ -39,7 +39,7 @@ type InterfaceStatus struct {
 }
 
 // scope(Namespaced or Cluster)
-// +kubebuilder:resource:categories={egressgatewaynode},path="egressgatewaynodess",singular="egressgatewaynode",scope="Cluster",shortName={en}
+// +kubebuilder:resource:categories={egressgatewaynode},path="egressgatewaynodes",singular="egressgatewaynode",scope="Cluster",shortName={egn}
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
 // +genclient
@@ -55,7 +55,7 @@ type EgressGatewayNode struct {
 
 // +kubebuilder:object:root=true
 
-// SpiderIPPoolList contains a list of SpiderIPPool
+// EgressGatewayNodeList contains a list of SpiderIPPool
 type EgressGatewayNodeList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata"`

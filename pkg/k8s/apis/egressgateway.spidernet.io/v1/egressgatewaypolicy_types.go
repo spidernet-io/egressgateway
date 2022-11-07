@@ -13,7 +13,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-type EgressGatewayRuleSpec struct {
+type EgressGatewayPolicySpec struct {
 
 	// +kubebuilder:validation:Required
 	AppliedTo AppliedTo `json:"appliedTo"`
@@ -31,7 +31,7 @@ type AppliedTo struct {
 	PodSelector *metav1.LabelSelector `json:"podSelector,omitempty"`
 
 	// +kubebuilder:validation:Optional
-	PodSubnet *[]string `json:"PodSubnet,omitempty"`
+	PodSubnet *[]string `json:"podSubnet,omitempty"`
 }
 
 type GatewayNodeConfig struct {
@@ -45,53 +45,38 @@ type GatewayNodeConfig struct {
 	Interface string `json:"interface"`
 }
 
-type EgressGatewayRuleStatus struct {
-	// +kubebuilder:validation:Optional
-	GatewayNodeList map[string]GatewayNodeStatus `json:"gatewayNodeList,omitempty"`
-
-	// +kubebuilder:validation:Optional
-	EgressIPv4IP string `json:"egressIPv4Ip,omitempty"`
-
-	// +kubebuilder:validation:Optional
-	EgressIPv6IP string `json:"egressIPv6Ip,omitempty"`
-
-	// +kubebuilder:validation:Maximum=4095
-	// +kubebuilder:validation:Minimum=0
-	// +kubebuilder:validation:Optional
-	Priority *int64 `json:"priority,omitempty"`
-}
-
 type GatewayNodeStatus struct {
 	// +kubebuilder:validation:Required
-	// +kubebuilder:validation:Enum="active";"standby"
+	// +kubebuilder:validation:Enum="Ready";"NotReady";"Unknown"
 	Status string `json:"status"`
+	// +kubebuilder:validation:Optional
+	Active bool `json:"active"`
 }
 
 // scope(Namespaced or Cluster)
-// +kubebuilder:resource:categories={egressgatewayrule},path="egressgatewayrules",singular="egressgatewayrule",scope="Cluster",shortName={er}
+// +kubebuilder:resource:categories={egressgatewaypolicy},path="egressgatewaypolicies",singular="egressgatewaypolicy",scope="Cluster",shortName={epo}
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
 // +genclient
 // +genclient:nonNamespaced
 
-type EgressGatewayRule struct {
+type EgressGatewayPolicy struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata"`
 
-	Spec   EgressGatewayRuleSpec   `json:"spec,omitempty"`
-	Status EgressGatewayRuleStatus `json:"status,omitempty"`
+	Spec EgressGatewayPolicySpec `json:"spec,omitempty"`
 }
 
 // +kubebuilder:object:root=true
 
-// SpiderIPPoolList contains a list of SpiderIPPool
-type EgressGatewayRuleList struct {
+// EgressGatewayPolicyList contains a list of SpiderIPPool
+type EgressGatewayPolicyList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata"`
 
-	Items []EgressGatewayRule `json:"items"`
+	Items []EgressGatewayPolicy `json:"items"`
 }
 
 func init() {
-	SchemeBuilder.Register(&EgressGatewayRule{}, &EgressGatewayRuleList{})
+	SchemeBuilder.Register(&EgressGatewayPolicy{}, &EgressGatewayPolicyList{})
 }

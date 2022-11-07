@@ -19,12 +19,12 @@ func (c *FakeEgressgatewayV1) EgressGatewayNodes() v1.EgressGatewayNodeInterface
 	return &FakeEgressGatewayNodes{c}
 }
 
-func (c *FakeEgressgatewayV1) EgressGatewayRules() v1.EgressGatewayRuleInterface {
-	return &FakeEgressGatewayRules{c}
+func (c *FakeEgressgatewayV1) EgressGatewayPolicies() v1.EgressGatewayPolicyInterface {
+	return &FakeEgressGatewayPolicies{c}
 }
 
-func (c *FakeEgressgatewayV1) Nodes() v1.NodeInterface {
-	return &FakeNodes{c}
+func (c *FakeEgressgatewayV1) EgressNodes() v1.EgressNodeInterface {
+	return &FakeEgressNodes{c}
 }
 
 // RESTClient returns a RESTClient that is used to communicate
