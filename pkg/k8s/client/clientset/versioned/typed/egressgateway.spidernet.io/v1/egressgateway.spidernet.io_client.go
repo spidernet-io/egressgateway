@@ -16,8 +16,8 @@ import (
 type EgressgatewayV1Interface interface {
 	RESTClient() rest.Interface
 	EgressGatewayNodesGetter
-	EgressGatewayRulesGetter
-	NodesGetter
+	EgressGatewayPoliciesGetter
+	EgressNodesGetter
 }
 
 // EgressgatewayV1Client is used to interact with features provided by the egressgateway.spidernet.io group.
@@ -29,12 +29,12 @@ func (c *EgressgatewayV1Client) EgressGatewayNodes() EgressGatewayNodeInterface 
 	return newEgressGatewayNodes(c)
 }
 
-func (c *EgressgatewayV1Client) EgressGatewayRules() EgressGatewayRuleInterface {
-	return newEgressGatewayRules(c)
+func (c *EgressgatewayV1Client) EgressGatewayPolicies() EgressGatewayPolicyInterface {
+	return newEgressGatewayPolicies(c)
 }
 
-func (c *EgressgatewayV1Client) Nodes() NodeInterface {
-	return newNodes(c)
+func (c *EgressgatewayV1Client) EgressNodes() EgressNodeInterface {
+	return newEgressNodes(c)
 }
 
 // NewForConfig creates a new EgressgatewayV1Client for the given config.

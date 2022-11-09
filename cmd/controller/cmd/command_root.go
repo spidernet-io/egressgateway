@@ -33,7 +33,7 @@ var rootCmd = &cobra.Command{
 
 		defer func() {
 			if e := recover(); nil != e {
-				rootLogger.Sugar().Errorf("Panic details: %v", e)
+				rootLogger.Sugar().Errorf("expected panic: %v", e)
 				debug.PrintStack()
 				os.Exit(1)
 			}

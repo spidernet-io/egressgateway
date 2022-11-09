@@ -13,10 +13,10 @@ import (
 type Interface interface {
 	// EgressGatewayNodes returns a EgressGatewayNodeInformer.
 	EgressGatewayNodes() EgressGatewayNodeInformer
-	// EgressGatewayRules returns a EgressGatewayRuleInformer.
-	EgressGatewayRules() EgressGatewayRuleInformer
-	// Nodes returns a NodeInformer.
-	Nodes() NodeInformer
+	// EgressGatewayPolicies returns a EgressGatewayPolicyInformer.
+	EgressGatewayPolicies() EgressGatewayPolicyInformer
+	// EgressNodes returns a EgressNodeInformer.
+	EgressNodes() EgressNodeInformer
 }
 
 type version struct {
@@ -35,12 +35,12 @@ func (v *version) EgressGatewayNodes() EgressGatewayNodeInformer {
 	return &egressGatewayNodeInformer{factory: v.factory, tweakListOptions: v.tweakListOptions}
 }
 
-// EgressGatewayRules returns a EgressGatewayRuleInformer.
-func (v *version) EgressGatewayRules() EgressGatewayRuleInformer {
-	return &egressGatewayRuleInformer{factory: v.factory, tweakListOptions: v.tweakListOptions}
+// EgressGatewayPolicies returns a EgressGatewayPolicyInformer.
+func (v *version) EgressGatewayPolicies() EgressGatewayPolicyInformer {
+	return &egressGatewayPolicyInformer{factory: v.factory, tweakListOptions: v.tweakListOptions}
 }
 
-// Nodes returns a NodeInformer.
-func (v *version) Nodes() NodeInformer {
-	return &nodeInformer{factory: v.factory, tweakListOptions: v.tweakListOptions}
+// EgressNodes returns a EgressNodeInformer.
+func (v *version) EgressNodes() EgressNodeInformer {
+	return &egressNodeInformer{factory: v.factory, tweakListOptions: v.tweakListOptions}
 }

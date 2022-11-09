@@ -42,10 +42,10 @@ func (f *sharedInformerFactory) ForResource(resource schema.GroupVersionResource
 	// Group=egressgateway.spidernet.io, Version=v1
 	case v1.SchemeGroupVersion.WithResource("egressgatewaynodes"):
 		return &genericInformer{resource: resource.GroupResource(), informer: f.Egressgateway().V1().EgressGatewayNodes().Informer()}, nil
-	case v1.SchemeGroupVersion.WithResource("egressgatewayrules"):
-		return &genericInformer{resource: resource.GroupResource(), informer: f.Egressgateway().V1().EgressGatewayRules().Informer()}, nil
-	case v1.SchemeGroupVersion.WithResource("nodes"):
-		return &genericInformer{resource: resource.GroupResource(), informer: f.Egressgateway().V1().Nodes().Informer()}, nil
+	case v1.SchemeGroupVersion.WithResource("egressgatewaypolicies"):
+		return &genericInformer{resource: resource.GroupResource(), informer: f.Egressgateway().V1().EgressGatewayPolicies().Informer()}, nil
+	case v1.SchemeGroupVersion.WithResource("egressnodes"):
+		return &genericInformer{resource: resource.GroupResource(), informer: f.Egressgateway().V1().EgressNodes().Informer()}, nil
 
 	}
 

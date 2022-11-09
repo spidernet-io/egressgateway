@@ -7,6 +7,6 @@ package v1
 
 type EgressGatewayNodeExpansion interface{}
 
-type EgressGatewayRuleExpansion interface{}
+type EgressGatewayPolicyExpansion interface{}
 
-type NodeExpansion interface{}
+type EgressNodeExpansion interface{}
