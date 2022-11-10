@@ -290,6 +290,9 @@ github.com/petermattis/goid
 # github.com/pkg/errors v0.9.1
 ## explicit
 github.com/pkg/errors
+# github.com/pmezard/go-difflib v1.0.0
+## explicit
+github.com/pmezard/go-difflib/difflib
 # github.com/prometheus/client_golang v1.13.1
 ## explicit; go 1.17
 github.com/prometheus/client_golang/prometheus
@@ -358,6 +361,9 @@ github.com/spf13/viper/internal/encoding/yaml
 ## explicit; go 1.17
 github.com/spidernet-io/e2eframework/framework
 github.com/spidernet-io/e2eframework/tools
+# github.com/stretchr/testify v1.8.1
+## explicit; go 1.13
+github.com/stretchr/testify/assert
 # github.com/subosito/gotenv v1.4.1
 ## explicit; go 1.18
 github.com/subosito/gotenv
@@ -881,6 +887,7 @@ k8s.io/kube-openapi/pkg/validation/spec
 k8s.io/utils/buffer
 k8s.io/utils/clock
 k8s.io/utils/clock/testing
+k8s.io/utils/exec
 k8s.io/utils/integer
 k8s.io/utils/internal/third_party/forked/golang/net
 k8s.io/utils/net

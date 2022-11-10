@@ -90,8 +90,6 @@ spec:
           imagePullPolicy: {{ .Values.egressgatewayAgent.image.pullPolicy }}
           command:
             - {{ .Values.egressgatewayAgent.cmdBinName }}
-          args:
-            - --config-path=/tmp/config-map/conf.yml
           {{- with .Values.egressgatewayAgent.extraArgs }}
           {{- toYaml . | trim | nindent 8 }}
           {{- end }}
@@ -104,7 +102,7 @@ spec:
           {{- if semverCompare ">=1.20-0" .Capabilities.KubeVersion.Version }}
           startupProbe:
             httpGet:
-              path: /v1/healthy/startup
+              path: /readyz
               port: {{ .Values.egressgatewayAgent.healthServer.port }}
               scheme: HTTP
             failureThreshold: {{ .Values.egressgatewayAgent.healthServer.startupProbe.failureThreshold }}
@@ -113,7 +111,7 @@ spec:
           {{- end }}
           livenessProbe:
             httpGet:
-              path: /v1/healthy/liveness
+              path: /healthz
               port: {{ .Values.egressgatewayAgent.healthServer.port }}
               scheme: HTTP
             initialDelaySeconds: 60
@@ -123,7 +121,7 @@ spec:
             timeoutSeconds: 5
           readinessProbe:
             httpGet:
-              path: /v1/healthy/readiness
+              path: /readyz
               port: {{ .Values.egressgatewayAgent.healthServer.port }}
               scheme: HTTP
             initialDelaySeconds: 5
@@ -136,21 +134,23 @@ spec:
           {{- toYaml . | trim | nindent 12 }}
           {{- end }}
           env:
-            - name: ENV_LOG_LEVEL
+            - name: LOG_LEVEL
               value: {{ .Values.egressgatewayAgent.debug.logLevel | quote }}
-            - name: ENV_ENABLED_METRIC
-              value: {{ .Values.egressgatewayAgent.prometheus.enabled | quote }}
-            - name: ENV_METRIC_HTTP_PORT
-              value: {{ .Values.egressgatewayAgent.prometheus.port | quote }}
-            - name: ENV_HTTP_PORT
-              value: {{ .Values.egressgatewayAgent.healthServer.port | quote }}
-            - name: ENV_GOPS_LISTEN_PORT
+            {{ if .Values.egressgatewayAgent.prometheus.enabled }}
+            - name: METRICS_BIND_ADDRESS
+              value: :{{ .Values.egressgatewayAgent.prometheus.port }}
+            {{ end }}
+            - name: HEALTH_PROBE_BIND_ADDRESS
+              value: :{{ .Values.egressgatewayAgent.healthServer.port }}
+            - name: GOPS_LISTEN_PORT
               value: {{ .Values.egressgatewayAgent.debug.gopsPort | quote }}
-            - name: ENV_POD_NAME
+            - name: CONFIGMAP_PATH
+              value: "/tmp/config-map/conf.yml"
+            - name: POD_NAME
               valueFrom:
                 fieldRef:
                   fieldPath: metadata.name
-            - name: ENV_POD_NAMESPACE
+            - name: POD_NAMESPACE
               valueFrom:
                 fieldRef:
                   fieldPath: metadata.namespace

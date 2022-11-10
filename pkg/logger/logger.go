@@ -5,10 +5,11 @@ package logger
 
 import (
 	"fmt"
-	"go.uber.org/zap"
-	"go.uber.org/zap/zapcore"
 	"os"
 	"strings"
+
+	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
 )
 
 func NewStdoutLogger(loglevel string) *zap.Logger {
