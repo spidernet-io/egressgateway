@@ -488,7 +488,7 @@ jobs:
   creat_issue:
     runs-on: ubuntu-latest
     needs: [e2e_against_commit]
-    if: ${{ always() && needs.e2e_against_commit.result == 'failure' }}
+    if: ${{ always() && needs.e2e_against_commit.result == 'failure' && github.event_name == 'schedule' }}
     steps:
       - name: echo
         run: |
