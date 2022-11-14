@@ -12,8 +12,8 @@ require (
 	github.com/go-swagger/go-swagger v0.30.3
 	github.com/google/gops v0.3.25
 	github.com/jessevdk/go-flags v1.5.0
-	github.com/onsi/ginkgo/v2 v2.4.0
-	github.com/onsi/gomega v1.23.0
+	github.com/onsi/ginkgo/v2 v2.5.0
+	github.com/onsi/gomega v1.24.1
 	github.com/prometheus/client_golang v1.13.1
 	github.com/pyroscope-io/client v0.4.0
 	github.com/sasha-s/go-deadlock v0.3.1
@@ -26,7 +26,7 @@ require (
 	go.opentelemetry.io/otel/sdk v1.11.1
 	go.opentelemetry.io/otel/sdk/metric v0.33.0
 	go.uber.org/zap v1.23.0
-	golang.org/x/net v0.1.0
+	golang.org/x/net v0.2.0
 	gopkg.in/yaml.v3 v3.0.1
 	k8s.io/apimachinery v0.25.3
 	k8s.io/client-go v0.25.0
@@ -112,8 +112,8 @@ require (
 	golang.org/x/crypto v0.1.0 // indirect
 	golang.org/x/mod v0.6.0 // indirect
 	golang.org/x/oauth2 v0.0.0-20221014153046-6fdb5e3db783 // indirect
-	golang.org/x/sys v0.1.0 // indirect
-	golang.org/x/term v0.1.0 // indirect
+	golang.org/x/sys v0.2.0 // indirect
+	golang.org/x/term v0.2.0 // indirect
 	golang.org/x/text v0.4.0 // indirect
 	golang.org/x/time v0.0.0-20220609170525-579cf78fd858 // indirect
 	golang.org/x/tools v0.2.0 // indirect
