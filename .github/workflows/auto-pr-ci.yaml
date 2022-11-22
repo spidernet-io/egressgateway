@@ -137,7 +137,7 @@ jobs:
               # do it in another workflow
               echo "RUN_UNITEST_ENABLED=false" >> $GITHUB_ENV
           else
-            echo "uknown event"
+            echo "unknown event"
             exit 1
           fi
 
