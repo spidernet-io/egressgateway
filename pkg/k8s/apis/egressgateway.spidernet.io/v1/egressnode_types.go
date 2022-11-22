@@ -34,7 +34,7 @@ type EgressNodeStatus struct {
 }
 
 // scope(Namespaced or Cluster)
-// +kubebuilder:resource:categories={egressnode},path="egressnode",singular="egressnode",scope="Cluster"
+// +kubebuilder:resource:categories={egressnode},path="egressnodes",singular="egressnode",scope="Cluster"
 // +kubebuilder:printcolumn:JSONPath=".status.VxlanIPv4IP",description="tunnelIPv4",name="tunnelIPv4",type=string
 // +kubebuilder:printcolumn:JSONPath=".status.VxlanIPv6IP",description="tunnelIPv6",name="tunnelIPv6",type=string
 // +kubebuilder:object:root=true

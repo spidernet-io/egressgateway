@@ -273,13 +273,13 @@ lint_golang_lock:
 # should label for each test file
 .PHONY: lint_test_label
 lint_test_label:
-	@ALL_TEST_FILE=` find  ./  -name "*_test.go" -not -path "./vendor/*" ` ; FAIL="false" ; \
+	@ALL_TEST_FILE=`find . -name "*_test.go" -not -path "./vendor/*"`; FAIL="false"; \
 		for ITEM in $$ALL_TEST_FILE ; do \
 			[[ "$$ITEM" == *_suite_test.go ]] && continue  ; \
-			! grep 'Label(' $${ITEM} &>/dev/null && FAIL="true" && echo "error, miss Label in $${ITEM}" ; \
+			grep 'gomega' $${ITEM} &>/dev/null && ! grep 'Label(' $${ITEM} &>/dev/null && FAIL="true" && echo "error, miss Label in $${ITEM}" ; \
 		done ; \
 		[ "$$FAIL" == "true" ] && echo "error, label check fail" && exit 1 ; \
-		echo "each test go file is labeled right"
+		echo "Each test go file is labeled right"
 
 
 .PHONY: lint_yaml

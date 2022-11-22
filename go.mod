@@ -12,6 +12,7 @@ require (
 	github.com/go-swagger/go-swagger v0.30.3
 	github.com/google/gops v0.3.25
 	github.com/jessevdk/go-flags v1.5.0
+	github.com/mitchellh/mapstructure v1.5.0
 	github.com/onsi/ginkgo/v2 v2.4.0
 	github.com/onsi/gomega v1.23.0
 	github.com/prometheus/client_golang v1.13.1
@@ -20,17 +21,18 @@ require (
 	github.com/spf13/cobra v1.6.1
 	github.com/spf13/viper v1.14.0
 	github.com/spidernet-io/e2eframework v0.0.0-20221012075947-0a835b3d4cf9
-	go.opentelemetry.io/otel v1.11.1
+	github.com/stretchr/testify v1.8.1
 	go.opentelemetry.io/otel/exporters/prometheus v0.33.0
 	go.opentelemetry.io/otel/metric v0.33.0
-	go.opentelemetry.io/otel/sdk v1.11.1
 	go.opentelemetry.io/otel/sdk/metric v0.33.0
 	go.uber.org/zap v1.23.0
 	golang.org/x/net v0.1.0
 	gopkg.in/yaml.v3 v3.0.1
+	k8s.io/api v0.25.0
 	k8s.io/apimachinery v0.25.3
 	k8s.io/client-go v0.25.0
 	k8s.io/code-generator v0.25.3
+	k8s.io/utils v0.0.0-20220728103510-ee6ede2d64ed
 	sigs.k8s.io/controller-runtime v0.13.1
 	sigs.k8s.io/controller-tools v0.10.0
 )
@@ -82,7 +84,6 @@ require (
 	github.com/mattn/go-isatty v0.0.14 // indirect
 	github.com/matttproud/golang_protobuf_extensions v1.0.2 // indirect
 	github.com/mitchellh/copystructure v1.2.0 // indirect
-	github.com/mitchellh/mapstructure v1.5.0 // indirect
 	github.com/mitchellh/reflectwalk v1.0.2 // indirect
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.2 // indirect
@@ -94,6 +95,7 @@ require (
 	github.com/pelletier/go-toml/v2 v2.0.5 // indirect
 	github.com/petermattis/goid v0.0.0-20180202154549-b0b1615b78e5 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
+	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/prometheus/client_model v0.3.0 // indirect
 	github.com/prometheus/common v0.37.0 // indirect
 	github.com/prometheus/procfs v0.8.0 // indirect
@@ -106,6 +108,8 @@ require (
 	github.com/subosito/gotenv v1.4.1 // indirect
 	github.com/toqueteos/webbrowser v1.2.0 // indirect
 	go.mongodb.org/mongo-driver v1.10.1 // indirect
+	go.opentelemetry.io/otel v1.11.1 // indirect
+	go.opentelemetry.io/otel/sdk v1.11.1 // indirect
 	go.opentelemetry.io/otel/trace v1.11.1 // indirect
 	go.uber.org/atomic v1.9.0 // indirect
 	go.uber.org/multierr v1.8.0 // indirect
@@ -123,13 +127,11 @@ require (
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
-	k8s.io/api v0.25.0 // indirect
 	k8s.io/apiextensions-apiserver v0.25.0 // indirect
 	k8s.io/component-base v0.25.0 // indirect
 	k8s.io/gengo v0.0.0-20211129171323-c02415ce4185 // indirect
 	k8s.io/klog/v2 v2.70.1 // indirect
 	k8s.io/kube-openapi v0.0.0-20220803162953-67bda5d908f1 // indirect
-	k8s.io/utils v0.0.0-20220728103510-ee6ede2d64ed // indirect
 	sigs.k8s.io/json v0.0.0-20220713155537-f223a00ba0e2 // indirect
 	sigs.k8s.io/structured-merge-diff/v4 v4.2.3 // indirect
 	sigs.k8s.io/yaml v1.3.0 // indirect

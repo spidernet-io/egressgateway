@@ -71,30 +71,25 @@ spec:
           imagePullPolicy: {{ .Values.egressgatewayController.image.pullPolicy }}
           command:
             - {{ .Values.egressgatewayController.cmdBinName }}
-          args:
-            - --config-path=/tmp/config-map/conf.yml
-            - --tls-ca-cert=/etc/tls/ca.crt
-            - --tls-server-cert=/etc/tls/tls.crt
-            - --tls-server-key=/etc/tls/tls.key
           {{- with .Values.egressgatewayController.extraArgs }}
           {{- toYaml . | trim | nindent 8 }}
           {{- end }}
           ports:
           {{- if .Values.egressgatewayController.prometheus.enabled }}
-          - name: metrics
-            containerPort: {{ .Values.egressgatewayController.prometheus.port }}
-            protocol: TCP
+            - name: metrics
+              containerPort: {{ .Values.egressgatewayController.prometheus.port }}
+              protocol: TCP
           {{- end }}
-          - name: http
-            containerPort: {{ .Values.egressgatewayController.healthServer.port }}
-            protocol: TCP
-          - name: webhook
-            containerPort: {{ .Values.egressgatewayController.webhookPort }}
-            protocol: TCP
+            - name: http
+              containerPort: {{ .Values.egressgatewayController.healthServer.port }}
+              protocol: TCP
+            - name: webhook
+              containerPort: {{ .Values.egressgatewayController.webhookPort }}
+              protocol: TCP
           {{- if semverCompare ">=1.20-0" .Capabilities.KubeVersion.Version }}
           startupProbe:
             httpGet:
-              path: /v1/healthy/startup
+              path: /readyz
               port: {{ .Values.egressgatewayController.healthServer.port }}
               scheme: HTTP
             failureThreshold: {{ .Values.egressgatewayController.healthServer.startupProbe.failureThreshold }}
@@ -103,7 +98,7 @@ spec:
           {{- end }}
           livenessProbe:
             httpGet:
-              path: /v1/healthy/liveness
+              path: /healthz
               port: {{ .Values.egressgatewayController.healthServer.port }}
               scheme: HTTP
             initialDelaySeconds: 60
@@ -113,7 +108,7 @@ spec:
             timeoutSeconds: 5
           readinessProbe:
             httpGet:
-              path: /v1/healthy/readiness
+              path: /readyz
               port: {{ .Values.egressgatewayController.healthServer.port }}
               scheme: HTTP
             initialDelaySeconds: 5
@@ -126,23 +121,25 @@ spec:
           {{- toYaml . | trim | nindent 12 }}
           {{- end }}
           env:
-            - name: ENV_LOG_LEVEL
+            - name: LOG_LEVEL
               value: {{ .Values.egressgatewayController.debug.logLevel | quote }}
-            - name: ENV_ENABLED_METRIC
-              value: {{ .Values.egressgatewayController.prometheus.enabled | quote }}
-            - name: ENV_METRIC_HTTP_PORT
-              value: {{ .Values.egressgatewayController.prometheus.port | quote }}
-            - name: ENV_GOPS_LISTEN_PORT
+            {{ if .Values.egressgatewayController.prometheus.enabled }}
+            - name: METRICS_BIND_ADDRESS
+              value: :{{ .Values.egressgatewayController.prometheus.port }}
+            {{ end }}
+            - name: GOPS_LISTEN_PORT
               value: {{ .Values.egressgatewayController.debug.gopsPort | quote }}
-            - name: ENV_WEBHOOK_PORT
+            - name: WEBHOOK_PORT
               value: {{ .Values.egressgatewayController.webhookPort | quote }}
-            - name: ENV_HTTP_PORT
-              value: {{ .Values.egressgatewayController.healthServer.port | quote }}
-            - name: ENV_POD_NAME
+            - name: HEALTH_PROBE_BIND_ADDRESS
+              value: :{{ .Values.egressgatewayController.healthServer.port }}
+            - name: CONFIGMAP_PATH
+              value: "/tmp/config-map/conf.yml"
+            - name: POD_NAME
               valueFrom:
                 fieldRef:
                   fieldPath: metadata.name
-            - name: ENV_POD_NAMESPACE
+            - name: POD_NAMESPACE
               valueFrom:
                 fieldRef:
                   fieldPath: metadata.namespace
