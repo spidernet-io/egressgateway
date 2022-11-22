@@ -1,0 +1,179 @@
+name: Call E2E
+
+env:
+  E2E_LOG_PATH: test/runtime/e2edebugLog.txt
+  E2E_GINKGO_REPORT_PATH: test/runtime/ginkgoreport.json
+  PERFORMANCE_SCRIPT: test/scripts/getPerformanceData.sh
+  # ====modify====
+  PERFORMANCE_BADGE_ID:
+  PERFORMANCE_BADGE_FILENAME:
+
+permissions: write-all
+
+on:
+  workflow_call:
+    inputs:
+      ref:
+        required: true
+        type: string
+      ipfamily:
+        required: true
+        type: string
+      e2e_labels:
+        required: false
+        type: string
+
+
+jobs:
+  e2e_against_commit:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Prepare
+        id: prepare
+        run: |
+          echo "ref: ${{ inputs.ref }} "
+          echo "e2e_labels: ${{ inputs.e2e_labels }}"
+          #========
+          if ${{ inputs.ipfamily == 'ipv4' }} ; then
+              echo "test ipv4"          
+          elif ${{ inputs.ipfamily == 'ipv6' }} ; then
+              echo "test ipv6"          
+          elif ${{ inputs.ipfamily == 'dual' }} ; then
+              echo "test dual stack"          
+          else
+              echo "unknown ipfamily ${{ inputs.ipfamily }} "
+              exit
+          fi
+          echo "===== image "
+          echo "ci image tag: ${{ inputs.ref }}"
+          TMP=` date +%m%d%H%M%S `
+          E2E_CLUSTER_NAME="project${TMP}"
+          echo "RUN_KIND_CLUSTER_NAME=${E2E_CLUSTER_NAME}" >> $GITHUB_ENV
+
+      - name: Checkout Code
+        uses: actions/checkout@v3
+        with:
+          persist-credentials: false
+          ref: ${{ inputs.ref }}
+
+      - name: Setup Golang
+        uses: actions/setup-go@v3
+        with:
+          go-version: 1.19.0
+          id: go
+
+      # https://github.com/helm/kind-action
+      - name: Install Kind Bin
+        uses: helm/kind-action@v1.4.0
+        with:
+          install_only: true
+
+      # download all artifact
+      # https://github.com/actions/download-artifact#download-all-artifacts
+      - name: Download images
+        uses: actions/download-artifact@v3.0.1
+        with:
+          path: output/artifact-${{ inputs.ipfamily }}
+
+      - name: Load And Scan Images
+        run: |
+          PROJECT_DIR=`pwd`
+          cd output/artifact-${{ inputs.ipfamily }}
+          ls
+          ALL_DIR=`ls`
+          IMAGE_DIR=""
+          for ITEM in $ALL_DIR ; do
+              grep -E "^image-tar" <<< "${ITEM}" &>/dev/null && IMAGE_DIR+=" ${ITEM} "
+          done
+          echo "IMAGE_DIR=${IMAGE_DIR}"
+          for ITEM in $IMAGE_DIR ; do
+              TAR_FILES=`ls ${ITEM}`
+              ls -l ${ITEM}
+              for TAR in $TAR_FILES ; do
+                echo "image tar ${ITEM}/${TAR}"
+                cat ${ITEM}/${TAR} |  docker import - ${TAR%*.tar}:${{ inputs.ref }}
+              done
+          done
+          docker images
+
+      # test against commit version
+      - name: Setup Kind Cluster
+        uses: nick-invision/retry@v2
+        with:
+          timeout_minutes: 10
+          max_attempts: 3
+          shell: bash
+          command: |
+            make e2e_init -e E2E_KIND_CLUSTER_NAME=${{ env.RUN_KIND_CLUSTER_NAME }} \
+                -e PROJECT_IMAGE_VERSION=${{ inputs.ref }} \
+                -e E2E_IP_FAMILY=${{ inputs.ipfamily }} \
+                -e PYROSCOPE_LOCAL_PORT=''
+
+      - name: Run e2e Test
+        continue-on-error: true
+        run: |
+          echo ${{ github.event.inputs.labels }}
+          RESULT=0
+          make e2e_run -e E2E_KIND_CLUSTER_NAME=${{ env.RUN_KIND_CLUSTER_NAME }}  \
+              -e E2E_GINKGO_LABELS=${{ inputs.e2e_labels }} \
+              -e E2E_IP_FAMILY=${{ inputs.ipfamily }} || RESULT=1
+          if ((RESULT==0)) ; then
+              echo "RUN_PASS=true" >> $GITHUB_ENV
+          else
+              echo "RUN_PASS=false" >> $GITHUB_ENV
+          fi
+          if [ -f "${{ env.E2E_LOG_PATH }}" ] ; then
+              echo "RUN_UPLOAD_LOG=true" >> $GITHUB_ENV
+          else
+              echo "RUN_UPLOAD_LOG=false" >> $GITHUB_ENV
+          fi
+          if [ -f "${{ env.E2E_GINKGO_REPORT_PATH }}" ] ; then
+              echo "RUN_UPLOAD_E2E_REPORT=true" >> $GITHUB_ENV
+          else
+              echo "RUN_UPLOAD_E2E_REPORT=false" >> $GITHUB_ENV
+          fi
+
+      - name: Upload e2e cluster log
+        uses: actions/upload-artifact@v3.1.1
+        with:
+          name: ${{ inputs.ipfamily }}-debuglog.txt
+          path: ${{ env.E2E_LOG_PATH }}
+          retention-days: 30
+
+      - name: Upload e2e ginkgo report
+        if: ${{ env.RUN_UPLOAD_LOG == 'true' }}
+        uses: actions/upload-artifact@v3.1.1
+        with:
+          name: ${{ inputs.ipfamily }}-e2ereport.json
+          path: ${{ env.E2E_GINKGO_REPORT_PATH }}
+          retention-days: 30
+
+      - name: Show e2e Result
+        run: |
+          if ${{ env.RUN_PASS == 'true' }} ;then
+              exit 0
+          else
+              exit 1
+          fi
+
+      - name: Get the E2E Performance Result
+        # run all e2e cases
+        id: get_performance
+        if: ${{ inputs.ipfamily == 'dual' && env.PERFORMANCE_BADGE_ID != ''}}
+        shell: bash
+        run: |
+          # sudo apt-get install -y jq
+          TOOL_PATH=${{ env.PERFORMANCE_SCRIPT }}
+          TODO_STATUS=$( ${TOOL_PATH}  "${{ env.E2E_GINKGO_REPORT_PATH }}"  )
+          echo "RUN_PERFORMANCE_RESULT=${TODO_STATUS}" >> $GITHUB_ENV
+
+      - name: Update Badge
+        if: ${{ env.RUN_PERFORMANCE_RESULT != '' && inputs.ipfamily == 'dual' && env.PERFORMANCE_BADGE_ID != '' }}
+        uses: schneegans/dynamic-badges-action@v1.6.0
+        with:
+          auth: ${{ secrets.WELAN_PAT }}
+          gistID: ${{ env.PERFORMANCE_BADGE_ID }}
+          filename: ${{ env.PERFORMANCE_BADGE_FILENAME }}
+          label: performance
+          message: ${{ steps.get_performance.outputs.result }}
+          color: lightgrey
