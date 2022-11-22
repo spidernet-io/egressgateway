@@ -1,10 +1,8 @@
-name: Auto CI
+name: Auto PR CI
 
 permissions: write-all
 on:
-  schedule:
-    # each day
-    - cron: "0 20 * * *"
+  workflow_call:
   pull_request_target:
     types:
       - opened
@@ -71,31 +69,45 @@ jobs:
         id: get_ref
         run: |
           if ${{ github.event_name == 'workflow_dispatch' }} ; then
-                echo "call by self workflow_dispatch"
-                echo "RUN_TAG=${{ github.event.inputs.ref }}" >> $GITHUB_ENV
-                echo "RUN_E2E_LABEL=${{ github.event.inputs.e2e_labels }}" >> $GITHUB_ENV
-                echo "RUN_E2E_ENABLED=true" >> $GITHUB_ENV
-                echo "RUN_UNITEST_ENABLED=true" >> $GITHUB_ENV
-                if ${{ github.event.inputs.ipfamily == 'ipv4' }}; then
-                  echo "RUN_E2E_IPV4_ONLY=true" >> $GITHUB_ENV
-                  echo "RUN_E2E_IPV6_ONLY=false" >> $GITHUB_ENV
-                  echo "RUN_E2E_DUAL_STACK=false" >> $GITHUB_ENV
-                elif ${{ github.event.inputs.ipfamily == 'ipv6' }}; then
-                  echo "RUN_E2E_IPV4_ONLY=false" >> $GITHUB_ENV
-                  echo "RUN_E2E_IPV6_ONLY=true" >> $GITHUB_ENV
-                  echo "RUN_E2E_DUAL_STACK=false" >> $GITHUB_ENV
-                elif ${{ github.event.inputs.ipfamily == 'dual' }}; then
-                  echo "RUN_E2E_IPV4_ONLY=false" >> $GITHUB_ENV
-                  echo "RUN_E2E_IPV6_ONLY=false" >> $GITHUB_ENV
-                  echo "RUN_E2E_DUAL_STACK=true" >> $GITHUB_ENV
-                elif ${{ github.event.inputs.ipfamily == 'all' }}; then
-                  echo "RUN_E2E_IPV4_ONLY=true" >> $GITHUB_ENV
-                  echo "RUN_E2E_IPV6_ONLY=true" >> $GITHUB_ENV
-                  echo "RUN_E2E_DUAL_STACK=true" >> $GITHUB_ENV
-                else
-                  echo "error, unknown input ipfamily: ${{ github.event.inputs.ipfamily }} "
-                  exit 1
-                fi
+              # github could not tell workflow_dispatch and workflow_call
+              if ${{ github.event.inputs.ipfamily == '' }} ; then
+                    # workflow_call event, nightly ci, run all e2e
+                    # use main sha for ci image tag
+                    echo "trigger by workflow_call"
+                    echo "RUN_TAG=main" >> $GITHUB_ENV
+                    echo "RUN_E2E_LABEL=" >> $GITHUB_ENV
+                    echo "RUN_E2E_ENABLED=true" >> $GITHUB_ENV
+                    echo "RUN_UNITEST_ENABLED=true" >> $GITHUB_ENV
+                    echo "RUN_E2E_IPV4_ONLY=true" >> $GITHUB_ENV
+                    echo "RUN_E2E_IPV6_ONLY=true" >> $GITHUB_ENV
+                    echo "RUN_E2E_DUAL_STACK=true" >> $GITHUB_ENV
+              else
+                    echo "call by self workflow_dispatch"
+                    echo "RUN_TAG=${{ github.event.inputs.ref }}" >> $GITHUB_ENV
+                    echo "RUN_E2E_LABEL=${{ github.event.inputs.e2e_labels }}" >> $GITHUB_ENV
+                    echo "RUN_E2E_ENABLED=true" >> $GITHUB_ENV
+                    echo "RUN_UNITEST_ENABLED=true" >> $GITHUB_ENV
+                    if ${{ github.event.inputs.ipfamily == 'ipv4' }}; then
+                      echo "RUN_E2E_IPV4_ONLY=true" >> $GITHUB_ENV
+                      echo "RUN_E2E_IPV6_ONLY=false" >> $GITHUB_ENV
+                      echo "RUN_E2E_DUAL_STACK=false" >> $GITHUB_ENV
+                    elif ${{ github.event.inputs.ipfamily == 'ipv6' }}; then
+                      echo "RUN_E2E_IPV4_ONLY=false" >> $GITHUB_ENV
+                      echo "RUN_E2E_IPV6_ONLY=true" >> $GITHUB_ENV
+                      echo "RUN_E2E_DUAL_STACK=false" >> $GITHUB_ENV
+                    elif ${{ github.event.inputs.ipfamily == 'dual' }}; then
+                      echo "RUN_E2E_IPV4_ONLY=false" >> $GITHUB_ENV
+                      echo "RUN_E2E_IPV6_ONLY=false" >> $GITHUB_ENV
+                      echo "RUN_E2E_DUAL_STACK=true" >> $GITHUB_ENV
+                    elif ${{ github.event.inputs.ipfamily == 'all' }}; then
+                      echo "RUN_E2E_IPV4_ONLY=true" >> $GITHUB_ENV
+                      echo "RUN_E2E_IPV6_ONLY=true" >> $GITHUB_ENV
+                      echo "RUN_E2E_DUAL_STACK=true" >> $GITHUB_ENV
+                    else
+                      echo "error, unknown input ipfamily: ${{ github.event.inputs.ipfamily }} "
+                      exit 1
+                    fi
+              fi
           elif ${{ github.event_name == 'push' }} ; then
               echo "trigger by push"
               echo "RUN_TAG=${{ github.sha }}" >> $GITHUB_ENV
@@ -117,24 +129,16 @@ jobs:
                   echo "RUN_E2E_DUAL_STACK=true" >> $GITHUB_ENV
               else
                   echo "RUN_E2E_LABEL=smoke" >> $GITHUB_ENV
-                  echo "RUN_E2E_IPV4_ONLY=false" >> $GITHUB_ENV
-                  echo "RUN_E2E_IPV6_ONLY=false" >> $GITHUB_ENV
+                  echo "RUN_E2E_IPV4_ONLY=true" >> $GITHUB_ENV
+                  echo "RUN_E2E_IPV6_ONLY=true" >> $GITHUB_ENV
                   echo "RUN_E2E_DUAL_STACK=true" >> $GITHUB_ENV
               fi
               echo "RUN_E2E_ENABLED=${{ steps.filter_pr.outputs.run_e2e }}" >> $GITHUB_ENV
               # do it in another workflow
               echo "RUN_UNITEST_ENABLED=false" >> $GITHUB_ENV
           else
-              # workflow_call event, nightly ci, run all e2e
-              # use main sha for ci image tag
-              echo "trigger by workflow_call"
-              echo "RUN_TAG=main" >> $GITHUB_ENV
-              echo "RUN_E2E_LABEL=" >> $GITHUB_ENV
-              echo "RUN_E2E_ENABLED=true" >> $GITHUB_ENV
-              echo "RUN_UNITEST_ENABLED=true" >> $GITHUB_ENV
-              echo "RUN_E2E_IPV4_ONLY=true" >> $GITHUB_ENV
-              echo "RUN_E2E_IPV6_ONLY=true" >> $GITHUB_ENV
-              echo "RUN_E2E_DUAL_STACK=true" >> $GITHUB_ENV
+            echo "uknown event"
+            exit 1
           fi
 
       # some event, the tag is not sha, so checkout it and get sha
@@ -171,7 +175,6 @@ jobs:
   lint_chart_against_release_image:
     needs: prepare
     if: ${{ needs.prepare.outputs.e2e_enabled == 'true' }}
-    # forbid to specify version for local workflow, GITHUB_REF Same as the caller workflow
     uses: ./.github/workflows/call-lint-chart.yaml
     with:
       ref: ${{ needs.prepare.outputs.ref }}
@@ -222,27 +225,3 @@ jobs:
     with:
       ref: ${{ needs.prepare.outputs.ref }}
     secrets: inherit
-
-  creat_issue:
-    runs-on: ubuntu-latest
-    needs: [ trivy_scan, e2e_ipv6, e2e_ipv4, e2e_dual ]
-    # https://docs.github.com/en/actions/learn-github-actions/contexts#jobs-context
-    if: ${{ always() && ( needs.trivy_scan.result == 'failure' || needs.e2e_ipv6.result == 'failure' || needs.e2e_ipv4.result == 'failure' || needs.e2e_dual.result == 'failure' ) }}
-    steps:
-      - name: echo
-        run: |
-          echo ${{ github.repository }}
-          echo ${{ github.repository_owner }}
-          echo "TIMESTAMP=`date +%Y-%m-%d`" >> $GITHUB_ENV
-
-      - name: create an issue
-        uses: dacbd/create-issue-action@v1.2.1
-        with:
-          token: ${{ secrets.WELAN_PAT }}
-          #owner: spidernet-io
-          #repo: rocktemplae
-          title: "Night CI ${{ ENV.TIMESTAMP }}: Failed"
-          body: |
-            action url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
-          labels: "kind/bug"
-          assignees: "weizhoublue"

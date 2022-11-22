@@ -1,0 +1,34 @@
+name: Auto Nightly CI
+
+permissions: write-all
+on:
+  schedule:
+    # each day
+    - cron: "0 20 * * *"
+  workflow_dispatch:
+
+jobs:
+  call-ci:
+    uses: ./.github/workflows/auto-pr-ci.yaml
+    secrets: inherit
+
+  creat_issue:
+    runs-on: ubuntu-latest
+    needs: [call-ci]
+    if: ${{ always() && needs.call-ci.result == 'failure' }}
+    steps:
+      - name: echo
+        run: |
+          echo ${{ github.repository }}
+          echo ${{ github.repository_owner }}
+          echo "TIMESTAMP=`date +%Y-%m-%d`" >> $GITHUB_ENV
+
+      - name: create an issue
+        uses: dacbd/create-issue-action@v1.2.1
+        with:
+          token: ${{ secrets.WELAN_PAT }}
+          title: "Night CI ${{ ENV.TIMESTAMP }}: Failed"
+          body: |
+            action url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          labels: "kind/bug"
+          assignees: "weizhoublue"
