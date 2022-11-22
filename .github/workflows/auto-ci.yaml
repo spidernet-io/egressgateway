@@ -1,13 +1,5 @@
 name: Auto CI
 
-env:
-  E2E_LOG_PATH: test/runtime/e2edebugLog.txt
-  E2E_GINKGO_REPORT_PATH: test/runtime/ginkgoreport.json
-  PERFORMANCE_SCRIPT: test/scripts/getPerformanceData.sh
-  # ====modify====
-  PERFORMANCE_BADGE_ID:
-  PERFORMANCE_BADGE_FILENAME:
-
 permissions: write-all
 on:
   schedule:
@@ -79,33 +71,33 @@ jobs:
         id: get_ref
         run: |
           if ${{ github.event_name == 'workflow_dispatch' }} ; then
-            echo "call by self workflow_dispatch"
-            echo "RUN_TAG=${{ github.event.inputs.ref }}" >> $GITHUB_ENV
-            echo "RUN_E2E_LABEL=${{ github.event.inputs.e2e_labels }}" >> $GITHUB_ENV
-            echo "RUN_E2E_ENABLED=true" >> $GITHUB_ENV
-            echo "RUN_UNITEST_ENABLED=true" >> $GITHUB_ENV
-            if ${{ github.event.inputs.ipfamily == 'ipv4' }}; then
-              echo "RUN_E2E_IPV4_ONLY=true" >> $GITHUB_ENV
-              echo "RUN_E2E_IPV6_ONLY=false" >> $GITHUB_ENV
-              echo "RUN_E2E_DUAL_STACK=false" >> $GITHUB_ENV
-            elif ${{ github.event.inputs.ipfamily == 'ipv6' }}; then
-              echo "RUN_E2E_IPV4_ONLY=false" >> $GITHUB_ENV
-              echo "RUN_E2E_IPV6_ONLY=true" >> $GITHUB_ENV
-              echo "RUN_E2E_DUAL_STACK=false" >> $GITHUB_ENV
-            elif ${{ github.event.inputs.ipfamily == 'dual' }}; then
-              echo "RUN_E2E_IPV4_ONLY=false" >> $GITHUB_ENV
-              echo "RUN_E2E_IPV6_ONLY=false" >> $GITHUB_ENV
-              echo "RUN_E2E_DUAL_STACK=true" >> $GITHUB_ENV
-            elif ${{ github.event.inputs.ipfamily == 'all' }}; then
-              echo "RUN_E2E_IPV4_ONLY=true" >> $GITHUB_ENV
-              echo "RUN_E2E_IPV6_ONLY=true" >> $GITHUB_ENV
-              echo "RUN_E2E_DUAL_STACK=true" >> $GITHUB_ENV
-            else
-              echo "error, unknown input ipfamily: ${{ github.event.inputs.ipfamily }} "
-              exit 1
-            fi
+                echo "call by self workflow_dispatch"
+                echo "RUN_TAG=${{ github.event.inputs.ref }}" >> $GITHUB_ENV
+                echo "RUN_E2E_LABEL=${{ github.event.inputs.e2e_labels }}" >> $GITHUB_ENV
+                echo "RUN_E2E_ENABLED=true" >> $GITHUB_ENV
+                echo "RUN_UNITEST_ENABLED=true" >> $GITHUB_ENV
+                if ${{ github.event.inputs.ipfamily == 'ipv4' }}; then
+                  echo "RUN_E2E_IPV4_ONLY=true" >> $GITHUB_ENV
+                  echo "RUN_E2E_IPV6_ONLY=false" >> $GITHUB_ENV
+                  echo "RUN_E2E_DUAL_STACK=false" >> $GITHUB_ENV
+                elif ${{ github.event.inputs.ipfamily == 'ipv6' }}; then
+                  echo "RUN_E2E_IPV4_ONLY=false" >> $GITHUB_ENV
+                  echo "RUN_E2E_IPV6_ONLY=true" >> $GITHUB_ENV
+                  echo "RUN_E2E_DUAL_STACK=false" >> $GITHUB_ENV
+                elif ${{ github.event.inputs.ipfamily == 'dual' }}; then
+                  echo "RUN_E2E_IPV4_ONLY=false" >> $GITHUB_ENV
+                  echo "RUN_E2E_IPV6_ONLY=false" >> $GITHUB_ENV
+                  echo "RUN_E2E_DUAL_STACK=true" >> $GITHUB_ENV
+                elif ${{ github.event.inputs.ipfamily == 'all' }}; then
+                  echo "RUN_E2E_IPV4_ONLY=true" >> $GITHUB_ENV
+                  echo "RUN_E2E_IPV6_ONLY=true" >> $GITHUB_ENV
+                  echo "RUN_E2E_DUAL_STACK=true" >> $GITHUB_ENV
+                else
+                  echo "error, unknown input ipfamily: ${{ github.event.inputs.ipfamily }} "
+                  exit 1
+                fi
           elif ${{ github.event_name == 'push' }} ; then
-            echo "trigger by push"
+              echo "trigger by push"
               echo "RUN_TAG=${{ github.sha }}" >> $GITHUB_ENV
               echo "RUN_E2E_LABEL=smoke" >> $GITHUB_ENV
               echo "RUN_E2E_ENABLED=true" >> $GITHUB_ENV
@@ -115,29 +107,28 @@ jobs:
               echo "RUN_E2E_IPV6_ONLY=false" >> $GITHUB_ENV
               echo "RUN_E2E_DUAL_STACK=true" >> $GITHUB_ENV
           elif ${{ github.event_name == 'pull_request_target' }} ; then
-            echo "trigger by pull_request_target"
-              echo "RUN_TAG=${{ github.event.pull_request.head.sha }}" >> $GITHUB_ENV
-            if ${{ steps.filter_pr.outputs.all_e2e == 'true' }} ; then
-                # run all e2e
-                echo "RUN_E2E_LABEL=" >> $GITHUB_ENV
-                echo "RUN_E2E_IPV4_ONLY=true" >> $GITHUB_ENV
-                echo "RUN_E2E_IPV6_ONLY=true" >> $GITHUB_ENV
-                echo "RUN_E2E_DUAL_STACK=true" >> $GITHUB_ENV
-            else
-                echo "RUN_E2E_LABEL=smoke" >> $GITHUB_ENV
-                echo "RUN_E2E_IPV4_ONLY=false" >> $GITHUB_ENV
-                echo "RUN_E2E_IPV6_ONLY=false" >> $GITHUB_ENV
-                echo "RUN_E2E_DUAL_STACK=true" >> $GITHUB_ENV
-            fi
-            echo "RUN_E2E_ENABLED=${{ steps.filter_pr.outputs.run_e2e }}" >> $GITHUB_ENV
-            # do it in another workflow
-            echo "RUN_UNITEST_ENABLED=false" >> $GITHUB_ENV
+              echo "trigger by pull_request_target"
+                echo "RUN_TAG=${{ github.event.pull_request.head.sha }}" >> $GITHUB_ENV
+              if ${{ steps.filter_pr.outputs.all_e2e == 'true' }} ; then
+                  # run all e2e
+                  echo "RUN_E2E_LABEL=" >> $GITHUB_ENV
+                  echo "RUN_E2E_IPV4_ONLY=true" >> $GITHUB_ENV
+                  echo "RUN_E2E_IPV6_ONLY=true" >> $GITHUB_ENV
+                  echo "RUN_E2E_DUAL_STACK=true" >> $GITHUB_ENV
+              else
+                  echo "RUN_E2E_LABEL=smoke" >> $GITHUB_ENV
+                  echo "RUN_E2E_IPV4_ONLY=false" >> $GITHUB_ENV
+                  echo "RUN_E2E_IPV6_ONLY=false" >> $GITHUB_ENV
+                  echo "RUN_E2E_DUAL_STACK=true" >> $GITHUB_ENV
+              fi
+              echo "RUN_E2E_ENABLED=${{ steps.filter_pr.outputs.run_e2e }}" >> $GITHUB_ENV
+              # do it in another workflow
+              echo "RUN_UNITEST_ENABLED=false" >> $GITHUB_ENV
           else
-            # schedule event
-            # use main sha for ci image tag
-            echo "trigger by schedule"
+              # workflow_call event, nightly ci, run all e2e
+              # use main sha for ci image tag
+              echo "trigger by workflow_call"
               echo "RUN_TAG=main" >> $GITHUB_ENV
-            # nightly ci, run all e2e
               echo "RUN_E2E_LABEL=" >> $GITHUB_ENV
               echo "RUN_E2E_ENABLED=true" >> $GITHUB_ENV
               echo "RUN_UNITEST_ENABLED=true" >> $GITHUB_ENV
@@ -195,300 +186,48 @@ jobs:
       submit: false
     secrets: inherit
 
-  e2e_against_commit:
-    runs-on: ubuntu-latest
+  e2e_dual:
     needs: [call_build_ci_image, prepare, call_release_chart]
-    if: ${{ needs.prepare.outputs.e2e_enabled == 'true' }}
-    steps:
-      - name: Prepare
-        id: prepare
-        run: |
-          echo "ref: ${{ needs.prepare.outputs.ref }} "
-          echo "e2e_labels: ${{ needs.prepare.outputs.e2e_labels }}"
-          echo "ipfamily_ipv4only_e2e: ${{ needs.prepare.outputs.ipfamily_ipv4only_e2e }}"
-          echo "ipfamily_ipv6only_e2e: ${{ needs.prepare.outputs.ipfamily_ipv6only_e2e }}"
-          echo "ipfamily_dual_e2e: ${{ needs.prepare.outputs.ipfamily_dual_e2e }}"
-          echo "===== image "
-          echo "ci image tag: ${{ needs.prepare.outputs.ref }}"
-          echo "===== chart "
-          echo "chart package artifact: ${{ needs.call_release_chart.outputs.artifact }}"
-          TMP=` date +%m%d%H%M%S `
-          E2E_CLUSTER_NAME="project${TMP}"
-          echo "RUN_KIND_CLUSTER_NAME=${E2E_CLUSTER_NAME}" >> $GITHUB_ENV
+    if: ${{ needs.prepare.outputs.e2e_enabled == 'true' && needs.prepare.outputs.ipfamily_dual_e2e == 'true' }}
+    uses: ./.github/workflows/call-e2e.yaml
+    with:
+      ref: ${{ needs.prepare.outputs.ref }}
+      ipfamily: dual
+      e2e_labels: ${{ needs.prepare.outputs.e2e_labels }}
+    secrets: inherit
 
-      - name: Checkout Code
-        uses: actions/checkout@v3
-        with:
-          persist-credentials: false
-          ref: ${{ needs.prepare.outputs.ref }}
+  e2e_ipv4:
+    needs: [call_build_ci_image, prepare, call_release_chart]
+    if: ${{ needs.prepare.outputs.e2e_enabled == 'true' && needs.prepare.outputs.ipfamily_ipv4only_e2e == 'true' }}
+    uses: ./.github/workflows/call-e2e.yaml
+    with:
+      ref: ${{ needs.prepare.outputs.ref }}
+      ipfamily: ipv4
+      e2e_labels: ${{ needs.prepare.outputs.e2e_labels }}
+    secrets: inherit
 
-      - name: Setup Golang
-        uses: actions/setup-go@v3
-        with:
-          go-version: 1.19.0
-          id: go
+  e2e_ipv6:
+    needs: [call_build_ci_image, prepare, call_release_chart]
+    if: ${{ needs.prepare.outputs.e2e_enabled == 'true'  && needs.prepare.outputs.ipfamily_ipv6only_e2e == 'true' }}
+    uses: ./.github/workflows/call-e2e.yaml
+    with:
+      ref: ${{ needs.prepare.outputs.ref }}
+      ipfamily: ipv6
+      e2e_labels: ${{ needs.prepare.outputs.e2e_labels }}
+    secrets: inherit
 
-      # https://github.com/helm/kind-action
-      - name: Install Kind Bin
-        uses: helm/kind-action@v1.4.0
-        with:
-          install_only: true
-
-      # download all artifact
-      # https://github.com/actions/download-artifact#download-all-artifacts
-      - name: Download images
-        uses: actions/download-artifact@v3.0.1
-        with:
-          path: output/artifact
-
-      - name: Load And Scan Images
-        run: |
-          PROJECT_DIR=`pwd`
-          cd output/artifact
-          ls
-          ALL_DIR=`ls`
-          IMAGE_DIR=""
-          for ITEM in $ALL_DIR ; do
-              grep -E "^image-tar" <<< "${ITEM}" &>/dev/null && IMAGE_DIR+=" ${ITEM} "
-          done
-          echo "IMAGE_DIR=${IMAGE_DIR}"
-          for ITEM in $IMAGE_DIR ; do
-              TAR_FILES=`ls ${ITEM}`
-              for TAR in $TAR_FILES ; do
-                echo "image tar ${ITEM}/${TAR}"
-                cat ${ITEM}/${TAR} |  docker import - ${TAR%*.tar}:${{ needs.prepare.outputs.ref }}
-                echo "---------trivy checkout image ${TAR%*.tar}:${{ needs.prepare.outputs.ref }} --------------------"
-                make -C ${PROJECT_DIR} lint_image_trivy -e IMAGE_NAME=${TAR%*.tar}:${{ needs.prepare.outputs.ref }} \
-                    || { echo "RUN_IMAGE_TRIVY_FAIL=true" >> $GITHUB_ENV ; echo "error, image ${TAR%*.tar}:${{ needs.prepare.outputs.ref }} is bad" ; }
-              done
-          done
-          docker images
-
-      # ------------- by default , dual stack
-      # test against commit version
-      - name: Setup Kind Cluster For Dual-stack
-        if: ${{ needs.prepare.outputs.ipfamily_dual_e2e == 'true' }}
-        uses: nick-invision/retry@v2
-        with:
-          timeout_minutes: 10
-          max_attempts: 3
-          shell: bash
-          command: |
-            make e2e_init -e E2E_KIND_CLUSTER_NAME=${{ env.RUN_KIND_CLUSTER_NAME }} \
-                -e PROJECT_IMAGE_VERSION=${{ needs.prepare.outputs.ref }} \
-                -e E2E_IP_FAMILY=dual
-
-      - name: Run e2e Test For Dual-stack
-        if: ${{ needs.prepare.outputs.ipfamily_dual_e2e == 'true' }}
-        continue-on-error: true
-        run: |
-          echo ${{ github.event.inputs.labels }}
-          RESULT=0
-          make e2e_run -e E2E_KIND_CLUSTER_NAME=${{ env.RUN_KIND_CLUSTER_NAME }}  \
-              -e E2E_GINKGO_LABELS=${{ needs.prepare.outputs.e2e_labels }} \
-              -e E2E_IP_FAMILY=dual || RESULT=1
-          if ((RESULT==0)) ; then
-              echo "RUN_PASS=true" >> $GITHUB_ENV
-          else
-              echo "RUN_PASS=false" >> $GITHUB_ENV
-          fi
-          if [ -f "${{ env.E2E_LOG_PATH }}" ] ; then
-              echo "RUN_UPLOAD_LOG=true" >> $GITHUB_ENV
-          else
-              echo "RUN_UPLOAD_LOG=false" >> $GITHUB_ENV
-          fi
-          if [ -f "${{ env.E2E_GINKGO_REPORT_PATH }}" ] ; then
-              echo "RUN_UPLOAD_E2E_REPORT=true" >> $GITHUB_ENV
-          else
-              echo "RUN_UPLOAD_E2E_REPORT=false" >> $GITHUB_ENV
-          fi
-
-      - name: Upload e2e cluster log For Dual-stack
-        if: ${{ needs.prepare.outputs.ipfamily_dual_e2e == 'true' }}
-        uses: actions/upload-artifact@v3.1.1
-        with:
-          name: dualstack-debuglog.txt
-          path: ${{ env.E2E_LOG_PATH }}
-          retention-days: 30
-
-      - name: Upload e2e ginkgo report For Dual-stack
-        if: ${{ env.RUN_UPLOAD_LOG == 'true' && needs.prepare.outputs.ipfamily_dual_e2e == 'true' }}
-        uses: actions/upload-artifact@v3.1.1
-        with:
-          name: dualstack-e2ereport.json
-          path: ${{ env.E2E_GINKGO_REPORT_PATH }}
-          retention-days: 30
-
-      - name: Show e2e Result For Dual-stack
-        if: ${{ needs.prepare.outputs.ipfamily_dual_e2e == 'true' }}
-        run: |
-          if ${{ env.RUN_PASS == 'true' }} ;then
-              exit 0
-          else
-              exit 1
-          fi
-
-      - name: Get the E2E Performance Result For Dual-stack
-        # run all e2e cases
-        id: get_performance
-        if: ${{ needs.prepare.outputs.ipfamily_dual_e2e == 'true' && env.PERFORMANCE_BADGE_ID != ''}}
-        shell: bash
-        run: |
-          # sudo apt-get install -y jq
-          TOOL_PATH=${{ env.PERFORMANCE_SCRIPT }}
-          TODO_STATUS=$( ${TOOL_PATH}  "${{ env.E2E_GINKGO_REPORT_PATH }}"  )
-          echo "RUN_PERFORMANCE_RESULT=${TODO_STATUS}" >> $GITHUB_ENV
-
-      - name: Update Badge For Dual-stack
-        if: ${{ env.RUN_PERFORMANCE_RESULT != '' && needs.prepare.outputs.ipfamily_dual_e2e == 'true' && env.PERFORMANCE_BADGE_ID != '' }}
-        uses: schneegans/dynamic-badges-action@v1.6.0
-        with:
-          auth: ${{ secrets.WELAN_PAT }}
-          gistID: ${{ env.PERFORMANCE_BADGE_ID }}
-          filename: ${{ env.PERFORMANCE_BADGE_FILENAME }}
-          label: performance
-          message: ${{ steps.get_performance.outputs.result }}
-          color: lightgrey
-
-      # ------------- ipv4-only
-      - name: Setup Kind Cluster For ipv4_only_stack
-        if: ${{ needs.prepare.outputs.ipfamily_ipv4only_e2e == 'true' }}
-        uses: nick-invision/retry@v2
-        with:
-          timeout_minutes: 10
-          max_attempts: 3
-          shell: bash
-          command: |
-            make e2e_init -e E2E_KIND_CLUSTER_NAME=${{ env.RUN_KIND_CLUSTER_NAME }} \
-                -e PROJECT_IMAGE_VERSION=${{ needs.prepare.outputs.ref }} \
-                -e E2E_IP_FAMILY=ipv4
-
-      - name: Run e2e Test For ipv4_only
-        if: ${{ needs.prepare.outputs.ipfamily_ipv4only_e2e == 'true' }}
-        continue-on-error: true
-        run: |
-          echo ${{ github.event.inputs.labels }}
-          RESULT=0
-          make e2e_run -e E2E_KIND_CLUSTER_NAME=${{ env.RUN_KIND_CLUSTER_NAME }}  \
-              -e E2E_GINKGO_LABELS=${{ needs.prepare.outputs.e2e_labels }} \
-              -e E2E_IP_FAMILY=ipv4 || RESULT=1
-          if ((RESULT==0)) ; then
-              echo "RUN_PASS=true" >> $GITHUB_ENV
-          else
-              echo "RUN_PASS=false" >> $GITHUB_ENV
-          fi
-          if [ -f "${{ env.E2E_LOG_PATH }}" ] ; then
-              echo "RUN_UPLOAD_LOG=true" >> $GITHUB_ENV
-          else
-              echo "RUN_UPLOAD_LOG=false" >> $GITHUB_ENV
-          fi
-          if [ -f "${{ env.E2E_GINKGO_REPORT_PATH }}" ] ; then
-              echo "RUN_UPLOAD_E2E_REPORT=true" >> $GITHUB_ENV
-          else
-              echo "RUN_UPLOAD_E2E_REPORT=false" >> $GITHUB_ENV
-          fi
-
-      - name: Upload e2e cluster log For ipv4_only
-        if: ${{ needs.prepare.outputs.ipfamily_ipv4only_e2e == 'true' }}
-        uses: actions/upload-artifact@v3.1.1
-        with:
-          name: ipv4_only-debuglog.txt
-          path: ${{ env.E2E_LOG_PATH }}
-          retention-days: 30
-
-      - name: Upload e2e ginkgo report For ipv4_only
-        if: ${{ env.RUN_UPLOAD_LOG == 'true' && needs.prepare.outputs.ipfamily_ipv4only_e2e == 'true' }}
-        uses: actions/upload-artifact@v3.1.1
-        with:
-          name: ipv4_only-e2ereport.json
-          path: ${{ env.E2E_GINKGO_REPORT_PATH }}
-          retention-days: 30
-
-      - name: Show e2e Result For ipv4_only
-        if: ${{ needs.prepare.outputs.ipfamily_ipv4only_e2e == 'true' }}
-        run: |
-          if ${{ env.RUN_PASS == 'true' }} ;then
-              exit 0
-          else
-              exit 1
-          fi
-
-      # ------------- ipv6-only
-      - name: Setup Kind Cluster For ipv6_only_stack
-        if: ${{ needs.prepare.outputs.ipfamily_ipv6only_e2e == 'true' }}
-        uses: nick-invision/retry@v2
-        with:
-          timeout_minutes: 10
-          max_attempts: 3
-          shell: bash
-          command: |
-            make e2e_init -e E2E_KIND_CLUSTER_NAME=${{ env.RUN_KIND_CLUSTER_NAME }} \
-                -e PROJECT_IMAGE_VERSION=${{ needs.prepare.outputs.ref }} \
-                -e E2E_IP_FAMILY=ipv6
-
-      - name: Run e2e Test For ipv6_only
-        if: ${{ needs.prepare.outputs.ipfamily_ipv6only_e2e == 'true' }}
-        continue-on-error: true
-        run: |
-          echo ${{ github.event.inputs.labels }}
-          RESULT=0
-          make e2e_run -e E2E_KIND_CLUSTER_NAME=${{ env.RUN_KIND_CLUSTER_NAME }}  \
-              -e E2E_GINKGO_LABELS=${{ needs.prepare.outputs.e2e_labels }} \
-              -e E2E_IP_FAMILY=ipv6 || RESULT=1
-          if ((RESULT==0)) ; then
-              echo "RUN_PASS=true" >> $GITHUB_ENV
-          else
-              echo "RUN_PASS=false" >> $GITHUB_ENV
-          fi
-          if [ -f "${{ env.E2E_LOG_PATH }}" ] ; then
-              echo "RUN_UPLOAD_LOG=true" >> $GITHUB_ENV
-          else
-              echo "RUN_UPLOAD_LOG=false" >> $GITHUB_ENV
-          fi
-          if [ -f "${{ env.E2E_GINKGO_REPORT_PATH }}" ] ; then
-              echo "RUN_UPLOAD_E2E_REPORT=true" >> $GITHUB_ENV
-          else
-              echo "RUN_UPLOAD_E2E_REPORT=false" >> $GITHUB_ENV
-          fi
-
-      - name: Upload e2e cluster log For ipv6_only
-        if: ${{ needs.prepare.outputs.ipfamily_ipv6only_e2e == 'true' }}
-        uses: actions/upload-artifact@v3.1.1
-        with:
-          name: ipv6_only-debuglog.txt
-          path: ${{ env.E2E_LOG_PATH }}
-          retention-days: 30
-
-      - name: Upload e2e ginkgo report For ipv6_only
-        if: ${{ env.RUN_UPLOAD_LOG == 'true' && needs.prepare.outputs.ipfamily_ipv6only_e2e == 'true' }}
-        uses: actions/upload-artifact@v3.1.1
-        with:
-          name: ipv6_only-e2ereport.json
-          path: ${{ env.E2E_GINKGO_REPORT_PATH }}
-          retention-days: 30
-
-      - name: Show e2e Result For ipv6_only
-        if: ${{ needs.prepare.outputs.ipfamily_ipv6only_e2e == 'true' }}
-        run: |
-          if ${{ env.RUN_PASS == 'true' }} ;then
-              exit 0
-          else
-              exit 1
-          fi
-
-      - name: Show Trivy Scan Report
-        run: |
-          if [ "${{ env.RUN_IMAGE_TRIVY_FAIL }}" == "true" ] ; then
-              echo "error, image is not secure, see detail on Step 'Load And Scan Images' "
-              exit 1
-          else
-              exit 0
-          fi
+  trivy_scan:
+    needs: [call_build_ci_image, prepare, call_release_chart]
+    uses: ./.github/workflows/call-trivy.yaml
+    with:
+      ref: ${{ needs.prepare.outputs.ref }}
+    secrets: inherit
 
   creat_issue:
     runs-on: ubuntu-latest
-    needs: [e2e_against_commit]
-    if: ${{ always() && needs.e2e_against_commit.result == 'failure' && github.event_name == 'schedule' }}
+    needs: [ trivy_scan, e2e_ipv6, e2e_ipv4, e2e_dual ]
+    # https://docs.github.com/en/actions/learn-github-actions/contexts#jobs-context
+    if: ${{ always() && ( needs.trivy_scan.result == 'failure' || needs.e2e_ipv6.result == 'failure' || needs.e2e_ipv4.result == 'failure' || needs.e2e_dual.result == 'failure' ) }}
     steps:
       - name: echo
         run: |
@@ -500,6 +239,8 @@ jobs:
         uses: dacbd/create-issue-action@v1.2.1
         with:
           token: ${{ secrets.WELAN_PAT }}
+          #owner: spidernet-io
+          #repo: rocktemplae
           title: "Night CI ${{ ENV.TIMESTAMP }}: Failed"
           body: |
             action url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
