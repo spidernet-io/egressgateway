@@ -195,25 +195,18 @@ spec:
 
 ### Controller
 
-* Webhook Validator
-* Node Controller
-    * Create/Update/Delete EgressNode CR by Node CR
-        * Create/Update
-            * Allocate VXLAN tunnel IP address
-            * Allocate VXLAN tunnel MAC address
-* EgressGatewayNode Controller
-    * Sync match node list from `labelSelector`
-    * Election egress gateway node
+Controller consists of Webhook Validator and Reconcile Flow.
+
+<img src="./Controller Reconcile Flow.png" width="70%"></img>
+
+Controller has 2 control processes, the first Watch cluster nodes, generate tunnel IP address and MAC address for Node, then `Create` or `Update` EgressNode CR Status. The second control flow watch `EgressNode` and `Egressgatewaynode`, sync match node list from `labelSelector`, election egress gateway node.
 
 ### Agent
 
-* EgressGatewayNode Controller
-    * iptables
-    * route
-* EgressGatewayPolicy Controller
-    * ipset
-* EgressGateway Controller
-    * vxlan tunnel
+<img src="./Agent Reconcile Flow.png" width="70%"></img>
+
+Agent has two control processes, the first Watch `EgressNode` CR, which manages node tunnel, and node tunnel is a pluggable interface that can be replaced by Geneve. The second control process manages datapath policy, which watches `EgressNode`, `EgressGatewayNode` and `Egresspolicy`, and sends them to the host through the police interface. It is currently implemented by a combination of *ipset*, *iptables*, and *route*, and it can be replaced by *eBPF*.
+
 
 ### Go Package (Structure) Design
 ```bash
