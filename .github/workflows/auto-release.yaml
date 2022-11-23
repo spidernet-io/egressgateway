@@ -64,14 +64,6 @@ jobs:
       ref: ${{ needs.get-tag.outputs.tag }}
     secrets: inherit
 
-  release-chart:
-    needs: [build-release-image, get-tag]
-    uses: ./.github/workflows/call-release-chart.yaml
-    with:
-      ref: ${{ needs.get-tag.outputs.tag }}
-      submit: true
-    secrets: inherit
-
   release-changelog:
     needs: [build-release-image, get-tag]
     uses: ./.github/workflows/call-release-changelog.yaml
@@ -79,22 +71,22 @@ jobs:
       dest_tag: ${{ needs.get-tag.outputs.tag }}
     secrets: inherit
 
-  release-doc:
+  release-pages:
     needs: [build-release-image, get-tag]
-    uses: ./.github/workflows/call-release-doc.yaml
+    uses: ./.github/workflows/call-release-pages.yaml
     with:
       ref: ${{ needs.get-tag.outputs.tag }}
     secrets: inherit
 
   create-release:
-    needs: [release-chart, release-changelog, get-tag, release-doc]
+    needs: [release-changelog, get-tag, release-pages]
     name: create release
     runs-on: ubuntu-latest
     steps:
       - name: Download Chart Artifact
         uses: actions/download-artifact@v3.0.1
         with:
-          name: ${{ needs.release-chart.outputs.artifact }}
+          name: ${{ needs.release-pages.outputs.artifact }}
           path: chart-package/
 
       - name: Download Changelog Artifact

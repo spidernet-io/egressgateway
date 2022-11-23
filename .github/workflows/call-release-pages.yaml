@@ -1,11 +1,10 @@
-name: Call Release Doc
+name: Call Release Pages
 
 env:
   MERGE_BRANCH: github_pages
-  SRC_DIRECTORY: 'docs'
-  DEST_DIRECTORY: 'docs'
   PR_LABEL: pr/robot_update
   PR_REVIWER: weizhoublue
+  CHART_OUTPUT_PATH: output/chart/*
 
 on:
   workflow_call:
@@ -13,6 +12,10 @@ on:
       ref:
         required: true
         type: string
+    outputs:
+      artifact:
+        description: "name of chart artifact"
+        value: chart_package_artifact
   # --- call by manual
   workflow_dispatch:
     inputs:
@@ -24,8 +27,8 @@ on:
 permissions: write-all
 
 jobs:
-  prepare_doc:
-    name: prepare doc
+  package:
+    name: prepare
     runs-on: ubuntu-latest
     outputs:
       ref: ${{ env.RUN_REF }}
@@ -51,21 +54,30 @@ jobs:
         with:
           ref: ${{ steps.get_ref.outputs.ref }}
 
-      - name: Build Site
+      - name: Build Site and chart
         run: |
           make build_doc
+          make chart_package
 
       - name: Upload Artifact
-        uses: actions/upload-artifact@v3.1.0
+        uses: actions/upload-artifact@v3.1.1
         with:
           name: site_artifact
           path: output/docs/site.tar.gz
           retention-days: 0
           if-no-files-found: error
 
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v3.1.1
+        with:
+          name: chart_package_artifact
+          path: ${{ env.CHART_OUTPUT_PATH }}
+          retention-days: 1
+          if-no-files-found: error
+
   create_pr:
     name: Create PR
-    needs: prepare_doc
+    needs: [package]
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
@@ -73,22 +85,45 @@ jobs:
         with:
           ref: ${{ env.MERGE_BRANCH }}
 
+      ## doc
       - name: Prepare
         run: |
-          rm -rf ${{ env.DEST_DIRECTORY }}
-          mkdir ${{ env.DEST_DIRECTORY }}
+          # prepare directory
+          mv docs/charts charts
+          rm -rf docs
+          mkdir docs
 
       - name: Download Artifact
         uses: actions/download-artifact@v3.0.1
         with:
           name: site_artifact
-          path: ${{ env.DEST_DIRECTORY }}
+          path: docs
 
       - name: Untar Doc
         run: |
-          cd ${{ env.DEST_DIRECTORY }}
+          cd docs
           tar -xzvf site.tar.gz
           rm -f site.tar.gz
+
+      ## chart
+      - name: Install Helm
+        uses: azure/setup-helm@v3.4
+
+      - name: Download Chart Artifact
+        uses: actions/download-artifact@v3.0.1
+        with:
+          name: chart_package_artifact
+          path: charts/
+
+      - name: Update Chart Yaml
+        run: |
+          mv charts docs/charts
+          name=${{ github.repository }}
+          proj=${name#*/}
+          url=https://${{ github.repository_owner }}.github.io/${proj}
+          cd docs
+          helm repo index  ./charts  --url ${url}/charts
+          mv ./charts/index.yaml ./index.yaml
 
       # https://github.com/peter-evans/create-pull-request
       - name: Create Pull Request
