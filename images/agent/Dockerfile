@@ -4,13 +4,6 @@
 ARG BASE_IMAGE=ghcr.io/spidernet-io/egressgateway/agent-base:5a80d2d30c430d6bfd116a80bb05ccf5656d3ab5
 ARG GOLANG_IMAGE=docker.io/library/golang:1.19@sha256:25de7b6b28219279a409961158c547aadd0960cf2dcbc533780224afa1157fd4
 
-# TARGETARCH is an automatic platform ARG enabled by Docker BuildKit.
-# like amd64 arm64
-ARG TARGETARCH
-
-# report error by github ci
-#ARG BUILDPLATFORM
-
 #======= build bin ==========
 FROM --platform=${BUILDPLATFORM} ${GOLANG_IMAGE} as builder
 
@@ -34,7 +27,7 @@ RUN  make GOARCH=${TARGETARCH}   \
 
 #====== release image =======
 
-FROM ${BASE_IMAGE}
+FROM --platform=${BUILDPLATFORM} ${BASE_IMAGE}
 
 LABEL maintainer="maintainer@spidernet-io"
 
