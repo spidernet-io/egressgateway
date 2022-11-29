@@ -10,7 +10,7 @@ require (
 	github.com/go-openapi/strfmt v0.21.3
 	github.com/go-openapi/swag v0.22.3
 	github.com/go-swagger/go-swagger v0.30.3
-	github.com/google/gops v0.3.25
+	github.com/google/gops v0.3.26
 	github.com/jessevdk/go-flags v1.5.0
 	github.com/mitchellh/mapstructure v1.5.0
 	github.com/onsi/ginkgo/v2 v2.4.0
