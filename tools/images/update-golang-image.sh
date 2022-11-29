@@ -33,12 +33,12 @@ cd "${root_dir}"
 
 
 image="docker.io/library/golang:${go_version}"
-image_digest="$("${script_dir}/get-image-digest.sh" "${image}")"
 
-if [ -z "${image_digest}" ]; then
-  echo "Image digest not available"
-  exit 1
-fi
+#image_digest="$("${script_dir}/get-image-digest.sh" "${image}")"
+#if [ -z "${image_digest}" ]; then
+#  echo "Image digest not available"
+#  exit 1
+#fi
 
 
 # shellcheck disable=SC2207
@@ -48,6 +48,7 @@ used_by=($(git grep -l GOLANG_IMAGE= ${PROJECT_ROOT_PATH}/images/*/Dockerfile))
 for i in "${used_by[@]}" ; do
     # golang images with image digest
     [ ! -f "${i}" ] && echo "error, failed to find ${i} " && exit 1
-    sed "s|GOLANG_IMAGE=docker\.io/library/golang:[0-9][0-9]*\.[0-9][0-9]*\(\.[0-9][0-9]*\)\?@.*|GOLANG_IMAGE=${image}@${image_digest}|" "${i}" > "${i}.sedtmp" && mv ${i}.sedtmp ${i}
+    #sed "s|GOLANG_IMAGE=docker\.io/library/golang:[0-9][0-9]*\.[0-9][0-9]*\(\.[0-9][0-9]*\)\?@.*|GOLANG_IMAGE=${image}@${image_digest}|" "${i}" > "${i}.sedtmp" && mv ${i}.sedtmp ${i}
+    sed "s|GOLANG_IMAGE=docker\.io/library/golang:[0-9][0-9]*\.[0-9][0-9]*\(\.[0-9][0-9]*\)\?|GOLANG_IMAGE=${image}|" "${i}" > "${i}.sedtmp" && mv ${i}.sedtmp ${i}
 done
 

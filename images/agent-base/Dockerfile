@@ -3,11 +3,11 @@
 # Copyright 2022 Authors of spidernet-io
 # SPDX-License-Identifier: Apache-2.0
 
-ARG GOLANG_IMAGE=docker.io/library/golang:1.19@sha256:25de7b6b28219279a409961158c547aadd0960cf2dcbc533780224afa1157fd4
-ARG UBUNTU_IMAGE=docker.io/library/ubuntu:22.04@sha256:35fb073f9e56eb84041b0745cb714eff0f7b225ea9e024f703cab56aaa5c7720
+ARG GOLANG_IMAGE=docker.io/library/golang:1.19
+ARG UBUNTU_IMAGE=docker.io/library/ubuntu:22.04
 
 #========= build gops ===============
-FROM --platform=${BUILDPLATFORM} ${GOLANG_IMAGE} as gops-cni-builder
+FROM --platform=${TARGETPLATFORM} ${GOLANG_IMAGE} as gops-cni-builder
 COPY /build-gops.sh /build-gops.sh
 
 ARG USE_PROXY_SOURCE
@@ -26,7 +26,7 @@ WORKDIR /
 RUN chmod +x /build-gops.sh && /build-gops.sh
 
 #========== root image ==============
-FROM --platform=${BUILDPLATFORM} ${UBUNTU_IMAGE} as rootfs
+FROM --platform=${TARGETPLATFORM} ${UBUNTU_IMAGE} as rootfs
 ARG TARGETARCH
 COPY /install-others.sh /install-others.sh
 COPY /configure-iptables-wrapper.sh /configure-iptables-wrapper.sh
@@ -39,8 +39,8 @@ RUN apt-get update && apt-get upgrade -y
 WORKDIR /
 RUN chmod +x /configure-iptables-wrapper.sh && /configure-iptables-wrapper.sh && rm -f /configure-iptables-wrapper.sh
 
-ARG BUILDPLATFORM
-COPY --from=gops-cni-builder /out/${BUILDPLATFORM}/bin/gops /bin/gops
+ARG TARGETPLATFORM
+COPY --from=gops-cni-builder /out/${TARGETPLATFORM}/bin/gops /bin/gops
 
 RUN chmod +x /install-others.sh && /install-others.sh ${TARGETARCH} && rm -f /install-others.sh
 
