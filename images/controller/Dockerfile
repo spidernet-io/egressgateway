@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 ARG BASE_IMAGE=ghcr.io/spidernet-io/egressgateway/controller-base:a92605cfa38fa69a15439e19e0a762a4bd121481
-ARG GOLANG_IMAGE=docker.io/library/golang:1.19@sha256:25de7b6b28219279a409961158c547aadd0960cf2dcbc533780224afa1157fd4
+ARG GOLANG_IMAGE=docker.io/library/golang:1.19
 
 #======= build bin ==========
 FROM --platform=${BUILDPLATFORM} ${GOLANG_IMAGE} as builder
@@ -27,7 +27,7 @@ RUN  make GOARCH=${TARGETARCH}   \
 
 #====== release image =======
 
-FROM --platform=${BUILDPLATFORM} ${BASE_IMAGE}
+FROM --platform=${TARGETPLATFORM} ${BASE_IMAGE}
 
 LABEL maintainer="maintainer@spidernet-io"
 
