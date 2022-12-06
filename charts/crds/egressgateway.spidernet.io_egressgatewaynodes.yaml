@@ -88,28 +88,37 @@ spec:
             type: object
           status:
             properties:
-              interfaceList:
-                items:
-                  properties:
-                    interfaceName:
-                      type: string
-                    ipv4List:
-                      items:
-                        type: string
-                      type: array
-                    ipv6List:
-                      items:
-                        type: string
-                      type: array
-                  required:
-                  - interfaceName
-                  - ipv4List
-                  - ipv6List
-                  type: object
-                type: array
               nodeList:
                 items:
-                  type: string
+                  properties:
+                    active:
+                      type: boolean
+                    interfaceStatus:
+                      items:
+                        properties:
+                          interfaceName:
+                            type: string
+                          ipv4List:
+                            items:
+                              type: string
+                            type: array
+                          ipv6List:
+                            items:
+                              type: string
+                            type: array
+                        required:
+                        - interfaceName
+                        - ipv4List
+                        - ipv6List
+                        type: object
+                      type: array
+                    name:
+                      type: string
+                    ready:
+                      type: boolean
+                  required:
+                  - name
+                  type: object
                 type: array
             type: object
         required:

@@ -6,6 +6,8 @@ package controller
 import (
 	"context"
 	"fmt"
+
+	"github.com/go-logr/logr"
 	"go.uber.org/zap"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -14,6 +16,7 @@ import (
 
 	"github.com/spidernet-io/egressgateway/pkg/config"
 	"github.com/spidernet-io/egressgateway/pkg/controller/webhook"
+	"github.com/spidernet-io/egressgateway/pkg/logger"
 	"github.com/spidernet-io/egressgateway/pkg/schema"
 	"github.com/spidernet-io/egressgateway/pkg/types"
 )
@@ -25,9 +28,9 @@ type Controller struct {
 
 func New(cfg *config.Config, log *zap.Logger) (types.Service, error) {
 	mgrOpts := manager.Options{
-		Scheme: schema.GetScheme(),
-		//Logger:                 log,
-		LeaderElection:          cfg.LeaderElection,
+		Scheme:                  schema.GetScheme(),
+		Logger:                  logr.New(logger.NewLogSink(log, cfg.KLOGLevel)),
+		LeaderElection:          false,
 		HealthProbeBindAddress:  cfg.HealthProbeBindAddress,
 		LeaderElectionID:        cfg.LeaderElectionID,
 		LeaderElectionNamespace: cfg.LeaderElectionNamespace,
@@ -57,7 +60,6 @@ func New(cfg *config.Config, log *zap.Logger) (types.Service, error) {
 
 	mgr.GetWebhookServer().Port = cfg.WebhookPort
 	mgr.GetWebhookServer().CertDir = cfg.TLSCertDir
-	// mgr.GetWebhookServer().Register("/mutating", webhook.MutatingHook(mgr.GetClient()))
 	mgr.GetWebhookServer().Register("/validate", webhook.ValidateHook())
 
 	err = newNodeController(mgr, log)
@@ -65,7 +67,7 @@ func New(cfg *config.Config, log *zap.Logger) (types.Service, error) {
 		return nil, fmt.Errorf("failed to create node controller: %w", err)
 	}
 
-	err = newEgressGatewayNodeController(mgr, log)
+	err = newEgressGatewayNodeController(mgr, log, cfg)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create egress gateway node controller: %w", err)
 	}

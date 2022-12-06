@@ -45,14 +45,6 @@ type GatewayNodeConfig struct {
 	Interface string `json:"interface"`
 }
 
-type GatewayNodeStatus struct {
-	// +kubebuilder:validation:Required
-	// +kubebuilder:validation:Enum="Ready";"NotReady";"Unknown"
-	Status string `json:"status"`
-	// +kubebuilder:validation:Optional
-	Active bool `json:"active"`
-}
-
 // scope(Namespaced or Cluster)
 // +kubebuilder:resource:categories={egressgatewaypolicy},path="egressgatewaypolicies",singular="egressgatewaypolicy",scope="Cluster",shortName={epo}
 // +kubebuilder:object:root=true
