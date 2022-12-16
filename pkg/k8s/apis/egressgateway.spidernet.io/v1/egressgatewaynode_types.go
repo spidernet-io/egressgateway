@@ -19,12 +19,33 @@ type EgressGatewayNodeSpec struct {
 }
 
 type EgressGatewayNodeStatus struct {
-
 	// +kubebuilder:validation:Optional
-	InterfaceList []InterfaceStatus `json:"interfaceList,omitempty"`
+	NodeList SelectedEgressNodes `json:"nodeList,omitempty"`
+}
 
+type SelectedEgressNodes []SelectedEgressNode
+
+type SelectedEgressNode struct {
+	// +kubebuilder:validation:Required
+	Name string `json:"name"`
 	// +kubebuilder:validation:Optional
-	NodeList []string `json:"nodeList,omitempty"`
+	Ready bool `json:"ready"`
+	// +kubebuilder:validation:Optional
+	Active bool `json:"active"`
+	// +kubebuilder:validation:Optional
+	InterfaceStatus []InterfaceStatus `json:"interfaceStatus"`
+}
+
+func (s SelectedEgressNodes) Len() int {
+	return len(s)
+}
+
+func (s SelectedEgressNodes) Less(i, j int) bool {
+	return s[i].Name < s[j].Name
+}
+
+func (s SelectedEgressNodes) Swap(i, j int) {
+	s[i], s[j] = s[j], s[i]
 }
 
 type InterfaceStatus struct {

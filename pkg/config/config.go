@@ -15,6 +15,8 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 )
 
+const ForwardMethodActiveActive = "active-active"
+
 type Config struct {
 	// From environment
 	EnvConfig
@@ -39,6 +41,7 @@ func (cfg *Config) PrintPrettyConfig(zap *zap.Logger) {
 
 type EnvConfig struct {
 	LogLevel                  string `mapstructure:"LOG_LEVEL"`
+	KLOGLevel                 int    `mapstructure:"KLOG_LEVEL"`
 	LeaderElection            bool   `mapstructure:"LEADER_ELECTION"`
 	LeaderElectionNamespace   string `mapstructure:"LEADER_ELECTION_NAMESPACE"`
 	LeaderElectionID          string `mapstructure:"LEADER_ELECTION_ID"`
@@ -76,6 +79,7 @@ type FileConfig struct {
 func LoadConfig() (*Config, error) {
 	config := &Config{
 		EnvConfig: EnvConfig{
+			KLOGLevel:                 2,
 			LeaderElection:            true,
 			LeaderElectionID:          "spider-egress-gateway",
 			LeaderElectionLostRestart: false,
