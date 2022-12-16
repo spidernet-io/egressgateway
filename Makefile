@@ -102,7 +102,7 @@ IMAGE_DIR=` dirname $(DOCKERFILE_PATH) ` \
 endef
 
 .PHONY: build_local_base_image
-build_local_base_image: build_local_agent_base_image
+build_local_base_image: build_local_agent_base_image build_local_controller_base_image
 
 .PHONY: build_local_agent_base_image
 build_local_agent_base_image: DOCKERFILE_PATH := $(ROOT_DIR)/images/agent-base/Dockerfile
