@@ -1,7 +1,7 @@
 # Copyright 2022 Authors of spidernet-io
 # SPDX-License-Identifier: Apache-2.0
 
-ARG BASE_IMAGE=ghcr.io/spidernet-io/egressgateway/controller-base:da74ed75a6af16ab18dd2095963dc82244c94177
+ARG BASE_IMAGE=ghcr.io/spidernet-io/egressgateway-controller-base:da74ed75a6af16ab18dd2095963dc82244c94177
 ARG GOLANG_IMAGE=docker.io/library/golang:1.19
 
 #======= build bin ==========
