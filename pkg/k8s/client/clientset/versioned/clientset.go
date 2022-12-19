@@ -20,8 +20,7 @@ type Interface interface {
 	EgressgatewayV1() egressgatewayv1.EgressgatewayV1Interface
 }
 
-// Clientset contains the clients for groups. Each group has exactly one
-// version included in a Clientset.
+// Clientset contains the clients for groups.
 type Clientset struct {
 	*discovery.DiscoveryClient
 	egressgatewayV1 *egressgatewayv1.EgressgatewayV1Client
