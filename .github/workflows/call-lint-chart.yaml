@@ -60,7 +60,7 @@ jobs:
       # https://github.com/Azure/setup-helm
       - name: Set up Helm
         if: ${{ env.RUN_JUST_LINT_CHART == 'false' }}
-        uses: azure/setup-helm@v3.4
+        uses: azure/setup-helm@v3.5
 
       # https://github.com/actions/setup-python
       - name: Set up Python
