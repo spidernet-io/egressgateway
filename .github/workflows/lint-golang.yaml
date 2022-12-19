@@ -51,11 +51,6 @@ jobs:
               - '**/*.go'
               - 'go.mod'
               - 'go.sum'
-            swagger:
-              - 'api/**'
-            crd:
-              - 'charts/**'
-              - 'pkg/k8s/**'
 
       - name: Result
         id: result
@@ -72,8 +67,8 @@ jobs:
               echo "RUN_CHECK=${flag}" >> $GITHUB_ENV
               ref=${{ github.event.pull_request.head.sha }}
               echo "RUN_REF=${ref}" >> $GITHUB_ENV
-              echo "RUN_SWAGGER=${{ steps.filter_pr.outputs.swagger }}" >> $GITHUB_ENV
-              echo "RUN_CRD_CHECK=${{ steps.filter_pr.outputs.crd }}" >> $GITHUB_ENV
+              echo "RUN_SWAGGER=${flag}" >> $GITHUB_ENV
+              echo "RUN_CRD_CHECK=${flag}" >> $GITHUB_ENV
           elif ${{ inputs.ref != '' }} ; then
               echo "trigger by workflow_call"
               echo "RUN_CHECK=true" >> $GITHUB_ENV
