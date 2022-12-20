@@ -91,6 +91,9 @@ jobs:
           GIT_COMMIT_TIME=$( git show -s --format='format:%aI')
           echo "RUN_COMMIT_VER=${GIT_COMMIT_VERSION}" >> $GITHUB_ENV
           echo "RUN_COMMIT_TIME=${GIT_COMMIT_TIME}" >> $GITHUB_ENV
+          tmp=${{ github.repository }}
+          tmp=${tmp##*/}
+          echo "RUN_IMAGE_SUFFIX=${tmp}-${{ matrix.name }}" >> $GITHUB_ENV
 
       - name: Build Image ${{ matrix.name }} and push
         uses: docker/build-push-action@v3.0.0
@@ -103,7 +106,7 @@ jobs:
           push: true
           platforms: ${{ env.BUILD_PLATFORM }}
           tags: |
-            ${{ env.ONLINE_REGISTER }}/${{ github.repository }}/${{ matrix.name }}${{ env.RUN_SUFFIX }}:${{ env.RUN_IMAGE_TAG }}
+            ${{ env.ONLINE_REGISTER }}/${{ github.repository }}-${{ matrix.name }}${{ env.RUN_SUFFIX }}:${{ env.RUN_IMAGE_TAG }}
           build-args: |
             GIT_COMMIT_VERSION=${{ env.RUN_COMMIT_VER }}
             GIT_COMMIT_TIME=${{ env.RUN_COMMIT_TIME }}
@@ -118,10 +121,10 @@ jobs:
           context: ${{ matrix.context }}
           file: ${{ matrix.dockerfile }}
           github-token: ${{ secrets.WELAN_PAT }}
-          outputs: type=tar,dest=/tmp/${{ matrix.name }}.tar
+          outputs: type=tar,dest=/tmp/${{ env.RUN_IMAGE_SUFFIX }}.tar
           platforms: linux/amd64
           tags: |
-            ${{ env.ONLINE_REGISTER }}/${{ github.repository }}/${{ matrix.name }}${{ env.RUN_SUFFIX }}:${{ env.RUN_IMAGE_TAG }}
+            ${{ env.ONLINE_REGISTER }}/${{ github.repository }}-${{ matrix.name }}${{ env.RUN_SUFFIX }}:${{ env.RUN_IMAGE_TAG }}
           build-args: |
             GIT_COMMIT_VERSION=${{ env.RUN_COMMIT_VER }}
             GIT_COMMIT_TIME=${{ env.RUN_COMMIT_TIME }}
@@ -143,7 +146,7 @@ jobs:
           echo "${job_name_underscored}_DIGEST := \"${DIGEST}\"" > image-digest/makefile-digest.txt
           echo "### ${{ matrix.name }}" > image-digest/${{ matrix.name }}.txt
           echo "" >> image-digest/${{ matrix.name }}.txt
-          echo "\`${{ env.ONLINE_REGISTER }}/${{ github.repository }}/${{ matrix.name }}${{ env.RUN_SUFFIX }}:${{ env.RUN_IMAGE_TAG }}@${DIGEST}\`" >> image-digest/${{ matrix.name }}.txt
+          echo "\`${{ env.ONLINE_REGISTER }}/${{ github.repository }}-${{ matrix.name }}${{ env.RUN_SUFFIX }}:${{ env.RUN_IMAGE_TAG }}@${DIGEST}\`" >> image-digest/${{ matrix.name }}.txt
           echo "" >> image-digest/${{ matrix.name }}.txt
           # ====== Image Digests Output =============
           cd image-digest/
@@ -179,6 +182,6 @@ jobs:
         if: ${{ env.RUN_UPLOAD == 'true' }}
         uses: actions/upload-artifact@v3.1.0
         with:
-          name: image-tar-${{ matrix.name }}
-          path: /tmp/${{ matrix.name }}.tar
+          name: image-tar-${{ env.RUN_IMAGE_SUFFIX }}
+          path: /tmp/${{ env.RUN_IMAGE_SUFFIX }}.tar
           retention-days: 1

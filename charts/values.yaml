@@ -78,7 +78,7 @@ egressgatewayAgent:
     registry: ghcr.io
 
     ## @param egressgatewayAgent.image.repository the image repository of egressgatewayAgent
-    repository: spidernet-io/egressgateway/agent
+    repository: spidernet-io/egressgateway-agent
 
     ## @param egressgatewayAgent.image.pullPolicy the image pullPolicy of egressgatewayAgent
     pullPolicy: IfNotPresent
@@ -284,7 +284,7 @@ egressgatewayController:
     registry: ghcr.io
 
     ## @param egressgatewayController.image.repository the image repository of egressgatewayController
-    repository: spidernet-io/egressgateway/controller
+    repository: spidernet-io/egressgateway-controller
 
     ## @param egressgatewayController.image.pullPolicy the image pullPolicy of egressgatewayController
     pullPolicy: IfNotPresent
