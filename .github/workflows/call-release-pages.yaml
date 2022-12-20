@@ -107,7 +107,7 @@ jobs:
 
       ## chart
       - name: Install Helm
-        uses: azure/setup-helm@v3.4
+        uses: azure/setup-helm@v3.5
 
       - name: Download Chart Artifact
         uses: actions/download-artifact@v3.0.1
