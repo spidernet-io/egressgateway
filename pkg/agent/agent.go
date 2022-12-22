@@ -56,12 +56,7 @@ func New(cfg *config.Config, log *zap.Logger) (types.Service, error) {
 		return nil, fmt.Errorf("failed to create node controller: %w", err)
 	}
 
-	err = newEgressGatewayNodeController(mgr, log)
-	if err != nil {
-		return nil, fmt.Errorf("failed to create egress gateway node controller: %w", err)
-	}
-
-	err = newEgressGatewayPolicyController(mgr, log)
+	err = newPolicyController(mgr, log, cfg)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create egress gateway policy controller: %w", err)
 	}
