@@ -7,13 +7,16 @@ import (
 	"context"
 	"crypto/sha1"
 	"fmt"
-	"k8s.io/apimachinery/pkg/labels"
 	"net"
+	"os"
+	"sync"
+	"time"
 
 	"go.uber.org/zap"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/utils/exec"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
@@ -24,6 +27,7 @@ import (
 
 	"github.com/spidernet-io/egressgateway/pkg/config"
 	"github.com/spidernet-io/egressgateway/pkg/ipset"
+	"github.com/spidernet-io/egressgateway/pkg/iptables"
 	egressv1 "github.com/spidernet-io/egressgateway/pkg/k8s/apis/egressgateway.spidernet.io/v1"
 	"github.com/spidernet-io/egressgateway/pkg/utils"
 )
@@ -34,9 +38,95 @@ type policeReconciler struct {
 	cfg      *config.Config
 	ipsetMap *utils.SyncMap[string, *ipset.IPSet]
 	ipset    ipset.Interface
+	doOnce   sync.Once
+
+	ruleV4Map    *utils.SyncMap[string, iptables.Rule]
+	ruleV6Map    *utils.SyncMap[string, iptables.Rule]
+	mangleTables []*iptables.Table
+	filterTables []*iptables.Table
+	natTables    []*iptables.Table
 }
 
-func (r policeReconciler) Reconcile(ctx context.Context, req reconcile.Request) (reconcile.Result, error) {
+func (r *policeReconciler) initApplyPolicy() error {
+	policyList := new(egressv1.EgressGatewayPolicyList)
+	err := r.client.List(context.Background(), policyList)
+	if err != nil {
+		return err
+	}
+
+	gatewayList := new(egressv1.EgressGatewayNodeList)
+	err = r.client.List(context.Background(), gatewayList)
+	if err != nil {
+		return err
+	}
+	if len(gatewayList.Items) == 0 {
+		return nil
+	}
+	isGatewayNode := false
+	for _, node := range gatewayList.Items[0].Status.NodeList {
+		if node.Name == r.cfg.NodeName {
+			isGatewayNode = true
+		}
+	}
+
+	for _, table := range r.natTables {
+		chainMapRules := buildNatStaticRule()
+		for chain, rules := range chainMapRules {
+			table.InsertOrAppendRules(chain, rules)
+		}
+	}
+
+	for _, table := range r.filterTables {
+		chainMapRules := buildFilterStaticRule()
+		for chain, rules := range chainMapRules {
+			table.InsertOrAppendRules(chain, rules)
+		}
+	}
+
+	for _, table := range r.mangleTables {
+		table.UpdateChain(&iptables.Chain{
+			Name: "EGRESSGATEWAY-MARK-REQUEST",
+		})
+		chainMapRules := buildMangleStaticRule(isGatewayNode)
+		for chain, rules := range chainMapRules {
+			table.InsertOrAppendRules(chain, rules)
+		}
+	}
+
+	for _, policy := range policyList.Items {
+		log := r.log.With(
+			zap.String("namespacedName", policy.Name),
+			zap.String("kind", "policy"),
+		)
+		if policy.DeletionTimestamp.IsZero() {
+			err := r.addOrUpdatePolicy(context.Background(), true, &policy, log)
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	allTables := append(r.natTables, r.filterTables...)
+	allTables = append(allTables, r.mangleTables...)
+	for _, table := range allTables {
+		_, err = table.Apply()
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (r *policeReconciler) Reconcile(ctx context.Context, req reconcile.Request) (reconcile.Result, error) {
+	r.doOnce.Do(func() {
+		r.log.Sugar().Info("first reconcile of policy controller, init apply policy")
+	redo:
+		err := r.initApplyPolicy()
+		if err != nil {
+			r.log.Sugar().Error("first reconcile of policy controller, init apply policy, with error:", err)
+			goto redo
+		}
+	})
 	kind, newReq, err := utils.ParseKindWithReq(req)
 	if err != nil {
 		r.log.Sugar().Infof("parse req(%v) with error: %v", req, err)
@@ -63,15 +153,96 @@ func (r policeReconciler) Reconcile(ctx context.Context, req reconcile.Request) 
 // goal:
 // - add/update/delete egress gateway node
 //   - iptables
-func (r policeReconciler) reconcileEGN(ctx context.Context, req reconcile.Request, log *zap.Logger) (reconcile.Result, error) {
+func (r *policeReconciler) reconcileEGN(ctx context.Context, req reconcile.Request, log *zap.Logger) (reconcile.Result, error) {
+	gateway := new(egressv1.EgressGatewayNode)
+	deleted := false
+	err := r.client.Get(ctx, req.NamespacedName, gateway)
+	if err != nil {
+		if !errors.IsNotFound(err) {
+			return reconcile.Result{}, err
+		}
+		deleted = true
+	}
+	deleted = deleted || !gateway.GetDeletionTimestamp().IsZero()
+
+	isGatewayNode := false
+	for _, node := range gateway.Status.NodeList {
+		name, err := os.Hostname()
+		if err != nil {
+			panic(fmt.Sprintf("get os hostname: %v", err))
+		}
+		if node.Name == name {
+			isGatewayNode = true
+		}
+	}
+
+	for _, table := range r.mangleTables {
+		chainMapRules := buildMangleStaticRule(isGatewayNode)
+
+		for chain, rules := range chainMapRules {
+			table.InsertOrAppendRules(chain, rules)
+		}
+	}
+
 	return reconcile.Result{}, nil
+}
+
+func buildNatStaticRule() map[string][]iptables.Rule {
+	res := map[string][]iptables.Rule{}
+	return res
+}
+
+func buildFilterStaticRule() map[string][]iptables.Rule {
+	res := map[string][]iptables.Rule{
+		"FORWARD": {
+			{
+				Match:  iptables.MatchCriteria{}.MarkMatchesWithMask(0x11000000, 0xffffffff),
+				Action: iptables.AcceptAction{},
+			},
+		},
+		"OUTPUT": {
+			{
+				Match:  iptables.MatchCriteria{}.MarkMatchesWithMask(0x11000000, 0xffffffff),
+				Action: iptables.AcceptAction{},
+			},
+		},
+	}
+	return res
+}
+
+func buildMangleStaticRule(isGatewayNode bool) map[string][]iptables.Rule {
+	res := map[string][]iptables.Rule{
+		"FORWARD": {
+			{
+				Match:  iptables.MatchCriteria{}.MarkMatchesWithMask(0x11000000, 0xffffffff),
+				Action: iptables.SetMarkAction{Mark: 0x12000000},
+			},
+		},
+		"POSTROUTING": {
+			{
+				Match:  iptables.MatchCriteria{}.MarkMatchesWithMask(0x11000000, 0xffffffff),
+				Action: iptables.AcceptAction{},
+			},
+		},
+	}
+	if !isGatewayNode {
+		res["PREROUTING"] = []iptables.Rule{
+			{
+				Match: iptables.MatchCriteria{},
+				Action: iptables.JumpAction{
+					Target: "EGRESSGATEWAY-MARK-REQUEST",
+				},
+			},
+		}
+	}
+	return res
 }
 
 // reconcileEGP reconcile egress gateway policy
 // add/update/delete policy
 //   - ipset
 //   - iptables
-func (r policeReconciler) reconcileEGP(ctx context.Context, req reconcile.Request, log *zap.Logger) (reconcile.Result, error) {
+func (r *policeReconciler) reconcileEGP(ctx context.Context, req reconcile.Request, log *zap.Logger) (reconcile.Result, error) {
 	policy := new(egressv1.EgressGatewayPolicy)
 	deleted := false
 	err := r.client.Get(ctx, req.NamespacedName, policy)
@@ -83,12 +254,24 @@ func (r policeReconciler) reconcileEGP(ctx context.Context, req reconcile.Reques
 	}
 	deleted = deleted || !policy.GetDeletionTimestamp().IsZero()
 
-	setNames := GetIPSetNamesByPolicy(policy.Name)
-
 	// reconcile delete event
 	if deleted {
+		setNames := GetIPSetNamesByPolicy(policy.Name)
 		log.Info("request item is deleted")
-		// TODO remove iptables
+
+		for _, table := range r.mangleTables {
+			rules, changed := r.removePolicyRule(policy.Name, table.IPVersion)
+			if changed {
+				table.UpdateChain(&iptables.Chain{
+					Name:  "EGRESSGATEWAY-MARK-REQUEST",
+					Rules: rules,
+				})
+				_, err := table.Apply()
+				if err != nil {
+					return reconcile.Result{}, err
+				}
+			}
+		}
 
 		_ = setNames.Map(func(set SetName) error {
 			r.removeIPSet(log, set.Name)
@@ -98,12 +281,23 @@ func (r policeReconciler) reconcileEGP(ctx context.Context, req reconcile.Reques
 		return reconcile.Result{}, nil
 	}
 
-	// reconcile add or update event
-	err = setNames.Map(func(set SetName) error {
+	err = r.addOrUpdatePolicy(ctx, false, policy, log)
+	if err != nil {
+		return reconcile.Result{
+			Requeue: true,
+		}, err
+	}
+	return reconcile.Result{}, nil
+}
+
+// addOrUpdatePolicy reconcile add or update egress policy
+func (r *policeReconciler) addOrUpdatePolicy(ctx context.Context, firstInit bool, policy *egressv1.EgressGatewayPolicy, log *zap.Logger) error {
+	setNames := GetIPSetNamesByPolicy(policy.Name)
+	err := setNames.Map(func(set SetName) error {
 		return r.createIPSet(log, set)
 	})
 	if err != nil {
-		return reconcile.Result{}, err
+		return err
 	}
 
 	toAddList := make(map[string][]string, 0)
@@ -112,13 +306,13 @@ func (r policeReconciler) reconcileEGP(ctx context.Context, req reconcile.Reques
 	// calculate src ip list
 	podIPv4List, podIPv6List, err := r.getPodIPsByLabelSelector(ctx, policy.Spec.AppliedTo.PodSelector)
 	if err != nil {
-		return reconcile.Result{}, err
+		return err
 	}
 
 	// calculate dst ip list
 	dstIPv4List, dstIPv6List, err := r.getDstCIDR(policy.Spec.DestSubnet)
 	if err != nil {
-		return reconcile.Result{}, err
+		return err
 	}
 
 	err = setNames.Map(func(set SetName) error {
@@ -143,7 +337,7 @@ func (r policeReconciler) reconcileEGP(ctx context.Context, req reconcile.Reques
 		return nil
 	})
 	if err != nil {
-		return reconcile.Result{}, err
+		return err
 	}
 
 	for set, ips := range toAddList {
@@ -155,22 +349,103 @@ func (r policeReconciler) reconcileEGP(ctx context.Context, req reconcile.Reques
 		for _, ip := range ips {
 			err := r.ipset.AddEntry(ip, ipSet, false)
 			if err != nil {
-				return reconcile.Result{}, err
+				return err
 			}
 		}
 	}
 
-	// TODO update iptables
+	for _, table := range r.mangleTables {
+		rules, changed := r.updatePolicyRule(policy.Name, table.IPVersion)
+		if changed {
+			table.UpdateChain(&iptables.Chain{
+				Name:  "EGRESSGATEWAY-MARK-REQUEST",
+				Rules: rules,
+			})
+			if !firstInit {
+				_, err := table.Apply()
+				if err != nil {
+					return err
+				}
+			}
+		}
+	}
 
 	for name, ips := range toDelList {
 		for _, ip := range ips {
 			err := r.ipset.DelEntry(ip, name)
 			if err != nil {
-				return reconcile.Result{}, err
+				return err
 			}
 		}
 	}
-	return reconcile.Result{}, nil
+	return nil
+}
+
+func (r *policeReconciler) removePolicyRule(policyName string, version uint8) ([]iptables.Rule, bool) {
+	changed := false
+	var ruleMap *utils.SyncMap[string, iptables.Rule]
+	switch version {
+	case 4:
+		ruleMap = r.ruleV4Map
+	case 6:
+		ruleMap = r.ruleV6Map
+	default:
+		panic("not supported ip version")
+	}
+	if _, ok := ruleMap.Load(policyName); ok {
+		ruleMap.Delete(policyName)
+		changed = true
+	}
+	if !changed {
+		return make([]iptables.Rule, 0), changed
+	}
+	return buildRuleList(ruleMap), changed
+}
+
+// updatePolicyRule make policy to rule
+func (r *policeReconciler) updatePolicyRule(policyName string, version uint8) ([]iptables.Rule, bool) {
+	changed := false
+	tmp := ""
+	var ruleMap *utils.SyncMap[string, iptables.Rule]
+	switch version {
+	case 4:
+		ruleMap = r.ruleV4Map
+		if _, ok := ruleMap.Load(policyName); ok {
+			break
+		}
+		tmp = "v4-"
+		changed = true
+	case 6:
+		ruleMap = r.ruleV6Map
+		if _, ok := ruleMap.Load(policyName); ok {
+			break
+		}
+		tmp = "v6-"
+		changed = true
+	default:
+		panic("not supported ip version")
+	}
+	if !changed {
+		return make([]iptables.Rule, 0), changed
+	}
+	rule := iptables.Rule{
+		Match: iptables.MatchCriteria{}.
+			SourceIPSet(formatIPSetName("egress-src-"+tmp, policyName)).
+			DestIPSet(formatIPSetName("egress-dst-"+tmp, policyName)),
+		Action:  iptables.SetMaskedMarkAction{Mark: 0x11000000, Mask: 0xffffffff},
+		Comment: []string{},
+	}
+	ruleMap.Store(policyName, rule)
+	return buildRuleList(ruleMap), changed
+}
+
+func buildRuleList(ruleMap *utils.SyncMap[string, iptables.Rule]) []iptables.Rule {
+	list := make([]iptables.Rule, 0)
+	ruleMap.Range(func(key string, val iptables.Rule) bool {
+		list = append(list, val)
+		return false
+	})
+	return list
 }
 
 func findDiff(oldList, newList []string) (toAdd, toDel []string) {
@@ -218,7 +493,7 @@ func findElements(include bool, parent []string, sub []string) []string {
 	return res
 }
 
-func (r policeReconciler) getDstCIDR(list []string) ([]string, []string, error) {
+func (r *policeReconciler) getDstCIDR(list []string) ([]string, []string, error) {
 	ipv4List := make([]string, 0)
 	ipv6List := make([]string, 0)
 
@@ -241,7 +516,7 @@ func (r policeReconciler) getDstCIDR(list []string) ([]string, []string, error) 
 	return nil, nil, nil
 }
 
-func (r policeReconciler) getPodIPsByLabelSelector(ctx context.Context, ls *metav1.LabelSelector) ([]string, []string, error) {
+func (r *policeReconciler) getPodIPsByLabelSelector(ctx context.Context, ls *metav1.LabelSelector) ([]string, []string, error) {
 	podList := &corev1.PodList{}
 	selPods, err := metav1.LabelSelectorAsSelector(ls)
 	if err != nil {
@@ -263,9 +538,11 @@ func getPodIPsByPodList(podList *corev1.PodList) ([]string, []string) {
 	ipv6List := make([]string, 0)
 
 	for _, pod := range podList.Items {
-		ipv4ListTmp, ipv6ListTmp := getPodIPsBy(pod)
-		ipv4List = append(ipv4List, ipv4ListTmp...)
-		ipv6List = append(ipv6List, ipv6ListTmp...)
+		if pod.DeletionTimestamp.IsZero() {
+			ipv4ListTmp, ipv6ListTmp := getPodIPsBy(pod)
+			ipv4List = append(ipv4List, ipv4ListTmp...)
+			ipv6List = append(ipv6List, ipv6ListTmp...)
+		}
 	}
 	return ipv4List, ipv6List
 }
@@ -287,7 +564,7 @@ func getPodIPsBy(pod corev1.Pod) ([]string, []string) {
 	return ipv4List, ipv6List
 }
 
-func (r policeReconciler) removeIPSet(log *zap.Logger, name string) {
+func (r *policeReconciler) removeIPSet(log *zap.Logger, name string) {
 	_, ok := r.ipsetMap.Load(name)
 	if ok {
 		err := r.ipset.DestroySet(name)
@@ -298,7 +575,7 @@ func (r policeReconciler) removeIPSet(log *zap.Logger, name string) {
 	}
 }
 
-func (r policeReconciler) createIPSet(log *zap.Logger, set SetName) error {
+func (r *policeReconciler) createIPSet(log *zap.Logger, set SetName) error {
 	_, exits := r.ipsetMap.Load(set.Name)
 	if !exits {
 		if set.Stack == IPv4 && !r.cfg.FileConfig.EnableIPv4 {
@@ -328,7 +605,7 @@ func (r policeReconciler) createIPSet(log *zap.Logger, set SetName) error {
 // reconcilePod reconcile pod
 // add/update/remove pod
 // - update ipset entry
-func (r policeReconciler) reconcilePod(ctx context.Context, req reconcile.Request, log *zap.Logger) (reconcile.Result, error) {
+func (r *policeReconciler) reconcilePod(ctx context.Context, req reconcile.Request, log *zap.Logger) (reconcile.Result, error) {
 	pod := new(corev1.Pod)
 	deleted := false
 	err := r.client.Get(ctx, req.NamespacedName, pod)
@@ -399,7 +676,7 @@ func (r policeReconciler) reconcilePod(ctx context.Context, req reconcile.Reques
 				ipSet, ok := r.ipsetMap.Load(set)
 				if ok {
 					err := r.ipset.AddEntry(ip, ipSet, false)
-					if err != nil {
+					if err != nil && err != ipset.ErrAlreadyAddedEntry {
 						return reconcile.Result{}, err
 					}
 				}
@@ -420,13 +697,70 @@ func (r policeReconciler) reconcilePod(ctx context.Context, req reconcile.Reques
 }
 
 func newPolicyController(mgr manager.Manager, log *zap.Logger, cfg *config.Config) error {
+	iptablesCfg := cfg.FileConfig.IPTables
+	opt := iptables.Options{
+		BackendMode:              cfg.FileConfig.IPTables.BackendMode,
+		InsertMode:               "insert",
+		RefreshInterval:          time.Second * time.Duration(iptablesCfg.RefreshIntervalSecond),
+		LockTimeout:              time.Second * time.Duration(iptablesCfg.LockTimeoutSecond),
+		LockProbeInterval:        time.Millisecond * time.Duration(iptablesCfg.LockProbeIntervalMillis),
+		InitialPostWriteInterval: time.Second * time.Duration(iptablesCfg.InitialPostWriteIntervalSecond),
+	}
+	lock := iptables.NewSharedLock(iptablesCfg.LockFilePath, opt.LockTimeout, opt.LockProbeInterval)
+	opt.XTablesLock = lock
+
+	mangleTables := make([]*iptables.Table, 0)
+	filterTables := make([]*iptables.Table, 0)
+	natTables := make([]*iptables.Table, 0)
+	if cfg.FileConfig.EnableIPv4 {
+		mangleTable, err := iptables.NewTable("mangle", 4, "egw-", opt, log)
+		if err != nil {
+			return err
+		}
+		mangleTables = append(mangleTables, mangleTable)
+
+		natTable, err := iptables.NewTable("nat", 4, "egw-", opt, log)
+		if err != nil {
+			return err
+		}
+		natTables = append(natTables, natTable)
+
+		filterTable, err := iptables.NewTable("filter", 4, "egw-", opt, log)
+		if err != nil {
+			return err
+		}
+		filterTables = append(filterTables, filterTable)
+	}
+	if cfg.FileConfig.EnableIPv6 {
+		mangle, err := iptables.NewTable("mangle", 6, "egw-", opt, log)
+		if err != nil {
+			return err
+		}
+		mangleTables = append(mangleTables, mangle)
+		nat, err := iptables.NewTable("nat", 6, "egw-", opt, log)
+		if err != nil {
+			return err
+		}
+		natTables = append(natTables, nat)
+		filter, err := iptables.NewTable("filter", 6, "egw-", opt, log)
+		if err != nil {
+			return err
+		}
+		filterTables = append(filterTables, filter)
+	}
+
 	e := exec.New()
 	r := &policeReconciler{
-		client:   mgr.GetClient(),
-		ipsetMap: utils.NewSyncMap[string, *ipset.IPSet](),
-		log:      log,
-		ipset:    ipset.New(e),
-		cfg:      cfg,
+		client:       mgr.GetClient(),
+		ipsetMap:     utils.NewSyncMap[string, *ipset.IPSet](),
+		log:          log,
+		ipset:        ipset.New(e),
+		cfg:          cfg,
+		mangleTables: mangleTables,
+		filterTables: filterTables,
+		natTables:    natTables,
+		ruleV4Map:    utils.NewSyncMap[string, iptables.Rule](),
+		ruleV6Map:    utils.NewSyncMap[string, iptables.Rule](),
 	}
 
 	c, err := controller.New("policy", mgr, controller.Options{Reconciler: r})

@@ -6,6 +6,7 @@ package ipset
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"net"
 	"regexp"
@@ -38,6 +39,8 @@ type Interface interface {
 	// GetVersion returns the "X.Y" version string for ipset.
 	GetVersion() (string, error)
 }
+
+var ErrAlreadyAddedEntry = errors.New("error already added entry")
 
 // IPSetCmd represents the ipset util. We use ipset command for ipset execute.
 const IPSetCmd = "ipset"

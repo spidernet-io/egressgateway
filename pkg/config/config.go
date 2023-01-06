@@ -40,6 +40,7 @@ func (cfg *Config) PrintPrettyConfig(zap *zap.Logger) {
 }
 
 type EnvConfig struct {
+	NodeName                  string `mapstructure:"NODE_NAME"`
 	LogLevel                  string `mapstructure:"LOG_LEVEL"`
 	KLOGLevel                 int    `mapstructure:"KLOG_LEVEL"`
 	LeaderElection            bool   `mapstructure:"LEADER_ELECTION"`
@@ -59,20 +60,28 @@ type EnvConfig struct {
 }
 
 type FileConfig struct {
-	EnableIPv4      bool `yaml:"enableIPv4"`
-	EnableIPv6      bool `yaml:"enableIPv6"`
-	StartRouteTable int  `yaml:"startRouteTable"`
-	// ["auto", "legacy", "nft"]
-	IptablesMode string `yaml:"iptablesMode"`
-	// ["iptables", "ebpf"]
-	DatapathMode     string `yaml:"datapathMode"`
-	TunnelIpv4Subnet string `yaml:"tunnelIpv4Subnet"`
-	TunnelIpv6Subnet string `yaml:"tunnelIpv6Subnet"`
-	TunnelInterface  string `yaml:"tunnelInterface"`
-	ForwardMethod    string `yaml:"forwardMethod"`
+	EnableIPv4       bool     `yaml:"enableIPv4"`
+	EnableIPv6       bool     `yaml:"enableIPv6"`
+	StartRouteTable  int      `yaml:"startRouteTable"`
+	IPTables         IPTables `yaml:"iptables"`
+	DatapathMode     string   `yaml:"datapathMode"`
+	TunnelIpv4Subnet string   `yaml:"tunnelIpv4Subnet"`
+	TunnelIpv6Subnet string   `yaml:"tunnelIpv6Subnet"`
+	TunnelInterface  string   `yaml:"tunnelInterface"`
+	ForwardMethod    string   `yaml:"forwardMethod"`
 
 	VxlanID      int `yaml:"vxlanID"`
 	VxlanUdpPort int `yaml:"vxlanUdpPort"`
+}
+
+type IPTables struct {
+	BackendMode                    string `yaml:"backendMode"`
+	RefreshIntervalSecond          int    `yaml:"refreshIntervalSecond"`
+	PostWriteIntervalSecond        int    `yaml:"postWriteIntervalSecond"`
+	LockTimeoutSecond              int    `yaml:"lockTimeoutSecond"`
+	LockProbeIntervalMillis        int    `yaml:"lockProbeIntervalMillis"`
+	InitialPostWriteIntervalSecond int    `yaml:"initialPostWriteIntervalSecond"`
+	LockFilePath                   string `yaml:"lockFilePath"`
 }
 
 // LoadConfig loads the configuration
@@ -90,7 +99,16 @@ func LoadConfig() (*Config, error) {
 			GolangMaxProcs:            -1,
 			TLSCertDir:                "/etc/tls",
 		},
-		FileConfig: FileConfig{},
+		FileConfig: FileConfig{
+			IPTables: IPTables{
+				BackendMode:             "",
+				RefreshIntervalSecond:   90,
+				PostWriteIntervalSecond: 1,
+				LockTimeoutSecond:       0,
+				LockProbeIntervalMillis: 50,
+				LockFilePath:            "/run/xtables.lock",
+			},
+		},
 	}
 
 	// map environment variables to struct objects

@@ -87,7 +87,7 @@ func (f *FakeIPSet) AddEntry(entry string, set *ipset.IPSet, ignoreExistErr bool
 	if f.Entries[set.Name].Has(entry) {
 		if !ignoreExistErr {
 			// already exists
-			return fmt.Errorf("element cannot be added to the set: it's already added")
+			return ipset.ErrAlreadyAddedEntry
 		}
 		return nil
 	}
