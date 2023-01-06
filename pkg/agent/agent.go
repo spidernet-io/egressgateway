@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 	"sigs.k8s.io/controller-runtime/pkg/healthz"
+	"time"
 
 	"go.uber.org/zap"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -24,10 +25,12 @@ type Agent struct {
 }
 
 func New(cfg *config.Config, log *zap.Logger) (types.Service, error) {
+	syncPeriod := time.Second * 15
 	mgrOpts := manager.Options{
 		Scheme: schema.GetScheme(),
 		//Logger:                 log,
 		HealthProbeBindAddress: cfg.HealthProbeBindAddress,
+		SyncPeriod:             &syncPeriod,
 	}
 
 	if cfg.MetricsBindAddress != "" {

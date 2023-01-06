@@ -6,6 +6,7 @@ package ipset
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"net"
 	"regexp"
@@ -38,6 +39,8 @@ type Interface interface {
 	// GetVersion returns the "X.Y" version string for ipset.
 	GetVersion() (string, error)
 }
+
+var ErrAlreadyAddedEntry = errors.New("error already added entry")
 
 // IPSetCmd represents the ipset util. We use ipset command for ipset execute.
 const IPSetCmd = "ipset"
@@ -378,7 +381,7 @@ func (runner *runner) ListEntries(set string) ([]string, error) {
 	}
 	out, err := runner.exec.Command(IPSetCmd, "list", set).CombinedOutput()
 	if err != nil {
-		return nil, fmt.Errorf("error listing set: %s, error: %v", set, err)
+		return nil, fmt.Errorf("error listing set: %s, error: %v (%v)", set, err, string(out))
 	}
 	memberMatcher := regexp.MustCompile(EntryMemberPattern)
 	list := memberMatcher.ReplaceAllString(string(out[:]), "")

@@ -70,7 +70,7 @@ install_proscope:
 		echo "setup pyroscope on $${ServerAddress}:$(PYROSCOPE_LOCAL_PORT)" ; \
 		docker run -d --name $(PYROSCOPE_CONTAINER_NAME) -p $(PYROSCOPE_LOCAL_PORT):4040 $(PYROSCOPE_IMAGE_NAME) server ; \
 		echo "finish setuping pyroscope " ; \
-      fi
+    fi
 
 
 
