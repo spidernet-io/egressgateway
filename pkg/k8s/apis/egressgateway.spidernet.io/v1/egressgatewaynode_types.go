@@ -13,12 +13,12 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-type EgressGatewayNodeSpec struct {
+type EgressGatewaySpec struct {
 	// +kubebuilder:validation:Required
 	NodeSelector *metav1.LabelSelector `json:"nodeSelector,omitempty"`
 }
 
-type EgressGatewayNodeStatus struct {
+type EgressGatewayStatus struct {
 	// +kubebuilder:validation:Optional
 	NodeList SelectedEgressNodes `json:"nodeList,omitempty"`
 }
@@ -60,30 +60,30 @@ type InterfaceStatus struct {
 }
 
 // scope(Namespaced or Cluster)
-// +kubebuilder:resource:categories={egressgatewaynode},path="egressgatewaynodes",singular="egressgatewaynode",scope="Cluster",shortName={egn}
+// +kubebuilder:resource:categories={egressgateway},path="egressgateways",singular="egressgateway",scope="Cluster",shortName={egn}
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
 // +genclient
 // +genclient:nonNamespaced
 
-type EgressGatewayNode struct {
+type EgressGateway struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata"`
 
-	Spec   EgressGatewayNodeSpec   `json:"spec,omitempty"`
-	Status EgressGatewayNodeStatus `json:"status,omitempty"`
+	Spec   EgressGatewaySpec   `json:"spec,omitempty"`
+	Status EgressGatewayStatus `json:"status,omitempty"`
 }
 
 // +kubebuilder:object:root=true
 
-// EgressGatewayNodeList contains a list of SpiderIPPool
-type EgressGatewayNodeList struct {
+// EgressGatewayList contains a list of SpiderIPPool
+type EgressGatewayList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata"`
 
-	Items []EgressGatewayNode `json:"items"`
+	Items []EgressGateway `json:"items"`
 }
 
 func init() {
-	SchemeBuilder.Register(&EgressGatewayNode{}, &EgressGatewayNodeList{})
+	SchemeBuilder.Register(&EgressGateway{}, &EgressGatewayList{})
 }

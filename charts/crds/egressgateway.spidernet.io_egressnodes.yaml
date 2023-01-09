@@ -46,19 +46,19 @@ spec:
             type: object
           status:
             properties:
+              phase:
+                type: string
               physicalInterface:
                 type: string
               physicalInterfaceIPv4:
                 type: string
               physicalInterfaceIPv6:
                 type: string
+              tunnelMac:
+                type: string
               vxlanIPv4IP:
                 type: string
-              vxlanIPv4Mac:
-                type: string
               vxlanIPv6IP:
-                type: string
-              vxlanIPv6Mac:
                 type: string
             type: object
         required:
