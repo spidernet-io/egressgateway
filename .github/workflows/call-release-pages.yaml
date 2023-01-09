@@ -60,7 +60,7 @@ jobs:
           make chart_package
 
       - name: Upload Artifact
-        uses: actions/upload-artifact@v3.1.1
+        uses: actions/upload-artifact@v3.1.2
         with:
           name: site_artifact
           path: output/docs/site.tar.gz
@@ -68,7 +68,7 @@ jobs:
           if-no-files-found: error
 
       - name: Upload Artifact
-        uses: actions/upload-artifact@v3.1.1
+        uses: actions/upload-artifact@v3.1.2
         with:
           name: chart_package_artifact
           path: ${{ env.CHART_OUTPUT_PATH }}
