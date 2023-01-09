@@ -18,10 +18,10 @@ type EgressNodeStatus struct {
 	VxlanIPv6IP string `json:"vxlanIPv6IP,omitempty"`
 
 	// +kubebuilder:validation:Optional
-	VxlanIPv4Mac string `json:"vxlanIPv4Mac,omitempty"`
+	TunnelMac string `json:"tunnelMac,omitempty"`
 
 	// +kubebuilder:validation:Optional
-	VxlanIPv6Mac string `json:"vxlanIPv6Mac,omitempty"`
+	Phase string `json:"phase,omitempty"`
 
 	// +kubebuilder:validation:Optional
 	PhysicalInterface string `json:"physicalInterface,omitempty"`

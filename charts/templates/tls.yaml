@@ -36,7 +36,7 @@ webhooks:
           - UPDATE
           - DELETE
         resources:
-        - egressgatewaynodes
+        - egressgateways
         - egressgatewaypolicies
         - egressnodes
     sideEffects: None

@@ -36,10 +36,10 @@ type TestEGNReq struct {
 	nn         types.NamespacedName
 	expErr     bool
 	expRequeue bool
-	expEGN     []egressv1.EgressGatewayNode
+	expEGN     []egressv1.EgressGateway
 }
 
-func TestReconcilerEgressGatewayNode(t *testing.T) {
+func TestReconcilerEgressGateway(t *testing.T) {
 	cases := map[string]TestCaseEGN{
 		"caseNodeReadyButVxlanNotReady":            caseNodeReadyButVxlanNotReady(),
 		"caseNodeReadVxlanReady":                   caseNodeReadVxlanReady(),
@@ -47,7 +47,7 @@ func TestReconcilerEgressGatewayNode(t *testing.T) {
 		"caseNodeReadyVxlanReadyDualStackNotReady": caseNodeReadyVxlanReadyDualStackNotReady(),
 		"caseMoreNodeBeSelected":                   caseMoreNodeBeSelected(),
 		"caseMoreNodeBeSelectedActiveActive":       caseMoreNodeBeSelectedActiveActive(),
-		"caseChangeEgressGatewayNodeLabel":         caseChangeEgressGatewayNodeLabel(),
+		"caseChangeEgressGatewayLabel":             caseChangeEgressGatewayLabel(),
 		"caseDeleteEgressNode":                     caseDeleteEgressNode(),
 		"caseNodeReadyToNotReady":                  caseNodeReadyToNotReady(),
 		"caseNodeNotReadyToReady":                  caseNodeNotReadyToReady(),
@@ -76,7 +76,7 @@ func TestReconcilerEgressGatewayNode(t *testing.T) {
 				assert.Equal(t, req.expRequeue, res.Requeue)
 
 				for _, expEgn := range req.expEGN {
-					gotEgn := new(egressv1.EgressGatewayNode)
+					gotEgn := new(egressv1.EgressGateway)
 					err := reconciler.client.Get(context.Background(), types.NamespacedName{
 						Name: expEgn.Name,
 					}, gotEgn)
@@ -133,38 +133,38 @@ func caseNodeReadyButVxlanNotReady() TestCaseEGN {
 				Spec:   corev1.NodeSpec{},
 				Status: corev1.NodeStatus{},
 			},
-			&egressv1.EgressGatewayNode{
+			&egressv1.EgressGateway{
 				TypeMeta: metav1.TypeMeta{},
 				ObjectMeta: metav1.ObjectMeta{
 					Name: "egress1",
 				},
-				Spec: egressv1.EgressGatewayNodeSpec{
+				Spec: egressv1.EgressGatewaySpec{
 					NodeSelector: &metav1.LabelSelector{
 						MatchLabels: map[string]string{
 							"egress": "true",
 						},
 					},
 				},
-				Status: egressv1.EgressGatewayNodeStatus{},
+				Status: egressv1.EgressGatewayStatus{},
 			},
 		},
 		reqs: []TestEGNReq{
 			{
 				nn: types.NamespacedName{
-					Namespace: "EgressGatewayNode/",
+					Namespace: "EgressGateway/",
 					Name:      "egress1",
 				},
 				expErr:     false,
 				expRequeue: false,
-				expEGN: []egressv1.EgressGatewayNode{
+				expEGN: []egressv1.EgressGateway{
 					{
 						TypeMeta: metav1.TypeMeta{},
 						ObjectMeta: metav1.ObjectMeta{
 							Name: "egress1",
 						},
 
-						Spec: egressv1.EgressGatewayNodeSpec{},
-						Status: egressv1.EgressGatewayNodeStatus{
+						Spec: egressv1.EgressGatewaySpec{},
+						Status: egressv1.EgressGatewayStatus{
 							NodeList: []egressv1.SelectedEgressNode{
 								{
 									Name:            "node1",
@@ -210,45 +210,45 @@ func caseNodeReadVxlanReady() TestCaseEGN {
 				Status: egressv1.EgressNodeStatus{
 					VxlanIPv4IP:           "10.6.0.1",
 					VxlanIPv6IP:           "",
-					VxlanIPv4Mac:          "00:50:56:b4:02:1d",
-					VxlanIPv6Mac:          "",
+					TunnelMac:             "00:50:56:b4:02:1d",
+					Phase:                 "Succeeded",
 					PhysicalInterface:     "eth0",
 					PhysicalInterfaceIPv4: "172.16.0.1",
 					PhysicalInterfaceIPv6: "",
 				},
 			},
-			&egressv1.EgressGatewayNode{
+			&egressv1.EgressGateway{
 				TypeMeta: metav1.TypeMeta{},
 				ObjectMeta: metav1.ObjectMeta{
 					Name: "egress1",
 				},
-				Spec: egressv1.EgressGatewayNodeSpec{
+				Spec: egressv1.EgressGatewaySpec{
 					NodeSelector: &metav1.LabelSelector{
 						MatchLabels: map[string]string{
 							"egress": "true",
 						},
 					},
 				},
-				Status: egressv1.EgressGatewayNodeStatus{},
+				Status: egressv1.EgressGatewayStatus{},
 			},
 		},
 		reqs: []TestEGNReq{
 			{
 				nn: types.NamespacedName{
-					Namespace: "EgressGatewayNode/",
+					Namespace: "EgressGateway/",
 					Name:      "egress1",
 				},
 				expErr:     false,
 				expRequeue: false,
-				expEGN: []egressv1.EgressGatewayNode{
+				expEGN: []egressv1.EgressGateway{
 					{
 						TypeMeta: metav1.TypeMeta{},
 						ObjectMeta: metav1.ObjectMeta{
 							Name: "egress1",
 						},
 
-						Spec: egressv1.EgressGatewayNodeSpec{},
-						Status: egressv1.EgressGatewayNodeStatus{
+						Spec: egressv1.EgressGatewaySpec{},
+						Status: egressv1.EgressGatewayStatus{
 							NodeList: []egressv1.SelectedEgressNode{
 								{
 									Name:            "node1",
@@ -294,45 +294,45 @@ func caseNodeReadyVxlanReadyDualStack() TestCaseEGN {
 				Status: egressv1.EgressNodeStatus{
 					VxlanIPv4IP:           "10.6.0.1",
 					VxlanIPv6IP:           "1010:0000:0000:0000:0000:0000:0000:00001",
-					VxlanIPv4Mac:          "00:50:56:b4:02:1d",
-					VxlanIPv6Mac:          "00:50:56:b4:02:1c",
+					TunnelMac:             "00:50:56:b4:02:1d",
+					Phase:                 "Succeeded",
 					PhysicalInterface:     "eth0",
 					PhysicalInterfaceIPv4: "172.16.0.1",
 					PhysicalInterfaceIPv6: "1020:0000:0000:0000:0000:0000:0000:0001",
 				},
 			},
-			&egressv1.EgressGatewayNode{
+			&egressv1.EgressGateway{
 				TypeMeta: metav1.TypeMeta{},
 				ObjectMeta: metav1.ObjectMeta{
 					Name: "egress1",
 				},
-				Spec: egressv1.EgressGatewayNodeSpec{
+				Spec: egressv1.EgressGatewaySpec{
 					NodeSelector: &metav1.LabelSelector{
 						MatchLabels: map[string]string{
 							"egress": "true",
 						},
 					},
 				},
-				Status: egressv1.EgressGatewayNodeStatus{},
+				Status: egressv1.EgressGatewayStatus{},
 			},
 		},
 		reqs: []TestEGNReq{
 			{
 				nn: types.NamespacedName{
-					Namespace: "EgressGatewayNode/",
+					Namespace: "EgressGateway/",
 					Name:      "egress1",
 				},
 				expErr:     false,
 				expRequeue: false,
-				expEGN: []egressv1.EgressGatewayNode{
+				expEGN: []egressv1.EgressGateway{
 					{
 						TypeMeta: metav1.TypeMeta{},
 						ObjectMeta: metav1.ObjectMeta{
 							Name: "egress1",
 						},
 
-						Spec: egressv1.EgressGatewayNodeSpec{},
-						Status: egressv1.EgressGatewayNodeStatus{
+						Spec: egressv1.EgressGatewaySpec{},
+						Status: egressv1.EgressGatewayStatus{
 							NodeList: []egressv1.SelectedEgressNode{
 								{
 									Name:            "node1",
@@ -378,45 +378,45 @@ func caseNodeReadyVxlanReadyDualStackNotReady() TestCaseEGN {
 				Status: egressv1.EgressNodeStatus{
 					VxlanIPv4IP:           "10.6.0.1",
 					VxlanIPv6IP:           "1010:0000:0000:0000:0000:0000:0000:00001",
-					VxlanIPv4Mac:          "00:50:56:b4:02:1d",
-					VxlanIPv6Mac:          "00:50:56:b4:02:1c",
+					TunnelMac:             "00:50:56:b4:02:1d",
+					Phase:                 "Succeeded",
 					PhysicalInterface:     "eth0",
 					PhysicalInterfaceIPv4: "172.16.0.1",
 					PhysicalInterfaceIPv6: "",
 				},
 			},
-			&egressv1.EgressGatewayNode{
+			&egressv1.EgressGateway{
 				TypeMeta: metav1.TypeMeta{},
 				ObjectMeta: metav1.ObjectMeta{
 					Name: "egress1",
 				},
-				Spec: egressv1.EgressGatewayNodeSpec{
+				Spec: egressv1.EgressGatewaySpec{
 					NodeSelector: &metav1.LabelSelector{
 						MatchLabels: map[string]string{
 							"egress": "true",
 						},
 					},
 				},
-				Status: egressv1.EgressGatewayNodeStatus{},
+				Status: egressv1.EgressGatewayStatus{},
 			},
 		},
 		reqs: []TestEGNReq{
 			{
 				nn: types.NamespacedName{
-					Namespace: "EgressGatewayNode/",
+					Namespace: "EgressGateway/",
 					Name:      "egress1",
 				},
 				expErr:     false,
 				expRequeue: false,
-				expEGN: []egressv1.EgressGatewayNode{
+				expEGN: []egressv1.EgressGateway{
 					{
 						TypeMeta: metav1.TypeMeta{},
 						ObjectMeta: metav1.ObjectMeta{
 							Name: "egress1",
 						},
 
-						Spec: egressv1.EgressGatewayNodeSpec{},
-						Status: egressv1.EgressGatewayNodeStatus{
+						Spec: egressv1.EgressGatewaySpec{},
+						Status: egressv1.EgressGatewayStatus{
 							NodeList: []egressv1.SelectedEgressNode{
 								{
 									Name:            "node1",
@@ -484,8 +484,8 @@ func caseMoreNodeBeSelected() TestCaseEGN {
 				Status: egressv1.EgressNodeStatus{
 					VxlanIPv4IP:           "10.6.0.1",
 					VxlanIPv6IP:           "",
-					VxlanIPv4Mac:          "00:50:56:b4:02:1d",
-					VxlanIPv6Mac:          "",
+					TunnelMac:             "00:50:56:b4:02:1d",
+					Phase:                 "Succeeded",
 					PhysicalInterface:     "eth0",
 					PhysicalInterfaceIPv4: "172.16.0.1",
 					PhysicalInterfaceIPv6: "",
@@ -499,8 +499,8 @@ func caseMoreNodeBeSelected() TestCaseEGN {
 				Status: egressv1.EgressNodeStatus{
 					VxlanIPv4IP:           "10.6.0.1",
 					VxlanIPv6IP:           "",
-					VxlanIPv4Mac:          "00:50:56:b4:02:1d",
-					VxlanIPv6Mac:          "",
+					TunnelMac:             "00:50:56:b4:02:1d",
+					Phase:                 "Succeeded",
 					PhysicalInterface:     "eth0",
 					PhysicalInterfaceIPv4: "172.16.0.1",
 					PhysicalInterfaceIPv6: "",
@@ -514,44 +514,44 @@ func caseMoreNodeBeSelected() TestCaseEGN {
 				Status: egressv1.EgressNodeStatus{
 					VxlanIPv4IP:           "",
 					VxlanIPv6IP:           "",
-					VxlanIPv4Mac:          "",
-					VxlanIPv6Mac:          "",
+					TunnelMac:             "",
+					Phase:                 "Succeeded",
 					PhysicalInterface:     "eth0",
 					PhysicalInterfaceIPv4: "172.16.0.1",
 					PhysicalInterfaceIPv6: "",
 				},
 			},
-			&egressv1.EgressGatewayNode{
+			&egressv1.EgressGateway{
 				TypeMeta: metav1.TypeMeta{},
 				ObjectMeta: metav1.ObjectMeta{
 					Name: "egress1",
 				},
-				Spec: egressv1.EgressGatewayNodeSpec{
+				Spec: egressv1.EgressGatewaySpec{
 					NodeSelector: &metav1.LabelSelector{
 						MatchLabels: map[string]string{
 							"egress": "true",
 						},
 					},
 				},
-				Status: egressv1.EgressGatewayNodeStatus{},
+				Status: egressv1.EgressGatewayStatus{},
 			},
 		},
 		reqs: []TestEGNReq{
 			{
 				nn: types.NamespacedName{
-					Namespace: "EgressGatewayNode/",
+					Namespace: "EgressGateway/",
 					Name:      "egress1",
 				},
 				expErr:     false,
 				expRequeue: false,
-				expEGN: []egressv1.EgressGatewayNode{
+				expEGN: []egressv1.EgressGateway{
 					{
 						TypeMeta: metav1.TypeMeta{},
 						ObjectMeta: metav1.ObjectMeta{
 							Name: "egress1",
 						},
-						Spec: egressv1.EgressGatewayNodeSpec{},
-						Status: egressv1.EgressGatewayNodeStatus{
+						Spec: egressv1.EgressGatewaySpec{},
+						Status: egressv1.EgressGatewayStatus{
 							NodeList: []egressv1.SelectedEgressNode{
 								{
 									Name:            "node1",
@@ -632,8 +632,8 @@ func caseMoreNodeBeSelectedActiveActive() TestCaseEGN {
 				Status: egressv1.EgressNodeStatus{
 					VxlanIPv4IP:           "10.6.0.1",
 					VxlanIPv6IP:           "",
-					VxlanIPv4Mac:          "00:50:56:b4:02:1d",
-					VxlanIPv6Mac:          "",
+					TunnelMac:             "00:50:56:b4:02:1d",
+					Phase:                 "Succeeded",
 					PhysicalInterface:     "eth0",
 					PhysicalInterfaceIPv4: "172.16.0.1",
 					PhysicalInterfaceIPv6: "",
@@ -647,8 +647,8 @@ func caseMoreNodeBeSelectedActiveActive() TestCaseEGN {
 				Status: egressv1.EgressNodeStatus{
 					VxlanIPv4IP:           "10.6.0.1",
 					VxlanIPv6IP:           "",
-					VxlanIPv4Mac:          "00:50:56:b4:02:1d",
-					VxlanIPv6Mac:          "",
+					TunnelMac:             "00:50:56:b4:02:1d",
+					Phase:                 "Succeeded",
 					PhysicalInterface:     "eth0",
 					PhysicalInterfaceIPv4: "172.16.0.1",
 					PhysicalInterfaceIPv6: "",
@@ -662,44 +662,44 @@ func caseMoreNodeBeSelectedActiveActive() TestCaseEGN {
 				Status: egressv1.EgressNodeStatus{
 					VxlanIPv4IP:           "",
 					VxlanIPv6IP:           "",
-					VxlanIPv4Mac:          "",
-					VxlanIPv6Mac:          "",
+					TunnelMac:             "",
+					Phase:                 "Succeeded",
 					PhysicalInterface:     "eth0",
 					PhysicalInterfaceIPv4: "172.16.0.1",
 					PhysicalInterfaceIPv6: "",
 				},
 			},
-			&egressv1.EgressGatewayNode{
+			&egressv1.EgressGateway{
 				TypeMeta: metav1.TypeMeta{},
 				ObjectMeta: metav1.ObjectMeta{
 					Name: "egress1",
 				},
-				Spec: egressv1.EgressGatewayNodeSpec{
+				Spec: egressv1.EgressGatewaySpec{
 					NodeSelector: &metav1.LabelSelector{
 						MatchLabels: map[string]string{
 							"egress": "true",
 						},
 					},
 				},
-				Status: egressv1.EgressGatewayNodeStatus{},
+				Status: egressv1.EgressGatewayStatus{},
 			},
 		},
 		reqs: []TestEGNReq{
 			{
 				nn: types.NamespacedName{
-					Namespace: "EgressGatewayNode/",
+					Namespace: "EgressGateway/",
 					Name:      "egress1",
 				},
 				expErr:     false,
 				expRequeue: false,
-				expEGN: []egressv1.EgressGatewayNode{
+				expEGN: []egressv1.EgressGateway{
 					{
 						TypeMeta: metav1.TypeMeta{},
 						ObjectMeta: metav1.ObjectMeta{
 							Name: "egress1",
 						},
-						Spec: egressv1.EgressGatewayNodeSpec{},
-						Status: egressv1.EgressGatewayNodeStatus{
+						Spec: egressv1.EgressGatewaySpec{},
+						Status: egressv1.EgressGatewayStatus{
 							NodeList: []egressv1.SelectedEgressNode{
 								{
 									Name:            "node1",
@@ -728,7 +728,7 @@ func caseMoreNodeBeSelectedActiveActive() TestCaseEGN {
 	}
 }
 
-func caseChangeEgressGatewayNodeLabel() TestCaseEGN {
+func caseChangeEgressGatewayLabel() TestCaseEGN {
 	return TestCaseEGN{
 		config: &config.Config{
 			EnvConfig: config.EnvConfig{},
@@ -776,8 +776,8 @@ func caseChangeEgressGatewayNodeLabel() TestCaseEGN {
 				Status: egressv1.EgressNodeStatus{
 					VxlanIPv4IP:           "10.6.0.1",
 					VxlanIPv6IP:           "",
-					VxlanIPv4Mac:          "00:50:56:b4:02:1a",
-					VxlanIPv6Mac:          "",
+					TunnelMac:             "00:50:56:b4:02:1a",
+					Phase:                 "Succeeded",
 					PhysicalInterface:     "eth0",
 					PhysicalInterfaceIPv4: "172.16.0.1",
 					PhysicalInterfaceIPv6: "",
@@ -791,8 +791,8 @@ func caseChangeEgressGatewayNodeLabel() TestCaseEGN {
 				Status: egressv1.EgressNodeStatus{
 					VxlanIPv4IP:           "10.6.0.2",
 					VxlanIPv6IP:           "",
-					VxlanIPv4Mac:          "00:50:56:b4:02:1b",
-					VxlanIPv6Mac:          "",
+					TunnelMac:             "00:50:56:b4:02:1b",
+					Phase:                 "Succeeded",
 					PhysicalInterface:     "eth0",
 					PhysicalInterfaceIPv4: "172.16.0.2",
 					PhysicalInterfaceIPv6: "",
@@ -806,26 +806,26 @@ func caseChangeEgressGatewayNodeLabel() TestCaseEGN {
 				Status: egressv1.EgressNodeStatus{
 					VxlanIPv4IP:           "10.6.0.3",
 					VxlanIPv6IP:           "",
-					VxlanIPv4Mac:          "00:50:56:b4:02:1c",
-					VxlanIPv6Mac:          "",
+					TunnelMac:             "00:50:56:b4:02:1c",
+					Phase:                 "Succeeded",
 					PhysicalInterface:     "eth0",
 					PhysicalInterfaceIPv4: "172.16.0.3",
 					PhysicalInterfaceIPv6: "",
 				},
 			},
-			&egressv1.EgressGatewayNode{
+			&egressv1.EgressGateway{
 				TypeMeta: metav1.TypeMeta{},
 				ObjectMeta: metav1.ObjectMeta{
 					Name: "egress1",
 				},
-				Spec: egressv1.EgressGatewayNodeSpec{
+				Spec: egressv1.EgressGatewaySpec{
 					NodeSelector: &metav1.LabelSelector{
 						MatchLabels: map[string]string{
 							"egress": "true",
 						},
 					},
 				},
-				Status: egressv1.EgressGatewayNodeStatus{
+				Status: egressv1.EgressGatewayStatus{
 					NodeList: []egressv1.SelectedEgressNode{
 						{
 							Name:            "node1",
@@ -852,19 +852,19 @@ func caseChangeEgressGatewayNodeLabel() TestCaseEGN {
 		reqs: []TestEGNReq{
 			{
 				nn: types.NamespacedName{
-					Namespace: "EgressGatewayNode/",
+					Namespace: "EgressGateway/",
 					Name:      "egress1",
 				},
 				expErr:     false,
 				expRequeue: false,
-				expEGN: []egressv1.EgressGatewayNode{
+				expEGN: []egressv1.EgressGateway{
 					{
 						TypeMeta: metav1.TypeMeta{},
 						ObjectMeta: metav1.ObjectMeta{
 							Name: "egress1",
 						},
-						Spec: egressv1.EgressGatewayNodeSpec{},
-						Status: egressv1.EgressGatewayNodeStatus{
+						Spec: egressv1.EgressGatewaySpec{},
+						Status: egressv1.EgressGatewayStatus{
 							NodeList: []egressv1.SelectedEgressNode{
 								{
 									Name:            "node2",
@@ -936,8 +936,8 @@ func caseDeleteEgressNode() TestCaseEGN {
 				Status: egressv1.EgressNodeStatus{
 					VxlanIPv4IP:           "10.6.0.1",
 					VxlanIPv6IP:           "",
-					VxlanIPv4Mac:          "00:50:56:b4:02:1a",
-					VxlanIPv6Mac:          "",
+					TunnelMac:             "00:50:56:b4:02:1a",
+					Phase:                 "Succeeded",
 					PhysicalInterface:     "eth0",
 					PhysicalInterfaceIPv4: "172.16.0.1",
 					PhysicalInterfaceIPv6: "",
@@ -951,8 +951,8 @@ func caseDeleteEgressNode() TestCaseEGN {
 				Status: egressv1.EgressNodeStatus{
 					VxlanIPv4IP:           "10.6.0.2",
 					VxlanIPv6IP:           "",
-					VxlanIPv4Mac:          "00:50:56:b4:02:1b",
-					VxlanIPv6Mac:          "",
+					TunnelMac:             "00:50:56:b4:02:1b",
+					Phase:                 "Succeeded",
 					PhysicalInterface:     "eth0",
 					PhysicalInterfaceIPv4: "172.16.0.2",
 					PhysicalInterfaceIPv6: "",
@@ -966,26 +966,26 @@ func caseDeleteEgressNode() TestCaseEGN {
 				Status: egressv1.EgressNodeStatus{
 					VxlanIPv4IP:           "10.6.0.3",
 					VxlanIPv6IP:           "",
-					VxlanIPv4Mac:          "00:50:56:b4:02:1c",
-					VxlanIPv6Mac:          "",
+					TunnelMac:             "00:50:56:b4:02:1c",
+					Phase:                 "Succeeded",
 					PhysicalInterface:     "eth0",
 					PhysicalInterfaceIPv4: "172.16.0.3",
 					PhysicalInterfaceIPv6: "",
 				},
 			},
-			&egressv1.EgressGatewayNode{
+			&egressv1.EgressGateway{
 				TypeMeta: metav1.TypeMeta{},
 				ObjectMeta: metav1.ObjectMeta{
 					Name: "egress1",
 				},
-				Spec: egressv1.EgressGatewayNodeSpec{
+				Spec: egressv1.EgressGatewaySpec{
 					NodeSelector: &metav1.LabelSelector{
 						MatchLabels: map[string]string{
 							"egress": "true",
 						},
 					},
 				},
-				Status: egressv1.EgressGatewayNodeStatus{
+				Status: egressv1.EgressGatewayStatus{
 					NodeList: []egressv1.SelectedEgressNode{
 						{
 							Name:            "node1",
@@ -1017,14 +1017,14 @@ func caseDeleteEgressNode() TestCaseEGN {
 				},
 				expErr:     false,
 				expRequeue: false,
-				expEGN: []egressv1.EgressGatewayNode{
+				expEGN: []egressv1.EgressGateway{
 					{
 						TypeMeta: metav1.TypeMeta{},
 						ObjectMeta: metav1.ObjectMeta{
 							Name: "egress1",
 						},
-						Spec: egressv1.EgressGatewayNodeSpec{},
-						Status: egressv1.EgressGatewayNodeStatus{
+						Spec: egressv1.EgressGatewaySpec{},
+						Status: egressv1.EgressGatewayStatus{
 							NodeList: []egressv1.SelectedEgressNode{
 								{
 									Name:            "node2",
@@ -1102,8 +1102,8 @@ func caseNodeReadyToNotReady() TestCaseEGN {
 				Status: egressv1.EgressNodeStatus{
 					VxlanIPv4IP:           "10.6.0.1",
 					VxlanIPv6IP:           "",
-					VxlanIPv4Mac:          "00:50:56:b4:02:1a",
-					VxlanIPv6Mac:          "",
+					TunnelMac:             "00:50:56:b4:02:1a",
+					Phase:                 "Succeeded",
 					PhysicalInterface:     "eth0",
 					PhysicalInterfaceIPv4: "172.16.0.1",
 					PhysicalInterfaceIPv6: "",
@@ -1117,8 +1117,8 @@ func caseNodeReadyToNotReady() TestCaseEGN {
 				Status: egressv1.EgressNodeStatus{
 					VxlanIPv4IP:           "10.6.0.2",
 					VxlanIPv6IP:           "",
-					VxlanIPv4Mac:          "00:50:56:b4:02:1b",
-					VxlanIPv6Mac:          "",
+					TunnelMac:             "00:50:56:b4:02:1b",
+					Phase:                 "Succeeded",
 					PhysicalInterface:     "eth0",
 					PhysicalInterfaceIPv4: "172.16.0.2",
 					PhysicalInterfaceIPv6: "",
@@ -1132,26 +1132,26 @@ func caseNodeReadyToNotReady() TestCaseEGN {
 				Status: egressv1.EgressNodeStatus{
 					VxlanIPv4IP:           "10.6.0.3",
 					VxlanIPv6IP:           "",
-					VxlanIPv4Mac:          "00:50:56:b4:02:1c",
-					VxlanIPv6Mac:          "",
+					TunnelMac:             "00:50:56:b4:02:1c",
+					Phase:                 "Succeeded",
 					PhysicalInterface:     "eth0",
 					PhysicalInterfaceIPv4: "172.16.0.3",
 					PhysicalInterfaceIPv6: "",
 				},
 			},
-			&egressv1.EgressGatewayNode{
+			&egressv1.EgressGateway{
 				TypeMeta: metav1.TypeMeta{},
 				ObjectMeta: metav1.ObjectMeta{
 					Name: "egress1",
 				},
-				Spec: egressv1.EgressGatewayNodeSpec{
+				Spec: egressv1.EgressGatewaySpec{
 					NodeSelector: &metav1.LabelSelector{
 						MatchLabels: map[string]string{
 							"egress": "true",
 						},
 					},
 				},
-				Status: egressv1.EgressGatewayNodeStatus{
+				Status: egressv1.EgressGatewayStatus{
 					NodeList: []egressv1.SelectedEgressNode{
 						{
 							Name:            "node1",
@@ -1183,14 +1183,14 @@ func caseNodeReadyToNotReady() TestCaseEGN {
 				},
 				expErr:     false,
 				expRequeue: false,
-				expEGN: []egressv1.EgressGatewayNode{
+				expEGN: []egressv1.EgressGateway{
 					{
 						TypeMeta: metav1.TypeMeta{},
 						ObjectMeta: metav1.ObjectMeta{
 							Name: "egress1",
 						},
-						Spec: egressv1.EgressGatewayNodeSpec{},
-						Status: egressv1.EgressGatewayNodeStatus{
+						Spec: egressv1.EgressGatewaySpec{},
+						Status: egressv1.EgressGatewayStatus{
 							NodeList: []egressv1.SelectedEgressNode{
 								{
 									Name:            "node1",
@@ -1268,8 +1268,8 @@ func caseNodeNotReadyToReady() TestCaseEGN {
 				Status: egressv1.EgressNodeStatus{
 					VxlanIPv4IP:           "10.6.0.1",
 					VxlanIPv6IP:           "",
-					VxlanIPv4Mac:          "00:50:56:b4:02:1a",
-					VxlanIPv6Mac:          "",
+					TunnelMac:             "00:50:56:b4:02:1a",
+					Phase:                 "Succeeded",
 					PhysicalInterface:     "eth0",
 					PhysicalInterfaceIPv4: "172.16.0.1",
 					PhysicalInterfaceIPv6: "",
@@ -1283,8 +1283,8 @@ func caseNodeNotReadyToReady() TestCaseEGN {
 				Status: egressv1.EgressNodeStatus{
 					VxlanIPv4IP:           "10.6.0.2",
 					VxlanIPv6IP:           "",
-					VxlanIPv4Mac:          "00:50:56:b4:02:1b",
-					VxlanIPv6Mac:          "",
+					TunnelMac:             "00:50:56:b4:02:1b",
+					Phase:                 "Succeeded",
 					PhysicalInterface:     "eth0",
 					PhysicalInterfaceIPv4: "172.16.0.2",
 					PhysicalInterfaceIPv6: "",
@@ -1298,26 +1298,26 @@ func caseNodeNotReadyToReady() TestCaseEGN {
 				Status: egressv1.EgressNodeStatus{
 					VxlanIPv4IP:           "10.6.0.3",
 					VxlanIPv6IP:           "",
-					VxlanIPv4Mac:          "00:50:56:b4:02:1c",
-					VxlanIPv6Mac:          "",
+					TunnelMac:             "00:50:56:b4:02:1c",
+					Phase:                 "Succeeded",
 					PhysicalInterface:     "eth0",
 					PhysicalInterfaceIPv4: "172.16.0.3",
 					PhysicalInterfaceIPv6: "",
 				},
 			},
-			&egressv1.EgressGatewayNode{
+			&egressv1.EgressGateway{
 				TypeMeta: metav1.TypeMeta{},
 				ObjectMeta: metav1.ObjectMeta{
 					Name: "egress1",
 				},
-				Spec: egressv1.EgressGatewayNodeSpec{
+				Spec: egressv1.EgressGatewaySpec{
 					NodeSelector: &metav1.LabelSelector{
 						MatchLabels: map[string]string{
 							"egress": "true",
 						},
 					},
 				},
-				Status: egressv1.EgressGatewayNodeStatus{
+				Status: egressv1.EgressGatewayStatus{
 					NodeList: []egressv1.SelectedEgressNode{
 						{
 							Name:            "node1",
@@ -1349,14 +1349,14 @@ func caseNodeNotReadyToReady() TestCaseEGN {
 				},
 				expErr:     false,
 				expRequeue: false,
-				expEGN: []egressv1.EgressGatewayNode{
+				expEGN: []egressv1.EgressGateway{
 					{
 						TypeMeta: metav1.TypeMeta{},
 						ObjectMeta: metav1.ObjectMeta{
 							Name: "egress1",
 						},
-						Spec: egressv1.EgressGatewayNodeSpec{},
-						Status: egressv1.EgressGatewayNodeStatus{
+						Spec: egressv1.EgressGatewaySpec{},
+						Status: egressv1.EgressGatewayStatus{
 							NodeList: []egressv1.SelectedEgressNode{
 								{
 									Name:            "node1",
@@ -1385,7 +1385,7 @@ func caseNodeNotReadyToReady() TestCaseEGN {
 	}
 }
 
-func TestNewEgressGatewayNodeController(t *testing.T) {
+func TestNewEgressGatewayController(t *testing.T) {
 	type Case struct {
 		mgr    manager.Manager
 		cfg    *config.Config
@@ -1416,7 +1416,7 @@ func TestNewEgressGatewayNodeController(t *testing.T) {
 
 	for name, c := range cases {
 		t.Run(name, func(t *testing.T) {
-			err := newEgressGatewayNodeController(c.mgr, c.log, c.cfg)
+			err := newEgressGatewayController(c.mgr, c.log, c.cfg)
 			if !c.expErr {
 				assert.NoError(t, err)
 			}

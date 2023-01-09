@@ -48,8 +48,8 @@ func (r policeReconciler) Reconcile(ctx context.Context, req reconcile.Request) 
 	)
 	log.Info("reconciling")
 	switch kind {
-	case "EgressGatewayNode":
-		return r.reconcileEGN(ctx, newReq, log)
+	case "EgressGateway":
+		return r.reconcileEG(ctx, newReq, log)
 	case "EgressGatewayPolicy":
 		return r.reconcileEGP(ctx, newReq, log)
 	case "Pod":
@@ -59,11 +59,11 @@ func (r policeReconciler) Reconcile(ctx context.Context, req reconcile.Request) 
 	}
 }
 
-// reconcileEGN reconcile egress gateway node
+//  reconcile egress gateway
 // goal:
-// - add/update/delete egress gateway node
+// - add/update/delete egress gateway
 //   - iptables
-func (r policeReconciler) reconcileEGN(ctx context.Context, req reconcile.Request, log *zap.Logger) (reconcile.Result, error) {
+func (r policeReconciler) reconcileEG(ctx context.Context, req reconcile.Request, log *zap.Logger) (reconcile.Result, error) {
 	return reconcile.Result{}, nil
 }
 
@@ -434,9 +434,9 @@ func newPolicyController(mgr manager.Manager, log *zap.Logger, cfg *config.Confi
 		return err
 	}
 
-	if err := c.Watch(&source.Kind{Type: &egressv1.EgressGatewayNode{}},
-		handler.EnqueueRequestsFromMapFunc(utils.KindToMapFlat("EgressGatewayNode"))); err != nil {
-		return fmt.Errorf("failed to watch EgressGatewayNode: %w", err)
+	if err := c.Watch(&source.Kind{Type: &egressv1.EgressGateway{}},
+		handler.EnqueueRequestsFromMapFunc(utils.KindToMapFlat("EgressGateway"))); err != nil {
+		return fmt.Errorf("failed to watch EgressGateway: %w", err)
 	}
 
 	if err := c.Watch(&source.Kind{Type: &egressv1.EgressGatewayPolicy{}},

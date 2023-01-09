@@ -28,8 +28,8 @@ import (
 )
 
 const (
-	indexEgressNodeEgressGatewayNode = "egressNodeEgressGatewayNodeIndex"
-	indexNodeEgressGatewayNode       = "nodeEgressGatewayNodeIndex"
+	indexEgressNodeEgressGateway = "egressNodeEgressGatewayIndex"
+	indexNodeEgressGateway       = "nodeEgressGatewayIndex"
 )
 
 type egnReconciler struct {
@@ -50,8 +50,8 @@ func (r egnReconciler) Reconcile(ctx context.Context, req reconcile.Request) (re
 	)
 	log.Info("reconciling")
 	switch kind {
-	case "EgressGatewayNode":
-		return r.reconcileEGN(ctx, newReq, log)
+	case "EgressGateway":
+		return r.reconcileEG(ctx, newReq, log)
 	case "EgressNode":
 		return r.reconcileEN(ctx, newReq, log)
 	case "Node":
@@ -87,10 +87,10 @@ func (r egnReconciler) reconcileNode(ctx context.Context, req reconcile.Request,
 		return reconcile.Result{}, nil
 	}
 
-	affectedEgressGatewayNodeList := &egressv1.EgressGatewayNodeList{}
-	if err := r.client.List(context.Background(), affectedEgressGatewayNodeList,
+	affectedEgressGatewayList := &egressv1.EgressGatewayList{}
+	if err := r.client.List(context.Background(), affectedEgressGatewayList,
 		&client.ListOptions{FieldSelector: fields.OneTermEqualSelector(
-			indexEgressNodeEgressGatewayNode,
+			indexEgressNodeEgressGateway,
 			req.NamespacedName.String()),
 		}); err != nil {
 		return reconcile.Result{}, nil
@@ -114,7 +114,7 @@ func (r egnReconciler) reconcileNode(ctx context.Context, req reconcile.Request,
 		ready = true
 	}
 
-	for _, egn := range affectedEgressGatewayNodeList.Items {
+	for _, egn := range affectedEgressGatewayList.Items {
 		index := -1
 		for i, selNode := range egn.Status.NodeList {
 			if selNode.Name == node.Name {
@@ -144,13 +144,13 @@ func (r egnReconciler) reconcileNode(ctx context.Context, req reconcile.Request,
 	return reconcile.Result{}, nil
 }
 
-// reconcileEGN reconcile egress node
+// reconcileEG reconcile egress node
 // goal:
 // - add egress gateway node
 // - update egress gateway node
-func (r egnReconciler) reconcileEGN(ctx context.Context, req reconcile.Request, log *zap.Logger) (reconcile.Result, error) {
+func (r egnReconciler) reconcileEG(ctx context.Context, req reconcile.Request, log *zap.Logger) (reconcile.Result, error) {
 	deleted := false
-	egn := &egressv1.EgressGatewayNode{}
+	egn := &egressv1.EgressGateway{}
 	err := r.client.Get(ctx, req.NamespacedName, egn)
 	if err != nil {
 		if !errors.IsNotFound(err) {
@@ -300,10 +300,10 @@ func (r egnReconciler) reconcileEN(ctx context.Context,
 	}
 	deleted = deleted || !eg.GetDeletionTimestamp().IsZero()
 
-	affectedEgressGatewayNodeList := &egressv1.EgressGatewayNodeList{}
-	if err := r.client.List(context.Background(), affectedEgressGatewayNodeList,
+	affectedEgressGatewayList := &egressv1.EgressGatewayList{}
+	if err := r.client.List(context.Background(), affectedEgressGatewayList,
 		&client.ListOptions{FieldSelector: fields.OneTermEqualSelector(
-			indexEgressNodeEgressGatewayNode,
+			indexEgressNodeEgressGateway,
 			req.NamespacedName.String()),
 		}); err != nil {
 		return reconcile.Result{}, nil
@@ -311,8 +311,8 @@ func (r egnReconciler) reconcileEN(ctx context.Context,
 
 	if deleted {
 		log.Info("request item is deleted")
-		// if req obj is deleted, we should be deleted it in EgressGatewayNode used.
-		for _, egn := range affectedEgressGatewayNodeList.Items {
+		// if req obj is deleted, we should be deleted it in EgressGateway used.
+		for _, egn := range affectedEgressGatewayList.Items {
 			changed := false
 			filterFunc := func(node egressv1.SelectedEgressNode) bool {
 				if node.Name == req.Name {
@@ -338,7 +338,7 @@ func (r egnReconciler) reconcileEN(ctx context.Context,
 		return reconcile.Result{}, nil
 	}
 
-	for _, item := range affectedEgressGatewayNodeList.Items {
+	for _, item := range affectedEgressGatewayList.Items {
 		exits := false
 		changed := false
 
@@ -451,7 +451,7 @@ func filter[T any](ss []T, f func(item T) bool) []T {
 	return res
 }
 
-func newEgressGatewayNodeController(mgr manager.Manager, log *zap.Logger, cfg *config.Config) error {
+func newEgressGatewayController(mgr manager.Manager, log *zap.Logger, cfg *config.Config) error {
 	if log == nil {
 		return fmt.Errorf("log can not be nil")
 	}
@@ -464,9 +464,9 @@ func newEgressGatewayNodeController(mgr manager.Manager, log *zap.Logger, cfg *c
 		config: cfg,
 	}
 
-	if err := mgr.GetFieldIndexer().IndexField(context.Background(), &egressv1.EgressGatewayNode{},
-		indexEgressNodeEgressGatewayNode, func(rawObj client.Object) []string {
-			egn := rawObj.(*egressv1.EgressGatewayNode)
+	if err := mgr.GetFieldIndexer().IndexField(context.Background(), &egressv1.EgressGateway{},
+		indexEgressNodeEgressGateway, func(rawObj client.Object) []string {
+			egn := rawObj.(*egressv1.EgressGateway)
 			var egressNodes []string
 			for _, node := range egn.Status.NodeList {
 				egressNodes = append(egressNodes,
@@ -480,9 +480,9 @@ func newEgressGatewayNodeController(mgr manager.Manager, log *zap.Logger, cfg *c
 		return err
 	}
 
-	if err := mgr.GetFieldIndexer().IndexField(context.Background(), &egressv1.EgressGatewayNode{},
-		indexNodeEgressGatewayNode, func(rawObj client.Object) []string {
-			egn := rawObj.(*egressv1.EgressGatewayNode)
+	if err := mgr.GetFieldIndexer().IndexField(context.Background(), &egressv1.EgressGateway{},
+		indexNodeEgressGateway, func(rawObj client.Object) []string {
+			egn := rawObj.(*egressv1.EgressGateway)
 			var egressNodes []string
 			for _, node := range egn.Status.NodeList {
 				egressNodes = append(egressNodes,
@@ -496,15 +496,15 @@ func newEgressGatewayNodeController(mgr manager.Manager, log *zap.Logger, cfg *c
 		return err
 	}
 
-	c, err := controller.New("egressGatewayNode", mgr,
+	c, err := controller.New("egressGateway", mgr,
 		controller.Options{Reconciler: r})
 	if err != nil {
 		return err
 	}
 
-	if err := c.Watch(&source.Kind{Type: &egressv1.EgressGatewayNode{}},
-		handler.EnqueueRequestsFromMapFunc(utils.KindToMapFlat("EgressGatewayNode"))); err != nil {
-		return fmt.Errorf("failed to watch EgressGatewayNode: %w", err)
+	if err := c.Watch(&source.Kind{Type: &egressv1.EgressGateway{}},
+		handler.EnqueueRequestsFromMapFunc(utils.KindToMapFlat("EgressGateway"))); err != nil {
+		return fmt.Errorf("failed to watch EgressGateway: %w", err)
 	}
 
 	if err := c.Watch(&source.Kind{Type: &egressv1.EgressNode{}},

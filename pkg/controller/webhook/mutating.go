@@ -6,7 +6,7 @@ package webhook
 import (
 	"context"
 
-	"k8s.io/api/admission/v1"
+	v1 "k8s.io/api/admission/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
 	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
@@ -22,7 +22,7 @@ func MutatingHook(client client.Client) *webhook.Admission {
 }
 
 // nolint
-func egressGatewayNodeWebhook(ctx context.Context, req *webhook.AdmissionRequest, client client.Client) webhook.AdmissionResponse {
+func egressGatewayWebhook(ctx context.Context, req *webhook.AdmissionRequest, client client.Client) webhook.AdmissionResponse {
 	return webhook.AdmissionResponse{
 		Patches:           nil,
 		AdmissionResponse: v1.AdmissionResponse{},

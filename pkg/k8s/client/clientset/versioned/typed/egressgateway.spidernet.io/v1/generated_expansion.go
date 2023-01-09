@@ -5,7 +5,7 @@
 
 package v1
 
-type EgressGatewayNodeExpansion interface{}
+type EgressGatewayExpansion interface{}
 
 type EgressGatewayPolicyExpansion interface{}
 

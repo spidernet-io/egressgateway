@@ -28,7 +28,7 @@ func IsNodeVxlanReady(node *egressv1.EgressNode, enableIPv4, enableIPv6 bool) bo
 		if node.Status.VxlanIPv4IP == "" {
 			return false
 		}
-		if node.Status.VxlanIPv4Mac == "" {
+		if node.Status.TunnelMac == "" {
 			return false
 		}
 		if node.Status.PhysicalInterfaceIPv4 == "" {
@@ -37,9 +37,6 @@ func IsNodeVxlanReady(node *egressv1.EgressNode, enableIPv4, enableIPv6 bool) bo
 	}
 	if enableIPv6 {
 		if node.Status.VxlanIPv6IP == "" {
-			return false
-		}
-		if node.Status.VxlanIPv6Mac == "" {
 			return false
 		}
 		if node.Status.PhysicalInterfaceIPv6 == "" {

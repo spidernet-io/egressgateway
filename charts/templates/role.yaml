@@ -39,8 +39,8 @@ rules:
 - apiGroups:
   - egressgateway.spidernet.io
   resources:
-  - egressgatewaynodes
   - egressgatewaypolicies
+  - egressgateways
   - egressnodes
   verbs:
   - create
@@ -53,8 +53,8 @@ rules:
 - apiGroups:
   - egressgateway.spidernet.io
   resources:
-  - egressgatewaynodes/status
   - egressgatewaypolicies/status
+  - egressgateways/status
   - egressnodes/status
   verbs:
   - get
