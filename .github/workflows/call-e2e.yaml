@@ -134,7 +134,7 @@ jobs:
           fi
 
       - name: Upload e2e cluster log
-        uses: actions/upload-artifact@v3.1.1
+        uses: actions/upload-artifact@v3.1.2
         with:
           name: ${{ inputs.ipfamily }}-debuglog.txt
           path: ${{ env.E2E_LOG_PATH }}
@@ -142,7 +142,7 @@ jobs:
 
       - name: Upload e2e ginkgo report
         if: ${{ env.RUN_UPLOAD_LOG == 'true' }}
-        uses: actions/upload-artifact@v3.1.1
+        uses: actions/upload-artifact@v3.1.2
         with:
           name: ${{ inputs.ipfamily }}-e2ereport.json
           path: ${{ env.E2E_GINKGO_REPORT_PATH }}
