@@ -6,7 +6,6 @@ package agent
 import (
 	"context"
 	"fmt"
-	"github.com/spidernet-io/egressgateway/pkg/agent/vxlan"
 
 	"go.uber.org/zap"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -16,6 +15,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 	"sigs.k8s.io/controller-runtime/pkg/source"
 
+	"github.com/spidernet-io/egressgateway/pkg/agent/vxlan"
 	egressv1 "github.com/spidernet-io/egressgateway/pkg/k8s/apis/egressgateway.spidernet.io/v1"
 )
 
