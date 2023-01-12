@@ -5,18 +5,18 @@ metadata:
   annotations:
     controller-gen.kubebuilder.io/version: (unknown)
   creationTimestamp: null
-  name: egressgatewaynodes.egressgateway.spidernet.io
+  name: egressgateways.egressgateway.spidernet.io
 spec:
   group: egressgateway.spidernet.io
   names:
     categories:
-    - egressgatewaynode
-    kind: EgressGatewayNode
-    listKind: EgressGatewayNodeList
-    plural: egressgatewaynodes
+    - egressgateway
+    kind: EgressGateway
+    listKind: EgressGatewayList
+    plural: egressgateways
     shortNames:
     - egn
-    singular: egressgatewaynode
+    singular: egressgateway
   scope: Cluster
   versions:
   - name: v1

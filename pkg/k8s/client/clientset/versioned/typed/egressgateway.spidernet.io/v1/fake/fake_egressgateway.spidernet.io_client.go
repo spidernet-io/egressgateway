@@ -15,8 +15,8 @@ type FakeEgressgatewayV1 struct {
 	*testing.Fake
 }
 
-func (c *FakeEgressgatewayV1) EgressGatewayNodes() v1.EgressGatewayNodeInterface {
-	return &FakeEgressGatewayNodes{c}
+func (c *FakeEgressgatewayV1) EgressGateways() v1.EgressGatewayInterface {
+	return &FakeEgressGateways{c}
 }
 
 func (c *FakeEgressgatewayV1) EgressGatewayPolicies() v1.EgressGatewayPolicyInterface {

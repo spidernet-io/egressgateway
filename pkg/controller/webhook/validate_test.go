@@ -17,22 +17,22 @@ import (
 	egressv1 "github.com/spidernet-io/egressgateway/pkg/k8s/apis/egressgateway.spidernet.io/v1"
 )
 
-func TestValidateEgressGatewayNode(t *testing.T) {
+func TestValidateEgressGateway(t *testing.T) {
 	ctx := context.Background()
 
 	cases := map[string]struct {
 		existingResources []runtime.Object
-		newResource       *egressv1.EgressGatewayNode
+		newResource       *egressv1.EgressGateway
 		expAllow          bool
 		expErrMessage     string
 	}{
 		"no duplicates, valid": {
 			existingResources: nil,
-			newResource: &egressv1.EgressGatewayNode{
+			newResource: &egressv1.EgressGateway{
 				ObjectMeta: metav1.ObjectMeta{
-					Name: "EgressGatewayNode",
+					Name: "EgressGateway",
 				},
-				Spec: egressv1.EgressGatewayNodeSpec{},
+				Spec: egressv1.EgressGatewaySpec{},
 			},
 			expAllow: true,
 		},
