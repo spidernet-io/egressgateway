@@ -71,7 +71,7 @@ jobs:
       # download all artifact
       # https://github.com/actions/download-artifact#download-all-artifacts
       - name: Download images
-        uses: actions/download-artifact@v3.0.1
+        uses: actions/download-artifact@v3.0.2
         with:
           path: output/artifact-${{ inputs.ipfamily }}
 
