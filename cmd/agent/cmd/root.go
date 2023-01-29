@@ -30,7 +30,7 @@ var rootCmd = &cobra.Command{
 		ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
 		defer stop()
 
-		cfg, err := config.LoadConfig()
+		cfg, err := config.LoadConfig(true)
 		if err != nil {
 			fmt.Println(err)
 			os.Exit(1)

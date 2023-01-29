@@ -6,7 +6,7 @@ package agent
 import (
 	"context"
 	"fmt"
-	"os"
+	"reflect"
 	"testing"
 	"time"
 
@@ -21,6 +21,8 @@ import (
 	"github.com/spidernet-io/egressgateway/pkg/config"
 	"github.com/spidernet-io/egressgateway/pkg/ipset"
 	testing2 "github.com/spidernet-io/egressgateway/pkg/ipset/testing"
+	"github.com/spidernet-io/egressgateway/pkg/iptables"
+	"github.com/spidernet-io/egressgateway/pkg/iptables/testutils"
 	egressv1 "github.com/spidernet-io/egressgateway/pkg/k8s/apis/egressgateway.spidernet.io/v1"
 	"github.com/spidernet-io/egressgateway/pkg/logger"
 	"github.com/spidernet-io/egressgateway/pkg/schema"
@@ -40,6 +42,7 @@ type TestEgressGatewayPolicyReq struct {
 	expErr     bool
 	expRequeue bool
 	expIPSets  map[string][]string
+	expMangle  []map[string][]string
 }
 
 func TestReconcilerEgressGatewayPolicy(t *testing.T) {
@@ -51,27 +54,75 @@ func TestReconcilerEgressGatewayPolicy(t *testing.T) {
 		"caseDelPodUpdatePolicy":        caseDelPodUpdatePolicy(),
 	}
 	for name, c := range cases {
-		log := logger.NewStdoutLogger(os.Getenv("LOG_LEVEL"))
+		log := logger.NewStdoutLogger("error")
 		t.Run(name, func(t *testing.T) {
 			builder := fake.NewClientBuilder()
 			builder.WithScheme(schema.GetScheme())
 			builder.WithObjects(c.initialObjects...)
-			ipsetClient := testing2.NewFake("")
+			ipsetCli := testing2.NewFake("")
 			ipsetMap := utils.NewSyncMap[string, *ipset.IPSet]()
+
+			mangles := make([]*iptables.Table, 0)
+
+			opt := iptables.Options{
+				XTablesLock:              &mockMutex{},
+				BackendMode:              c.config.FileConfig.IPTables.BackendMode,
+				InsertMode:               "insert",
+				RefreshInterval:          time.Second * time.Duration(c.config.FileConfig.IPTables.RefreshIntervalSecond),
+				InitialPostWriteInterval: time.Second * time.Duration(c.config.FileConfig.IPTables.InitialPostWriteIntervalSecond),
+				RestoreSupportsLock:      false,
+				LockTimeout:              time.Second * time.Duration(c.config.FileConfig.IPTables.LockTimeoutSecond),
+				LockProbeInterval:        time.Millisecond * time.Duration(c.config.FileConfig.IPTables.LockProbeIntervalMillis),
+				LookPathOverride:         testutils.LookPathAll,
+			}
+			manglesStore := make([]*testutils.MockDataplane, 0)
+
+			if c.config.FileConfig.EnableIPv4 {
+				tmpOpt := opt
+				dataplane := testutils.NewMockDataplane("mangle", map[string][]string{
+					"PREROUTING":  {"-m comment --comment \"cali:6gwbT8clXdHdC1b1\" -j cali-PREROUTING"},
+					"POSTROUTING": {"-m comment --comment \"cali:O3lYWMrLQYEMJtB5\" -j cali-POSTROUTING"},
+					"FORWARD":     {},
+				}, "legacy")
+				tmpOpt.NewCmdOverride = dataplane.NewCmd
+				tmpOpt.SleepOverride = dataplane.Sleep
+				tmpOpt.NowOverride = dataplane.Now
+				table, err := iptables.NewTable("mangle", 4, "egw-", tmpOpt, log)
+				assert.NoError(t, err)
+				mangles = append(mangles, table)
+				manglesStore = append(manglesStore, dataplane)
+			}
+			if c.config.FileConfig.EnableIPv6 {
+				tmpOpt := opt
+				dataplane := testutils.NewMockDataplane("mangle", map[string][]string{
+					"PREROUTING":  {"-m comment --comment \"cali:6gwbT8clXdHdC1b1\" -j cali-PREROUTING"},
+					"POSTROUTING": {"-m comment --comment \"cali:O3lYWMrLQYEMJtB5\" -j cali-POSTROUTING"},
+				}, "legacy")
+				tmpOpt.NewCmdOverride = dataplane.NewCmd
+				tmpOpt.SleepOverride = dataplane.Sleep
+				tmpOpt.NowOverride = dataplane.Now
+				table, err := iptables.NewTable("mangle", 6, "egw-", tmpOpt, log)
+				assert.NoError(t, err)
+				mangles = append(mangles, table)
+			}
+
 			reconciler := policeReconciler{
-				client:   builder.Build(),
-				log:      log,
-				cfg:      c.config,
-				ipsetMap: ipsetMap,
-				ipset:    ipsetClient,
+				client:       builder.Build(),
+				log:          log,
+				cfg:          c.config,
+				ipsetMap:     ipsetMap,
+				ipset:        ipsetCli,
+				mangleTables: mangles,
+				ruleV4Map:    utils.NewSyncMap[string, iptables.Rule](),
+				ruleV6Map:    utils.NewSyncMap[string, iptables.Rule](),
 			}
 
 			for name, ips := range c.initialV4IPSets {
-				err := initIPSet(ipsetClient, ipsetMap, name, "IPv4", ips)
+				err := initIPSet(ipsetCli, ipsetMap, name, "IPv4", ips)
 				assert.NoError(t, err)
 			}
 			for name, ips := range c.initialV6IPSets {
-				err := initIPSet(ipsetClient, ipsetMap, name, "IPv6", ips)
+				err := initIPSet(ipsetCli, ipsetMap, name, "IPv6", ips)
 				assert.NoError(t, err)
 			}
 
@@ -107,6 +158,19 @@ func TestReconcilerEgressGatewayPolicy(t *testing.T) {
 					}
 					t.Fatalf("exp ip set list not found in got list: %v", list)
 				}
+				// do check
+				for i := range manglesStore {
+					for name, gotRules := range manglesStore[i].Chains {
+						if expRules, ok := req.expMangle[i][name]; ok {
+							if !reflect.DeepEqual(gotRules, expRules) {
+								fmt.Println("chain name:", name)
+								fmt.Printf("gotRules:\n%v\n", gotRules)
+								fmt.Printf("expRules:\n%v\n", expRules)
+								t.Fatal("gotRules != expRules")
+							}
+						}
+					}
+				}
 			}
 		})
 	}
@@ -135,16 +199,20 @@ func initIPSet(cli ipset.Interface, setMap *utils.SyncMap[string, *ipset.IPSet],
 func caseAddEgressGatewayPolicy() TestCaseEGP {
 	return TestCaseEGP{
 		initialObjects: []client.Object{
+			&egressv1.EgressGateway{
+				ObjectMeta: metav1.ObjectMeta{Name: "gateway"},
+				Spec:       egressv1.EgressGatewaySpec{},
+				Status: egressv1.EgressGatewayStatus{NodeList: []egressv1.SelectedEgressNode{{
+					Name:   "node1",
+					Active: true,
+				}}},
+			},
 			&egressv1.EgressGatewayPolicy{
-				ObjectMeta: metav1.ObjectMeta{
-					Name: "policy1",
-				},
+				ObjectMeta: metav1.ObjectMeta{Name: "policy1"},
 				Spec: egressv1.EgressGatewayPolicySpec{
 					AppliedTo: egressv1.AppliedTo{
 						PodSelector: &metav1.LabelSelector{
-							MatchLabels: map[string]string{
-								"app": "2048",
-							},
+							MatchLabels: map[string]string{"app": "2048"},
 						},
 					},
 				},
@@ -185,9 +253,30 @@ func caseAddEgressGatewayPolicy() TestCaseEGP {
 					},
 					formatIPSetName("egress-dst-v4-", "policy1"): {},
 				},
+				expMangle: []map[string][]string{
+					{
+						"EGRESSGATEWAY-MARK-REQUEST": []string{"" +
+							"-m comment --comment \"egw-Mio2l_qQ2kKhiz2d\" -m set --match-set egress-src-v4-c0eb42ab804da452e src -m set --match-set egress-dst-v4-c0eb42ab804da452e dst --jump MARK --set-mark 0x11000000/0xffffffff",
+						},
+						"PREROUTING": []string{
+							"-m comment --comment \"egw-HAe35Kaffr8R0mLj\" --jump EGRESSGATEWAY-MARK-REQUEST",
+							"-m comment --comment \"cali:6gwbT8clXdHdC1b1\" -j cali-PREROUTING",
+						},
+						"POSTROUTING": []string{
+							"-m comment --comment \"egw-1ecaPSxhNEc4Ylv_\" -m mark --mark 0x11000000/0xffffffff --jump ACCEPT",
+							"-m comment --comment \"cali:O3lYWMrLQYEMJtB5\" -j cali-POSTROUTING",
+						},
+						"FORWARD": []string{
+							"-m comment --comment \"egw-ogGr4WMsrCe4gJFJ\" -m mark --mark 0x11000000/0xffffffff --jump MARK --set-mark 0x12000000/0x12000000",
+						},
+					},
+				},
 			},
 		},
 		config: &config.Config{
+			EnvConfig: config.EnvConfig{
+				NodeName: "",
+			},
 			FileConfig: config.FileConfig{
 				EnableIPv4: true,
 				EnableIPv6: false,
@@ -199,6 +288,14 @@ func caseAddEgressGatewayPolicy() TestCaseEGP {
 func caseDelEgressGatewayPolicy() TestCaseEGP {
 	return TestCaseEGP{
 		initialObjects: []client.Object{
+			&egressv1.EgressGateway{
+				ObjectMeta: metav1.ObjectMeta{Name: "gateway"},
+				Spec:       egressv1.EgressGatewaySpec{},
+				Status: egressv1.EgressGatewayStatus{NodeList: []egressv1.SelectedEgressNode{{
+					Name:   "node1",
+					Active: true,
+				}}},
+			},
 			&egressv1.EgressGatewayPolicy{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:              "policy1",
@@ -251,6 +348,21 @@ func caseDelEgressGatewayPolicy() TestCaseEGP {
 				expErr:     false,
 				expRequeue: false,
 				expIPSets:  map[string][]string{},
+				expMangle: []map[string][]string{
+					{
+						"PREROUTING": []string{
+							"-m comment --comment \"egw-HAe35Kaffr8R0mLj\" --jump EGRESSGATEWAY-MARK-REQUEST",
+							"-m comment --comment \"cali:6gwbT8clXdHdC1b1\" -j cali-PREROUTING",
+						},
+						"POSTROUTING": []string{
+							"-m comment --comment \"egw-1ecaPSxhNEc4Ylv_\" -m mark --mark 0x11000000/0xffffffff --jump ACCEPT",
+							"-m comment --comment \"cali:O3lYWMrLQYEMJtB5\" -j cali-POSTROUTING",
+						},
+						"FORWARD": []string{
+							"-m comment --comment \"egw-ogGr4WMsrCe4gJFJ\" -m mark --mark 0x11000000/0xffffffff --jump MARK --set-mark 0x12000000/0x12000000",
+						},
+					},
+				},
 			},
 		},
 		config: &config.Config{
@@ -265,6 +377,14 @@ func caseDelEgressGatewayPolicy() TestCaseEGP {
 func caseUpdateEgressGatewayPolicy() TestCaseEGP {
 	return TestCaseEGP{
 		initialObjects: []client.Object{
+			&egressv1.EgressGateway{
+				ObjectMeta: metav1.ObjectMeta{Name: "gateway"},
+				Spec:       egressv1.EgressGatewaySpec{},
+				Status: egressv1.EgressGatewayStatus{NodeList: []egressv1.SelectedEgressNode{{
+					Name:   "node1",
+					Active: true,
+				}}},
+			},
 			&egressv1.EgressGatewayPolicy{
 				ObjectMeta: metav1.ObjectMeta{
 					Name: "policy1",
@@ -363,6 +483,24 @@ func caseUpdateEgressGatewayPolicy() TestCaseEGP {
 					},
 					formatIPSetName("egress-dst-v4-", "policy1"): {},
 				},
+				expMangle: []map[string][]string{
+					{
+						"EGRESSGATEWAY-MARK-REQUEST": []string{"" +
+							"-m comment --comment \"egw-Mio2l_qQ2kKhiz2d\" -m set --match-set egress-src-v4-c0eb42ab804da452e src -m set --match-set egress-dst-v4-c0eb42ab804da452e dst --jump MARK --set-mark 0x11000000/0xffffffff",
+						},
+						"PREROUTING": []string{
+							"-m comment --comment \"egw-HAe35Kaffr8R0mLj\" --jump EGRESSGATEWAY-MARK-REQUEST",
+							"-m comment --comment \"cali:6gwbT8clXdHdC1b1\" -j cali-PREROUTING",
+						},
+						"POSTROUTING": []string{
+							"-m comment --comment \"egw-1ecaPSxhNEc4Ylv_\" -m mark --mark 0x11000000/0xffffffff --jump ACCEPT",
+							"-m comment --comment \"cali:O3lYWMrLQYEMJtB5\" -j cali-POSTROUTING",
+						},
+						"FORWARD": []string{
+							"-m comment --comment \"egw-ogGr4WMsrCe4gJFJ\" -m mark --mark 0x11000000/0xffffffff --jump MARK --set-mark 0x12000000/0x12000000",
+						},
+					},
+				},
 			},
 		},
 		config: &config.Config{
@@ -377,6 +515,14 @@ func caseUpdateEgressGatewayPolicy() TestCaseEGP {
 func caseAddPodUpdatePolicy() TestCaseEGP {
 	return TestCaseEGP{
 		initialObjects: []client.Object{
+			&egressv1.EgressGateway{
+				ObjectMeta: metav1.ObjectMeta{Name: "gateway"},
+				Spec:       egressv1.EgressGatewaySpec{},
+				Status: egressv1.EgressGatewayStatus{NodeList: []egressv1.SelectedEgressNode{{
+					Name:   "node1",
+					Active: true,
+				}}},
+			},
 			&egressv1.EgressGatewayPolicy{
 				ObjectMeta: metav1.ObjectMeta{
 					Name: "policy1",
@@ -450,6 +596,24 @@ func caseAddPodUpdatePolicy() TestCaseEGP {
 					},
 					formatIPSetName("egress-dst-v4-", "policy1"): {},
 				},
+				expMangle: []map[string][]string{
+					{
+						"EGRESSGATEWAY-MARK-REQUEST": []string{"" +
+							"-m comment --comment \"egw-Mio2l_qQ2kKhiz2d\" -m set --match-set egress-src-v4-c0eb42ab804da452e src -m set --match-set egress-dst-v4-c0eb42ab804da452e dst --jump MARK --set-mark 0x11000000/0xffffffff",
+						},
+						"PREROUTING": []string{
+							"-m comment --comment \"egw-HAe35Kaffr8R0mLj\" --jump EGRESSGATEWAY-MARK-REQUEST",
+							"-m comment --comment \"cali:6gwbT8clXdHdC1b1\" -j cali-PREROUTING",
+						},
+						"POSTROUTING": []string{
+							"-m comment --comment \"egw-1ecaPSxhNEc4Ylv_\" -m mark --mark 0x11000000/0xffffffff --jump ACCEPT",
+							"-m comment --comment \"cali:O3lYWMrLQYEMJtB5\" -j cali-POSTROUTING",
+						},
+						"FORWARD": []string{
+							"-m comment --comment \"egw-ogGr4WMsrCe4gJFJ\" -m mark --mark 0x11000000/0xffffffff --jump MARK --set-mark 0x12000000/0x12000000",
+						},
+					},
+				},
 			},
 		},
 		config: &config.Config{
@@ -464,6 +628,14 @@ func caseAddPodUpdatePolicy() TestCaseEGP {
 func caseDelPodUpdatePolicy() TestCaseEGP {
 	return TestCaseEGP{
 		initialObjects: []client.Object{
+			&egressv1.EgressGateway{
+				ObjectMeta: metav1.ObjectMeta{Name: "gateway"},
+				Spec:       egressv1.EgressGatewaySpec{},
+				Status: egressv1.EgressGatewayStatus{NodeList: []egressv1.SelectedEgressNode{{
+					Name:   "node1",
+					Active: true,
+				}}},
+			},
 			&egressv1.EgressGatewayPolicy{
 				ObjectMeta: metav1.ObjectMeta{
 					Name: "policy1",
@@ -534,6 +706,24 @@ func caseDelPodUpdatePolicy() TestCaseEGP {
 					},
 					formatIPSetName("egress-dst-v4-", "policy1"): {},
 				},
+				expMangle: []map[string][]string{
+					{
+						"EGRESSGATEWAY-MARK-REQUEST": []string{"" +
+							"-m comment --comment \"egw-Mio2l_qQ2kKhiz2d\" -m set --match-set egress-src-v4-c0eb42ab804da452e src -m set --match-set egress-dst-v4-c0eb42ab804da452e dst --jump MARK --set-mark 0x11000000/0xffffffff",
+						},
+						"PREROUTING": []string{
+							"-m comment --comment \"egw-HAe35Kaffr8R0mLj\" --jump EGRESSGATEWAY-MARK-REQUEST",
+							"-m comment --comment \"cali:6gwbT8clXdHdC1b1\" -j cali-PREROUTING",
+						},
+						"POSTROUTING": []string{
+							"-m comment --comment \"egw-1ecaPSxhNEc4Ylv_\" -m mark --mark 0x11000000/0xffffffff --jump ACCEPT",
+							"-m comment --comment \"cali:O3lYWMrLQYEMJtB5\" -j cali-POSTROUTING",
+						},
+						"FORWARD": []string{
+							"-m comment --comment \"egw-ogGr4WMsrCe4gJFJ\" -m mark --mark 0x11000000/0xffffffff --jump MARK --set-mark 0x12000000/0x12000000",
+						},
+					},
+				},
 			},
 		},
 		config: &config.Config{
@@ -543,4 +733,24 @@ func caseDelPodUpdatePolicy() TestCaseEGP {
 			},
 		},
 	}
+}
+
+type mockMutex struct {
+	Held     bool
+	WasTaken bool
+}
+
+func (m *mockMutex) Lock() {
+	if m.Held {
+		panic("mutex already held")
+	}
+	m.Held = true
+	m.WasTaken = true
+}
+
+func (m *mockMutex) Unlock() {
+	if !m.Held {
+		panic("mutex not held")
+	}
+	m.Held = false
 }

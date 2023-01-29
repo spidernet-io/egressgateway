@@ -84,8 +84,6 @@ define BUILD_BASE_IMAGE
 IMAGE_DIR=` dirname $(DOCKERFILE_PATH) ` \
 		TAG=` git ls-tree --full-tree HEAD -- $${IMAGE_DIR} | awk '{ print $$3 }' ` ; \
 		echo "Build base image $(BASE_IMAGE_NAME):$${TAG}" ; \
-		sed -i '2 a \ARG TARGETPLATFORM' $(DOCKERFILE_PATH) ; \
-		sed -i '2 a \ARG BUILDPLATFORM' $(DOCKERFILE_PATH) ; \
 		docker build  \
 				--build-arg USE_PROXY_SOURCE=true \
 				--build-arg BUILDPLATFORM="linux/$(TARGETARCH)" \
@@ -96,9 +94,7 @@ IMAGE_DIR=` dirname $(DOCKERFILE_PATH) ` \
 				--output type=docker \
 				--tag $(BASE_IMAGE_NAME):$${TAG}   $${IMAGE_DIR} ; \
 		(($$?==0)) || { echo "error , failed to build base image" ; exit 1 ;} ; \
-		echo "build success $(BASE_IMAGE_NAME):$${TAG} " ; \
-		sed -i '3 d' $(DOCKERFILE_PATH) ; \
-		sed -i '3 d' $(DOCKERFILE_PATH)
+		echo "build success $(BASE_IMAGE_NAME):$${TAG} "
 endef
 
 .PHONY: build_local_base_image
