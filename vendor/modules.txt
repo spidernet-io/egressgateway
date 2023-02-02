@@ -16,6 +16,10 @@ github.com/beorn7/perks/quantile
 # github.com/cespare/xxhash/v2 v2.1.2
 ## explicit; go 1.11
 github.com/cespare/xxhash/v2
+# github.com/cilium/ipam v0.0.0-20220824141044-46ef3d556735
+## explicit; go 1.14
+github.com/cilium/ipam/service/allocator
+github.com/cilium/ipam/service/ipallocator
 # github.com/davecgh/go-spew v1.1.1
 ## explicit
 github.com/davecgh/go-spew/spew
