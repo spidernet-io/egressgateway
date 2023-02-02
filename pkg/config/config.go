@@ -5,15 +5,17 @@ package config
 
 import (
 	"fmt"
-	"github.com/spidernet-io/egressgateway/pkg/iptables"
-	"go.uber.org/zap"
+	"net"
 	"os"
 
 	"github.com/mitchellh/mapstructure"
 	"github.com/spf13/viper"
+	"go.uber.org/zap"
 	"gopkg.in/yaml.v3"
 	"k8s.io/client-go/rest"
 	ctrl "sigs.k8s.io/controller-runtime"
+
+	"github.com/spidernet-io/egressgateway/pkg/iptables"
 )
 
 const ForwardMethodActiveActive = "active-active"
@@ -68,11 +70,18 @@ type FileConfig struct {
 	DatapathMode     string   `yaml:"datapathMode"`
 	TunnelIpv4Subnet string   `yaml:"tunnelIpv4Subnet"`
 	TunnelIpv6Subnet string   `yaml:"tunnelIpv6Subnet"`
-	TunnelInterface  string   `yaml:"tunnelInterface"`
-	ForwardMethod    string   `yaml:"forwardMethod"`
+	TunnelIPv4Net    *net.IPNet
+	TunnelIPv6Net    *net.IPNet
+	TunnelInterface  string `yaml:"tunnelInterface"`
+	ForwardMethod    string `yaml:"forwardMethod"`
+	VXLAN            VXLAN  `yaml:"vxlan"`
+}
 
-	VxlanID      int `yaml:"vxlanID"`
-	VxlanUdpPort int `yaml:"vxlanUdpPort"`
+type VXLAN struct {
+	Name                   string `yaml:"name"`
+	ID                     int    `yaml:"id"`
+	Port                   int    `yaml:"port"`
+	DisableChecksumOffload bool   `yaml:"disableChecksumOffload"`
 }
 
 type IPTables struct {
@@ -149,6 +158,20 @@ func LoadConfig(isAgent bool) (*Config, error) {
 		}
 		if err := yaml.Unmarshal(configmapBytes, &config.FileConfig); nil != err {
 			return nil, fmt.Errorf("failed to parse ConfigMap data, error: %v", err)
+		}
+		if config.FileConfig.EnableIPv4 {
+			_, ipn, err := net.ParseCIDR(config.FileConfig.TunnelIpv4Subnet)
+			if err != nil {
+				return nil, fmt.Errorf("failed to parse TunnelIpv4Subnet: %v", err)
+			}
+			config.FileConfig.TunnelIPv4Net = ipn
+		}
+		if config.FileConfig.EnableIPv6 {
+			_, ipn, err := net.ParseCIDR(config.FileConfig.TunnelIpv6Subnet)
+			if err != nil {
+				return nil, fmt.Errorf("failed to parse TunnelIpv6Subnet: %v", err)
+			}
+			config.FileConfig.TunnelIPv6Net = ipn
 		}
 	}
 

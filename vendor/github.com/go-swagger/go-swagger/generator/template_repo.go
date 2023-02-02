@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"math"
 	"os"
 	"path"
@@ -18,7 +19,6 @@ import (
 
 	"log"
 
-	"github.com/Masterminds/sprig/v3"
 	"github.com/go-openapi/inflect"
 	"github.com/go-openapi/runtime"
 	"github.com/go-openapi/swag"
@@ -54,11 +54,10 @@ func initTemplateRepo() {
 	}
 }
 
-// DefaultFuncMap yields a map with default functions for use in the templates.
+// DefaultFuncMap yields a map with default functions for use n the templates.
 // These are available in every template
 func DefaultFuncMap(lang *LanguageOpts) template.FuncMap {
-	f := sprig.TxtFuncMap()
-	extra := template.FuncMap{
+	return template.FuncMap(map[string]interface{}{
 		"pascalize": pascalize,
 		"camelize":  swag.ToJSONName,
 		"varname":   lang.MangleVarName,
@@ -85,6 +84,8 @@ func DefaultFuncMap(lang *LanguageOpts) template.FuncMap {
 		},
 		"dropPackage":      dropPackage,
 		"containsPkgStr":   containsPkgStr,
+		"upper":            strings.ToUpper,
+		"lower":            strings.ToLower,
 		"contains":         swag.ContainsStrings,
 		"padSurround":      padSurround,
 		"joinFilePath":     filepath.Join,
@@ -137,13 +138,7 @@ func DefaultFuncMap(lang *LanguageOpts) template.FuncMap {
 		"httpStatus":          httpStatus,
 		"cleanupEnumVariant":  cleanupEnumVariant,
 		"gt0":                 gt0,
-	}
-
-	for k, v := range extra {
-		f[k] = v
-	}
-
-	return f
+	})
 }
 
 func defaultAssets() map[string][]byte {
@@ -341,7 +336,7 @@ func (t *Repository) LoadDir(templatePath string) error {
 
 		if strings.HasSuffix(path, ".gotmpl") {
 			if assetName, e := filepath.Rel(templatePath, path); e == nil {
-				if data, e := os.ReadFile(path); e == nil {
+				if data, e := ioutil.ReadFile(path); e == nil {
 					if ee := t.AddFile(assetName, string(data)); ee != nil {
 						return fmt.Errorf("could not add template: %v", ee)
 					}

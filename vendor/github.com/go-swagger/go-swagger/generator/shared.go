@@ -19,6 +19,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"os"
 	"path"
@@ -286,8 +287,8 @@ type SectionOpts struct {
 	Models          []TemplateOpts `mapstructure:"models"`
 }
 
-// GenOptsCommon the options for the generator
-type GenOptsCommon struct {
+// GenOpts the options for the generator
+type GenOpts struct {
 	IncludeModel               bool
 	IncludeValidator           bool
 	IncludeHandler             bool
@@ -393,6 +394,7 @@ func (g *GenOpts) CheckOpts() error {
 //
 // Server is generated in ${PWD}/tmp/abc/efg
 // relative TargetPath returned: ../../../tmp
+//
 func (g *GenOpts) TargetPath() string {
 	var tgt string
 	if g.Target == "" {
@@ -600,7 +602,7 @@ func (g *GenOpts) render(t *TemplateOpts, data interface{}) ([]byte, error) {
 		} else {
 			templateFile = t.Source
 		}
-		content, err := os.ReadFile(templateFile)
+		content, err := ioutil.ReadFile(templateFile)
 		if err != nil {
 			return nil, fmt.Errorf("error while opening %s template file: %v", templateFile, err)
 		}
@@ -666,7 +668,7 @@ func (g *GenOpts) write(t *TemplateOpts, data interface{}) error {
 		formatted, err = g.LanguageOpts.FormatContent(filepath.Join(dir, fname), content)
 		if err != nil {
 			log.Printf("source formatting failed on template-generated source (%q for %s). Check that your template produces valid code", filepath.Join(dir, fname), t.Name)
-			writeerr = os.WriteFile(filepath.Join(dir, fname), content, 0644) // #nosec
+			writeerr = ioutil.WriteFile(filepath.Join(dir, fname), content, 0644) // #nosec
 			if writeerr != nil {
 				return fmt.Errorf("failed to write (unformatted) file %q in %q: %v", fname, dir, writeerr)
 			}
@@ -675,7 +677,7 @@ func (g *GenOpts) write(t *TemplateOpts, data interface{}) error {
 		}
 	}
 
-	writeerr = os.WriteFile(filepath.Join(dir, fname), formatted, 0644) // #nosec
+	writeerr = ioutil.WriteFile(filepath.Join(dir, fname), formatted, 0644) // #nosec
 	if writeerr != nil {
 		return fmt.Errorf("failed to write file %q in %q: %v", fname, dir, writeerr)
 	}
@@ -761,7 +763,7 @@ func (g *GenOpts) renderDefinition(gg *GenDefinition) error {
 	return nil
 }
 
-func (g *GenOptsCommon) setTemplates() error {
+func (g *GenOpts) setTemplates() error {
 	if g.Template != "" {
 		// set contrib templates
 		if err := g.templates.LoadContrib(g.Template); err != nil {
@@ -928,7 +930,7 @@ func gatherOperations(specDoc *analysis.Spec, operationIDs []string) map[string]
 		for path, operation := range pathItem {
 			vv := *operation
 			oprefs = append(oprefs, opRef{
-				Key:    swag.ToGoName(strings.ToLower(method) + " " + swag.ToHumanNameTitle(path)),
+				Key:    swag.ToGoName(strings.ToLower(method) + " " + strings.Title(path)),
 				Method: method,
 				Path:   path,
 				ID:     vv.ID,

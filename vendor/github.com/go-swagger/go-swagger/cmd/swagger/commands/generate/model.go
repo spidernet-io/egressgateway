@@ -70,14 +70,15 @@ func (m Model) apply(opts *generator.GenOpts) {
 }
 
 func (m Model) log(rp string) {
-	log.Println(`Generation completed!
+	log.Printf(`Generation completed!
 
-For this generation to compile you need to have some packages in your go.mod:
+For this generation to compile you need to have some packages in your GOPATH:
 
 	* github.com/go-openapi/validate
 	* github.com/go-openapi/strfmt
 
-You can get these now with: go mod tidy`)
+You can get these now with: go get -u -f %s/...
+`, rp)
 }
 
 func (m *Model) generate(opts *generator.GenOpts) error {

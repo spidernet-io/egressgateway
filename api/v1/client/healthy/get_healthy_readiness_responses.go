@@ -53,36 +53,7 @@ Success
 type GetHealthyReadinessOK struct {
 }
 
-// IsSuccess returns true when this get healthy readiness o k response has a 2xx status code
-func (o *GetHealthyReadinessOK) IsSuccess() bool {
-	return true
-}
-
-// IsRedirect returns true when this get healthy readiness o k response has a 3xx status code
-func (o *GetHealthyReadinessOK) IsRedirect() bool {
-	return false
-}
-
-// IsClientError returns true when this get healthy readiness o k response has a 4xx status code
-func (o *GetHealthyReadinessOK) IsClientError() bool {
-	return false
-}
-
-// IsServerError returns true when this get healthy readiness o k response has a 5xx status code
-func (o *GetHealthyReadinessOK) IsServerError() bool {
-	return false
-}
-
-// IsCode returns true when this get healthy readiness o k response a status code equal to that given
-func (o *GetHealthyReadinessOK) IsCode(code int) bool {
-	return code == 200
-}
-
 func (o *GetHealthyReadinessOK) Error() string {
-	return fmt.Sprintf("[GET /healthy/readiness][%d] getHealthyReadinessOK ", 200)
-}
-
-func (o *GetHealthyReadinessOK) String() string {
 	return fmt.Sprintf("[GET /healthy/readiness][%d] getHealthyReadinessOK ", 200)
 }
 
@@ -104,36 +75,7 @@ Failed
 type GetHealthyReadinessInternalServerError struct {
 }
 
-// IsSuccess returns true when this get healthy readiness internal server error response has a 2xx status code
-func (o *GetHealthyReadinessInternalServerError) IsSuccess() bool {
-	return false
-}
-
-// IsRedirect returns true when this get healthy readiness internal server error response has a 3xx status code
-func (o *GetHealthyReadinessInternalServerError) IsRedirect() bool {
-	return false
-}
-
-// IsClientError returns true when this get healthy readiness internal server error response has a 4xx status code
-func (o *GetHealthyReadinessInternalServerError) IsClientError() bool {
-	return false
-}
-
-// IsServerError returns true when this get healthy readiness internal server error response has a 5xx status code
-func (o *GetHealthyReadinessInternalServerError) IsServerError() bool {
-	return true
-}
-
-// IsCode returns true when this get healthy readiness internal server error response a status code equal to that given
-func (o *GetHealthyReadinessInternalServerError) IsCode(code int) bool {
-	return code == 500
-}
-
 func (o *GetHealthyReadinessInternalServerError) Error() string {
-	return fmt.Sprintf("[GET /healthy/readiness][%d] getHealthyReadinessInternalServerError ", 500)
-}
-
-func (o *GetHealthyReadinessInternalServerError) String() string {
 	return fmt.Sprintf("[GET /healthy/readiness][%d] getHealthyReadinessInternalServerError ", 500)
 }
 

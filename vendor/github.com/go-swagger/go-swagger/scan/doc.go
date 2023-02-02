@@ -1,4 +1,3 @@
-//go:build !go1.11
 // +build !go1.11
 
 // Copyright 2015 go-swagger maintainers
@@ -15,8 +14,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-/*
-Package scan provides a scanner for go files that produces a swagger spec document.
+/*Package scan provides a scanner for go files that produces a swagger spec document.
 
 This package is intended for pre-go1.11 versions, and does not support go modules.
 
@@ -25,7 +23,7 @@ package to produce a swagger specification.
 
 To use you can add a go:generate comment to your main file for example:
 
-	//go:generate swagger generate spec
+		//go:generate swagger generate spec
 
 The following annotations exist:
 
