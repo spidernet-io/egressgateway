@@ -3,7 +3,7 @@ package generator
 import (
 	"encoding/json"
 	"fmt"
-	"io"
+	"io/ioutil"
 	"log"
 	"os"
 	"path"
@@ -286,22 +286,15 @@ func GoLangOpts() *LanguageOpts {
 
 		gopath := os.Getenv("GOPATH")
 		if gopath == "" {
-			homeDir, herr := os.UserHomeDir()
-			if herr != nil {
-				log.Fatalln(herr)
-			}
-			gopath = filepath.Join(homeDir, "go")
+			gopath = filepath.Join(os.Getenv("HOME"), "go")
 		}
 
 		var pth string
 		for _, gp := range filepath.SplitList(gopath) {
-			if _, derr := os.Stat(filepath.Join(gp, "src")); os.IsNotExist(derr) {
-				continue
-			}
 			// EvalSymLinks also calls the Clean
 			gopathExtended, er := filepath.EvalSymlinks(gp)
 			if er != nil {
-				panic(er)
+				log.Fatalln(er)
 			}
 			gopathExtended = filepath.Join(gopathExtended, "src")
 			gp = filepath.Join(gp, "src")
@@ -402,7 +395,7 @@ func tryResolveModule(baseTargetPath string) (string, string, error) {
 		return "", "", err
 	}
 
-	src, err := io.ReadAll(f)
+	src, err := ioutil.ReadAll(f)
 	if err != nil {
 		return "", "", err
 	}

@@ -6,12 +6,12 @@ package agent
 import (
 	"context"
 	"fmt"
-	"sigs.k8s.io/controller-runtime/pkg/healthz"
 	"time"
 
 	"go.uber.org/zap"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/healthz"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 
 	"github.com/spidernet-io/egressgateway/pkg/config"
@@ -54,7 +54,7 @@ func New(cfg *config.Config, log *zap.Logger) (types.Service, error) {
 		return nil, fmt.Errorf("failed to AddReadyzCheck: %w", err)
 	}
 
-	err = newEgressNodeController(mgr, log)
+	err = newEgressNodeController(mgr, cfg, log)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create node controller: %w", err)
 	}

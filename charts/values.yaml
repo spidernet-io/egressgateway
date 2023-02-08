@@ -55,11 +55,20 @@ feature:
   ## @param feature.forwardMethod tunnel base on which interface ["active-active": require kernel >=4.4, "active-passive"]
   forwardMethod: "active-passive"
 
-  ## @param feature.vxlanID vxlan id
-  vxlanID: "100"
+  ## @section vxlan parameters
+  vxlan:
+    ## @param feature.vxlan.name vxlan device name
+    name: "egress.vxlan"
 
-  ## @param feature.vxlanUdpPort vxlan port
-  vxlanUdpPort: "5789"
+    ## @param feature.vxlan.port vxlan port
+    port: "7789"
+
+    ## @param feature.vxlan.id vxlan id
+    id: "100"
+
+    ## @param feature.vxlan.disableChecksumOffload disable checksum offload
+    disableChecksumOffload: true
+
 
 ## @section egressgatewayAgent parameters
 ##

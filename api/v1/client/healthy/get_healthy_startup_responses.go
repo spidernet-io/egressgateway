@@ -53,36 +53,7 @@ Success
 type GetHealthyStartupOK struct {
 }
 
-// IsSuccess returns true when this get healthy startup o k response has a 2xx status code
-func (o *GetHealthyStartupOK) IsSuccess() bool {
-	return true
-}
-
-// IsRedirect returns true when this get healthy startup o k response has a 3xx status code
-func (o *GetHealthyStartupOK) IsRedirect() bool {
-	return false
-}
-
-// IsClientError returns true when this get healthy startup o k response has a 4xx status code
-func (o *GetHealthyStartupOK) IsClientError() bool {
-	return false
-}
-
-// IsServerError returns true when this get healthy startup o k response has a 5xx status code
-func (o *GetHealthyStartupOK) IsServerError() bool {
-	return false
-}
-
-// IsCode returns true when this get healthy startup o k response a status code equal to that given
-func (o *GetHealthyStartupOK) IsCode(code int) bool {
-	return code == 200
-}
-
 func (o *GetHealthyStartupOK) Error() string {
-	return fmt.Sprintf("[GET /healthy/startup][%d] getHealthyStartupOK ", 200)
-}
-
-func (o *GetHealthyStartupOK) String() string {
 	return fmt.Sprintf("[GET /healthy/startup][%d] getHealthyStartupOK ", 200)
 }
 
@@ -104,36 +75,7 @@ Failed
 type GetHealthyStartupInternalServerError struct {
 }
 
-// IsSuccess returns true when this get healthy startup internal server error response has a 2xx status code
-func (o *GetHealthyStartupInternalServerError) IsSuccess() bool {
-	return false
-}
-
-// IsRedirect returns true when this get healthy startup internal server error response has a 3xx status code
-func (o *GetHealthyStartupInternalServerError) IsRedirect() bool {
-	return false
-}
-
-// IsClientError returns true when this get healthy startup internal server error response has a 4xx status code
-func (o *GetHealthyStartupInternalServerError) IsClientError() bool {
-	return false
-}
-
-// IsServerError returns true when this get healthy startup internal server error response has a 5xx status code
-func (o *GetHealthyStartupInternalServerError) IsServerError() bool {
-	return true
-}
-
-// IsCode returns true when this get healthy startup internal server error response a status code equal to that given
-func (o *GetHealthyStartupInternalServerError) IsCode(code int) bool {
-	return code == 500
-}
-
 func (o *GetHealthyStartupInternalServerError) Error() string {
-	return fmt.Sprintf("[GET /healthy/startup][%d] getHealthyStartupInternalServerError ", 500)
-}
-
-func (o *GetHealthyStartupInternalServerError) String() string {
 	return fmt.Sprintf("[GET /healthy/startup][%d] getHealthyStartupInternalServerError ", 500)
 }
 

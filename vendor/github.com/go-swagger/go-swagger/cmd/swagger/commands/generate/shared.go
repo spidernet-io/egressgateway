@@ -2,6 +2,7 @@ package generate
 
 import (
 	"fmt"
+	"io/ioutil"
 	"log"
 	"os"
 	"path/filepath"
@@ -111,7 +112,7 @@ func (w WithShared) getConfigFile() string {
 	return string(w.Shared.ConfigFile)
 }
 
-type sharedOptionsCommon struct {
+type sharedOptions struct {
 	Spec                  flags.Filename `long:"spec" short:"f" description:"the spec file to use (default swagger.{json,yml,yaml})" group:"shared"`
 	Target                flags.Filename `long:"target" short:"t" default:"./" description:"the base directory for generating the files" group:"shared"`
 	Template              string         `long:"template" description:"load contributed templates" choice:"stratoscale" group:"shared"`
@@ -126,7 +127,7 @@ type sharedOptionsCommon struct {
 	FlattenCmdOptions
 }
 
-func (s sharedOptionsCommon) apply(opts *generator.GenOpts) {
+func (s sharedOptions) apply(opts *generator.GenOpts) {
 	opts.Spec = string(s.Spec)
 	opts.Target = string(s.Target)
 	opts.Template = s.Template
@@ -146,7 +147,7 @@ func setCopyright(copyrightFile string) (string, error) {
 	if copyrightFile == "" {
 		return "", nil
 	}
-	bytebuffer, err := os.ReadFile(copyrightFile)
+	bytebuffer, err := ioutil.ReadFile(copyrightFile)
 	if err != nil {
 		return "", err
 	}
