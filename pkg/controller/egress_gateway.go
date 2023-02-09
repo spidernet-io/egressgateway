@@ -134,7 +134,7 @@ func (r egnReconciler) reconcileNode(ctx context.Context, req reconcile.Request,
 			change = true
 		}
 		if change {
-			log.Sugar().Debugf("update egress gateway node\n%s", mustMarshalJson(egn))
+			log.Sugar().Debugf("update egress gateway node %s", mustMarshalJson(egn.Status))
 			err = r.client.Status().Update(ctx, &egn)
 			if err != nil {
 				return reconcile.Result{}, err
@@ -182,8 +182,12 @@ func (r egnReconciler) reconcileEG(ctx context.Context, req reconcile.Request, l
 		return reconcile.Result{}, err
 	}
 
+	log.Sugar().Debugf("number of selected nodes: %d", len(nodeList.Items))
+
 	egressNodeList := make([]egressv1.SelectedEgressNode, 0)
 	for _, node := range nodeList.Items {
+		log.Sugar().Debugf("check node: %s", node.Name)
+
 		eNode := new(egressv1.EgressNode)
 		err = r.client.Get(ctx, types.NamespacedName{Name: node.Name}, eNode)
 		if err != nil {
@@ -196,12 +200,18 @@ func (r egnReconciler) reconcileEG(ctx context.Context, req reconcile.Request, l
 				return reconcile.Result{}, err
 			}
 		}
+
+		log.Sugar().Debug("get egress node: ", node.Name)
+
 		isReady := false
 		if utils.IsNodeVxlanReady(eNode,
 			r.config.FileConfig.EnableIPv4,
 			r.config.FileConfig.EnableIPv6) {
 			isReady = true
 		}
+
+		log.Sugar().Debugf("egress node is ready: %v", isReady)
+
 		egressNodeList = append(egressNodeList, egressv1.SelectedEgressNode{
 			Name:  eNode.Name,
 			Ready: isReady,
@@ -234,7 +244,7 @@ func (r egnReconciler) reconcileEG(ctx context.Context, req reconcile.Request, l
 
 	// for there, it has been change, so we do not need to double-check
 	r.updateActive(egn.Status.NodeList)
-	log.Sugar().Debugf("update egress gateway node\n%s", mustMarshalJson(egn))
+	log.Sugar().Infof("update egress gateway node %s", mustMarshalJson(egn.Status))
 	err = r.client.Status().Update(ctx, egn)
 	if err != nil {
 		return reconcile.Result{}, err

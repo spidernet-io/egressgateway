@@ -361,8 +361,8 @@ func (r *policeReconciler) addOrUpdatePolicy(ctx context.Context, firstInit bool
 			continue
 		}
 		for _, ip := range ips {
-			err := r.ipset.AddEntry(ip, ipSet, false)
-			if err != nil {
+			err := r.ipset.AddEntry(ip, ipSet, true)
+			if err != nil && err != ipset.ErrAlreadyAddedEntry {
 				return err
 			}
 		}
@@ -648,7 +648,7 @@ func (r *policeReconciler) reconcilePod(ctx context.Context, req reconcile.Reque
 			continue
 		}
 		if !podLabelSelector.Matches(labels.Set(pod.Labels)) {
-			log.Sugar().Debug("pod not matching egn(%s)", item.Name)
+			log.Sugar().Debugf("pod not matching egn(%s)", item.Name)
 			continue
 		}
 
@@ -687,7 +687,7 @@ func (r *policeReconciler) reconcilePod(ctx context.Context, req reconcile.Reque
 			for _, ip := range ips {
 				ipSet, ok := r.ipsetMap.Load(set)
 				if ok {
-					err := r.ipset.AddEntry(ip, ipSet, false)
+					err := r.ipset.AddEntry(ip, ipSet, true)
 					if err != nil && err != ipset.ErrAlreadyAddedEntry {
 						return reconcile.Result{}, err
 					}

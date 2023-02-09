@@ -39,12 +39,9 @@ func IsNodeVxlanReady(node *egressv1.EgressNode, enableIPv4, enableIPv6 bool) bo
 		if node.Status.VxlanIPv6IP == "" {
 			return false
 		}
-		if node.Status.PhysicalInterfaceIPv6 == "" {
+		if !enableIPv4 && node.Status.PhysicalInterfaceIPv6 == "" {
 			return false
 		}
-	}
-	if node.Status.PhysicalInterface == "" {
-		return false
 	}
 	return true
 }
