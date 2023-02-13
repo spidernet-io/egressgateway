@@ -5,17 +5,18 @@ package agent
 
 import (
 	"context"
-	"github.com/spidernet-io/egressgateway/pkg/agent/vxlan"
-	"k8s.io/apimachinery/pkg/types"
 	"net"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
+	"github.com/spidernet-io/egressgateway/pkg/agent/route"
+	"github.com/spidernet-io/egressgateway/pkg/agent/vxlan"
 	"github.com/spidernet-io/egressgateway/pkg/config"
 	egressv1 "github.com/spidernet-io/egressgateway/pkg/k8s/apis/egressgateway.spidernet.io/v1"
 	"github.com/spidernet-io/egressgateway/pkg/logger"
@@ -47,12 +48,21 @@ func TestReconcilerEgressNode(t *testing.T) {
 			builder.WithScheme(schema.GetScheme())
 			builder.WithObjects(c.initialObjects...)
 			ctx := context.Background()
-
+			multiPath := false
+			if c.config.FileConfig.ForwardMethod == "active-active" {
+				multiPath = true
+			}
+			ruleRoute := route.NewRuleRoute(c.config.FileConfig.StartRouteTable, 0x11000000, 0xffffffff, multiPath, log)
 			reconciler := vxlanReconciler{
 				client:    builder.Build(),
 				log:       log,
 				cfg:       c.config,
 				getParent: vxlan.GetParent,
+				ruleRoute: ruleRoute,
+				ruleRouteCache: RuleRouteCache{
+					ipv4List: make([]net.IP, 0),
+					ipv6List: make([]net.IP, 0),
+				},
 			}
 
 			for _, req := range c.reqs {

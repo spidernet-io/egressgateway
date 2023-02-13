@@ -19,6 +19,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 	"sigs.k8s.io/controller-runtime/pkg/source"
 
+	"github.com/spidernet-io/egressgateway/pkg/agent/route"
 	"github.com/spidernet-io/egressgateway/pkg/agent/vxlan"
 	"github.com/spidernet-io/egressgateway/pkg/config"
 	egressv1 "github.com/spidernet-io/egressgateway/pkg/k8s/apis/egressgateway.spidernet.io/v1"
@@ -35,6 +36,14 @@ type vxlanReconciler struct {
 
 	vxlan     *vxlan.Device
 	getParent func(version int) (*vxlan.Parent, error)
+
+	ruleRoute      *route.RuleRoute
+	ruleRouteCache RuleRouteCache
+}
+
+type RuleRouteCache struct {
+	ipv4List []net.IP
+	ipv6List []net.IP
 }
 
 type VTEP struct {
@@ -78,10 +87,84 @@ func (r *vxlanReconciler) reconcileGateway(ctx context.Context, req reconcile.Re
 	deleted = deleted || !gateway.GetDeletionTimestamp().IsZero()
 
 	if deleted {
+		ipv4List := make([]net.IP, 0)
+		ipv6List := make([]net.IP, 0)
+		r.ruleRouteCache.ipv4List = ipv4List
+		r.ruleRouteCache.ipv6List = ipv6List
+		err = r.ruleRoute.Ensure(r.cfg.FileConfig.VXLAN.Name, ipv4List, ipv6List)
+		if err != nil {
+			return reconcile.Result{}, err
+		}
+
 		return reconcile.Result{}, nil
 	}
 
-	// l3 route
+	log.Info("calculate l3 route")
+	nodeList := make([]string, 0)
+	for _, node := range gateway.Status.NodeList {
+		if node.Ready && node.Active {
+			if node.Name == r.cfg.NodeName {
+				log.Info("current node is gateway node, skip")
+
+				r.ruleRouteCache = RuleRouteCache{
+					ipv4List: make([]net.IP, 0),
+					ipv6List: make([]net.IP, 0),
+				}
+
+				return reconcile.Result{}, nil
+			}
+
+			log.Sugar().Infof("active node: %s", node.Name)
+
+			nodeList = append(nodeList, node.Name)
+		}
+	}
+
+	ipv4List := make([]net.IP, 0)
+	ipv6List := make([]net.IP, 0)
+
+	for _, node := range nodeList {
+		egressNode := new(egressv1.EgressNode)
+		err := r.client.Get(ctx, types.NamespacedName{Name: node}, egressNode)
+		if err != nil {
+			if !errors.IsNotFound(err) {
+				continue
+			}
+			return reconcile.Result{}, err
+		}
+
+		log.Sugar().Debugf("get egress node: %s", node)
+
+		ipv4 := egressNode.Status.VxlanIPv4IP
+		ipv6 := egressNode.Status.VxlanIPv6IP
+
+		if ipv4 != "" {
+			log.Sugar().Debugf("parse ip: %s", ipv4)
+			ip := net.ParseIP(ipv4)
+			if ip.To4() != nil {
+				log.Sugar().Debugf("append ip: %s", ipv4)
+				ipv4List = append(ipv4List, ip)
+			}
+		}
+
+		if ipv6 != "" {
+			log.Sugar().Debugf("parse ip: %s", ipv6)
+			ip := net.ParseIP(ipv6)
+			if ip.To16() != nil {
+				log.Sugar().Debugf("append ip: %s", ipv6)
+				ipv6List = append(ipv6List, ip)
+			}
+		}
+	}
+
+	r.ruleRouteCache.ipv4List = ipv4List
+	r.ruleRouteCache.ipv6List = ipv6List
+
+	log.Sugar().Infof("ensure route: %v, %v", ipv4List, ipv6List)
+	err = r.ruleRoute.Ensure(r.cfg.FileConfig.VXLAN.Name, ipv4List, ipv6List)
+	if err != nil {
+		return reconcile.Result{}, err
+	}
 
 	return reconcile.Result{}, nil
 }
@@ -309,9 +392,10 @@ func (r *vxlanReconciler) version() int {
 }
 
 func (r *vxlanReconciler) keepVXLAN() {
-	logReduce := false
+	reduce := false
 	for {
 		if r.vtep == nil {
+			r.log.Sugar().Debugf("vtep not ready")
 			time.Sleep(time.Second)
 			continue
 		}
@@ -334,18 +418,38 @@ func (r *vxlanReconciler) keepVXLAN() {
 		err = r.vxlan.EnsureLink(name, vni, port, mac, 0, ipv4, ipv6, disableChecksumOffload)
 		if err != nil {
 			r.log.Sugar().Errorf("ensure vxlan link with error: %v", err)
-			logReduce = false
+			reduce = false
 			time.Sleep(time.Second)
 			continue
 		}
-		if !logReduce {
-			r.log.Sugar().Info("vxlan build successfully")
-			err := r.ensureRoute()
-			if err != nil {
-				r.log.Sugar().Errorf("ensure route with error: %v", err)
-			}
-			logReduce = true
+
+		r.log.Sugar().Debugf("link ensure has completed")
+
+		err = r.ensureRoute()
+		if err != nil {
+			r.log.Sugar().Errorf("ensure route with error: %v", err)
+			reduce = false
+			time.Sleep(time.Second)
+			continue
 		}
+
+		r.log.Sugar().Debugf("route ensure has completed")
+
+		err = r.ruleRoute.Ensure(r.cfg.FileConfig.VXLAN.Name, r.ruleRouteCache.ipv4List, r.ruleRouteCache.ipv6List)
+		if err != nil {
+			r.log.Sugar().Errorf("ensure vxlan link with error: %v", err)
+			reduce = false
+			time.Sleep(time.Second)
+			continue
+		}
+
+		r.log.Sugar().Debugf("route rule ensure has completed")
+
+		if !reduce {
+			r.log.Sugar().Info("vxlan and route has completed")
+			reduce = true
+		}
+
 		time.Sleep(time.Second * 10)
 	}
 }
@@ -387,6 +491,12 @@ func (r *vxlanReconciler) ensureRoute() error {
 }
 
 func newEgressNodeController(mgr manager.Manager, cfg *config.Config, log *zap.Logger) error {
+	multiPath := false
+	if cfg.FileConfig.ForwardMethod == "active-active" {
+		multiPath = true
+	}
+	ruleRoute := route.NewRuleRoute(cfg.FileConfig.StartRouteTable, 0x11000000, 0xffffffff, multiPath, log)
+
 	r := &vxlanReconciler{
 		client:    mgr.GetClient(),
 		log:       log,
@@ -394,6 +504,11 @@ func newEgressNodeController(mgr manager.Manager, cfg *config.Config, log *zap.L
 		peerMap:   utils.NewSyncMap[string, vxlan.Peer](),
 		vxlan:     vxlan.New(),
 		getParent: vxlan.GetParent,
+		ruleRoute: ruleRoute,
+		ruleRouteCache: RuleRouteCache{
+			ipv4List: make([]net.IP, 0),
+			ipv6List: make([]net.IP, 0),
+		},
 	}
 
 	c, err := controller.New("vxlan", mgr, controller.Options{Reconciler: r})

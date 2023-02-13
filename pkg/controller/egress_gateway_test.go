@@ -381,7 +381,7 @@ func caseNodeReadyVxlanReadyDualStackNotReady() TestCaseEGN {
 					TunnelMac:             "00:50:56:b4:02:1d",
 					Phase:                 "Succeeded",
 					PhysicalInterface:     "eth0",
-					PhysicalInterfaceIPv4: "172.16.0.1",
+					PhysicalInterfaceIPv4: "",
 					PhysicalInterfaceIPv6: "",
 				},
 			},
