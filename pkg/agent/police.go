@@ -168,12 +168,16 @@ func (r *policeReconciler) reconcileEG(ctx context.Context, req reconcile.Reques
 	deleted = deleted || !gateway.GetDeletionTimestamp().IsZero()
 
 	if deleted {
-		log.Info("request item is deleted")
+		log.Sugar().Info("request item deleted, rebuild the iptables rules to overwrite the system rules.")
 		for _, table := range r.mangleTables {
 			chainMapRules := buildMangleStaticRule(false, false)
 
 			for chain, rules := range chainMapRules {
 				table.InsertOrAppendRules(chain, rules)
+				_, err := table.Apply()
+				if err != nil {
+					return reconcile.Result{Requeue: true}, err
+				}
 			}
 		}
 	}
@@ -190,10 +194,20 @@ func (r *policeReconciler) reconcileEG(ctx context.Context, req reconcile.Reques
 	}
 
 	for _, table := range r.mangleTables {
+		log.Sugar().Debug("building a static rule for the mangle table",
+			zap.Bool("isGatewayNode", isGatewayNode),
+			zap.Bool("hasGateway", hasGateway))
+
 		chainMapRules := buildMangleStaticRule(isGatewayNode, hasGateway)
 
 		for chain, rules := range chainMapRules {
+			log.Debug("insert or append rules", zap.String("chain", chain))
 			table.InsertOrAppendRules(chain, rules)
+			_, err := table.Apply()
+			if err != nil {
+				log.Error("failed to apply iptables", zap.Error(err), zap.String("chain", chain))
+				return reconcile.Result{Requeue: true}, err
+			}
 		}
 	}
 
@@ -269,11 +283,11 @@ func (r *policeReconciler) reconcileEGP(ctx context.Context, req reconcile.Reque
 
 	// reconcile delete event
 	if deleted {
-		setNames := GetIPSetNamesByPolicy(policy.Name, true, true)
-		log.Info("request item is deleted")
+		setNames := GetIPSetNamesByPolicy(req.Name, true, true)
+		log.Info("request item deleted, delete related policies")
 
 		for _, table := range r.mangleTables {
-			rules, changed := r.removePolicyRule(policy.Name, table.IPVersion)
+			rules, changed := r.removePolicyRule(req.Name, table.IPVersion)
 			if changed {
 				table.UpdateChain(&iptables.Chain{
 					Name:  "EGRESSGATEWAY-MARK-REQUEST",
@@ -307,7 +321,7 @@ func (r *policeReconciler) reconcileEGP(ctx context.Context, req reconcile.Reque
 func (r *policeReconciler) addOrUpdatePolicy(ctx context.Context, firstInit bool, policy *egressv1.EgressGatewayPolicy, log *zap.Logger) error {
 	setNames := GetIPSetNamesByPolicy(policy.Name, r.cfg.FileConfig.EnableIPv4, r.cfg.FileConfig.EnableIPv6)
 	err := setNames.Map(func(set SetName) error {
-		log.Sugar().Debug("check ipset %s", set.Name)
+		log.Debug("check ipset", zap.String("ipset", set.Name))
 		return r.createIPSet(log, set)
 	})
 	if err != nil {
