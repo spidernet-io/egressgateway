@@ -3,6 +3,7 @@ module github.com/spidernet-io/egressgateway
 go 1.19
 
 require (
+	github.com/cilium/ipam v0.0.0-20220824141044-46ef3d556735
 	github.com/go-logr/logr v1.2.3
 	github.com/go-openapi/errors v0.20.3
 	github.com/go-openapi/loads v0.21.2
