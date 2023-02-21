@@ -182,6 +182,12 @@ func (r *policeReconciler) reconcileEG(ctx context.Context, req reconcile.Reques
 		}
 	}
 
+	//err = r.initApplyPolicy()
+	//if err != nil {
+	//	log.Error("add egress gateway, init apply policy with error", zap.Error(err))
+	//	return reconcile.Result{Requeue: true}, err
+	//}
+
 	isGatewayNode := false
 	hasGateway := false
 	for _, node := range gateway.Status.NodeList {
@@ -203,11 +209,26 @@ func (r *policeReconciler) reconcileEG(ctx context.Context, req reconcile.Reques
 		for chain, rules := range chainMapRules {
 			log.Debug("insert or append rules", zap.String("chain", chain))
 			table.InsertOrAppendRules(chain, rules)
-			_, err := table.Apply()
-			if err != nil {
-				log.Error("failed to apply iptables", zap.Error(err), zap.String("chain", chain))
-				return reconcile.Result{Requeue: true}, err
-			}
+
+		}
+	}
+
+	for _, table := range r.mangleTables {
+		var rules []iptables.Rule
+		if table.IPVersion == 4 {
+			rules = buildRuleList(r.ruleV4Map)
+		} else {
+			rules = buildRuleList(r.ruleV6Map)
+		}
+		table.UpdateChain(&iptables.Chain{
+			Name:  "EGRESSGATEWAY-MARK-REQUEST",
+			Rules: rules,
+		})
+
+		_, err := table.Apply()
+		if err != nil {
+			log.Error("failed to apply iptables", zap.Error(err))
+			return reconcile.Result{Requeue: true}, err
 		}
 	}
 
@@ -215,7 +236,14 @@ func (r *policeReconciler) reconcileEG(ctx context.Context, req reconcile.Reques
 }
 
 func buildNatStaticRule() map[string][]iptables.Rule {
-	res := map[string][]iptables.Rule{}
+	res := map[string][]iptables.Rule{
+		"POSTROUTING": {
+			{
+				Match:  iptables.MatchCriteria{}.MarkMatchesWithMask(0x12000000, 0xffffffff),
+				Action: iptables.AcceptAction{},
+			},
+		},
+	}
 	return res
 }
 
@@ -223,13 +251,13 @@ func buildFilterStaticRule() map[string][]iptables.Rule {
 	res := map[string][]iptables.Rule{
 		"FORWARD": {
 			{
-				Match:  iptables.MatchCriteria{}.MarkMatchesWithMask(0x11000000, 0xffffffff),
+				Match:  iptables.MatchCriteria{}.MarkMatchesWithMask(0x12000000, 0xffffffff),
 				Action: iptables.AcceptAction{},
 			},
 		},
 		"OUTPUT": {
 			{
-				Match:  iptables.MatchCriteria{}.MarkMatchesWithMask(0x11000000, 0xffffffff),
+				Match:  iptables.MatchCriteria{}.MarkMatchesWithMask(0x12000000, 0xffffffff),
 				Action: iptables.AcceptAction{},
 			},
 		},
@@ -242,12 +270,12 @@ func buildMangleStaticRule(isGatewayNode bool, hasGateway bool) map[string][]ipt
 		"FORWARD": {
 			{
 				Match:  iptables.MatchCriteria{}.MarkMatchesWithMask(0x11000000, 0xffffffff),
-				Action: iptables.SetMarkAction{Mark: 0x12000000},
+				Action: iptables.SetMaskedMarkAction{Mark: 0x12000000, Mask: 0xffffffff},
 			},
 		},
 		"POSTROUTING": {
 			{
-				Match:  iptables.MatchCriteria{}.MarkMatchesWithMask(0x11000000, 0xffffffff),
+				Match:  iptables.MatchCriteria{}.MarkMatchesWithMask(0x12000000, 0xffffffff),
 				Action: iptables.AcceptAction{},
 			},
 		},

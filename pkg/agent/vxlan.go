@@ -131,8 +131,8 @@ func (r *vxlanReconciler) reconcileGateway(ctx context.Context, req reconcile.Re
 
 		log.Sugar().Debugf("get egress node: %s", node)
 
-		ipv4 := egressNode.Status.VxlanIPv4IP
-		ipv6 := egressNode.Status.VxlanIPv6IP
+		ipv4 := egressNode.Status.VxlanIPv4
+		ipv6 := egressNode.Status.VxlanIPv6
 
 		if ipv4 != "" {
 			log.Sugar().Debugf("parse ip: %s", ipv4)
@@ -213,8 +213,8 @@ func (r *vxlanReconciler) reconcileEgressNode(ctx context.Context, req reconcile
 			return reconcile.Result{}, nil
 		}
 
-		ipv4 := net.ParseIP(node.Status.VxlanIPv4IP).To4()
-		ipv6 := net.ParseIP(node.Status.VxlanIPv6IP).To16()
+		ipv4 := net.ParseIP(node.Status.VxlanIPv4).To4()
+		ipv6 := net.ParseIP(node.Status.VxlanIPv6).To16()
 
 		peer := vxlan.Peer{Parent: parentIP, MAC: mac}
 		if ipv4 != nil {
@@ -312,7 +312,7 @@ func (r *vxlanReconciler) updateEgressNodeStatus(node *egressv1.EgressNode, vers
 	// calculate whether the state has changed, update if the status changes.
 	vtep := r.parseVTEP(node.Status)
 	if vtep != nil {
-		phase := "Successfully"
+		phase := egressv1.EgressNodeSucceeded
 		if node.Status.Phase != phase {
 			needUpdate = true
 			node.Status.Phase = phase
@@ -320,6 +320,14 @@ func (r *vxlanReconciler) updateEgressNodeStatus(node *egressv1.EgressNode, vers
 	}
 
 	if needUpdate {
+		r.log.Info("update node status",
+			zap.String("phase", string(node.Status.Phase)),
+			zap.String("vxlanIPv4", node.Status.VxlanIPv4),
+			zap.String("vxlanIPv6", node.Status.VxlanIPv6),
+			zap.String("parentInterface", node.Status.PhysicalInterface),
+			zap.String("parentIPv4", node.Status.PhysicalInterfaceIPv4),
+			zap.String("parentIPv6", node.Status.PhysicalInterfaceIPv6),
+		)
 		ctx := context.Background()
 		err = r.client.Status().Update(ctx, node)
 		if err != nil {
@@ -336,10 +344,10 @@ func (r *vxlanReconciler) parseVTEP(status egressv1.EgressNodeStatus) *vxlan.Pee
 	ready := true
 
 	if r.cfg.FileConfig.EnableIPv4 {
-		if status.VxlanIPv4IP == "" {
+		if status.VxlanIPv4 == "" {
 			ready = false
 		} else {
-			ip := net.ParseIP(status.VxlanIPv4IP)
+			ip := net.ParseIP(status.VxlanIPv4)
 			if ip.To4() == nil {
 				ready = false
 			}
@@ -347,10 +355,10 @@ func (r *vxlanReconciler) parseVTEP(status egressv1.EgressNodeStatus) *vxlan.Pee
 		}
 	}
 	if r.cfg.FileConfig.EnableIPv6 {
-		if status.VxlanIPv6IP == "" {
+		if status.VxlanIPv6 == "" {
 			ready = false
 		} else {
-			ip := net.ParseIP(status.VxlanIPv6IP)
+			ip := net.ParseIP(status.VxlanIPv6)
 			if ip.To16() == nil {
 				ready = false
 			}
@@ -404,8 +412,8 @@ func (r *vxlanReconciler) keepVXLAN() {
 				Mask: r.cfg.FileConfig.TunnelIPv4Net.Mask,
 			}
 		}
-		if r.cfg.FileConfig.EnableIPv6 && vtep.IPv4.To16() != nil {
-			ipv4 = &net.IPNet{
+		if r.cfg.FileConfig.EnableIPv6 && vtep.IPv6.To16() != nil {
+			ipv6 = &net.IPNet{
 				IP:   vtep.IPv6.To16(),
 				Mask: r.cfg.FileConfig.TunnelIPv6Net.Mask,
 			}
@@ -468,6 +476,9 @@ func (r *vxlanReconciler) ensureRoute() error {
 
 	peerMap := make(map[string]vxlan.Peer, 0)
 	r.peerMap.Range(func(key string, peer vxlan.Peer) bool {
+		if key == r.cfg.EnvConfig.NodeName {
+			return true
+		}
 		peerMap[key] = peer
 		return false
 	})

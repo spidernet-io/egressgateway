@@ -12,16 +12,17 @@ type EgressNodeSpec struct {
 
 type EgressNodeStatus struct {
 	// +kubebuilder:validation:Optional
-	VxlanIPv4IP string `json:"vxlanIPv4IP,omitempty"`
+	VxlanIPv4 string `json:"vxlanIPv4,omitempty"`
 
 	// +kubebuilder:validation:Optional
-	VxlanIPv6IP string `json:"vxlanIPv6IP,omitempty"`
+	VxlanIPv6 string `json:"vxlanIPv6,omitempty"`
 
 	// +kubebuilder:validation:Optional
 	TunnelMac string `json:"tunnelMac,omitempty"`
 
-	// +kubebuilder:validation:Optional
-	Phase string `json:"phase,omitempty"`
+	// +kubebuilder:validation:Enum=Pending;Init;Failed;Succeeded;""
+	// +optional
+	Phase EgressNodePhase `json:"phase,omitempty"`
 
 	// +kubebuilder:validation:Optional
 	PhysicalInterface string `json:"physicalInterface,omitempty"`
@@ -32,6 +33,19 @@ type EgressNodeStatus struct {
 	// +kubebuilder:validation:Optional
 	PhysicalInterfaceIPv6 string `json:"physicalInterfaceIPv6,omitempty"`
 }
+
+type EgressNodePhase string
+
+const (
+	// EgressNodePending wait for tunnel address available
+	EgressNodePending EgressNodePhase = "Pending"
+	// EgressNodeInit Init tunnel address
+	EgressNodeInit EgressNodePhase = "Init"
+	// EgressNodeFailed allocate tunnel address failed
+	EgressNodeFailed EgressNodePhase = "Failed"
+	// EgressNodeSucceeded vxlan tunnel is available
+	EgressNodeSucceeded EgressNodePhase = "Succeeded"
+)
 
 // scope(Namespaced or Cluster)
 // +kubebuilder:resource:categories={egressnode},path="egressnodes",singular="egressnode",scope="Cluster"

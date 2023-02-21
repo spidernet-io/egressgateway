@@ -47,6 +47,12 @@ spec:
           status:
             properties:
               phase:
+                enum:
+                - Pending
+                - Init
+                - Failed
+                - Succeeded
+                - ""
                 type: string
               physicalInterface:
                 type: string
@@ -56,9 +62,9 @@ spec:
                 type: string
               tunnelMac:
                 type: string
-              vxlanIPv4IP:
+              vxlanIPv4:
                 type: string
-              vxlanIPv6IP:
+              vxlanIPv6:
                 type: string
             type: object
         required:

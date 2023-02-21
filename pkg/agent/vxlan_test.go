@@ -100,8 +100,8 @@ func caseAddEgressNode() TestCaseVXLAN {
 				ObjectMeta: metav1.ObjectMeta{Name: "workstation1"},
 				Spec:       egressv1.EgressNodeSpec{},
 				Status: egressv1.EgressNodeStatus{
-					VxlanIPv4IP:           "",
-					VxlanIPv6IP:           "",
+					VxlanIPv4:             "",
+					VxlanIPv6:             "",
 					TunnelMac:             "",
 					Phase:                 "",
 					PhysicalInterface:     "",
