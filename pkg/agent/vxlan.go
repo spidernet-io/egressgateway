@@ -30,7 +30,6 @@ type vxlanReconciler struct {
 	client client.Client
 	log    *zap.Logger
 	cfg    *config.Config
-	vtep   *VTEP
 
 	peerMap *utils.SyncMap[string, vxlan.Peer]
 
@@ -38,12 +37,7 @@ type vxlanReconciler struct {
 	getParent func(version int) (*vxlan.Parent, error)
 
 	ruleRoute      *route.RuleRoute
-	ruleRouteCache RuleRouteCache
-}
-
-type RuleRouteCache struct {
-	ipv4List []net.IP
-	ipv6List []net.IP
+	ruleRouteCache *utils.SyncMap[string, []net.IP]
 }
 
 type VTEP struct {
@@ -89,8 +83,10 @@ func (r *vxlanReconciler) reconcileGateway(ctx context.Context, req reconcile.Re
 	if deleted {
 		ipv4List := make([]net.IP, 0)
 		ipv6List := make([]net.IP, 0)
-		r.ruleRouteCache.ipv4List = ipv4List
-		r.ruleRouteCache.ipv6List = ipv6List
+
+		r.ruleRouteCache.Store("ipv4", ipv4List)
+		r.ruleRouteCache.Store("ipv6", ipv6List)
+
 		err = r.ruleRoute.Ensure(r.cfg.FileConfig.VXLAN.Name, ipv4List, ipv6List)
 		if err != nil {
 			return reconcile.Result{}, err
@@ -106,10 +102,10 @@ func (r *vxlanReconciler) reconcileGateway(ctx context.Context, req reconcile.Re
 			if node.Name == r.cfg.NodeName {
 				log.Info("current node is gateway node, skip")
 
-				r.ruleRouteCache = RuleRouteCache{
-					ipv4List: make([]net.IP, 0),
-					ipv6List: make([]net.IP, 0),
-				}
+				ipv4List := make([]net.IP, 0)
+				ipv6List := make([]net.IP, 0)
+				r.ruleRouteCache.Store("ipv4", ipv4List)
+				r.ruleRouteCache.Store("ipv6", ipv6List)
 
 				return reconcile.Result{}, nil
 			}
@@ -157,8 +153,8 @@ func (r *vxlanReconciler) reconcileGateway(ctx context.Context, req reconcile.Re
 		}
 	}
 
-	r.ruleRouteCache.ipv4List = ipv4List
-	r.ruleRouteCache.ipv6List = ipv6List
+	r.ruleRouteCache.Store("ipv4", ipv4List)
+	r.ruleRouteCache.Store("ipv6", ipv6List)
 
 	log.Sugar().Infof("ensure route: %v, %v", ipv4List, ipv6List)
 	err = r.ruleRoute.Ensure(r.cfg.FileConfig.VXLAN.Name, ipv4List, ipv6List)
@@ -264,7 +260,7 @@ func (r *vxlanReconciler) ensureEgressNodeStatus(node *egressv1.EgressNode) erro
 
 	vtep := r.parseVTEP(node.Status)
 	if vtep != nil {
-		r.vtep = vtep
+		r.peerMap.Store(r.cfg.EnvConfig.NodeName, *vtep)
 	}
 	return nil
 }
@@ -334,12 +330,12 @@ func (r *vxlanReconciler) updateEgressNodeStatus(node *egressv1.EgressNode, vers
 	return nil
 }
 
-func (r *vxlanReconciler) parseVTEP(status egressv1.EgressNodeStatus) *VTEP {
-	var ipv4 *net.IPNet
-	var ipv6 *net.IPNet
+func (r *vxlanReconciler) parseVTEP(status egressv1.EgressNodeStatus) *vxlan.Peer {
+	var ipv4 *net.IP
+	var ipv6 *net.IP
 	ready := true
 
-	if status.VxlanIPv4IP == "" && r.cfg.FileConfig.EnableIPv4 {
+	if r.cfg.FileConfig.EnableIPv4 {
 		if status.VxlanIPv4IP == "" {
 			ready = false
 		} else {
@@ -347,10 +343,7 @@ func (r *vxlanReconciler) parseVTEP(status egressv1.EgressNodeStatus) *VTEP {
 			if ip.To4() == nil {
 				ready = false
 			}
-			ipv4 = &net.IPNet{
-				IP:   ip.To4(),
-				Mask: r.cfg.FileConfig.TunnelIPv4Net.Mask,
-			}
+			ipv4 = &ip
 		}
 	}
 	if r.cfg.FileConfig.EnableIPv6 {
@@ -361,10 +354,7 @@ func (r *vxlanReconciler) parseVTEP(status egressv1.EgressNodeStatus) *VTEP {
 			if ip.To16() == nil {
 				ready = false
 			}
-			ipv6 = &net.IPNet{
-				IP:   ip.To16(),
-				Mask: r.cfg.FileConfig.TunnelIPv6Net.Mask,
-			}
+			ipv6 = &ip
 		}
 	}
 
@@ -376,7 +366,7 @@ func (r *vxlanReconciler) parseVTEP(status egressv1.EgressNodeStatus) *VTEP {
 	if !ready {
 		return nil
 	}
-	return &VTEP{
+	return &vxlan.Peer{
 		IPv4: ipv4,
 		IPv6: ipv6,
 		MAC:  mac,
@@ -394,7 +384,8 @@ func (r *vxlanReconciler) version() int {
 func (r *vxlanReconciler) keepVXLAN() {
 	reduce := false
 	for {
-		if r.vtep == nil {
+		vtep, ok := r.peerMap.Load(r.cfg.EnvConfig.NodeName)
+		if !ok {
 			r.log.Sugar().Debugf("vtep not ready")
 			time.Sleep(time.Second)
 			continue
@@ -403,10 +394,22 @@ func (r *vxlanReconciler) keepVXLAN() {
 		name := r.cfg.FileConfig.VXLAN.Name
 		vni := r.cfg.FileConfig.VXLAN.ID
 		port := r.cfg.FileConfig.VXLAN.Port
-		ipv4 := r.vtep.IPv4
-		ipv6 := r.vtep.IPv6
-		mac := r.vtep.MAC
+		mac := vtep.MAC
 		disableChecksumOffload := r.cfg.FileConfig.VXLAN.DisableChecksumOffload
+
+		var ipv4, ipv6 *net.IPNet
+		if r.cfg.FileConfig.EnableIPv4 && vtep.IPv4.To4() != nil {
+			ipv4 = &net.IPNet{
+				IP:   vtep.IPv4.To4(),
+				Mask: r.cfg.FileConfig.TunnelIPv4Net.Mask,
+			}
+		}
+		if r.cfg.FileConfig.EnableIPv6 && vtep.IPv4.To16() != nil {
+			ipv4 = &net.IPNet{
+				IP:   vtep.IPv6.To16(),
+				Mask: r.cfg.FileConfig.TunnelIPv6Net.Mask,
+			}
+		}
 
 		err := r.updateEgressNodeStatus(nil, r.version())
 		if err != nil {
@@ -435,7 +438,10 @@ func (r *vxlanReconciler) keepVXLAN() {
 
 		r.log.Sugar().Debugf("route ensure has completed")
 
-		err = r.ruleRoute.Ensure(r.cfg.FileConfig.VXLAN.Name, r.ruleRouteCache.ipv4List, r.ruleRouteCache.ipv6List)
+		ipv4List, _ := r.ruleRouteCache.Load("ipv4")
+		ipv6List, _ := r.ruleRouteCache.Load("ipv6")
+
+		err = r.ruleRoute.Ensure(r.cfg.FileConfig.VXLAN.Name, ipv4List, ipv6List)
 		if err != nil {
 			r.log.Sugar().Errorf("ensure vxlan link with error: %v", err)
 			reduce = false
@@ -498,17 +504,14 @@ func newEgressNodeController(mgr manager.Manager, cfg *config.Config, log *zap.L
 	ruleRoute := route.NewRuleRoute(cfg.FileConfig.StartRouteTable, 0x11000000, 0xffffffff, multiPath, log)
 
 	r := &vxlanReconciler{
-		client:    mgr.GetClient(),
-		log:       log,
-		cfg:       cfg,
-		peerMap:   utils.NewSyncMap[string, vxlan.Peer](),
-		vxlan:     vxlan.New(),
-		getParent: vxlan.GetParent,
-		ruleRoute: ruleRoute,
-		ruleRouteCache: RuleRouteCache{
-			ipv4List: make([]net.IP, 0),
-			ipv6List: make([]net.IP, 0),
-		},
+		client:         mgr.GetClient(),
+		log:            log,
+		cfg:            cfg,
+		peerMap:        utils.NewSyncMap[string, vxlan.Peer](),
+		vxlan:          vxlan.New(),
+		getParent:      vxlan.GetParent,
+		ruleRoute:      ruleRoute,
+		ruleRouteCache: utils.NewSyncMap[string, []net.IP](),
 	}
 
 	c, err := controller.New("vxlan", mgr, controller.Options{Reconciler: r})

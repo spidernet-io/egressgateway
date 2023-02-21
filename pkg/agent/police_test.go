@@ -754,3 +754,45 @@ func (m *mockMutex) Unlock() {
 	}
 	m.Held = false
 }
+
+func TestGetPodIPs(t *testing.T) {
+	tests := []struct {
+		name         string
+		args         []corev1.PodIP
+		wantIpv4List []string
+		wantIpv6List []string
+	}{
+		{
+			name: "ipv4 with ipv6 list",
+			args: []corev1.PodIP{
+				{
+					IP: "10.21.180.91",
+				},
+				{
+					IP: "some invalid IP address",
+				},
+				{
+					IP: "fd00:21::a203:748a:5f1a:c780",
+				},
+				{
+					IP: "fd00:21::a203:748a:5f1a:c781",
+				},
+			},
+			wantIpv4List: []string{
+				"10.21.180.91",
+			},
+			wantIpv6List: []string{
+				"fd00:21::a203:748a:5f1a:c780",
+				"fd00:21::a203:748a:5f1a:c781",
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+
+			gotIpv4List, gotIpv6List := getPodIPsBy(tt.args)
+			assert.Equalf(t, tt.wantIpv4List, gotIpv4List, "getPodIPsBy(%v)", tt.args)
+			assert.Equalf(t, tt.wantIpv6List, gotIpv6List, "getPodIPsBy(%v)", tt.args)
+		})
+	}
+}

@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"net"
 	"reflect"
+	"sync"
 	"syscall"
 
 	"github.com/vishvananda/netlink"
@@ -17,6 +18,7 @@ import (
 // Device is vxlan device
 type Device struct {
 	name      string
+	lock      sync.RWMutex
 	link      *netlink.Vxlan
 	getParent func(version int) (*Parent, error)
 }
@@ -70,7 +72,7 @@ func (dev *Device) EnsureLink(name string, vni int, port int, mac net.HardwareAd
 	if err != nil {
 		return err
 	}
-	dev.link = link
+	dev.setLink(link)
 
 	err = dev.ensureAddr(ipv4, link, netlink.FAMILY_V4)
 	if err != nil {
@@ -142,7 +144,7 @@ type Peer struct {
 }
 
 func (dev *Device) ListNeigh() ([]netlink.Neigh, error) {
-	if dev.link == nil {
+	if dev.notReady() {
 		return nil, nil
 	}
 	existingNeigh, err := netlink.NeighList(dev.link.Index, netlink.FAMILY_V4)
@@ -153,7 +155,7 @@ func (dev *Device) ListNeigh() ([]netlink.Neigh, error) {
 }
 
 func (dev *Device) Add(peer Peer) error {
-	if dev.link == nil {
+	if dev.notReady() {
 		return nil
 	}
 	if peer.IPv6 != nil {
@@ -199,7 +201,7 @@ func (dev *Device) add(mac net.HardwareAddr, ip net.IP) error {
 }
 
 func (dev *Device) Del(neigh netlink.Neigh) error {
-	if dev.link == nil {
+	if dev.notReady() {
 		return nil
 	}
 
@@ -267,14 +269,6 @@ func (dev *Device) ensureAddr(ipn *net.IPNet, link netlink.Link, family int) err
 		return nil
 	}
 
-	//suffix := "/32"
-	//if family == netlink.FAMILY_V6 {
-	//	suffix = "/128"
-	//}
-	//_, ipn, err := net.ParseCIDR(ip + suffix)
-	//if err != nil {
-	//	return err
-	//}
 	addr := netlink.Addr{IPNet: ipn}
 	gotAddrs, err := netlink.AddrList(link, family)
 	if err != nil {
@@ -298,4 +292,16 @@ func (dev *Device) ensureAddr(ipn *net.IPNet, link netlink.Link, family int) err
 		}
 	}
 	return nil
+}
+
+func (dev *Device) notReady() bool {
+	dev.lock.RLock()
+	defer dev.lock.RUnlock()
+	return dev.link == nil
+}
+
+func (dev *Device) setLink(link *netlink.Vxlan) {
+	dev.lock.Lock()
+	defer dev.lock.Unlock()
+	dev.link = link
 }

@@ -21,6 +21,7 @@ import (
 	egressv1 "github.com/spidernet-io/egressgateway/pkg/k8s/apis/egressgateway.spidernet.io/v1"
 	"github.com/spidernet-io/egressgateway/pkg/logger"
 	"github.com/spidernet-io/egressgateway/pkg/schema"
+	"github.com/spidernet-io/egressgateway/pkg/utils"
 )
 
 type TestCaseVXLAN struct {
@@ -54,15 +55,12 @@ func TestReconcilerEgressNode(t *testing.T) {
 			}
 			ruleRoute := route.NewRuleRoute(c.config.FileConfig.StartRouteTable, 0x11000000, 0xffffffff, multiPath, log)
 			reconciler := vxlanReconciler{
-				client:    builder.Build(),
-				log:       log,
-				cfg:       c.config,
-				getParent: vxlan.GetParent,
-				ruleRoute: ruleRoute,
-				ruleRouteCache: RuleRouteCache{
-					ipv4List: make([]net.IP, 0),
-					ipv6List: make([]net.IP, 0),
-				},
+				client:         builder.Build(),
+				log:            log,
+				cfg:            c.config,
+				getParent:      vxlan.GetParent,
+				ruleRoute:      ruleRoute,
+				ruleRouteCache: utils.NewSyncMap[string, []net.IP](),
 			}
 
 			for _, req := range c.reqs {
@@ -83,7 +81,7 @@ func caseAddEgressNode() TestCaseVXLAN {
 		panic(err)
 	}
 
-	config := &config.Config{
+	cfg := &config.Config{
 		EnvConfig: config.EnvConfig{
 			NodeName: "workstation1",
 		},
@@ -122,6 +120,6 @@ func caseAddEgressNode() TestCaseVXLAN {
 				expRequeue: false,
 			},
 		},
-		config: config,
+		config: cfg,
 	}
 }

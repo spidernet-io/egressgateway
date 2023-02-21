@@ -21,7 +21,7 @@ global:
   ## @param global.commonLabels Labels to add to all deployed objects
   commonLabels: {}
   #  label1: v1
-  #  labele: v2
+  #  label2: v2
 
   ## @param global.configName the configmap name
   configName: "egressgateway"
