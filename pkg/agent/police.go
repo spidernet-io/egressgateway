@@ -281,9 +281,9 @@ func (r *policeReconciler) reconcileEGP(ctx context.Context, req reconcile.Reque
 	}
 	deleted = deleted || !policy.GetDeletionTimestamp().IsZero()
 
-	// reconcile delete event
+	// reconcile delete vtepEvent
 	if deleted {
-		setNames := GetIPSetNamesByPolicy(req.Name, true, true)
+		setNames := buildIPSetNamesByPolicy(req.Name, true, true)
 		log.Info("request item deleted, delete related policies")
 
 		for _, table := range r.mangleTables {
@@ -319,7 +319,7 @@ func (r *policeReconciler) reconcileEGP(ctx context.Context, req reconcile.Reque
 
 // addOrUpdatePolicy reconcile add or update egress policy
 func (r *policeReconciler) addOrUpdatePolicy(ctx context.Context, firstInit bool, policy *egressv1.EgressGatewayPolicy, log *zap.Logger) error {
-	setNames := GetIPSetNamesByPolicy(policy.Name, r.cfg.FileConfig.EnableIPv4, r.cfg.FileConfig.EnableIPv6)
+	setNames := buildIPSetNamesByPolicy(policy.Name, r.cfg.FileConfig.EnableIPv4, r.cfg.FileConfig.EnableIPv6)
 	err := setNames.Map(func(set SetName) error {
 		log.Debug("check ipset", zap.String("ipset", set.Name))
 		return r.createIPSet(log, set)
@@ -565,7 +565,7 @@ func getPodIPsByPodList(podList *corev1.PodList) ([]string, []string) {
 
 	for _, pod := range podList.Items {
 		if pod.DeletionTimestamp.IsZero() {
-			ipv4ListTmp, ipv6ListTmp := getPodIPsBy(pod)
+			ipv4ListTmp, ipv6ListTmp := getPodIPsBy(pod.Status.PodIPs)
 			ipv4List = append(ipv4List, ipv4ListTmp...)
 			ipv6List = append(ipv6List, ipv6ListTmp...)
 		}
@@ -573,15 +573,13 @@ func getPodIPsByPodList(podList *corev1.PodList) ([]string, []string) {
 	return ipv4List, ipv6List
 }
 
-func getPodIPsBy(pod corev1.Pod) ([]string, []string) {
-	ipv4List := make([]string, 0)
-	ipv6List := make([]string, 0)
-	for _, item := range pod.Status.PodIPs {
+func getPodIPsBy(ips []corev1.PodIP) (ipv4List []string, ipv6List []string) {
+	for _, item := range ips {
 		ip := net.ParseIP(item.IP)
 		if ip == nil {
 			continue
 		}
-		if ip4 := ip.To4(); ip4 != nil {
+		if ip.To4() != nil {
 			ipv4List = append(ipv4List, item.IP)
 		} else {
 			ipv6List = append(ipv6List, item.IP)
@@ -642,7 +640,7 @@ func (r *policeReconciler) reconcilePod(ctx context.Context, req reconcile.Reque
 		deleted = true
 	}
 	if deleted {
-		log.Sugar().Debug("watch pod deleted event, skip")
+		log.Sugar().Debug("watch pod deleted vtepEvent, skip")
 		return reconcile.Result{}, nil
 	}
 	deleted = deleted || !pod.GetDeletionTimestamp().IsZero()
@@ -653,7 +651,7 @@ func (r *policeReconciler) reconcilePod(ctx context.Context, req reconcile.Reque
 		return reconcile.Result{}, err
 	}
 
-	ipv4List, ipv6List := getPodIPsBy(*pod)
+	ipv4List, ipv6List := getPodIPsBy(pod.Status.PodIPs)
 
 	for _, item := range policyList.Items {
 		podLabelSelector, err := metav1.LabelSelectorAsSelector(item.Spec.AppliedTo.PodSelector)
@@ -662,14 +660,14 @@ func (r *policeReconciler) reconcilePod(ctx context.Context, req reconcile.Reque
 			continue
 		}
 		if !podLabelSelector.Matches(labels.Set(pod.Labels)) {
-			log.Sugar().Debugf("pod not matching egn(%s)", item.Name)
+			log.Sugar().Debugf("Pod is not selected by policy %s", item.Name)
 			continue
 		}
 
 		toAddList := make(map[string][]string, 0)
 		toDelList := make(map[string][]string, 0)
 
-		setNames := GetIPSetNamesByPolicy(item.Name, r.cfg.FileConfig.EnableIPv4, r.cfg.FileConfig.EnableIPv6)
+		setNames := buildIPSetNamesByPolicy(item.Name, r.cfg.FileConfig.EnableIPv4, r.cfg.FileConfig.EnableIPv6)
 		err = setNames.Map(func(set SetName) error {
 			oldIPList, err := r.ipset.ListEntries(set.Name)
 			if err != nil {
@@ -821,7 +819,7 @@ func newPolicyController(mgr manager.Manager, log *zap.Logger, cfg *config.Confi
 	return nil
 }
 
-func GetIPSetNamesByPolicy(name string, enableIPv4, enableIPv6 bool) SetNames {
+func buildIPSetNamesByPolicy(name string, enableIPv4, enableIPv6 bool) SetNames {
 	res := make([]SetName, 0)
 	if enableIPv4 {
 		res = append(res, []SetName{
