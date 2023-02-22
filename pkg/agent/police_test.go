@@ -263,11 +263,11 @@ func caseAddEgressGatewayPolicy() TestCaseEGP {
 							"-m comment --comment \"cali:6gwbT8clXdHdC1b1\" -j cali-PREROUTING",
 						},
 						"POSTROUTING": []string{
-							"-m comment --comment \"egw-1ecaPSxhNEc4Ylv_\" -m mark --mark 0x11000000/0xffffffff --jump ACCEPT",
+							"-m comment --comment \"egw-OucywG_GSKckREz8\" -m mark --mark 0x12000000/0xffffffff --jump ACCEPT",
 							"-m comment --comment \"cali:O3lYWMrLQYEMJtB5\" -j cali-POSTROUTING",
 						},
 						"FORWARD": []string{
-							"-m comment --comment \"egw-ogGr4WMsrCe4gJFJ\" -m mark --mark 0x11000000/0xffffffff --jump MARK --set-mark 0x12000000/0x12000000",
+							"-m comment --comment \"egw-A11GyMiLK1XfhS_d\" -m mark --mark 0x11000000/0xffffffff --jump MARK --set-mark 0x12000000/0xffffffff",
 						},
 					},
 				},
@@ -355,11 +355,11 @@ func caseDelEgressGatewayPolicy() TestCaseEGP {
 							"-m comment --comment \"cali:6gwbT8clXdHdC1b1\" -j cali-PREROUTING",
 						},
 						"POSTROUTING": []string{
-							"-m comment --comment \"egw-1ecaPSxhNEc4Ylv_\" -m mark --mark 0x11000000/0xffffffff --jump ACCEPT",
+							"-m comment --comment \"egw-OucywG_GSKckREz8\" -m mark --mark 0x12000000/0xffffffff --jump ACCEPT",
 							"-m comment --comment \"cali:O3lYWMrLQYEMJtB5\" -j cali-POSTROUTING",
 						},
 						"FORWARD": []string{
-							"-m comment --comment \"egw-ogGr4WMsrCe4gJFJ\" -m mark --mark 0x11000000/0xffffffff --jump MARK --set-mark 0x12000000/0x12000000",
+							"-m comment --comment \"egw-A11GyMiLK1XfhS_d\" -m mark --mark 0x11000000/0xffffffff --jump MARK --set-mark 0x12000000/0xffffffff",
 						},
 					},
 				},
@@ -493,11 +493,11 @@ func caseUpdateEgressGatewayPolicy() TestCaseEGP {
 							"-m comment --comment \"cali:6gwbT8clXdHdC1b1\" -j cali-PREROUTING",
 						},
 						"POSTROUTING": []string{
-							"-m comment --comment \"egw-1ecaPSxhNEc4Ylv_\" -m mark --mark 0x11000000/0xffffffff --jump ACCEPT",
+							"-m comment --comment \"egw-OucywG_GSKckREz8\" -m mark --mark 0x12000000/0xffffffff --jump ACCEPT",
 							"-m comment --comment \"cali:O3lYWMrLQYEMJtB5\" -j cali-POSTROUTING",
 						},
 						"FORWARD": []string{
-							"-m comment --comment \"egw-ogGr4WMsrCe4gJFJ\" -m mark --mark 0x11000000/0xffffffff --jump MARK --set-mark 0x12000000/0x12000000",
+							"-m comment --comment \"egw-A11GyMiLK1XfhS_d\" -m mark --mark 0x11000000/0xffffffff --jump MARK --set-mark 0x12000000/0xffffffff",
 						},
 					},
 				},
@@ -606,11 +606,11 @@ func caseAddPodUpdatePolicy() TestCaseEGP {
 							"-m comment --comment \"cali:6gwbT8clXdHdC1b1\" -j cali-PREROUTING",
 						},
 						"POSTROUTING": []string{
-							"-m comment --comment \"egw-1ecaPSxhNEc4Ylv_\" -m mark --mark 0x11000000/0xffffffff --jump ACCEPT",
+							"-m comment --comment \"egw-OucywG_GSKckREz8\" -m mark --mark 0x12000000/0xffffffff --jump ACCEPT",
 							"-m comment --comment \"cali:O3lYWMrLQYEMJtB5\" -j cali-POSTROUTING",
 						},
 						"FORWARD": []string{
-							"-m comment --comment \"egw-ogGr4WMsrCe4gJFJ\" -m mark --mark 0x11000000/0xffffffff --jump MARK --set-mark 0x12000000/0x12000000",
+							"-m comment --comment \"egw-A11GyMiLK1XfhS_d\" -m mark --mark 0x11000000/0xffffffff --jump MARK --set-mark 0x12000000/0xffffffff",
 						},
 					},
 				},
@@ -716,11 +716,11 @@ func caseDelPodUpdatePolicy() TestCaseEGP {
 							"-m comment --comment \"cali:6gwbT8clXdHdC1b1\" -j cali-PREROUTING",
 						},
 						"POSTROUTING": []string{
-							"-m comment --comment \"egw-1ecaPSxhNEc4Ylv_\" -m mark --mark 0x11000000/0xffffffff --jump ACCEPT",
+							"-m comment --comment \"egw-OucywG_GSKckREz8\" -m mark --mark 0x12000000/0xffffffff --jump ACCEPT",
 							"-m comment --comment \"cali:O3lYWMrLQYEMJtB5\" -j cali-POSTROUTING",
 						},
 						"FORWARD": []string{
-							"-m comment --comment \"egw-ogGr4WMsrCe4gJFJ\" -m mark --mark 0x11000000/0xffffffff --jump MARK --set-mark 0x12000000/0x12000000",
+							"-m comment --comment \"egw-A11GyMiLK1XfhS_d\" -m mark --mark 0x11000000/0xffffffff --jump MARK --set-mark 0x12000000/0xffffffff",
 						},
 					},
 				},

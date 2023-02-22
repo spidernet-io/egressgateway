@@ -232,7 +232,7 @@ func (t *TunnleIpam) ReleaseByNode(node string) error {
 
 	releaseIP := net.ParseIP(t.ipmap[node])
 	if err := t.allocator.Release(releaseIP); err != nil {
-		t.log.Sugar().Errorf("IP(%v) release failure; IP=%v, Node=%v; err(%v)", releaseIP, node, err)
+		t.log.Sugar().Errorf("release failure; IP=%v, Node=%v; err(%v)", releaseIP, node, err)
 		return err
 	}
 
@@ -247,7 +247,7 @@ func (t *TunnleIpam) ReleaseIPv6ByNode(node string) error {
 
 	releaseIP := net.ParseIP(t.ipmapIPv6[node])
 	if err := t.allocatorIPv6.Release(releaseIP); err != nil {
-		t.log.Sugar().Errorf("IP(%v) release failure; IP=%v, Node=%v; err(%v)", releaseIP, node, err)
+		t.log.Sugar().Errorf("release failure; IP=%v, Node=%v; err(%v)", releaseIP, node, err)
 		return err
 	}
 

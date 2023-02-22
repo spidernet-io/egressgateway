@@ -387,7 +387,7 @@ func (d *restoreCmd) Run() error {
 				chain := chains[chainName]
 				i := 0
 
-				newChain := []string{}
+				var newChain []string
 				var found bool
 				for ; i < len(chain); i++ {
 					if chain[i] == rule {

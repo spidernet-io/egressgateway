@@ -8,6 +8,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"net"
+
+	"k8s.io/api/admission/v1"
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
 	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
 
@@ -18,6 +20,9 @@ import (
 func ValidateHook() *webhook.Admission {
 	return &webhook.Admission{
 		Handler: admission.HandlerFunc(func(ctx context.Context, req webhook.AdmissionRequest) webhook.AdmissionResponse {
+			if req.Operation == v1.Delete {
+				return webhook.Allowed("checked")
+			}
 
 			switch req.Kind.Kind {
 			case "EgressGateway":
