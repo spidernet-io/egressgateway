@@ -213,9 +213,18 @@ func (r *egReconciler) reconcileEN(ctx context.Context,
 		}
 
 		log.Sugar().Infof("If the node(%v) exists, the IP address is released", req.Name)
-		if err := r.ipam.ReleaseByNode(req.Name); err != nil {
-			log.Sugar().Errorf("EgressNode(%v) failed to release ip", en.Name)
-			return reconcile.Result{Requeue: true}, err
+		if r.ipam.EnableIPv4 {
+			if err := r.ipam.ReleaseByNode(req.Name); err != nil {
+				log.Sugar().Errorf("EgressNode(%v) failed to release ip", en.Name)
+				return reconcile.Result{Requeue: true}, err
+			}
+		}
+
+		if r.ipam.EnableIPv6 {
+			if err := r.ipam.ReleaseIPv6ByNode(req.Name); err != nil {
+				log.Sugar().Errorf("EgressNode(%v) failed to release ip", en.Name)
+				return reconcile.Result{Requeue: true}, err
+			}
 		}
 
 		if node.GetDeletionTimestamp().IsZero() {
