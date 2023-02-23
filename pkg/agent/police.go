@@ -183,12 +183,6 @@ func (r *policeReconciler) reconcileEG(ctx context.Context, req reconcile.Reques
 		}
 	}
 
-	//err = r.initApplyPolicy()
-	//if err != nil {
-	//	log.Error("add egress gateway, init apply policy with error", zap.Error(err))
-	//	return reconcile.Result{Requeue: true}, err
-	//}
-
 	isGatewayNode := false
 	hasGateway := false
 	for _, node := range gateway.Status.NodeList {
@@ -210,7 +204,6 @@ func (r *policeReconciler) reconcileEG(ctx context.Context, req reconcile.Reques
 		for chain, rules := range chainMapRules {
 			log.Debug("insert or append rules", zap.String("chain", chain))
 			table.InsertOrAppendRules(chain, rules)
-
 		}
 	}
 
@@ -280,6 +273,7 @@ func buildMangleStaticRule(isGatewayNode bool, hasGateway bool) map[string][]ipt
 				Action: iptables.AcceptAction{},
 			},
 		},
+		"PREROUTING": {},
 	}
 	if !isGatewayNode && hasGateway {
 		res["PREROUTING"] = []iptables.Rule{
