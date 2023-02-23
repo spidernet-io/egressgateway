@@ -500,7 +500,7 @@ func buildRuleList(ruleMap *utils.SyncMap[string, iptables.Rule]) []iptables.Rul
 	list := make([]iptables.Rule, 0)
 	ruleMap.Range(func(key string, val iptables.Rule) bool {
 		list = append(list, val)
-		return false
+		return true
 	})
 	return list
 }
@@ -641,7 +641,7 @@ func (r *policeReconciler) removeIPSet(log *zap.Logger, name string) {
 	if ok {
 		err := r.ipset.DestroySet(name)
 		if err != nil {
-			log.Sugar().Warnf("delete IPSet with error: %v", err)
+			log.Warn("failed to delete ipset", zap.String("ipset", name), zap.Error(err))
 		}
 		r.ipsetMap.Delete(name)
 	}

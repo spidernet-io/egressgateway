@@ -480,7 +480,7 @@ func (r *vxlanReconciler) ensureRoute() error {
 			return true
 		}
 		peerMap[key] = peer
-		return false
+		return true
 	})
 
 	expected := make(map[string]struct{}, 0)
@@ -488,11 +488,11 @@ func (r *vxlanReconciler) ensureRoute() error {
 		expected[peer.MAC.String()] = struct{}{}
 	}
 
-	for _, existing := range neighList {
-		if _, ok := expected[existing.HardwareAddr.String()]; !ok {
-			err := r.vxlan.Del(existing)
+	for _, item := range neighList {
+		if _, ok := expected[item.HardwareAddr.String()]; !ok {
+			err := r.vxlan.Del(item)
 			if err != nil {
-				r.log.Sugar().Warn("del existing neigh with error: %v, %v", existing, err)
+				r.log.Sugar().Warnf("del existing neigh with error: %v, %v", item, err)
 			}
 		}
 	}
