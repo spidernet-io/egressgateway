@@ -796,3 +796,66 @@ func TestGetPodIPs(t *testing.T) {
 		})
 	}
 }
+
+func TestFindDiff(t *testing.T) {
+	type args struct {
+		oldList []string
+		newList []string
+	}
+	tests := []struct {
+		name      string
+		args      args
+		wantToAdd []string
+		wantToDel []string
+	}{
+		{
+			name: "case 1 ipv4",
+			args: args{
+				newList: []string{
+					"192.168.0.1/32",
+					"10.6.0.0/24",
+					"10.6.3.0/24",
+				},
+				oldList: []string{
+					"10.6.1.0/24",
+					"10.6.3.0/24",
+				},
+			},
+			wantToAdd: []string{
+				"192.168.0.1",
+				"10.6.0.0/24",
+			},
+			wantToDel: []string{
+				"10.6.1.0/24",
+			},
+		},
+		{
+			name: "case 2 ipv6",
+			args: args{
+				newList: []string{
+					"fd00:0000:0000:0000:0000:0000:0000:0021/128",
+					"fd00:0000:0000:0000:0000:0000:0000:0023/128",
+					"fd01:0000:0000:0000:0000:0000:0000:0021/112",
+				},
+				oldList: []string{
+					"fd00::22",
+					"fd00::23",
+				},
+			},
+			wantToAdd: []string{
+				"fd00::21",
+				"fd01::/112",
+			},
+			wantToDel: []string{
+				"fd00::22",
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			gotToAdd, gotToDel := findDiff(tt.args.oldList, tt.args.newList)
+			assert.Equalf(t, tt.wantToAdd, gotToAdd, "find add diff(%v, %v)", tt.args.oldList, tt.args.newList)
+			assert.Equalf(t, tt.wantToDel, gotToDel, "find del fiff(%v, %v)", tt.args.oldList, tt.args.newList)
+		})
+	}
+}
