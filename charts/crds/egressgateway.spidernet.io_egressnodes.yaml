@@ -18,13 +18,21 @@ spec:
   scope: Cluster
   versions:
   - additionalPrinterColumns:
+    - description: tunnelMac
+      jsonPath: .status.tunnelMac
+      name: tunnelMac
+      type: string
     - description: tunnelIPv4
-      jsonPath: .status.VxlanIPv4IP
+      jsonPath: .status.vxlanIPv4
       name: tunnelIPv4
       type: string
     - description: tunnelIPv6
-      jsonPath: .status.VxlanIPv6IP
+      jsonPath: .status.vxlanIPv6
       name: tunnelIPv6
+      type: string
+    - description: phase
+      jsonPath: .status.phase
+      name: phase
       type: string
     name: v1
     schema:

@@ -49,8 +49,10 @@ const (
 
 // scope(Namespaced or Cluster)
 // +kubebuilder:resource:categories={egressnode},path="egressnodes",singular="egressnode",scope="Cluster"
-// +kubebuilder:printcolumn:JSONPath=".status.VxlanIPv4IP",description="tunnelIPv4",name="tunnelIPv4",type=string
-// +kubebuilder:printcolumn:JSONPath=".status.VxlanIPv6IP",description="tunnelIPv6",name="tunnelIPv6",type=string
+// +kubebuilder:printcolumn:JSONPath=".status.tunnelMac",description="tunnelMac",name="tunnelMac",type=string
+// +kubebuilder:printcolumn:JSONPath=".status.vxlanIPv4",description="tunnelIPv4",name="tunnelIPv4",type=string
+// +kubebuilder:printcolumn:JSONPath=".status.vxlanIPv6",description="tunnelIPv6",name="tunnelIPv6",type=string
+// +kubebuilder:printcolumn:JSONPath=".status.phase",description="phase",name="phase",type=string
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
 // +genclient
