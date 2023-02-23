@@ -8,6 +8,7 @@ import (
 	"crypto/sha1"
 	"fmt"
 	"net"
+	"strings"
 	"sync"
 	"time"
 
@@ -509,6 +510,25 @@ func findDiff(oldList, newList []string) (toAdd, toDel []string) {
 	copy(oldCopy, oldList)
 	newCopy := make([]string, len(newList))
 	copy(newCopy, newList)
+
+	for i, s := range newCopy {
+		// for single ip address
+		if strings.HasSuffix(s, "/32") {
+			newCopy[i] = strings.TrimSuffix(s, "/32")
+			continue
+		} else if strings.HasSuffix(s, "/128") {
+			ip := net.ParseIP(strings.TrimSuffix(s, "/128"))
+			if ip.To16() != nil {
+				newCopy[i] = ip.To16().String()
+			}
+			continue
+		}
+		// for ip cidr
+		_, cidr, _ := net.ParseCIDR(s)
+		if cidr != nil {
+			newCopy[i] = cidr.String()
+		}
+	}
 
 	oldMap := make(map[string]bool)
 	for _, s := range oldCopy {
