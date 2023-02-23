@@ -509,7 +509,7 @@ func (r *vxlanReconciler) ensureRoute() error {
 
 func newEgressNodeController(mgr manager.Manager, cfg *config.Config, log *zap.Logger) error {
 	multiPath := false
-	if cfg.FileConfig.ForwardMethod == "active-active" {
+	if cfg.FileConfig.ForwardMethod == config.ForwardMethodActiveActive {
 		multiPath = true
 	}
 	ruleRoute := route.NewRuleRoute(cfg.FileConfig.StartRouteTable, 0x11000000, 0xffffffff, multiPath, log)

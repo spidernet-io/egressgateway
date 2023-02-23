@@ -21,9 +21,9 @@ data:
     tunnelIpv4Subnet: {{ .Values.feature.tunnelIpv4Subnet }}
     tunnelIpv6Subnet: {{ .Values.feature.tunnelIpv6Subnet }}
     tunnelInterface: {{ .Values.feature.tunnelInterface }}
+    forwardMethod: {{ .Values.feature.forwardMethod }}
     vxlan:
       name: {{ .Values.feature.vxlan.name}}
       id: {{ .Values.feature.vxlan.id }}
       port: {{ .Values.feature.vxlan.port }}
       disableChecksumOffload: {{ .Values.feature.vxlan.disableChecksumOffload }}
-
