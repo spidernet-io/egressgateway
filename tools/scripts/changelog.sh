@@ -79,7 +79,7 @@ if [ -z "${START_TAG}" ] ; then
       if (( RC == 0 )) ;then
         SET_VERSION
         # remove rc
-        DEST_TAG=` grep -oE "[vV]*[0-9]+\.[0-9]+\.[0-9]+" <<< "${DEST_TAG}" `
+        DEST_TAG_WITHOUT_RC=` grep -oE "[vV]*[0-9]+\.[0-9]+\.[0-9]+" <<< "${DEST_TAG}" `
         RC=""
       else
         START_X=$V_X
@@ -89,7 +89,7 @@ if [ -z "${START_TAG}" ] ; then
       fi
     fi
     #------ result
-    START_TAG=` sed -E "s?[0-9]+\.[0-9]+\.[0-9]+?${START_X}.${START_Y}.${START_Z}?" <<<  "${DEST_TAG}" `
+    START_TAG=` sed -E "s?[0-9]+\.[0-9]+\.[0-9]+?${START_X}.${START_Y}.${START_Z}?" <<<  "${DEST_TAG_WITHOUT_RC}" `
     if [ -n "${RC}" ] ; then
       START_TAG=` sed -E "s?([vV]*[0-9]+\.[0-9]+\.[0-9]+[^0-9]*[^0-9]*)[0-9]+?\1${START_RC}?" <<<  "${START_TAG}" `
     fi
@@ -161,7 +161,7 @@ if [ -n "${FIX_PR}" ]; then
     echo "" >> ${FILE_CHANGELOG}
 fi
 #
-echo "## Totoal PR" >> ${FILE_CHANGELOG}
+echo "## Total PR" >> ${FILE_CHANGELOG}
 echo "" >> ${FILE_CHANGELOG}
 echo "[ ${TOTAL_COUNT} PR](https://github.com/${PROJECT_REPO}/compare/${START_TAG}...${DEST_TAG})" >> ${FILE_CHANGELOG}
 echo "--------------------"
