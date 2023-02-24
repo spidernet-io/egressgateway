@@ -50,7 +50,7 @@ func TestReconcilerEgressNode(t *testing.T) {
 			builder.WithObjects(c.initialObjects...)
 			ctx := context.Background()
 			multiPath := false
-			if c.config.FileConfig.ForwardMethod == "active-active" {
+			if c.config.FileConfig.ForwardMethod == config.ForwardMethodActiveActive {
 				multiPath = true
 			}
 			ruleRoute := route.NewRuleRoute(c.config.FileConfig.StartRouteTable, 0x11000000, 0xffffffff, multiPath, log)

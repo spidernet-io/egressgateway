@@ -57,7 +57,7 @@ func (r *RuleRoute) Ensure(linkName string, ipv4List, ipv6List []net.IP) error {
 		if err != nil {
 			return err
 		}
-		r.log.Debug("ensure multi route v4")
+		r.log.Debug("ensure multi route v6")
 		err = r.ensureMultiRoute(link, ipv6List, netlink.FAMILY_V6)
 		if err != nil {
 			return err
@@ -141,15 +141,18 @@ func (r *RuleRoute) ensureMultiRoute(link netlink.Link, ips []net.IP, family int
 				expMap[ip.String()] = ip
 			}
 
+			needReplace := false
+
 			for _, path := range route.MultiPath {
 				if _, ok := expMap[path.Gw.String()]; !ok {
+					needReplace = true
 					continue
 				}
 				delete(expMap, path.Gw.String())
 			}
 
-			if len(expMap) > 0 {
-				route := newMultiRoute(index, r.table, ips)
+			if len(expMap) > 0 || needReplace {
+				route := newMultiRoute(family, index, r.table, ips)
 				err = netlink.RouteReplace(route)
 				if err != nil {
 					return fmt.Errorf("replace route with error: %v", err)
@@ -160,7 +163,7 @@ func (r *RuleRoute) ensureMultiRoute(link netlink.Link, ips []net.IP, family int
 		}
 	}
 
-	route := newMultiRoute(index, r.table, ips)
+	route := newMultiRoute(family, index, r.table, ips)
 	err = netlink.RouteAdd(route)
 	if err != nil {
 		return fmt.Errorf("add route with error: %v", err)
@@ -169,13 +172,17 @@ func (r *RuleRoute) ensureMultiRoute(link netlink.Link, ips []net.IP, family int
 	return nil
 }
 
-func newMultiRoute(index, table int, ips []net.IP) *netlink.Route {
+func newMultiRoute(family, index, table int, ips []net.IP) *netlink.Route {
 	paths := make([]*netlink.NexthopInfo, 0)
 	for _, ip := range ips {
 		info := &netlink.NexthopInfo{LinkIndex: index, Gw: ip}
 		paths = append(paths, info)
 	}
-	route := &netlink.Route{Table: table, MultiPath: paths}
+	gw := []byte{0, 0, 0, 0}
+	if family == netlink.FAMILY_V6 {
+		gw = []byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
+	}
+	route := &netlink.Route{Table: table, Protocol: 3, Gw: gw, MultiPath: paths}
 	return route
 }
 
