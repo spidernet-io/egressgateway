@@ -25,9 +25,14 @@ type Device struct {
 
 func New(options ...func(*Device)) *Device {
 	d := &Device{
-		name:      "",
-		link:      nil,
-		getParent: GetParent,
+		name: "",
+		link: nil,
+		getParent: GetParentByDefaultRoute(NetLink{
+			RouteListFiltered: netlink.RouteListFiltered,
+			LinkByIndex:       netlink.LinkByIndex,
+			AddrList:          netlink.AddrList,
+			LinkByName:        netlink.LinkByName,
+		}),
 	}
 	for _, o := range options {
 		o(d)

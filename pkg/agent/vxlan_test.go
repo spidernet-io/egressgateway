@@ -5,6 +5,7 @@ package agent
 
 import (
 	"context"
+	"github.com/vishvananda/netlink"
 	"net"
 	"testing"
 
@@ -41,6 +42,13 @@ func TestReconcilerEgressNode(t *testing.T) {
 		"caseAddEgressNode": caseAddEgressNode(),
 	}
 
+	getParent := vxlan.GetParentByDefaultRoute(vxlan.NetLink{
+		RouteListFiltered: netlink.RouteListFiltered,
+		LinkByIndex:       netlink.LinkByIndex,
+		AddrList:          netlink.AddrList,
+		LinkByName:        netlink.LinkByName,
+	})
+
 	for name, c := range cases {
 		log := logger.NewStdoutLogger("error")
 
@@ -58,7 +66,7 @@ func TestReconcilerEgressNode(t *testing.T) {
 				client:         builder.Build(),
 				log:            log,
 				cfg:            c.config,
-				getParent:      vxlan.GetParent,
+				getParent:      getParent,
 				ruleRoute:      ruleRoute,
 				ruleRouteCache: utils.NewSyncMap[string, []net.IP](),
 			}

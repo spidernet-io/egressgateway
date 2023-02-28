@@ -49,8 +49,8 @@ feature:
   ## @param feature.tunnelIpv6Subnet tunnel ipv6 subnet
   tunnelIpv6Subnet: "fd11::/112"
 
-  ## @param feature.tunnelInterface tunnel base on which interface ["interface=eth0", "defaultRouteInterface"]
-  tunnelInterface: "interface=eth0"
+  ## @param feature.tunnelDetectMethod tunnel base on which interface [ "defaultRouteInterface", "interface=eth0" ]
+  tunnelDetectMethod: "defaultRouteInterface"
 
   ## @param feature.forwardMethod tunnel base on which interface ["active-active": require kernel >=4.4, "active-passive"]
   forwardMethod: "active-passive"

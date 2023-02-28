@@ -6,7 +6,9 @@ package agent
 import (
 	"context"
 	"fmt"
+	"github.com/vishvananda/netlink"
 	"net"
+	"strings"
 	"time"
 
 	"go.uber.org/zap"
@@ -520,9 +522,20 @@ func newEgressNodeController(mgr manager.Manager, cfg *config.Config, log *zap.L
 		cfg:            cfg,
 		peerMap:        utils.NewSyncMap[string, vxlan.Peer](),
 		vxlan:          vxlan.New(),
-		getParent:      vxlan.GetParent,
 		ruleRoute:      ruleRoute,
 		ruleRouteCache: utils.NewSyncMap[string, []net.IP](),
+	}
+	netLink := vxlan.NetLink{
+		RouteListFiltered: netlink.RouteListFiltered,
+		LinkByIndex:       netlink.LinkByIndex,
+		AddrList:          netlink.AddrList,
+		LinkByName:        netlink.LinkByName,
+	}
+	if strings.HasPrefix(cfg.FileConfig.TunnelDetectMethod, config.TunnelInterfaceSpecific) {
+		name := strings.TrimPrefix(cfg.FileConfig.TunnelDetectMethod, config.TunnelInterfaceSpecific)
+		r.getParent = vxlan.GetParentByName(netLink, name)
+	} else {
+		r.getParent = vxlan.GetParentByDefaultRoute(netLink)
 	}
 
 	c, err := controller.New("vxlan", mgr, controller.Options{Reconciler: r})

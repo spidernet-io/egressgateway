@@ -6,91 +6,88 @@ package vxlan
 import (
 	"fmt"
 	"net"
-	"regexp"
-	"strings"
+
+	"github.com/vishvananda/netlink"
 )
 
+type NetLink struct {
+	RouteListFiltered func(family int, filter *netlink.Route, filterMask uint64) ([]netlink.Route, error)
+	LinkByIndex       func(index int) (netlink.Link, error)
+	AddrList          func(link netlink.Link, family int) ([]netlink.Addr, error)
+	LinkByName        func(name string) (netlink.Link, error)
+}
+
+// Parent defines the parent interface information
 type Parent struct {
 	Name  string
 	IP    net.IP
 	Index int
 }
 
-var defaultInterfacesToExclude = []string{
-	"^docker.*", "^cbr.*", "^dummy.*",
-	"^virbr.*", "^lxcbr.*", "^veth.*", "^lo",
-	"^cali.*", "^tunl.*", "^flannel.*", "^kube-ipvs.*", "^cni.*",
-	"^vxlan.calico.*", "^vxlan-v6.calico.*", "vxlan",
-}
+// GetParentByDefaultRoute get vxlan parent interface by default route
+func GetParentByDefaultRoute(cli NetLink) func(version int) (*Parent, error) {
+	return func(version int) (*Parent, error) {
+		routeFilter := &netlink.Route{Table: 254}
+		filterMask := netlink.RT_FILTER_TABLE
+		family := netlink.FAMILY_V4
+		if version == 6 {
+			family = netlink.FAMILY_V6
+		}
 
-func GetParent(version int) (*Parent, error) {
-	ifaces, err := net.Interfaces()
-	if err != nil {
-		return nil, err
-	}
-
-	var excludeRegexp *regexp.Regexp
-	if len(defaultInterfacesToExclude) > 0 {
-		expr := "(" + strings.Join(defaultInterfacesToExclude, ")|(") + ")"
-		excludeRegexp, err = regexp.Compile(expr)
+		routes, err := cli.RouteListFiltered(family, routeFilter, filterMask)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("failed to list routes: %v", err)
 		}
-	}
 
-	filtered := make([]net.Interface, 0)
-	for _, iface := range ifaces {
-		exclude := excludeRegexp.MatchString(iface.Name)
-		if !exclude {
-			filtered = append(filtered, iface)
-		}
-	}
-
-	if len(filtered) == 0 {
-		return nil, fmt.Errorf("interface filtered list is empty")
-	}
-
-	var tmpIP net.IP
-	var name string
-	var index int
-
-	for _, iface := range filtered {
-		addrs, err := iface.Addrs()
-		if err != nil {
-			return nil, err
-		}
-		name = iface.Name
-		index = iface.Index
-		for _, addr := range addrs {
-			str := addr.String()
-			ip, _, err := net.ParseCIDR(str)
-			if err != nil {
-				return nil, err
+		index := -1
+		for _, route := range routes {
+			if route.Family == family {
+				index = route.LinkIndex
+				break
 			}
+		}
+		if index == -1 {
+			return nil, fmt.Errorf("not found default route link: family IPv%v", version)
+		}
 
-			if !ip.IsGlobalUnicast() {
+		link, err := cli.LinkByIndex(index)
+		if err != nil {
+			return nil, fmt.Errorf("failed to get parent link by index: %v, %v", index, err)
+		}
+		addrs, err := cli.AddrList(link, family)
+		if err != nil {
+			return nil, fmt.Errorf("failed to list parent link addrs: %v", err)
+		}
+		for _, addr := range addrs {
+			if !addr.IP.IsGlobalUnicast() {
 				continue
 			}
-
-			if version == 4 {
-				if ip.To4() != nil {
-					tmpIP = ip
-					break
-				}
-			}
-			if version == 6 {
-				if ip.To16() != nil {
-					tmpIP = ip
-					break
-				}
-			}
+			return &Parent{Name: link.Attrs().Name, IP: addr.IP, Index: link.Attrs().Index}, nil
 		}
+		return nil, fmt.Errorf("failed to find parent interface")
 	}
+}
 
-	res := &Parent{
-		Name:  name,
-		IP:    tmpIP,
-		Index: index,
+func GetParentByName(cli NetLink, name string) func(version int) (*Parent, error) {
+	return func(version int) (*Parent, error) {
+		link, err := cli.LinkByName(name)
+		if err != nil {
+			return nil, fmt.Errorf("failed to get parent link by name: %v, %v", name, err)
+		}
+		family := netlink.FAMILY_V4
+		if version == 6 {
+			family = netlink.FAMILY_V6
+		}
+		addrs, err := cli.AddrList(link, family)
+		if err != nil {
+			return nil, fmt.Errorf("failed to list parent link addrs: %v", err)
+		}
+		for _, addr := range addrs {
+			if !addr.IP.IsGlobalUnicast() {
+				continue
+			}
+			return &Parent{Name: link.Attrs().Name, IP: addr.IP, Index: link.Attrs().Index}, nil
+		}
+		return nil, fmt.Errorf("failed to find parent interface")
 	}
-	return res, nil
 }
