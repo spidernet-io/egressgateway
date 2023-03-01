@@ -1,4 +1,4 @@
-site_name: egressgateway
+site_name: EgressGateway
 docs_dir: docs
 site_dir: site
 repo_name: spidernet-io/egressgateway
@@ -11,7 +11,7 @@ theme:
   navigation_depth: 2
   palette:
     scheme: default
-    primary: blue
+    primary: "#4478D1"
     language: zh
   features:
     - navigation.instant
@@ -35,3 +35,8 @@ markdown_extensions:
   - fenced_code
   - tables
   - attr_list
+
+nav:
+  - Home: README.md
+  - Getting started:
+      - Install: usage/install.md
