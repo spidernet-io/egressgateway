@@ -1,4 +1,4 @@
-# develop
+# Develop
 
 ## local develop
 
@@ -8,8 +8,4 @@
 
 3. `make e2e_run`
 
-4. check proscope, browser vists http://NodeIP:4040
-
-## chart develop
-
-helm repo add rock https://spidernet-io.github.io/egressgateway/
+4. check proscope, browser visits http://nodeIP:4040
