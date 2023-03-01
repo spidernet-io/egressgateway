@@ -2,10 +2,10 @@
 ## @section Global parameters
 ##
 global:
-  ## @param global.imageRegistryOverride Global Docker image registry
+  ## @param global.imageRegistryOverride The global image registry override
   imageRegistryOverride: ""
 
-  ## @param global.imageTagOverride Global Docker image tag
+  ## @param global.imageTagOverride The global image tag override
   imageTagOverride: ""
 
   ## @param global.name instance name
@@ -28,31 +28,34 @@ global:
 
 ## @section feature parameters
 feature:
-  ## @param feature.enableIPv4 enable ipv4
+  ## @param feature.enableIPv4 enable IPv4
   enableIPv4: true
 
-  ## @param feature.enableIPv6 enable ipv6
+  ## @param feature.enableIPv6 enable IPv6
   enableIPv6: false
 
   ## @param feature.startRouteTable start route table
   startRouteTable: 50
 
-  ## @param feature.iptablesMode iptables mode,["auto", "legacy", "nft"]
-  iptablesMode: "auto"
+  ## @param feature.iptables settings
+  iptables:
 
-  ## @param feature.datapathMode iptables mode,["iptables", "ebpf"]
+    ## @param feature.iptables.backendMode The mode for iptables (`legacy` or `nft`). If left blank, it's automatically detected. Default: "".
+    backendMode: ""
+
+  ## @param feature.datapathMode iptables mode,[`iptables`, `ebpf`]
   datapathMode: "iptables"
 
-  ## @param feature.tunnelIpv4Subnet tunnel ipv4 subnet
+  ## @param feature.tunnelIpv4Subnet Tunnel IPv4 subnet
   tunnelIpv4Subnet: "172.31.0.0/16"
 
-  ## @param feature.tunnelIpv6Subnet tunnel ipv6 subnet
+  ## @param feature.tunnelIpv6Subnet Tunnel IPv6 subnet
   tunnelIpv6Subnet: "fd11::/112"
 
-  ## @param feature.tunnelDetectMethod tunnel base on which interface [ "defaultRouteInterface", "interface=eth0" ]
+  ## @param feature.tunnelDetectMethod Tunnel base on which interface [`defaultRouteInterface`, `interface=eth0`]
   tunnelDetectMethod: "defaultRouteInterface"
 
-  ## @param feature.forwardMethod tunnel base on which interface ["active-active": require kernel >=4.4, "active-passive"]
+  ## @param feature.forwardMethod Tunnel base on which interface [`active-active`: require kernel >=4.4, `active-passive`]
   forwardMethod: "active-passive"
 
   ## @section vxlan parameters
@@ -79,8 +82,8 @@ egressgatewayAgent:
   ## @param egressgatewayAgent.cmdBinName the binary name of egressgatewayAgent
   cmdBinName: "/usr/bin/agent"
 
-  ## @param egressgatewayAgent.hostnetwork enable hostnetwork mode of egressgatewayAgent pod
-  hostnetwork: true
+  ## @param egressgatewayAgent.hostNetwork enable host network mode of egressgatewayAgent pod
+  hostNetwork: true
 
   image:
     ## @param egressgatewayAgent.image.registry the image registry of egressgatewayAgent
@@ -279,14 +282,14 @@ egressgatewayController:
   ## @param egressgatewayController.name the egressgatewayController name
   name: "egressgateway-controller"
 
-  ## @param egressgatewayController.replicas the replicas number of egressgatewayController pod
+  ## @param egressgatewayController.replicas the replicas number of egressgateway controller
   replicas: 1
 
-  ## @param egressgatewayController.binName the binName name of egressgatewayController
+  ## @param egressgatewayController.binName the binName name of egressgateway controller
   cmdBinName: "/usr/bin/controller"
 
-  ## @param egressgatewayController.hostnetwork enable hostnetwork mode of egressgatewayController pod. Notice, if no CNI available before template installation, must enable this
-  hostnetwork: false
+  ## @param egressgatewayController.hostNetwork enable host network mode of egressgatewayController pod. Notice, if no CNI available before template installation, must enable this
+  hostNetwork: false
 
   image:
     ## @param egressgatewayController.image.registry the image registry of egressgatewayController
@@ -526,7 +529,7 @@ egressgatewayController:
     ## for auto method
     auto:
       ## @param egressgatewayController.tls.auto.caExpiration ca expiration for auto method
-      # in day , default 200 years
+      # in day, default 200 years
       caExpiration: '73000'
 
       ## @param egressgatewayController.tls.auto.certExpiration server cert expiration for auto method

@@ -45,7 +45,7 @@ spec:
       {{- end }}
       serviceAccountName: {{ .Values.egressgatewayController.name | trunc 63 | trimSuffix "-" }}
       priorityClassName: {{ default "system-node-critical" .Values.egressgatewayController.priorityClassName }}
-      {{- if .Values.egressgatewayController.hostnetwork }}
+      {{- if .Values.egressgatewayController.hostNetwork }}
       hostNetwork: true
       dnsPolicy: ClusterFirstWithHostNet
       {{- else }}

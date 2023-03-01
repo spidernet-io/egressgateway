@@ -16,12 +16,13 @@ data:
     enableIPv4: {{ .Values.feature.enableIPv4 }}
     enableIPv6: {{ .Values.feature.enableIPv6 }}
     startRouteTable: {{ .Values.feature.startRouteTable }}
-    iptablesMode: {{ .Values.feature.iptablesMode }}
     datapathMode: {{ .Values.feature.datapathMode }}
     tunnelIpv4Subnet: {{ .Values.feature.tunnelIpv4Subnet }}
     tunnelIpv6Subnet: {{ .Values.feature.tunnelIpv6Subnet }}
     tunnelDetectMethod: {{ .Values.feature.tunnelDetectMethod }}
     forwardMethod: {{ .Values.feature.forwardMethod }}
+    iptables:
+      backendMode: {{ .Values.feature.iptables.backendMode }}
     vxlan:
       name: {{ .Values.feature.vxlan.name}}
       id: {{ .Values.feature.vxlan.id }}
