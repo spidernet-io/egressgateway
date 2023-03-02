@@ -48,7 +48,7 @@ spec:
       {{- end }}
       serviceAccountName: {{ .Values.egressgatewayAgent.name | trunc 63 | trimSuffix "-" }}
       priorityClassName: {{ default "system-node-critical" .Values.egressgatewayAgent.priorityClassName }}
-      {{- if .Values.egressgatewayAgent.hostnetwork }}
+      {{- if .Values.egressgatewayAgent.hostNetwork }}
       hostNetwork: true
       dnsPolicy: ClusterFirstWithHostNet
       {{- else }}
@@ -77,12 +77,14 @@ spec:
                     operator: In
                     values:
                       - linux
+              {{- if semverCompare "<1.14-0" .Capabilities.KubeVersion.Version -}}
               # Compatible with Kubernetes 1.12.x and 1.13.x
               - matchExpressions:
                   - key: beta.kubernetes.io/os
                     operator: In
                     values:
                       - linux
+              {{- end }}
       {{- end }}
       containers:
         - name: {{ .Values.egressgatewayAgent.name | trunc 63 | trimSuffix "-" }}
