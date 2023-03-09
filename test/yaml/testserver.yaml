@@ -1,0 +1,73 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nettools-server
+  labels:
+    app: nettools-server
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nettools-server
+  template:
+    metadata:
+      labels:
+        app: nettools-server
+    spec:
+      containers:
+      - name: nettools-server
+        image: ghcr.io/spidernet-io/egressgateway-nettools:t1
+        imagePullPolicy: IfNotPresent
+        command:
+            - "/usr/bin/nettools-server"
+        ports:
+        - containerPort: 8080
+          name: tcp
+        - containerPort: 8081
+          name: udp
+        - containerPort: 8082
+          name: websocket
+        env:
+        - name: SERVER_IP
+          valueFrom:
+            fieldRef:
+              apiVersion: v1
+              fieldPath: status.podIP
+        - name: MOD
+          value: "all"
+        - name: TCP_PORT
+          value: "8080"
+        - name: UDP_PORT
+          value: "8081"
+        - name: WEB_PORT
+          value: "8082"
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: nettools-server
+spec:
+  selector:
+    app: nettools-server
+  ports:
+    - name: tcp
+      port: 8080
+      protocol: TCP
+      nodePort: 30080
+      targetPort: tcp
+    - name: udp
+      port: 8081
+      protocol: UDP
+      nodePort: 30081
+      targetPort: udp
+    - name: websocket
+      port: 8082
+      protocol: TCP
+      nodePort: 30082
+      targetPort: websocket
+  type: NodePort
+
+
