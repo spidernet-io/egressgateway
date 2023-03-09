@@ -113,6 +113,38 @@ build_local_controller_base_image:
 	$(BUILD_BASE_IMAGE)
 
 
+#================= build nettools
+.PHONY: build_nettools_all_bin
+build_nettools_all_bin:
+	make build_nettools_cilent_bin
+	make build_nettools_server_bin
+
+
+.PHONY: build_nettools_cilent_bin
+build_nettools_cilent_bin: CMD_BIN_DIR := $(ROOT_DIR)/cmd/nettools/client
+build_nettools_cilent_bin:
+	$(BUILD_BIN)
+
+.PHONY: build_nettools_server_bin
+build_nettools_server_bin: CMD_BIN_DIR := $(ROOT_DIR)/cmd/nettools/server
+build_nettools_server_bin:
+	$(BUILD_BIN)
+
+#-----------------
+
+.PHONY: build_local_nettools_image
+build_local_nettools_image: IMAGE_NAME := ${REGISTER}/${GIT_REPO}-nettools
+build_local_nettools_image: DOCKERFILE_PATH := $(ROOT_DIR)/images/nettools/Dockerfile
+build_local_nettools_image: IMAGE_TAG := $(GIT_COMMIT_VERSION)
+build_local_nettools_image:
+	$(BUILD_FINAL_IMAGE)
+
+# .PHONY: build_local_nettools_bash_image
+# build_local_nettools_bash_image: DOCKERFILE_PATH := $(ROOT_DIR)/images/agent-base/Dockerfile
+# build_local_nettools_bash_image: BASE_IMAGE_NAME := ${REGISTER}/${GIT_REPO}-nettools-base
+# build_local_nettools_bash_image:
+# 	$(BUILD_BASE_IMAGE)
+
 #================= update golang
 
 ## Update Go version for all the components

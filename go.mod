@@ -13,6 +13,7 @@ require (
 	github.com/go-openapi/swag v0.22.3
 	github.com/go-swagger/go-swagger v0.29.0
 	github.com/google/gops v0.3.27
+	github.com/gorilla/websocket v1.4.2
 	github.com/jessevdk/go-flags v1.5.0
 	github.com/mitchellh/mapstructure v1.5.0
 	github.com/onsi/ginkgo/v2 v2.8.4

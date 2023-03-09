@@ -1,0 +1,34 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nettools-client
+  labels:
+    app: nettools-client
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nettools-client
+  template:
+    metadata:
+      labels:
+        app: nettools-client
+    spec:
+      containers:
+      - name: nettools-client
+        image: ghcr.io/spidernet-io/egressgateway-nettools:t1
+        imagePullPolicy: IfNotPresent
+        command:
+            - "/usr/bin/nettools-client"
+        env:
+        - name: SERVER_IP
+          value: "10.6.105.21"
+        - name: MOD
+          value: "all"
+        - name: TCP_PORT
+          value: "30080"
+        - name: UDP_PORT
+          value: "30081"
+        - name: WEB_PORT
+          value: "30082"
