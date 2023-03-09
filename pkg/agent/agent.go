@@ -29,7 +29,7 @@ func New(cfg *config.Config, log *zap.Logger) (types.Service, error) {
 	syncPeriod := time.Second * 15
 	mgrOpts := manager.Options{
 		Scheme: schema.GetScheme(),
-		//Logger:                 log,
+		// Logger:                 log,
 		HealthProbeBindAddress: cfg.HealthProbeBindAddress,
 		SyncPeriod:             &syncPeriod,
 	}

@@ -159,12 +159,12 @@ func (e *Entry) Validate(set *IPSet) (bool, error) {
 	}
 	switch e.SetType {
 	case HashIPPort:
-		//check if IP and Protocol of Entry is valid.
+		// check if IP and Protocol of Entry is valid.
 		if valid, err := e.checkIPandProtocol(set); !valid {
 			return false, err
 		}
 	case HashIPPortIP:
-		//check if IP and Protocol of Entry is valid.
+		// check if IP and Protocol of Entry is valid.
 		if valid, err := e.checkIPandProtocol(set); !valid {
 			return false, err
 		}
@@ -174,7 +174,7 @@ func (e *Entry) Validate(set *IPSet) (bool, error) {
 			return false, fmt.Errorf("error parsing entry %v second ip address %v for ipset %v", e, e.IP2, set)
 		}
 	case HashIPPortNet:
-		//check if IP and Protocol of Entry is valid.
+		// check if IP and Protocol of Entry is valid.
 		if valid, err := e.checkIPandProtocol(set); !valid {
 			return false, err
 		}

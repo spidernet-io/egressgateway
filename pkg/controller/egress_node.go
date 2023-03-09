@@ -170,7 +170,6 @@ func (r *egReconciler) reconcileNode(ctx context.Context, req reconcile.Request,
 					// 		return reconcile.Result{Requeue: true}, err
 					// 	}
 					// }
-
 				}
 			}
 		}
@@ -193,7 +192,8 @@ func (r *egReconciler) reconcileNode(ctx context.Context, req reconcile.Request,
 // - update node
 // - remove node
 func (r *egReconciler) reconcileEN(ctx context.Context,
-	req reconcile.Request, log *zap.Logger) (reconcile.Result, error) {
+	req reconcile.Request, log *zap.Logger,
+) (reconcile.Result, error) {
 	deleted := false
 	en := &egressv1.EgressNode{}
 	err := r.client.Get(ctx, req.NamespacedName, en)

@@ -5,11 +5,12 @@ package profiling
 
 import (
 	"fmt"
+	"os"
+	"path/filepath"
+
 	"github.com/google/gops/agent"
 	"github.com/pyroscope-io/client/pyroscope"
 	"go.uber.org/zap"
-	"os"
-	"path/filepath"
 )
 
 type Manager interface {

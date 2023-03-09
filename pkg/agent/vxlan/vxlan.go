@@ -49,8 +49,8 @@ func WithCustomGetParent(getParent func(version int) (*Parent, error)) func(devi
 // EnsureLink ensure vxlan device
 // name, vni, port, mac, mtu, ipv4, ipv6, disableChecksumOffload
 func (dev *Device) EnsureLink(name string, vni int, port int, mac net.HardwareAddr, mtu int, ipv4 *net.IPNet, ipv6 *net.IPNet,
-	disableChecksumOffload bool) error {
-
+	disableChecksumOffload bool,
+) error {
 	v := 4
 	if ipv4 == nil && ipv6 != nil {
 		v = 6

@@ -7,6 +7,9 @@ env:
   BADGE_CODELINE_ID:
   BADGE_COMMENT_FILENAME:
   BADGE_COMMENT_ID:
+  E2ECOVERSTATUSSCRIPT: "./tools/golang/e2ecover.sh"
+  BADGE_E2ECOVER_FILENAME: egressgatewaye2e.json
+  BADGE_E2ECOVER_ID: cc6d42eb27d8ee4c3d19c936eff2c478
 
 
 on:
@@ -34,6 +37,9 @@ jobs:
           COMMENT_PERCENTAGE=$(  ${TOOL_PATH} --comment-percent )
           echo "CODE_LINES=${CODE_LINES}" >> $GITHUB_ENV
           echo "COMMENT_PERCENTAGE=${COMMENT_PERCENTAGE}" >> $GITHUB_ENV
+          TOOL_PATH=${{ env.E2ECOVERSTATUSSCRIPT }}
+          E2E_STATUS=$( ${TOOL_PATH} )
+          echo "E2E_STATUS=${E2E_STATUS}" >> $GITHUB_ENV
 
       - name: Create Lines-of-Code-Badge
         if: ${{ env.BADGE_CODELINE_ID != '' }}
@@ -58,4 +64,15 @@ jobs:
           valColorRange: ${{ env.COMMENT_PERCENTAGE }}
           maxColorRange: 100
           minColorRange: 0
+
+      - name: Create E2E-Badge
+        if: ${{ env.BADGE_E2ECOVER_ID != '' }}
+        uses: schneegans/dynamic-badges-action@v1.6.0
+        with:
+          auth: ${{ secrets.GET_GIST }}
+          gistID: ${{ env.BADGE_E2ECOVER_ID }}
+          filename: ${{ env.BADGE_E2ECOVER_FILENAME }}
+          label: e2e cover
+          message: ${{ env.E2E_STATUS }}
+          color: lightgrey
 

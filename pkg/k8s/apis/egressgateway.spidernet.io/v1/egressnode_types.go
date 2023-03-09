@@ -7,8 +7,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-type EgressNodeSpec struct {
-}
+type EgressNodeSpec struct{}
 
 type EgressNodeStatus struct {
 	// +kubebuilder:validation:Optional

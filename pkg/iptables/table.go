@@ -302,7 +302,6 @@ func NewTable(name string, ipVersion uint8, hashPrefix string, options Options, 
 	table.iptablesSaveCmd, err = FindBestBinary(table.lookPath, ipVersion, iptablesVariant, "save")
 	if err != nil {
 		return nil, err
-
 	}
 
 	return table, nil

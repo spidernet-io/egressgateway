@@ -89,9 +89,10 @@ func (r egnReconciler) reconcileNode(ctx context.Context, req reconcile.Request,
 
 	affectedEgressGatewayList := &egressv1.EgressGatewayList{}
 	if err := r.client.List(context.Background(), affectedEgressGatewayList,
-		&client.ListOptions{FieldSelector: fields.OneTermEqualSelector(
-			indexEgressNodeEgressGateway,
-			req.NamespacedName.String()),
+		&client.ListOptions{
+			FieldSelector: fields.OneTermEqualSelector(
+				indexEgressNodeEgressGateway,
+				req.NamespacedName.String()),
 		}); err != nil {
 		return reconcile.Result{}, nil
 	}
@@ -297,8 +298,8 @@ func mergeEgressNodes(oldList, preList []egressv1.SelectedEgressNode) []egressv1
 // - update node
 // - remove node
 func (r egnReconciler) reconcileEN(ctx context.Context,
-	req reconcile.Request, log *zap.Logger) (reconcile.Result, error) {
-
+	req reconcile.Request, log *zap.Logger,
+) (reconcile.Result, error) {
 	deleted := false
 	eg := &egressv1.EgressNode{}
 	err := r.client.Get(ctx, req.NamespacedName, eg)
@@ -312,9 +313,10 @@ func (r egnReconciler) reconcileEN(ctx context.Context,
 
 	affectedEgressGatewayList := &egressv1.EgressGatewayList{}
 	if err := r.client.List(context.Background(), affectedEgressGatewayList,
-		&client.ListOptions{FieldSelector: fields.OneTermEqualSelector(
-			indexEgressNodeEgressGateway,
-			req.NamespacedName.String()),
+		&client.ListOptions{
+			FieldSelector: fields.OneTermEqualSelector(
+				indexEgressNodeEgressGateway,
+				req.NamespacedName.String()),
 		}); err != nil {
 		return reconcile.Result{}, nil
 	}

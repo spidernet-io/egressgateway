@@ -4,12 +4,14 @@
 package example_test
 
 import (
+	egressgatewayv1 "github.com/spidernet-io/egressgateway/pkg/k8s/apis/egressgateway.spidernet.io/v1"
+	"k8s.io/apimachinery/pkg/runtime"
 	"testing"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-	e2e "github.com/spidernet-io/e2eframework/framework"
-	// "k8s.io/apimachinery/pkg/runtime"
+	"github.com/spidernet-io/e2eframework/framework"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 func TestAssignIP(t *testing.T) {
@@ -17,12 +19,16 @@ func TestAssignIP(t *testing.T) {
 	RunSpecs(t, "example Suite")
 }
 
-var frame *e2e.Framework
+var (
+	frame *framework.Framework
+	err   error
+	c     client.WithWatch
+)
 
 var _ = BeforeSuite(func() {
-	defer GinkgoRecover()
-	var e error
-	frame, e = e2e.NewFramework(GinkgoT(), nil)
-	Expect(e).NotTo(HaveOccurred())
+	GinkgoRecover()
 
+	frame, err = framework.NewFramework(GinkgoT(), []func(scheme *runtime.Scheme) error{egressgatewayv1.AddToScheme})
+	Expect(err).NotTo(HaveOccurred(), "failed to NewFramework, details: %w", err)
+	c = frame.KClient
 })

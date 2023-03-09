@@ -172,7 +172,6 @@ type restoreCmd struct {
 }
 
 func (d *restoreCmd) SetStdin(r io.Reader) {
-
 	var buf bytes.Buffer
 	_, err := io.Copy(&buf, r)
 	if err != nil {
@@ -416,8 +415,8 @@ func (d *restoreCmd) Run() error {
 		default:
 			panic("Unknown action: " + action)
 		}
-		//fmt.Printf("Updated chain '%s' (len=%v); new contents:\n\t%v",
-		//chainName, len(chains[chainName]), strings.Join(chains[chainName], "\n\t"))
+		// fmt.Printf("Updated chain '%s' (len=%v); new contents:\n\t%v",
+		// chainName, len(chains[chainName]), strings.Join(chains[chainName], "\n\t"))
 	}
 	if !commitSeen {
 		panic("didn't see a COMMIT line")

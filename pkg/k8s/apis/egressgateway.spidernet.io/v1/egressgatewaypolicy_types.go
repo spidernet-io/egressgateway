@@ -14,7 +14,6 @@ import (
 )
 
 type EgressGatewayPolicySpec struct {
-
 	// +kubebuilder:validation:Required
 	AppliedTo AppliedTo `json:"appliedTo"`
 

@@ -117,7 +117,6 @@ func TestValidateEgressGatewayPolicy(t *testing.T) {
 	}
 	for name, c := range cases {
 		t.Run(name, func(t *testing.T) {
-
 			policy := &egressv1.EgressGatewayPolicy{
 				ObjectMeta: metav1.ObjectMeta{
 					Name: "policy",

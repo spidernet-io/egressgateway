@@ -6,10 +6,11 @@ package agent
 import (
 	"context"
 	"fmt"
-	"github.com/vishvananda/netlink"
 	"net"
 	"strings"
 	"time"
+
+	"github.com/vishvananda/netlink"
 
 	"go.uber.org/zap"
 	"k8s.io/apimachinery/pkg/api/errors"

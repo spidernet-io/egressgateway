@@ -5,6 +5,9 @@ include ../Makefile.defs
 init_kind_env:
 	make init_one_kind -e KIND_CONFIG_PATH=./kindconfig/global-kind.yaml -e KIND_CLUSTER_NAME=$(E2E_KIND_CLUSTER_NAME) -e KIND_KUBECONFIG=$(E2E_KIND_KUBECONFIG_PATH)
 	make install_proscope
+	make install_calico
+	make run_nettool_server
+	make load_nettool_image
 
 
 .PHONY: init_one_kind
@@ -73,8 +76,31 @@ install_proscope:
     fi
 
 
+.PHONY: install_calico
+install_calico:
+	echo "install calico"
+	export CALICO_VERSION=$(CALICO_VERSION); \
+	export INSTALL_TIME_OUT=$(INSTALL_TIME_OUT); \
+	export E2E_IP_FAMILY=$(E2E_IP_FAMILY); \
+	export E2E_KIND_KUBECONFIG_PATH=$(E2E_KIND_KUBECONFIG_PATH); \
+	bash ./scripts/installCalico.sh
+
+
 
 #==================
+
+.PHONY: kind_install_ipset
+kind_install_ipset: E2E_CLUSTER_NAME ?= $(E2E_KIND_CLUSTER_NAME)
+kind_install_ipset:
+	@ NODE_LIST=` docker ps | egrep " kindest/node.* $(E2E_CLUSTER_NAME)-(control|worker)" | awk '{print $$NF }' | tr '\n' ' ' ` ; \
+		[ -n "$$NODE_LIST" ] || { echo "error, failed to find any kind nodes, please setup kind cluster $(E2E_CLUSTER_NAME) first" ; exit 1 ; } ; \
+		echo "find cluster node: $${NODE_LIST}" ; \
+		for NODE in  $${NODE_LIST} ; do \
+		  echo "update apt sources list for node $$NODE " ; \
+		  docker exec $${NODE} sed -i -e 's?archive?cn.archive?g;s?/security?/cn.archive?g;s?impish?jammy?g' /etc/apt/sources.list ; \
+		  docker exec $${NODE} apt update; \
+		  docker exec $${NODE} apt install -y ipset; \
+        done ; \
 
 # this will auto tag github ci image : agent:xxx -> github.com/spidernet-io/egressgateway/agent:xxx
 .PHONY: check_images_ready
@@ -106,7 +132,7 @@ check_images_ready:
 	fi
 
 
-# install spidernet on global cluster
+# install egressgateway on global cluster
 .PHONY: deploy_project
 deploy_project: KIND_KUBECONFIG ?= $(E2E_KIND_KUBECONFIG_PATH)
 deploy_project: KIND_CLUSTER_NAME ?= $(E2E_KIND_CLUSTER_NAME)
@@ -137,6 +163,11 @@ deploy_project:
 		fi ; \
 		HELM_OPTION+=" --set egressgatewayAgent.prometheus.enabled=true --set egressgatewayController.prometheus.enabled=true  " ; \
 		HELM_OPTION+=" --set egressgatewayAgent.debug.logLevel=debug --set egressgatewayController.debug.logLevel=debug " ; \
+		if [ "$(E2E_IP_FAMILY)" == "dual" ] ; then HELM_OPTION+=" --set feature.enableIPv4=true --set feature.enableIPv6=true" ; fi ; \
+		if [ "$(E2E_IP_FAMILY)" == "ipv4" ] ; then HELM_OPTION+=" --set feature.enableIPv4=true --set feature.enableIPv6=false" ; fi ; \
+		if [ "$(E2E_IP_FAMILY)" == "ipv6" ] ; then HELM_OPTION+=" --set feature.enableIPv4=false --set feature.enableIPv6=true" ; fi ; \
+		if [ "$(PROJECT_FORWARD_METHOD)" == "active-passive" ] ; then HELM_OPTION+=" --set feature.forwardMethod=active-passive" ; fi ; \
+		if [ "$(PROJECT_FORWARD_METHOD)" == "active-active" ] ; then HELM_OPTION+=" --set feature.forwardMethod=active-active" ; fi ; \
 		helm --kubeconfig=$(KIND_KUBECONFIG) install project $(ROOT_DIR)/charts \
 				-n kube-system --wait --debug \
 				--set global.imageTagOverride=$(PROJECT_IMAGE_VERSION) \
@@ -144,6 +175,46 @@ deploy_project:
 				|| { KIND_CLUSTER_NAME=$(KIND_CLUSTER_NAME) ./scripts/debugCluster.sh $(KIND_KUBECONFIG) "detail"   ; exit 1 ; } ; \
 		exit 0
 
+# run_nettool_server
+.PHONY: run_nettool_server
+run_nettool_server:
+	echo "run nettool server bin"
+	make -C $(ROOT_DIR) build_nettools_all_bin || { echo "failed build_nettools_all_bin"; exit 1; }
+#	if [ "$(E2E_IP_FAMILY)" == "ipv6" ] ; then export SERVER_IP=$(SERVER_IP_V6) ; fi ; \
+#	if [ "$(E2E_IP_FAMILY)" == "dual" ] ; then export SERVER_IP=$(SERVER_IP_V6) ; fi ; \
+#	if [ "$(E2E_IP_FAMILY)" == "ipv4" ] ; then export SERVER_IP=$(SERVER_IP_V4) ; fi ; \
+
+	export SERVER_IP=$(SERVER_IP_V4) ; \
+    export MOD=$(MOD) ; \
+    export TCP_PORT=$(TCP_PORT) ; \
+    export UDP_PORT=$(UDP_PORT) ; \
+    export WEB_PORT=$(WEB_PORT) ; \
+    { $(SERVER_BIN) & } || { echo "failed to run nettools server"; exit 1; }
+
+# install nettool client
+.PHONY: install_nettool_client
+install_nettool_client: IMAGE := $(REGISTER)/$(GIT_REPO)-nettools:$(NET_TOOLS_IMAGE_TAG)
+install_nettool_client: KIND_KUBECONFIG ?= $(E2E_KIND_KUBECONFIG_PATH)
+install_nettool_client: load_nettool_image
+	echo "install nettool client pod"; \
+	sed -e \
+	's?<<NETTOOLS_IMAGE>>?$(IMAGE)?g;s?<<SERVER_IP>>?$(SERVER_IP)?g;s?<<MOD>>?$(MOD)?g;s?<<TCP_PORT>>?$(TCP_PORT)?g;s?<<UDP_PORT>>?$(UDP_PORT)?g;s?<<WEB_PORT>>?$(WEB_PORT)?g;s?<<NETTOOLS_CLIENT>>?$(NETTOOLS_CLIENT)?g;s?<<NODE_NAME>>?$(NODE_NAME)?g' \
+	./yaml/testclient.yaml | kubectl --kubeconfig $(KIND_KUBECONFIG) apply -f - ; \
+	kubectl --kubeconfig $(KIND_KUBECONFIG) wait --for condition=ready -l app=$(NETTOOLS_CLIENT) --timeout 10s po || { echo "timeout to wait pod running"; exit 1; }
+
+# kind load nettool image
+.PHONY: load_nettool_image
+load_nettool_image: IMAGE_NAME := $(REGISTER)/$(GIT_REPO)-nettools
+load_nettool_image: IMAGE_TAG := $(GIT_COMMIT_VERSION)
+load_nettool_image: KIND_CLUSTER_NAME ?= $(E2E_KIND_CLUSTER_NAME)
+load_nettool_image:
+	make -C $(ROOT_DIR)	build_local_nettools_image ; \
+	IMAGE=`docker image ls | grep $(IMAGE_NAME) | grep $(IMAGE_TAG)` ; \
+	[ -z $${IMAGE} ] && { echo "failed to find nettool image"; exit 1; } ; \
+	IMG=`echo $${IMAGE} | awk '{{printf("%s:%s\n",$$1,$$2)}}'`; \
+	LOAD_IMG=$(IMAGE_NAME):$(NET_TOOLS_IMAGE_TAG) ; \
+	docker image tag $${IMG} $${LOAD_IMG}; \
+	kind load docker-image $${LOAD_IMG}  --name $(KIND_CLUSTER_NAME) || { echo "failed to load nettool image"; exit 1; }
 
 # test kind is ok
 .PHONY: install_example_app
@@ -171,6 +242,7 @@ clean:
 	-@ rm -rf $(E2E_RUNTIME_DIR)
 	-@ docker stop $(PYROSCOPE_CONTAINER_NAME) &>/dev/null
 	-@ docker rm $(PYROSCOPE_CONTAINER_NAME) &>/dev/null
+	-@ ps aux | grep $(SERVER_BIN) | grep -v color | awk '{print $$2}' | xargs kill
 
 
 

@@ -5,9 +5,10 @@ package agent
 
 import (
 	"context"
-	"github.com/vishvananda/netlink"
 	"net"
 	"testing"
+
+	"github.com/vishvananda/netlink"
 
 	"github.com/stretchr/testify/assert"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -83,7 +84,6 @@ func TestReconcilerEgressNode(t *testing.T) {
 }
 
 func caseAddEgressNode() TestCaseVXLAN {
-
 	_, ipn, err := net.ParseCIDR("192.168.100.1/24")
 	if err != nil {
 		panic(err)

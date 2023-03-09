@@ -2,33 +2,36 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: nettools-client
+  name: <<NETTOOLS_CLIENT>>
   labels:
-    app: nettools-client
+    app: <<NETTOOLS_CLIENT>>
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: nettools-client
+      app: <<NETTOOLS_CLIENT>>
   template:
     metadata:
       labels:
-        app: nettools-client
+        app: <<NETTOOLS_CLIENT>>
     spec:
+      nodeName: <<NODE_NAME>>
       containers:
-      - name: nettools-client
-        image: ghcr.io/spidernet-io/egressgateway-nettools:t1
+      - name: <<NETTOOLS_CLIENT>>
+        image: <<NETTOOLS_IMAGE>>
         imagePullPolicy: IfNotPresent
         command:
-            - "/usr/bin/nettools-client"
+          - "sh"
+          - "-c"
+          - "sleep 10s && /usr/bin/nettools-client"
         env:
         - name: SERVER_IP
-          value: "10.6.105.21"
+          value: <<SERVER_IP>>
         - name: MOD
-          value: "all"
+          value: <<MOD>>
         - name: TCP_PORT
-          value: "30080"
+          value: <<TCP_PORT>>
         - name: UDP_PORT
-          value: "30081"
+          value: <<UDP_PORT>>
         - name: WEB_PORT
-          value: "30082"
+          value: <<WEB_PORT>>

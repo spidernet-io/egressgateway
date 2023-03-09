@@ -92,7 +92,6 @@ func tcpServer() {
 		fmt.Println("A client connected :" + tcpConn.RemoteAddr().String())
 		go tcpPipe(tcpConn)
 	}
-
 }
 
 func tcpPipe(conn *net.TCPConn) {

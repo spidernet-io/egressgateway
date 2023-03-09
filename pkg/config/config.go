@@ -76,8 +76,10 @@ type FileConfig struct {
 	VXLAN              VXLAN  `yaml:"vxlan"`
 }
 
-const TunnelInterfaceDefaultRoute = "defaultRouteInterface"
-const TunnelInterfaceSpecific = "interface="
+const (
+	TunnelInterfaceDefaultRoute = "defaultRouteInterface"
+	TunnelInterfaceSpecific     = "interface="
+)
 
 type VXLAN struct {
 	Name                   string `yaml:"name"`

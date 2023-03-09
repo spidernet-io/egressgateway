@@ -255,8 +255,9 @@ func caseAddEgressGatewayPolicy() TestCaseEGP {
 				},
 				expMangle: []map[string][]string{
 					{
-						"EGRESSGATEWAY-MARK-REQUEST": []string{"" +
-							"-m comment --comment \"egw-Mio2l_qQ2kKhiz2d\" -m set --match-set egress-src-v4-c0eb42ab804da452e src -m set --match-set egress-dst-v4-c0eb42ab804da452e dst --jump MARK --set-mark 0x11000000/0xffffffff",
+						"EGRESSGATEWAY-MARK-REQUEST": []string{
+							"" +
+								"-m comment --comment \"egw-Mio2l_qQ2kKhiz2d\" -m set --match-set egress-src-v4-c0eb42ab804da452e src -m set --match-set egress-dst-v4-c0eb42ab804da452e dst --jump MARK --set-mark 0x11000000/0xffffffff",
 						},
 						"PREROUTING": []string{
 							"-m comment --comment \"egw-HAe35Kaffr8R0mLj\" --jump EGRESSGATEWAY-MARK-REQUEST",
@@ -485,8 +486,9 @@ func caseUpdateEgressGatewayPolicy() TestCaseEGP {
 				},
 				expMangle: []map[string][]string{
 					{
-						"EGRESSGATEWAY-MARK-REQUEST": []string{"" +
-							"-m comment --comment \"egw-Mio2l_qQ2kKhiz2d\" -m set --match-set egress-src-v4-c0eb42ab804da452e src -m set --match-set egress-dst-v4-c0eb42ab804da452e dst --jump MARK --set-mark 0x11000000/0xffffffff",
+						"EGRESSGATEWAY-MARK-REQUEST": []string{
+							"" +
+								"-m comment --comment \"egw-Mio2l_qQ2kKhiz2d\" -m set --match-set egress-src-v4-c0eb42ab804da452e src -m set --match-set egress-dst-v4-c0eb42ab804da452e dst --jump MARK --set-mark 0x11000000/0xffffffff",
 						},
 						"PREROUTING": []string{
 							"-m comment --comment \"egw-HAe35Kaffr8R0mLj\" --jump EGRESSGATEWAY-MARK-REQUEST",
@@ -598,8 +600,9 @@ func caseAddPodUpdatePolicy() TestCaseEGP {
 				},
 				expMangle: []map[string][]string{
 					{
-						"EGRESSGATEWAY-MARK-REQUEST": []string{"" +
-							"-m comment --comment \"egw-Mio2l_qQ2kKhiz2d\" -m set --match-set egress-src-v4-c0eb42ab804da452e src -m set --match-set egress-dst-v4-c0eb42ab804da452e dst --jump MARK --set-mark 0x11000000/0xffffffff",
+						"EGRESSGATEWAY-MARK-REQUEST": []string{
+							"" +
+								"-m comment --comment \"egw-Mio2l_qQ2kKhiz2d\" -m set --match-set egress-src-v4-c0eb42ab804da452e src -m set --match-set egress-dst-v4-c0eb42ab804da452e dst --jump MARK --set-mark 0x11000000/0xffffffff",
 						},
 						"PREROUTING": []string{
 							"-m comment --comment \"egw-HAe35Kaffr8R0mLj\" --jump EGRESSGATEWAY-MARK-REQUEST",
@@ -708,8 +711,9 @@ func caseDelPodUpdatePolicy() TestCaseEGP {
 				},
 				expMangle: []map[string][]string{
 					{
-						"EGRESSGATEWAY-MARK-REQUEST": []string{"" +
-							"-m comment --comment \"egw-Mio2l_qQ2kKhiz2d\" -m set --match-set egress-src-v4-c0eb42ab804da452e src -m set --match-set egress-dst-v4-c0eb42ab804da452e dst --jump MARK --set-mark 0x11000000/0xffffffff",
+						"EGRESSGATEWAY-MARK-REQUEST": []string{
+							"" +
+								"-m comment --comment \"egw-Mio2l_qQ2kKhiz2d\" -m set --match-set egress-src-v4-c0eb42ab804da452e src -m set --match-set egress-dst-v4-c0eb42ab804da452e dst --jump MARK --set-mark 0x11000000/0xffffffff",
 						},
 						"PREROUTING": []string{
 							"-m comment --comment \"egw-HAe35Kaffr8R0mLj\" --jump EGRESSGATEWAY-MARK-REQUEST",
@@ -789,7 +793,6 @@ func TestGetPodIPs(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-
 			gotIpv4List, gotIpv6List := getPodIPsBy(tt.args)
 			assert.Equalf(t, tt.wantIpv4List, gotIpv4List, "getPodIPsBy(%v)", tt.args)
 			assert.Equalf(t, tt.wantIpv6List, gotIpv6List, "getPodIPsBy(%v)", tt.args)

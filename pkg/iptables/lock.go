@@ -98,7 +98,7 @@ func (l *SharedLock) Unlock() {
 		panic("Unmatched Unlock()")
 	}
 	if l.referenceCount == 0 {
-		//log.Debug("Releasing iptables lock.")
+		// log.Debug("Releasing iptables lock.")
 		err := l.lockHandle.Close()
 		if err != nil {
 			// We haven't done anything with the file or socket, so we shouldn't be
@@ -138,8 +138,8 @@ var (
 )
 
 func GrabIptablesLocks(lockFilePath, socketName string,
-	timeout, probeInterval time.Duration) (io.Closer, error) {
-
+	timeout, probeInterval time.Duration,
+) (io.Closer, error) {
 	var err error
 	var success bool
 

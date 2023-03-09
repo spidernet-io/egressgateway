@@ -12,10 +12,8 @@ import (
 )
 
 var _ = Describe("LockFast", Label("unitest"), func() {
-
 	// it is daemon , add more test here
 	It("test debug lock", func() {
-
 		l := &lock.Mutex{}
 
 		l.Lock()

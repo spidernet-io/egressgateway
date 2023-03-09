@@ -13,7 +13,6 @@ import (
 )
 
 func NewStdoutLogger(loglevel string) *zap.Logger {
-
 	// log level
 	l := zapcore.InfoLevel
 	switch strings.ToLower(loglevel) {

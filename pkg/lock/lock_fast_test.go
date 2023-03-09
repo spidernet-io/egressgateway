@@ -7,13 +7,13 @@
 package lock_test
 
 import (
+	"time"
+
 	. "github.com/onsi/ginkgo/v2"
 	"github.com/spidernet-io/egressgateway/pkg/lock"
-	"time"
 )
 
 var _ = Describe("LockFast", Label("unitest"), func() {
-
 	// it is daemon , add more test here
 	It("test lock", func() {
 		l := &lock.Mutex{}

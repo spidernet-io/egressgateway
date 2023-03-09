@@ -73,7 +73,6 @@ func tcpClient() {
 	tcpAddr, _ = net.ResolveTCPAddr("tcp", addr+":"+tcpPort)
 
 	conn, err := net.DialTCP("tcp", nil, tcpAddr)
-
 	if err != nil {
 		fmt.Println("TCP: Client connect error ! " + err.Error())
 		return
@@ -92,7 +91,6 @@ func udpClient() {
 	udpAddr, _ = net.ResolveUDPAddr("udp", addr+":"+udpPort)
 
 	conn, err := net.DialUDP("udp", nil, udpAddr)
-
 	if err != nil {
 		fmt.Println("UDP: Client connect error ! " + err.Error())
 		return
