@@ -527,5 +527,11 @@ func newEgressGatewayController(mgr manager.Manager, log *zap.Logger, cfg *confi
 		return fmt.Errorf("failed to watch Node: %w", err)
 	}
 
+	if err := c.Watch(&source.Kind{Type: &corev1.Node{}}, handler.EnqueueRequestsFromMapFunc(func(object client.Object) []reconcile.Request {
+		return []reconcile.Request{{NamespacedName: types.NamespacedName{Namespace: "EgressGateway/", Name: "default"}}}
+	})); err != nil {
+		return fmt.Errorf("failed to watch Node: %w", err)
+	}
+
 	return nil
 }
