@@ -15,6 +15,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 
 	"github.com/spidernet-io/egressgateway/pkg/config"
+	"github.com/spidernet-io/egressgateway/pkg/controller/metrics"
 	"github.com/spidernet-io/egressgateway/pkg/controller/webhook"
 	"github.com/spidernet-io/egressgateway/pkg/logger"
 	"github.com/spidernet-io/egressgateway/pkg/schema"
@@ -57,6 +58,8 @@ func New(cfg *config.Config, log *zap.Logger) (types.Service, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to AddReadyzCheck: %w", err)
 	}
+
+	metrics.RegisterMetricCollectors()
 
 	mgr.GetWebhookServer().Port = cfg.WebhookPort
 	mgr.GetWebhookServer().CertDir = cfg.TLSCertDir
