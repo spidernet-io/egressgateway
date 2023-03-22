@@ -14,6 +14,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/healthz"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 
+	"github.com/spidernet-io/egressgateway/pkg/agent/metrics"
 	"github.com/spidernet-io/egressgateway/pkg/config"
 	"github.com/spidernet-io/egressgateway/pkg/schema"
 	"github.com/spidernet-io/egressgateway/pkg/types"
@@ -53,6 +54,8 @@ func New(cfg *config.Config, log *zap.Logger) (types.Service, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to AddReadyzCheck: %w", err)
 	}
+
+	metrics.RegisterMetricCollectors()
 
 	err = newEgressNodeController(mgr, cfg, log)
 	if err != nil {
