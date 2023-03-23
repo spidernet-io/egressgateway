@@ -33,7 +33,7 @@ type SelectedEgressNode struct {
 	// +kubebuilder:validation:Optional
 	Active bool `json:"active"`
 	// +kubebuilder:validation:Optional
-	InterfaceStatus []InterfaceStatus `json:"interfaceStatus"`
+	InterfaceStatus []InterfaceStatus `json:"interfaceStatus,omitempty"`
 }
 
 func (s SelectedEgressNodes) Len() int {
