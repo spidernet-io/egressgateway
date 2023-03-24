@@ -192,8 +192,8 @@ egressgatewayAgent:
     ## @param egressgatewayAgent.resources.requests.cpu the cpu requests of egressgatewayAgent pod
     ## @param egressgatewayAgent.resources.requests.memory the memory requests of egressgatewayAgent pod
     limits:
-      cpu: 1000m
-      memory: 1024Mi
+      cpu: 500m
+      memory: 512Mi
     requests:
       cpu: 100m
       memory: 128Mi
@@ -399,7 +399,7 @@ egressgatewayController:
     ## @param egressgatewayController.resources.requests.memory the memory requests of egressgatewayController pod
     limits:
       cpu: 500m
-      memory: 1024Mi
+      memory: 512Mi
     requests:
       cpu: 100m
       memory: 128Mi
