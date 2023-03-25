@@ -2,7 +2,7 @@
 ## @section Global parameters
 ##
 global:
-  ## @param global.imageRegistryOverride The global image registry override
+  ## @param global.imageRegistryOverride The global image registry override1
   imageRegistryOverride: ""
 
   ## @param global.imageTagOverride The global image tag override
