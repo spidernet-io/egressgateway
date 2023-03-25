@@ -19,7 +19,7 @@ type FakeIPSet struct {
 	// The key of Sets maps is the ip set name
 	Sets map[string]*ipset.IPSet
 	// The key of Entries maps is the ip set name where the entries exist
-	Entries map[string]sets.String
+	Entries map[string]sets.Set[string]
 }
 
 // NewFake create a new fake ipset interface - it initialize the FakeIPSet.
@@ -27,7 +27,7 @@ func NewFake(version string) *FakeIPSet {
 	return &FakeIPSet{
 		Version: version,
 		Sets:    make(map[string]*ipset.IPSet),
-		Entries: make(map[string]sets.String),
+		Entries: make(map[string]sets.Set[string]),
 	}
 }
 
@@ -78,7 +78,7 @@ func (f *FakeIPSet) CreateSet(set *ipset.IPSet, ignoreExistErr bool) error {
 	}
 	f.Sets[set.Name] = set
 	// initialize entry map
-	f.Entries[set.Name] = sets.NewString()
+	f.Entries[set.Name] = sets.New[string]()
 	return nil
 }
 

@@ -1,3 +1,4 @@
+//go:build !go1.11
 // +build !go1.11
 
 // Copyright 2015 go-swagger maintainers
@@ -73,6 +74,12 @@ type routesParser struct {
 	parameters  []*spec.Parameter
 }
 
+var routeVendorExtensibleParser = vendorExtensibleParser{
+	setExtensions: func(ext spec.Extensions, dest interface{}) {
+		dest.(*spec.Operation).Extensions = ext
+	},
+}
+
 func (rp *routesParser) Parse(gofile *ast.File, target interface{}, includeTags map[string]bool, excludeTags map[string]bool) error {
 	tgt := target.(*spec.Paths)
 	for _, comsec := range gofile.Comments {
@@ -108,6 +115,7 @@ func (rp *routesParser) Parse(gofile *ast.File, target interface{}, includeTags 
 			newMultiLineTagParser("Security", newSetSecurity(rxSecuritySchemes, opSecurityDefsSetter(op)), false),
 			newMultiLineTagParser("Parameters", spa, false),
 			newMultiLineTagParser("Responses", sr, false),
+			newMultiLineTagParser("YAMLExtensionsBlock", newYamlParser(rxExtensions, routeVendorExtensibleParser.ParseInto(op)), true),
 		}
 		if err := sp.Parse(content.Remaining); err != nil {
 			return fmt.Errorf("operation (%s): %v", op.ID, err)

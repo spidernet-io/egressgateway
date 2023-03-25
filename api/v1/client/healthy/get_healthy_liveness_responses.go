@@ -53,7 +53,41 @@ Success
 type GetHealthyLivenessOK struct {
 }
 
+// IsSuccess returns true when this get healthy liveness o k response has a 2xx status code
+func (o *GetHealthyLivenessOK) IsSuccess() bool {
+	return true
+}
+
+// IsRedirect returns true when this get healthy liveness o k response has a 3xx status code
+func (o *GetHealthyLivenessOK) IsRedirect() bool {
+	return false
+}
+
+// IsClientError returns true when this get healthy liveness o k response has a 4xx status code
+func (o *GetHealthyLivenessOK) IsClientError() bool {
+	return false
+}
+
+// IsServerError returns true when this get healthy liveness o k response has a 5xx status code
+func (o *GetHealthyLivenessOK) IsServerError() bool {
+	return false
+}
+
+// IsCode returns true when this get healthy liveness o k response a status code equal to that given
+func (o *GetHealthyLivenessOK) IsCode(code int) bool {
+	return code == 200
+}
+
+// Code gets the status code for the get healthy liveness o k response
+func (o *GetHealthyLivenessOK) Code() int {
+	return 200
+}
+
 func (o *GetHealthyLivenessOK) Error() string {
+	return fmt.Sprintf("[GET /healthy/liveness][%d] getHealthyLivenessOK ", 200)
+}
+
+func (o *GetHealthyLivenessOK) String() string {
 	return fmt.Sprintf("[GET /healthy/liveness][%d] getHealthyLivenessOK ", 200)
 }
 
@@ -75,7 +109,41 @@ Failed
 type GetHealthyLivenessInternalServerError struct {
 }
 
+// IsSuccess returns true when this get healthy liveness internal server error response has a 2xx status code
+func (o *GetHealthyLivenessInternalServerError) IsSuccess() bool {
+	return false
+}
+
+// IsRedirect returns true when this get healthy liveness internal server error response has a 3xx status code
+func (o *GetHealthyLivenessInternalServerError) IsRedirect() bool {
+	return false
+}
+
+// IsClientError returns true when this get healthy liveness internal server error response has a 4xx status code
+func (o *GetHealthyLivenessInternalServerError) IsClientError() bool {
+	return false
+}
+
+// IsServerError returns true when this get healthy liveness internal server error response has a 5xx status code
+func (o *GetHealthyLivenessInternalServerError) IsServerError() bool {
+	return true
+}
+
+// IsCode returns true when this get healthy liveness internal server error response a status code equal to that given
+func (o *GetHealthyLivenessInternalServerError) IsCode(code int) bool {
+	return code == 500
+}
+
+// Code gets the status code for the get healthy liveness internal server error response
+func (o *GetHealthyLivenessInternalServerError) Code() int {
+	return 500
+}
+
 func (o *GetHealthyLivenessInternalServerError) Error() string {
+	return fmt.Sprintf("[GET /healthy/liveness][%d] getHealthyLivenessInternalServerError ", 500)
+}
+
+func (o *GetHealthyLivenessInternalServerError) String() string {
 	return fmt.Sprintf("[GET /healthy/liveness][%d] getHealthyLivenessInternalServerError ", 500)
 }
 

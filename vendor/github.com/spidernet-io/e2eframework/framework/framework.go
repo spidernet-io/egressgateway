@@ -40,6 +40,7 @@ type ClusterInfo struct {
 	// multus
 	MultusDefaultCni    string
 	MultusAdditionalCni string
+	SpiderSubnetEnabled bool
 }
 
 var ClusterInformation = &ClusterInfo{}
@@ -64,6 +65,7 @@ const (
 	E2E_KIND_CLUSTER_NODE_LIST  = "E2E_KIND_CLUSTER_NODE_LIST"
 	E2E_Multus_DefaultCni       = "E2E_Multus_DefaultCni"
 	E2E_Multus_AdditionalCni    = "E2E_Multus_AdditionalCni"
+	E2E_SPIDERSUBNET_ENABLED    = "E2E_SPIDERSUBNET_ENABLED"
 )
 
 var envConfigList = []envconfig{
@@ -81,6 +83,9 @@ var envConfigList = []envconfig{
 	{EnvName: E2E_WHEREABOUT_IPAM_ENABLED, DestBool: &ClusterInformation.WhereaboutIPAMEnabled, Default: "false", Required: false},
 	// ---- kind field
 	{EnvName: E2E_KIND_CLUSTER_NODE_LIST, DestStr: &ClusterInformation.KindNodeListRaw, Default: "false", Required: false},
+	// ---- subnet field
+	{EnvName: E2E_SPIDERSUBNET_ENABLED, DestBool: &ClusterInformation.SpiderSubnetEnabled, Default: "true", Required: false},
+
 	// ---- vagrant field
 }
 
@@ -233,7 +238,7 @@ func (f *Framework) UpdateResource(obj client.Object, opts ...client.UpdateOptio
 	return f.KClient.Update(ctx5, obj, opts...)
 }
 
-func (f *Framework) UpdateResourceStatus(obj client.Object, opts ...client.UpdateOption) error {
+func (f *Framework) UpdateResourceStatus(obj client.Object, opts ...client.SubResourceUpdateOption) error {
 	ctx6, cancel6 := context.WithTimeout(context.Background(), f.Config.ApiOperateTimeout)
 	defer cancel6()
 	return f.KClient.Status().Update(ctx6, obj, opts...)

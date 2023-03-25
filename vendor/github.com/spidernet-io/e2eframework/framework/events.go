@@ -37,6 +37,7 @@ func (f *Framework) WaitExceptEventOccurred(ctx context.Context, eventKind, objN
 			if !ok {
 				return ErrChanelClosed
 			}
+			f.Log("watch event object %v", event.Object)
 			switch event.Type {
 			case watch.Error:
 				return ErrEvent
