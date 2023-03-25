@@ -1,11 +1,11 @@
-name: 'Update Chart Readme'
+name: 'Helm'
 
 on:
   pull_request_target:
     branches:
       - main
     paths:
-      - 'charts/*/values.yaml'
+      - 'charts/values.yaml'
 
 permissions: write-all
 
@@ -17,7 +17,7 @@ jobs:
         uses: actions/checkout@v3
         with:
           repository: 'bitnami-labs/readme-generator-for-helm'
-          ref: '1af12881436b1f58f0643d733fd5196b4a11caa8'
+          ref: '56339fd97199c76326f224272deba14f3bcc8c3f'
           path: readme-generator-for-helm
 
       - name: Cache node modules
@@ -31,53 +31,26 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-build-${{ env.cache-name }}-
 
-      - name: Install readme-generator-for-helm dependencies
+      - name: Install readme-generator-for-helm
         run: |
           cd readme-generator-for-helm
           npm install
 
-      - name: Checkout Code
+      - name: Checkout egressgateway project
         uses: actions/checkout@v3
         with:
           ref: ${{github.event.pull_request.head.ref}}
           repository: ${{ github.event.pull_request.head.repo.full_name }}
           path: thisProject
 
-      - name: Execute readme-generator-for-helm
+      - name: Diff chart/README.md
         id: execute
         run: |
-          # Using the Github API to detect the files changed as git merge-base stops working when the branch is behind
-          # and jitterbit/get-changed-files does not support pull_request_target
-          URL="https://api.github.com/repos/${{ github.repository }}/pulls/${{ github.event.pull_request.number }}/files"
-          files_changed_data=$(curl -s --header 'authorization: Bearer ${{ secrets.GITHUB_TOKEN }}' -X GET -G "$URL")
-          echo "files_changed_data: $files_changed_data"
-          files_changed="$(echo $files_changed_data | jq -r '.[] | .filename')"
-          echo "files_changed: $files_changed"
-          # Adding || true to avoid "Process exited with code 1" errors
-          charts_changed="$(echo "$files_changed" | grep -E -o "([^/]*)/values.yaml" | sort | uniq | awk -F'/' '{print $1}' | tr '\n' ' ' || true)"
-          echo "charts_changed: $charts_changed"
-          #--------------------
-          for ITEM in $charts_changed ; do
-            if [ -f "thisProject/charts/${ITEM}/values.yaml" ] && grep "charts/${ITEM}/values.yaml" <<< "$files_changed" &>/dev/null ; then
-                echo "------ Updating README.md for ${ITEM}"
-                readme-generator-for-helm/bin/index.js --values "thisProject/charts/${ITEM}/values.yaml" --readme "thisProject/charts/${ITEM}/README.md" --schema "/tmp/schema.json"
-                cat thisProject/charts/${ITEM}/README.md
-            fi
-          done
-
-      - name: Push changes
-        run: |
-          # Push all the changes
-          cd thisProject
-          if git status -s | grep README.md; then
-            set -x
-            echo "create pr"
-            git branch
-            git status
-            git config --list
-            git config user.name  "Robot"
-            git config user.email "robot@spidernet-io.github.io"
-            git add .
-            git commit -am "Update README.md with readme-generator-for-helm" --signoff
-            git push
-          fi
+          echo "Diff chart/README.md"
+          echo "-----------------------------"
+          readme-generator-for-helm/bin/index.js \
+          --values "thisProject/charts/values.yaml" \
+          --readme "thisProject/charts/README.md"
+          
+          echo "-----------------------------"
+          cat thisProject/charts/README.md
