@@ -1,3 +1,4 @@
+//go:build !go1.11
 // +build !go1.11
 
 // Copyright 2015 go-swagger maintainers
@@ -33,7 +34,7 @@ import (
 	"github.com/go-openapi/spec"
 	"github.com/go-openapi/swag"
 	"golang.org/x/tools/go/loader"
-	yaml "gopkg.in/yaml.v2"
+	yaml "gopkg.in/yaml.v3"
 )
 
 const (
@@ -949,4 +950,25 @@ COMMENTS:
 		}
 	}
 	return nil
+}
+
+type vendorExtensibleParser struct {
+	setExtensions func(ext spec.Extensions, dest interface{})
+}
+
+func (extParser vendorExtensibleParser) ParseInto(dest interface{}) func(json.RawMessage) error {
+	return func(jsonValue json.RawMessage) error {
+		var jsonData spec.Extensions
+		err := json.Unmarshal(jsonValue, &jsonData)
+		if err != nil {
+			return err
+		}
+		for k := range jsonData {
+			if !rxAllowedExtensions.MatchString(k) {
+				return fmt.Errorf("invalid schema extension name, should start from `x-`: %s", k)
+			}
+		}
+		extParser.setExtensions(jsonData, dest)
+		return nil
+	}
 }

@@ -59,6 +59,33 @@ func TestReconcilerEgressGateway(t *testing.T) {
 			builder := fake.NewClientBuilder()
 			builder.WithScheme(schema.GetScheme())
 			builder.WithObjects(c.initialObjects...)
+			builder.WithIndex(&egressv1.EgressGateway{},
+				indexEgressNodeEgressGateway, func(rawObj client.Object) []string {
+					egn := rawObj.(*egressv1.EgressGateway)
+					var egressNodes []string
+					for _, node := range egn.Status.NodeList {
+						egressNodes = append(egressNodes,
+							types.NamespacedName{
+								Name: node.Name,
+							}.String(),
+						)
+					}
+					return egressNodes
+				})
+			builder.WithIndex(&egressv1.EgressGateway{},
+				indexNodeEgressGateway, func(rawObj client.Object) []string {
+					egn := rawObj.(*egressv1.EgressGateway)
+					var egressNodes []string
+					for _, node := range egn.Status.NodeList {
+						egressNodes = append(egressNodes,
+							types.NamespacedName{
+								Name: node.Name,
+							}.String(),
+						)
+					}
+					return egressNodes
+				})
+
 			reconciler := egnReconciler{
 				client: builder.Build(),
 				log:    log,
@@ -1058,17 +1085,11 @@ func caseNodeReadyToNotReady() TestCaseEGN {
 		},
 		initialObjects: []client.Object{
 			&corev1.Node{
-				TypeMeta: metav1.TypeMeta{},
-				ObjectMeta: metav1.ObjectMeta{
-					Name: "node1",
-				},
-				Spec: corev1.NodeSpec{},
+				TypeMeta:   metav1.TypeMeta{},
+				ObjectMeta: metav1.ObjectMeta{Name: "node1"},
+				Spec:       corev1.NodeSpec{},
 				Status: corev1.NodeStatus{
-					Conditions: []corev1.NodeCondition{
-						{
-							Type: corev1.NodeReady,
-						},
-					},
+					Conditions: []corev1.NodeCondition{{Type: corev1.NodeReady}},
 				},
 			},
 			&corev1.Node{
@@ -1178,8 +1199,7 @@ func caseNodeReadyToNotReady() TestCaseEGN {
 		reqs: []TestEGNReq{
 			{
 				nn: types.NamespacedName{
-					Namespace: "Node/",
-					Name:      "node1",
+					Namespace: "Node/", Name: "node1",
 				},
 				expErr:     false,
 				expRequeue: false,
@@ -1192,24 +1212,9 @@ func caseNodeReadyToNotReady() TestCaseEGN {
 						Spec: egressv1.EgressGatewaySpec{},
 						Status: egressv1.EgressGatewayStatus{
 							NodeList: []egressv1.SelectedEgressNode{
-								{
-									Name:            "node1",
-									Ready:           false,
-									Active:          false,
-									InterfaceStatus: nil,
-								},
-								{
-									Name:            "node2",
-									Ready:           true,
-									Active:          true,
-									InterfaceStatus: nil,
-								},
-								{
-									Name:            "node3",
-									Ready:           true,
-									Active:          false,
-									InterfaceStatus: nil,
-								},
+								{Name: "node1", Ready: false, Active: false, InterfaceStatus: nil},
+								{Name: "node2", Ready: true, Active: true, InterfaceStatus: nil},
+								{Name: "node3", Ready: true, Active: false, InterfaceStatus: nil},
 							},
 						},
 					},
