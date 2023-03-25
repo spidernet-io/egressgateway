@@ -1,6 +1,6 @@
 module github.com/spidernet-io/egressgateway
 
-go 1.19
+go 1.20
 
 require (
 	github.com/cilium/ipam v0.0.0-20220824141044-46ef3d556735
