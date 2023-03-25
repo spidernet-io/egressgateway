@@ -1,0 +1,65 @@
+name: 'Helm'
+
+on:
+  pull_request_target:
+    branches:
+      - main
+    paths:
+      - 'charts/values.yaml'
+
+permissions: write-all
+
+jobs:
+  check-chart-readme:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout bitnami-labs/readme-generator-for-helm
+        uses: actions/checkout@v3
+        with:
+          repository: 'bitnami-labs/readme-generator-for-helm'
+          ref: '56339fd97199c76326f224272deba14f3bcc8c3f'
+          path: readme-generator-for-helm
+
+      - name: Cache node modules
+        uses: actions/cache@v3
+        env:
+          cache-name: cache-node-modules
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('readme-generator-for-helm/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-build-${{ env.cache-name }}-
+
+      - name: Install readme-generator-for-helm
+        run: |
+          cd readme-generator-for-helm
+          npm install
+
+      - name: Checkout egressgateway project
+        uses: actions/checkout@v3
+        with:
+          ref: ${{github.event.pull_request.head.ref}}
+          repository: ${{ github.event.pull_request.head.repo.full_name }}
+          path: thisProject
+
+      - name: Diff chart/README.md
+        id: execute
+        run: |
+          echo -e "\033[32mUse readme-generator-for-helm to generate README.md\033[0m"
+          echo "-----------------------------"
+          readme-generator-for-helm/bin/index.js \
+          --values "thisProject/charts/values.yaml" \
+          --readme "thisProject/charts/README.md"
+          echo "-----------------------------"
+
+          cd thisProject
+          if git diff --quiet; then
+            echo -e "\033[32mREADME.md has not changed\033[0m"
+          else
+            echo -e "\033[31mcharts/README.md has changed!\033[0m"
+            echo -e "\033[31mPlease refer to the project https://github.com/bitnami-labs/readme-generator-for-helm to install the Helm chart README.md generation tool, regenerate the README.md, and then commit the code.\033[0m"
+            echo -e "\033[31mAlternatively, copy the contents of the new README.md below into your commit.\033[0m"
+            echo -e "\033[31m-----------------------------\033[0m"
+            cat charts/README.md
+            exit 1
+          fi
