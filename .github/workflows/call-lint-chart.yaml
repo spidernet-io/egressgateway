@@ -50,6 +50,16 @@ jobs:
           fetch-depth: 0
           ref: ${{ env.RUN_REF }}
 
+      - name: Install yq
+        run: |
+          YQ_VERSION=v4.33.1
+          YQ_BINARY="yq_$(uname | tr 'A-Z' 'a-z')_amd64"
+          wget https://github.com/mikefarah/yq/releases/download/${YQ_VERSION}/${YQ_BINARY}.tar.gz -O /tmp/yq.tar.gz
+          tar -xzf /tmp/yq.tar.gz -C /tmp
+          sudo mv /tmp/${YQ_BINARY} /usr/bin/yq
+          sudo chmod +x /usr/bin/yq
+          yq &>/dev/null || exit 1
+
       - name: Lint Chart
         run: |
           make chart_package
