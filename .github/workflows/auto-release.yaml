@@ -84,11 +84,8 @@ jobs:
           branchLabelName="${{ env.LABEL_PREFIX_CHERRYPICK }}release-${{ env.RUN_YBranchName }}"
           mainLabelName="${{ env.LABEL_PREFIX_CHERRYPICK }}main"
           echo "try to create label "
-          gh label create ${branchLabelName} --force
-          (( $? !=0 )) && echo "error, failed to create label ${branchLabelName}"
-          gh label create ${mainLabelName} --force
-          (( $? !=0 )) && echo "error, failed to create label ${mainLabelName}"
-
+          gh label create ${branchLabelName} --force ; if [ $? -ne 0 ]; then echo -e "\e[31merror, failed to create label ${branchLabelName}\e[0m"; fi
+          gh label create ${mainLabelName} --force ; if [ $? -ne 0 ]; then echo -e "\e[31merror, failed to create label ${mainLabelName}\e[0m"; fi
   build-release-image:
     needs: get-tag
     uses: ./.github/workflows/build-image-release.yaml

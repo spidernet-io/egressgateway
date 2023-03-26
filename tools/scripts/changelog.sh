@@ -7,37 +7,36 @@
 #  GH_TOKEN=${{ github.token }} LABEL_FEATURE="release/feature-new" LABEL_BUG="release/bug" PROJECT_REPO="spidernet-io/spiderpool" changelog.sh ./ v0.3.6
 #  GH_TOKEN=${{ github.token }} LABEL_FEATURE="release/feature-new" LABEL_BUG="release/bug" PROJECT_REPO="spidernet-io/spiderpool" changelog.sh ./ v0.3.6 v0.3.5
 
-
-CURRENT_DIR_PATH=$(cd `dirname $0`; pwd)
-PROJECT_ROOT_PATH="${CURRENT_DIR_PATH}/../.."
-
 set -x
 set -o errexit
 set -o nounset
 set -o pipefail
 
-#required
+# required
 OUTPUT_DIR=${1}
-#required
+# required
 DEST_TAG=${2}
 # optional
 START_TAG=${3:-""}
 
-#required
-LABEL_FEATURE=${LABEL_FEATURE}
-#required
-LABEL_BUG=${LABEL_BUG}
-#required
-PROJECT_REPO=${PROJECT_REPO}
+# required
+if [ -z "${LABEL_FEATURE+x}" ]; then echo "error: LABEL_FEATURE variable is not set"; exit 1; fi
+
+# required
+if [ -z "${LABEL_BUG+x}" ]; then echo "error: LABEL_BUG variable is not set"; exit 1; fi
+
+# required
+if [ -z "${PROJECT_REPO+x}" ]; then echo "error: PROJECT_REPO variable is not set"; exit 1; fi
 
 OUTPUT_DIR=$(cd ${OUTPUT_DIR}; pwd)
 echo "generate changelog to directory ${OUTPUT_DIR}"
-cd ${OUTPUT_DIR}
+cd "${OUTPUT_DIR}"
 
 ORIGIN_START_TAG=${START_TAG}
+DEST_TAG_WITHOUT_RC=""
 if [ -z "${START_TAG}" ] ; then
     echo "-------------- generate start tag"
-    VERSION=` grep -oE "[0-9]+\.[0-9]+\.[0-9]+" <<< "${DEST_TAG}" `
+    VERSION=$( grep -oE "[0-9]+\.[0-9]+\.[0-9]+" <<< "${DEST_TAG}" )
     V_X=${VERSION%%.*}
     TMP=${VERSION%.*}
     V_Y=${TMP#*.}
@@ -116,7 +115,7 @@ TOTAL_COUNT=` wc -l <<< "${ALL_PR_NUM}" `
 FEATURE_PR=""
 FIX_PR=""
 for PR in ${ALL_PR_NUM} ; do
-	INFO=` gh pr view ${PR}  `
+	INFO=` gh pr view ${PR}  ` || continue
 	TITLE=` grep -E "^title:[[:space:]]+" <<< "$INFO" | sed -E 's/title:[[:space:]]+//' `
 	LABELS=`  grep -E "^labels:[[:space:]]" <<< "$INFO" | sed -E 's/labels://' | tr ',' ' ' `
 	#
@@ -133,36 +132,37 @@ done
 #---------------------
 echo "generate changelog md"
 FILE_CHANGELOG="${OUTPUT_DIR}/changelog_from_${START_TAG}_to_${DEST_TAG}.md"
-echo > ${FILE_CHANGELOG}
-echo "# ${DEST_TAG}" >> ${FILE_CHANGELOG}
-echo "" >> ${FILE_CHANGELOG}
-echo "***" >> ${FILE_CHANGELOG}
-echo "" >> ${FILE_CHANGELOG}
+echo > "${FILE_CHANGELOG}"
+{
+  echo "# ${DEST_TAG}"
+  echo ""
+  echo "***"
+  echo ""
+} >> "${FILE_CHANGELOG}"
 #
 if [ -n "${FEATURE_PR}" ]; then
-    echo "## Feature" >> ${FILE_CHANGELOG}
-    echo "" >> ${FILE_CHANGELOG}
+    echo "## Feature" >> "${FILE_CHANGELOG}"
+    echo "" >> "${FILE_CHANGELOG}"
     while read LINE ; do
-      echo "${LINE}" >> ${FILE_CHANGELOG}
-      echo "" >> ${FILE_CHANGELOG}
+      echo "${LINE}" >> "${FILE_CHANGELOG}"
+      echo "" >> "${FILE_CHANGELOG}"
     done <<< "${FEATURE_PR}"
-    echo "***" >> ${FILE_CHANGELOG}
-    echo "" >> ${FILE_CHANGELOG}
+    echo "***" >> "${FILE_CHANGELOG}"
+    echo "" >> "${FILE_CHANGELOG}"
 fi
 #
 if [ -n "${FIX_PR}" ]; then
-    echo "## Fix" >> ${FILE_CHANGELOG}
-    echo "" >> ${FILE_CHANGELOG}
+    echo "## Fix" >> "${FILE_CHANGELOG}"
+    echo "" >> "${FILE_CHANGELOG}"
     while read LINE ; do
-      echo "${LINE}" >> ${FILE_CHANGELOG}
-      echo "" >> ${FILE_CHANGELOG}
+      echo "${LINE}" >> "${FILE_CHANGELOG}"
+      echo "" >> "${FILE_CHANGELOG}"
     done <<< "${FIX_PR}"
-    echo "***" >> ${FILE_CHANGELOG}
-    echo "" >> ${FILE_CHANGELOG}
+    echo "***" >> "${FILE_CHANGELOG}"
+    echo "" >> "${FILE_CHANGELOG}"
 fi
 #
-echo "## Total PR" >> ${FILE_CHANGELOG}
-echo "" >> ${FILE_CHANGELOG}
-echo "[ ${TOTAL_COUNT} PR](https://github.com/${PROJECT_REPO}/compare/${START_TAG}...${DEST_TAG})" >> ${FILE_CHANGELOG}
+{ echo "## Total PR"; echo "" ; } >> "${FILE_CHANGELOG}"
+echo "[ ${TOTAL_COUNT} PR](https://github.com/${PROJECT_REPO}/compare/${START_TAG}...${DEST_TAG})" >> "${FILE_CHANGELOG}"
 echo "--------------------"
 echo "generate changelog to ${FILE_CHANGELOG}"

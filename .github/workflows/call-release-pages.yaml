@@ -89,7 +89,7 @@ jobs:
       - name: Prepare
         run: |
           # prepare directory
-          [ -d "docs/charts" ] && mv charts docs/charts
+          [ -d "docs/charts" ] && mv docs/charts charts
           rm -rf docs
           mkdir docs
 
