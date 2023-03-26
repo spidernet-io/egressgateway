@@ -203,40 +203,46 @@ fix_code_spell:
 #================== chart
 
 .PHONY: chart_package
-chart_package: lint_chart_format lint_chart_version
+chart_package: update_chart_version lint_chart_format lint_chart_version
 	-@rm -rf $(DESTDIR_CHART)
 	-@mkdir -p $(DESTDIR_CHART)
 	cd $(DESTDIR_CHART) ; \
-   		echo "package chart " ; \
-   		helm package  $(CHART_DIR) ; \
+   		echo "package chart" ; \
+   		helm package $(CHART_DIR)
 
 
 .PHONY: update_chart_version
 update_chart_version:
-	VERSION=`cat VERSION | tr -d '\n' ` ; [ -n "$${VERSION}" ] || { echo "error, wrong version" ; exit 1 ; } ; \
-		echo "update chart version to $${VERSION}" ; \
+	@VERSION=`cat VERSION | tr -d '\n' ` ; [ -n "$${VERSION}" ] || { echo "error, wrong version" ; exit 1 ; } ; \
+		if ! command -v yq >/dev/null 2>&1; then echo -e "\033[31myq is not installed \033[0m"; exit 1; fi ; \
+		echo "CHART_DIR=$(CHART_DIR)" ; \
 		CHART_VERSION=`echo $${VERSION} | tr -d 'v' ` ; \
-		sed -E -i 's?^version: .*?version: '$${CHART_VERSION}'?g' $(CHART_DIR)/Chart.yaml &>/dev/null  ; \
-		sed -E -i 's?^appVersion: .*?appVersion: "'$${CHART_VERSION}'"?g' $(CHART_DIR)/Chart.yaml &>/dev/null  ; \
-   		echo "version of all chart is right"
+		echo "VERSION=$${VERSION}" ; \
+		echo "CHART_VERSION=$${CHART_VERSION}" ; \
+		echo "Update chart version to $${CHART_VERSION}, image tag to $${VERSION}" ; \
+		CHART_VERSION=$${CHART_VERSION} yq -i '.version = strenv(CHART_VERSION)' $(CHART_DIR)/Chart.yaml ; \
+		CHART_VERSION=$${CHART_VERSION} yq -i '.appVersion = strenv(CHART_VERSION)' $(CHART_DIR)/Chart.yaml ; \
+		VERSION=$${VERSION} yq -i '.egressgatewayAgent.image.tag = strenv(VERSION)' $(CHART_DIR)/values.yaml ; \
+		VERSION=$${VERSION} yq -i '.egressgatewayController.image.tag = strenv(VERSION)' $(CHART_DIR)/values.yaml ; \
+   		echo -e "\033[32mAll versions have been updated\033[0m"
 
 
 .PHONY: lint_chart_format
 lint_chart_format:
-	mkdir -p $(DESTDIR_CHART) ; \
-   			echo "check chart" ; \
-   			helm lint --with-subcharts $(CHART_DIR)
+	mkdir -p $(DESTDIR_CHART)
+	@echo "check chart"
+	helm lint --with-subcharts $(CHART_DIR)
 
 
 .PHONY: lint_chart_version
 lint_chart_version:
 	VERSION=`cat VERSION | tr -d '\n' ` ; [ -n "$${VERSION}" ] || { echo "error, wrong version" ; exit 1 ; } ; \
-		echo "check chart version $${VERSION}" ; \
+		echo "VERSION=$${VERSION}" ; \
 		CHART_VERSION=`echo $${VERSION} | tr -d 'v' ` ; \
-			grep -E "^version: $${CHART_VERSION}" $(CHART_DIR)/Chart.yaml &>/dev/null || { echo "error, wrong version in Chart.yaml" ; exit 1 ; } ; \
-			grep -E "^appVersion: \"$${CHART_VERSION}\"" $(CHART_DIR)/Chart.yaml &>/dev/null || { echo "error, wrong appVersion in Chart.yaml" ; exit 1 ; } ; \
-   		echo "version of all chart is right"
-
+		echo "CHART_VERSION=$${CHART_VERSION}" ; \
+		grep -E "^version: \"$${CHART_VERSION}\"" $(CHART_DIR)/Chart.yaml &>/dev/null || { echo "error, wrong version in Chart.yaml" ; exit 1 ; } ; \
+		grep -E "^appVersion: \"$${CHART_VERSION}\"" $(CHART_DIR)/Chart.yaml &>/dev/null || { echo "error, wrong appVersion in Chart.yaml" ; exit 1 ; } ; \
+   		echo -e "\033[32mAll versions have been checked\033[0m"
 
 .PHONY: lint_chart_trivy
 lint_chart_trivy:
