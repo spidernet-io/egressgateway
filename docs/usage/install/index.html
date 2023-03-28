@@ -9,6 +9,8 @@
       
       
       
+        <link rel="prev" href="../..">
+      
       
       <link rel="icon" href="../../assets/images/favicon.png">
       <meta name="generator" content="mkdocs-1.4.2, mkdocs-material-9.1.4">
@@ -173,7 +175,7 @@
 
 
   <li class="md-tabs__item">
-    <a href="../../README.md" class="md-tabs__link">
+    <a href="../.." class="md-tabs__link">
       Home
     </a>
   </li>
@@ -255,7 +257,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../README.md" class="md-nav__link">
+      <a href="../.." class="md-nav__link">
         Home
       </a>
     </li>
@@ -312,9 +314,101 @@
         
       
       
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          Install
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
       <a href="./" class="md-nav__link md-nav__link--active">
         Install
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#requirement" class="md-nav__link">
+    Requirement
+  </a>
+  
+    <nav class="md-nav" aria-label="Requirement">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#calico" class="md-nav__link">
+    Calico
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#install_1" class="md-nav__link">
+    Install
+  </a>
+  
+    <nav class="md-nav" aria-label="Install">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#add-helm-repository" class="md-nav__link">
+    Add helm repository
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#install-egressgateway" class="md-nav__link">
+    Install egressgateway
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#create-egressgateway" class="md-nav__link">
+    Create EgressGateway
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#create-example-app" class="md-nav__link">
+    Create Example App
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#create-egressgatewaypolicy" class="md-nav__link">
+    Create EgressGatewayPolicy
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
       
     </li>
   
@@ -347,6 +441,82 @@
     
   
   
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#requirement" class="md-nav__link">
+    Requirement
+  </a>
+  
+    <nav class="md-nav" aria-label="Requirement">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#calico" class="md-nav__link">
+    Calico
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#install_1" class="md-nav__link">
+    Install
+  </a>
+  
+    <nav class="md-nav" aria-label="Install">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#add-helm-repository" class="md-nav__link">
+    Add helm repository
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#install-egressgateway" class="md-nav__link">
+    Install egressgateway
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#create-egressgateway" class="md-nav__link">
+    Create EgressGateway
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#create-example-app" class="md-nav__link">
+    Create Example App
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#create-egressgatewaypolicy" class="md-nav__link">
+    Create EgressGatewayPolicy
+  </a>
+  
+</li>
+      
+    </ul>
+  
 </nav>
                   </div>
                 </div>
@@ -367,9 +537,84 @@
 
 
 <h1 id="install">Install</h1>
-<pre><code class="language-shell">helm repo add egressgateway https://spidernet-io.github.io/egressgateway/
-helm install egressgateway egressgateway/egressgateway
+<h2 id="requirement">Requirement</h2>
+<p>Egressgateway currently supports collaboration with Calico CNI and will support collaboration with more CNIs in the future. 
+Below are the configuration methods for different CNIs:</p>
+<h3 id="calico">Calico</h3>
+<p>Required settings <code>chainInsertMode</code> to <code>Append</code>, for example in the code, 
+more reference <a href="https://projectcalico.docs.tigera.io/reference/resources/felixconfig">calico docs</a>:</p>
+<pre><code class="language-yaml">apiVersion: projectcalico.org/v3
+kind: FelixConfiguration
+metadata:
+  name: default
+spec:
+  ipv6Support: false
+  ipipMTU: 1400
+  chainInsertMode: Append # this line
 </code></pre>
+<h2 id="install_1">Install</h2>
+<h3 id="add-helm-repository">Add helm repository</h3>
+<pre><code class="language-shell">helm repo add egressgateway https://spidernet-io.github.io/egressgateway/
+helm repo update
+</code></pre>
+<h3 id="install-egressgateway">Install egressgateway</h3>
+<p>The following is a common chart setting option:</p>
+<pre><code class="language-yaml">feature:
+  enableIPv4: true
+  enableIPv6: false # Required pod support IPv6 Stack
+  tunnelIpv4Subnet: &quot;192.200.0.1/16&quot; # IPv4 tunnel subnet
+  tunnelIpv6Subnet: &quot;fd01::21/112&quot;   # IPv6 tunnel subnet
+  forwardMethod: &quot;active-active&quot;     # Support active-active or active-passive
+</code></pre>
+<pre><code class="language-shell">helm install egressgateway egressgateway/egressgateway --values values.yaml --wait --debug
+</code></pre>
+<pre><code class="language-shell">kubectl get crd | grep egress
+</code></pre>
+<h2 id="create-egressgateway">Create EgressGateway</h2>
+<p>Create an EgressGateway CR that can set a node as an egress gateway node through matchLabels.</p>
+<pre><code class="language-shell">apiVersion: egressgateway.spidernet.io/v1
+kind: EgressGateway
+metadata:
+  name: default
+spec:
+  nodeSelector:
+    matchLabels:
+      kubernetes.io/hostname: workstation2 # change me, select a node in your cluster
+</code></pre>
+<h2 id="create-example-app">Create Example App</h2>
+<p>Create a testing Pod to simulate an application that requires egress.</p>
+<pre><code class="language-shell">apiVersion: v1
+kind: Pod
+metadata:
+  labels:
+    app: mock-app
+  name: mock-app
+  namespace: default
+spec:
+  containers:
+      image: nginx
+      imagePullPolicy: IfNotPresent
+      name: nginx
+      resources: {}
+  dnsPolicy: ClusterFirst
+  enableServiceLinks: true
+  nodeName: workstation1 # change me, select a non-egress gateway node in your cluster
+</code></pre>
+<h2 id="create-egressgatewaypolicy">Create EgressGatewayPolicy</h2>
+<p>By creating an EgressGatewayPolicy CR, you can control which Pod accesses which address needs to go through the egress gateway.</p>
+<pre><code class="language-yaml">apiVersion: egressgateway.spidernet.io/v1
+kind: EgressGatewayPolicy
+metadata:
+  name: mock-app
+spec:
+  appliedTo:
+    podSelector:
+      matchLabels:
+        app: mock-app
+  destSubnet:
+    - 10.6.1.92/32
+</code></pre>
+<p>Now traffic from mock-app accessing 10.6.1.92 will be forwarded by the egress gateway.</p>
 
 
 
