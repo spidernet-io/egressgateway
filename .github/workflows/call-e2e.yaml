@@ -53,7 +53,7 @@ jobs:
               exit
           fi
           
-          echo -e "\033[32mTest image tag: ${inputs.ref}\033[0m"
+          echo -e "\033[32mTest image tag: ${{inputs.ref}}\033[0m"
           TMP=` date +%m%d%H%M%S `
           E2E_CLUSTER_NAME="project${TMP}"
           echo "RUN_KIND_CLUSTER_NAME=${E2E_CLUSTER_NAME}" >> $GITHUB_ENV
