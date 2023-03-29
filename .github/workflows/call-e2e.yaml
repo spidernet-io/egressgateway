@@ -38,10 +38,10 @@ jobs:
           lsb_release -a
           echo -e "\033[32miptables --version \033[0m"
           iptables --version
-
+          
           echo "ref: ${{ inputs.ref }} "
           echo "e2e_labels: ${{ inputs.e2e_labels }}"
-
+          
           if ${{ inputs.ipfamily == 'ipv4' }} ; then
               echo "test ipv4"          
           elif ${{ inputs.ipfamily == 'ipv6' }} ; then
@@ -52,7 +52,7 @@ jobs:
               echo "Unknown IP family ${{ inputs.ipfamily }} "
               exit
           fi
-
+          
           echo -e "\033[32mTest image tag: ${inputs.ref}\033[0m"
           TMP=` date +%m%d%H%M%S `
           E2E_CLUSTER_NAME="project${TMP}"
