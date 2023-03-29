@@ -6,10 +6,11 @@ package main
 import (
 	"bufio"
 	"fmt"
+	utils "github.com/spidernet-io/egressgateway/cmd/nettools"
 	"io"
+	"log"
 	"net"
 	"net/http"
-	"os"
 	"strings"
 	"sync"
 	"time"
@@ -17,72 +18,49 @@ import (
 	"github.com/gorilla/websocket"
 )
 
-const (
-	MOD_TCP = "tcp"
-	MOD_UDP = "udp"
-	MOD_ALL = "all"
-	MOD_WEB = "web"
-)
-
 var (
-	addr, tcpPort, udpPort, webPort string
-	wg                              sync.WaitGroup
-	upgrader                        = websocket.Upgrader{
+	wg       sync.WaitGroup
+	upgrader = websocket.Upgrader{
 		ReadBufferSize:  1024,
 		WriteBufferSize: 1024,
 	}
 )
 
 func main() {
-	addr = os.Getenv("SERVER_IP")
-	if addr == "" {
-		fmt.Println("err: server addr is nil")
-		return
-	}
-	tcpPort = os.Getenv("TCP_PORT")
-	if tcpPort == "" {
-		tcpPort = "8080"
-	}
-	udpPort = os.Getenv("UDP_PORT")
-	if udpPort == "" {
-		udpPort = "8081"
-	}
-	webPort = os.Getenv("WEB_PORT")
-	if webPort == "" {
-		webPort = "8082"
-	}
-
-	mod := os.Getenv("MOD")
-	if strings.EqualFold(mod, MOD_ALL) {
-		wg.Add(2)
-		go tcpServer()
-		go udpServer()
-		go websocketServer()
-	} else if strings.EqualFold(mod, MOD_UDP) {
+	config := utils.ParseFlag()
+	protocol := strings.ToLower(*config.Proto)
+	switch protocol {
+	case utils.PROTOCOL_TCP:
 		wg.Add(1)
-		go udpServer()
-	} else if strings.EqualFold(mod, MOD_WEB) {
+		go tcpServer(config)
+	case utils.PROTOCOL_UDP:
 		wg.Add(1)
-		go websocketServer()
-	} else {
+		go udpServer(config)
+	case utils.PROTOCOL_WEB:
 		wg.Add(1)
-		go tcpServer()
+		go websocketServer(config)
+	case utils.PROTOCOL_ALL:
+		wg.Add(3)
+		go tcpServer(config)
+		go udpServer(config)
+		go websocketServer(config)
+	default:
+		log.Fatalf("protocol: %s don't support, available protocols: tcp,udp,web,all", *config.Proto)
 	}
 
 	wg.Wait()
 }
 
-func tcpServer() {
+func tcpServer(config utils.Config) {
 	defer wg.Done()
 	var tcpAddr *net.TCPAddr
-	tcpAddr, _ = net.ResolveTCPAddr("tcp", addr+":"+tcpPort)
+	tcpAddr, _ = net.ResolveTCPAddr(utils.PROTOCOL_TCP, fmt.Sprintf("%s:%s", *config.Addr, *config.TcpPort))
 	tcpListener, err := net.ListenTCP("tcp", tcpAddr)
 	if err != nil {
-		fmt.Println(err)
-		return
+		log.Fatalf("tcpServer failed to start: %v", err)
 	}
 	defer tcpListener.Close()
-	fmt.Println("TCP Server listen ", tcpAddr.String())
+	log.Println("TCP Server listen on: ", tcpAddr.String())
 	for {
 		tcpConn, err := tcpListener.AcceptTCP()
 		if err != nil {
@@ -132,20 +110,17 @@ func tcpPipe(conn *net.TCPConn) {
 	}
 }
 
-func udpServer() {
+func udpServer(config utils.Config) {
 	defer wg.Done()
-	var udpAddr *net.UDPAddr
-	udpAddr, _ = net.ResolveUDPAddr("udp", addr+":"+udpPort)
-	udpListener, err := net.ListenUDP("udp", udpAddr)
+	udpConn, err := net.ListenPacket(utils.PROTOCOL_UDP, fmt.Sprintf("%s:%s", *config.Addr, *config.UdpPort))
 	if err != nil {
-		fmt.Println(err)
-		return
+		log.Fatalf("udpServer failed to start: %v", err)
 	}
-	defer udpListener.Close()
-	fmt.Println("UDP Server listen ", udpAddr.String())
+	defer udpConn.Close()
+	log.Println("UDP Server listen on: ", udpConn.LocalAddr().String())
 	for {
 		data := make([]byte, 4096)
-		read, remoteAddr, err := udpListener.ReadFromUDP(data)
+		read, remoteAddr, err := udpConn.ReadFrom(data)
 		if err != nil {
 			fmt.Println("UDP: read meg failed", err)
 			continue
@@ -153,16 +128,20 @@ func udpServer() {
 		fmt.Println(read, remoteAddr)
 		fmt.Printf("%s\n", data)
 
-		senddata := []byte(time.Now().String() + " clientIP=" + remoteAddr.String() + " UDP Server Say hello! \n")
-		_, err = udpListener.WriteToUDP(senddata, remoteAddr)
-		if err != nil {
-			fmt.Println("UDP: send meg failed!", err)
-			return
-		}
+		go func() {
+			senddata := []byte(time.Now().String() + " clientIP=" + remoteAddr.String() + " UDP Server Say hello! \n")
+			_, err = udpConn.WriteTo(senddata, remoteAddr)
+			if err != nil {
+				fmt.Println("UDP: send meg failed!", err)
+				return
+			}
+		}()
 	}
 }
 
-func websocketServer() {
+func websocketServer(config utils.Config) {
+	defer wg.Done()
+
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		conn, _ := upgrader.Upgrade(w, r, nil) // error ignored for sake of simplicity
 
@@ -189,10 +168,9 @@ func websocketServer() {
 	// 	http.ServeFile(w, r, "websockets.html")
 	// })
 
-	fmt.Println("WebSocket Server listen ", addr, ":", webPort)
+	log.Println("WebSocket Server listen on: ", *config.Addr, ":", *config.WebPort)
 
-	if err := http.ListenAndServe(addr+":"+webPort, nil); err != nil {
-		fmt.Println("WebSocket create failed; ", err)
-		return
+	if err := http.ListenAndServe(fmt.Sprintf("%s:%s", *config.Addr, *config.WebPort), nil); err != nil {
+		log.Fatalf("WebSocket create failed: %v ", err)
 	}
 }
