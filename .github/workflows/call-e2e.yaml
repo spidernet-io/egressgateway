@@ -23,7 +23,7 @@ on:
         required: false
         type: string
       os:
-        required: true
+        required: false
         type: string
         default: ubuntu-latest
 
