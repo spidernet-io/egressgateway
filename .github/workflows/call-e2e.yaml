@@ -22,18 +22,26 @@ on:
       e2e_labels:
         required: false
         type: string
-
+      os:
+        required: true
+        type: string
+        default: ubuntu-latest
 
 jobs:
   e2e_against_commit:
-    runs-on: ubuntu-latest
+    runs-on: ${{ inputs.os }}
     steps:
       - name: Prepare
         id: prepare
         run: |
+          echo -e "\033[32mSystem info: \033[0m"
+          lsb_release -a
+          echo -e "\033[32miptables --version \033[0m"
+          iptables --version
+
           echo "ref: ${{ inputs.ref }} "
           echo "e2e_labels: ${{ inputs.e2e_labels }}"
-          #========
+
           if ${{ inputs.ipfamily == 'ipv4' }} ; then
               echo "test ipv4"          
           elif ${{ inputs.ipfamily == 'ipv6' }} ; then
@@ -41,11 +49,11 @@ jobs:
           elif ${{ inputs.ipfamily == 'dual' }} ; then
               echo "test dual stack"          
           else
-              echo "unknown ipfamily ${{ inputs.ipfamily }} "
+              echo "Unknown IP family ${{ inputs.ipfamily }} "
               exit
           fi
-          echo "===== image "
-          echo "ci image tag: ${{ inputs.ref }}"
+
+          echo -e "\033[32mTest image tag: ${inputs.ref}\033[0m"
           TMP=` date +%m%d%H%M%S `
           E2E_CLUSTER_NAME="project${TMP}"
           echo "RUN_KIND_CLUSTER_NAME=${E2E_CLUSTER_NAME}" >> $GITHUB_ENV
