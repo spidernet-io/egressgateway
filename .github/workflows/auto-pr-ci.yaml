@@ -175,6 +175,39 @@ jobs:
       ref: ${{ needs.prepare.outputs.ref }}
     secrets: inherit
 
+  e2e_dual-ubuntu-20-04:
+    needs: [call_build_ci_image, prepare]
+    if: ${{ needs.prepare.outputs.e2e_enabled == 'true' && needs.prepare.outputs.ipfamily_dual_e2e == 'true' }}
+    uses: ./.github/workflows/call-e2e.yaml
+    with:
+      ref: ${{ needs.prepare.outputs.ref }}
+      ipfamily: dual
+      e2e_labels: ${{ needs.prepare.outputs.e2e_labels }}
+      os: ubuntu-20.04
+    secrets: inherit
+
+  e2e_ipv4-ubuntu-20-04:
+    needs: [call_build_ci_image, prepare]
+    if: ${{ needs.prepare.outputs.e2e_enabled == 'true' && needs.prepare.outputs.ipfamily_ipv4only_e2e == 'true' }}
+    uses: ./.github/workflows/call-e2e.yaml
+    with:
+      ref: ${{ needs.prepare.outputs.ref }}
+      ipfamily: ipv4
+      e2e_labels: ${{ needs.prepare.outputs.e2e_labels }}
+      os: ubuntu-20.04
+    secrets: inherit
+
+  e2e_ipv6-ubuntu-20-04:
+    needs: [call_build_ci_image, prepare]
+    if: ${{ needs.prepare.outputs.e2e_enabled == 'true'  && needs.prepare.outputs.ipfamily_ipv6only_e2e == 'true' }}
+    uses: ./.github/workflows/call-e2e.yaml
+    with:
+      ref: ${{ needs.prepare.outputs.ref }}
+      ipfamily: ipv6
+      e2e_labels: ${{ needs.prepare.outputs.e2e_labels }}
+      os: ubuntu-20.04
+    secrets: inherit
+
   e2e_dual:
     needs: [call_build_ci_image, prepare]
     if: ${{ needs.prepare.outputs.e2e_enabled == 'true' && needs.prepare.outputs.ipfamily_dual_e2e == 'true' }}
