@@ -5,6 +5,7 @@ include ../Makefile.defs
 init_kind_env:
 	make init_one_kind -e KIND_CONFIG_PATH=./kindconfig/global-kind.yaml -e KIND_CLUSTER_NAME=$(E2E_KIND_CLUSTER_NAME) -e KIND_KUBECONFIG=$(E2E_KIND_KUBECONFIG_PATH)
 	make install_proscope
+	make install_calico
 
 
 .PHONY: init_one_kind
@@ -73,6 +74,15 @@ install_proscope:
     fi
 
 
+# install calico
+.PHONY: install_calico
+install_calico:
+	echo "install calico"
+	export CALICO_VERSION=$(CALICO_VERSION); \
+	export INSTALL_TIME_OUT=$(INSTALL_TIME_OUT); \
+	export E2E_IP_FAMILY=$(E2E_IP_FAMILY); \
+	export E2E_KIND_KUBECONFIG_PATH=$(E2E_KIND_KUBECONFIG_PATH); \
+	bash ./scripts/installCalico.sh
 
 #==================
 
