@@ -6,9 +6,10 @@ package main
 import (
 	"bufio"
 	"fmt"
+	utils "github.com/spidernet-io/egressgateway/cmd/nettools"
 	"io"
+	"log"
 	"net"
-	"os"
 	"strings"
 	"sync"
 	"time"
@@ -16,67 +17,47 @@ import (
 	"github.com/gorilla/websocket"
 )
 
-const (
-	MOD_TCP = "tcp"
-	MOD_UDP = "udp"
-	MOD_ALL = "all"
-	MOD_WEB = "web"
-)
-
-var (
-	addr, tcpPort, udpPort, webPort string
-	wg                              sync.WaitGroup
-)
+var wg sync.WaitGroup
 
 func main() {
-	addr = os.Getenv("SERVER_IP")
-	if addr == "" {
-		fmt.Println("err: server addr is nil")
-		return
+	config := utils.ParseFlag()
+	if *config.Addr == "" {
+		log.Fatalln("err: server addr no provide")
 	}
-	tcpPort = os.Getenv("TCP_PORT")
-	if tcpPort == "" {
-		tcpPort = "8080"
-	}
-	udpPort = os.Getenv("UDP_PORT")
-	if udpPort == "" {
-		udpPort = "8081"
-	}
-	webPort = os.Getenv("WEB_PORT")
-	if webPort == "" {
-		webPort = "8082"
-	}
-
-	mod := os.Getenv("MOD")
-	if strings.EqualFold(mod, MOD_ALL) {
+	protocol := strings.ToLower(*config.Proto)
+	switch protocol {
+	case utils.PROTOCOL_TCP:
+		wg.Add(1)
+		go tcpClient(config)
+	case utils.PROTOCOL_UDP:
+		wg.Add(1)
+		go udpClient(config)
+	case utils.PROTOCOL_WEB:
+		wg.Add(1)
+		go webClient(config)
+	case utils.PROTOCOL_ALL:
 		wg.Add(3)
-		go tcpClient()
-		go udpClient()
-		go webClient()
-	} else if strings.EqualFold(mod, MOD_UDP) {
-		wg.Add(1)
-		go udpClient()
-	} else if strings.EqualFold(mod, MOD_WEB) {
-		wg.Add(1)
-		go webClient()
-	} else {
-		wg.Add(1)
-		go tcpClient()
+		go tcpClient(config)
+		go udpClient(config)
+		go webClient(config)
+	default:
+		log.Fatalf("protocol: %s don't support, available protocols: tcp,udp,web,all", *config.Proto)
 	}
 
 	wg.Wait()
 }
 
-func tcpClient() {
+func tcpClient(config utils.Config) {
+	defer wg.Done()
+
 	var tcpAddr *net.TCPAddr
+	tcpAddr, _ = net.ResolveTCPAddr(utils.PROTOCOL_TCP, fmt.Sprintf("%s:%s", *config.Addr, *config.TcpPort))
 
-	tcpAddr, _ = net.ResolveTCPAddr("tcp", addr+":"+tcpPort)
-
-	conn, err := net.DialTCP("tcp", nil, tcpAddr)
+	log.Println("trying to connect tcpServer: ", fmt.Sprintf("%s:%s", *config.Addr, *config.TcpPort))
+	conn, err := net.DialTCP(utils.PROTOCOL_TCP, nil, tcpAddr)
 
 	if err != nil {
-		fmt.Println("TCP: Client connect error ! " + err.Error())
-		return
+		log.Fatalln("WEB: connect server failed: ", err)
 	}
 
 	defer conn.Close()
@@ -86,16 +67,17 @@ func tcpClient() {
 	onMessageReceived(conn)
 }
 
-func udpClient() {
+func udpClient(config utils.Config) {
+	defer wg.Done()
+
 	var udpAddr *net.UDPAddr
+	udpAddr, _ = net.ResolveUDPAddr(utils.PROTOCOL_UDP, fmt.Sprintf("%s:%s", *config.Addr, *config.UdpPort))
 
-	udpAddr, _ = net.ResolveUDPAddr("udp", addr+":"+udpPort)
-
-	conn, err := net.DialUDP("udp", nil, udpAddr)
+	log.Println("trying to connect udpServer: ", fmt.Sprintf("%s:%s", *config.Addr, *config.UdpPort))
+	conn, err := net.DialUDP(utils.PROTOCOL_UDP, nil, udpAddr)
 
 	if err != nil {
-		fmt.Println("UDP: Client connect error ! " + err.Error())
-		return
+		log.Fatalln("WEB: connect server failed: ", err)
 	}
 
 	defer conn.Close()
@@ -105,12 +87,14 @@ func udpClient() {
 	onMessageReceivedUDP(conn)
 }
 
-func webClient() {
+func webClient(config utils.Config) {
+	defer wg.Done()
+
 	dialer := websocket.Dialer{}
-	conn, _, err := dialer.Dial("ws://"+addr+":"+webPort+"/", nil)
+	log.Println("trying to connect websocket: ", fmt.Sprintf("ws://%s:%s/", *config.Addr, *config.WebPort))
+	conn, _, err := dialer.Dial(fmt.Sprintf("ws://%s:%s/", *config.Addr, *config.WebPort), nil)
 	if err != nil {
-		fmt.Println("WEB: connect server failed")
-		return
+		log.Fatalln("WEB: connect server failed: ", err)
 	}
 	defer conn.Close()
 
