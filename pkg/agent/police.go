@@ -479,13 +479,12 @@ func (r *policeReconciler) updatePolicyRule(policyName string, version uint8) ([
 	if !changed {
 		return make([]iptables.Rule, 0), changed
 	}
-	rule := iptables.Rule{
-		Match: iptables.MatchCriteria{}.
-			SourceIPSet(formatIPSetName("egress-src-"+tmp, policyName)).
-			DestIPSet(formatIPSetName("egress-dst-"+tmp, policyName)),
-		Action:  iptables.SetMaskedMarkAction{Mark: 0x11000000, Mask: 0xffffffff},
-		Comment: []string{},
-	}
+	matchCriteria := iptables.MatchCriteria{}.
+		SourceIPSet(formatIPSetName("egress-src-"+tmp, policyName)).
+		DestIPSet(formatIPSetName("egress-dst-"+tmp, policyName)).
+		CTDirectionOriginal(iptables.DirectionOriginal)
+	action := iptables.SetMaskedMarkAction{Mark: 0x11000000, Mask: 0xffffffff}
+	rule := iptables.Rule{Match: matchCriteria, Action: action, Comment: []string{}}
 	ruleMap.Store(policyName, rule)
 	return buildRuleList(ruleMap), changed
 }

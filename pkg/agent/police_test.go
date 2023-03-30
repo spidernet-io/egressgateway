@@ -256,7 +256,7 @@ func caseAddEgressGatewayPolicy() TestCaseEGP {
 				expMangle: []map[string][]string{
 					{
 						"EGRESSGATEWAY-MARK-REQUEST": []string{"" +
-							"-m comment --comment \"egw-Mio2l_qQ2kKhiz2d\" -m set --match-set egress-src-v4-c0eb42ab804da452e src -m set --match-set egress-dst-v4-c0eb42ab804da452e dst --jump MARK --set-mark 0x11000000/0xffffffff",
+							"-m comment --comment \"egw-MGgujHaTsrxV0NZ-\" -m set --match-set egress-src-v4-c0eb42ab804da452e src -m set --match-set egress-dst-v4-c0eb42ab804da452e dst -m conntrack --ctdir ORIGINAL --jump MARK --set-mark 0x11000000/0xffffffff",
 						},
 						"PREROUTING": []string{
 							"-m comment --comment \"egw-HAe35Kaffr8R0mLj\" --jump EGRESSGATEWAY-MARK-REQUEST",
@@ -486,7 +486,7 @@ func caseUpdateEgressGatewayPolicy() TestCaseEGP {
 				expMangle: []map[string][]string{
 					{
 						"EGRESSGATEWAY-MARK-REQUEST": []string{"" +
-							"-m comment --comment \"egw-Mio2l_qQ2kKhiz2d\" -m set --match-set egress-src-v4-c0eb42ab804da452e src -m set --match-set egress-dst-v4-c0eb42ab804da452e dst --jump MARK --set-mark 0x11000000/0xffffffff",
+							"-m comment --comment \"egw-MGgujHaTsrxV0NZ-\" -m set --match-set egress-src-v4-c0eb42ab804da452e src -m set --match-set egress-dst-v4-c0eb42ab804da452e dst -m conntrack --ctdir ORIGINAL --jump MARK --set-mark 0x11000000/0xffffffff",
 						},
 						"PREROUTING": []string{
 							"-m comment --comment \"egw-HAe35Kaffr8R0mLj\" --jump EGRESSGATEWAY-MARK-REQUEST",
@@ -599,7 +599,7 @@ func caseAddPodUpdatePolicy() TestCaseEGP {
 				expMangle: []map[string][]string{
 					{
 						"EGRESSGATEWAY-MARK-REQUEST": []string{"" +
-							"-m comment --comment \"egw-Mio2l_qQ2kKhiz2d\" -m set --match-set egress-src-v4-c0eb42ab804da452e src -m set --match-set egress-dst-v4-c0eb42ab804da452e dst --jump MARK --set-mark 0x11000000/0xffffffff",
+							"-m comment --comment \"egw-MGgujHaTsrxV0NZ-\" -m set --match-set egress-src-v4-c0eb42ab804da452e src -m set --match-set egress-dst-v4-c0eb42ab804da452e dst -m conntrack --ctdir ORIGINAL --jump MARK --set-mark 0x11000000/0xffffffff",
 						},
 						"PREROUTING": []string{
 							"-m comment --comment \"egw-HAe35Kaffr8R0mLj\" --jump EGRESSGATEWAY-MARK-REQUEST",
@@ -709,7 +709,7 @@ func caseDelPodUpdatePolicy() TestCaseEGP {
 				expMangle: []map[string][]string{
 					{
 						"EGRESSGATEWAY-MARK-REQUEST": []string{"" +
-							"-m comment --comment \"egw-Mio2l_qQ2kKhiz2d\" -m set --match-set egress-src-v4-c0eb42ab804da452e src -m set --match-set egress-dst-v4-c0eb42ab804da452e dst --jump MARK --set-mark 0x11000000/0xffffffff",
+							"-m comment --comment \"egw-MGgujHaTsrxV0NZ-\" -m set --match-set egress-src-v4-c0eb42ab804da452e src -m set --match-set egress-dst-v4-c0eb42ab804da452e dst -m conntrack --ctdir ORIGINAL --jump MARK --set-mark 0x11000000/0xffffffff",
 						},
 						"PREROUTING": []string{
 							"-m comment --comment \"egw-HAe35Kaffr8R0mLj\" --jump EGRESSGATEWAY-MARK-REQUEST",
