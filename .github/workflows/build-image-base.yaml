@@ -16,12 +16,14 @@ on:
     paths:
       - images/agent-base/**
       - images/controller-base/**
+      - images/nettools-base/**
   push:
     branches:
       - main
     paths:
       - images/agent-base/**
       - images/controller-base/**
+      - images/nettools-base/**
   workflow_dispatch:
     inputs:
       ref:
@@ -48,6 +50,8 @@ jobs:
             context: ./images/agent-base
           - name: controller-base
             context: ./images/controller-base
+          - name: nettools-base
+            context: ./images/nettools-base
 
     steps:
       - name: Set up Docker Buildx

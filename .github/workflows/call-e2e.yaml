@@ -123,6 +123,7 @@ jobs:
           echo ${{ github.event.inputs.labels }}
           RESULT=0
           make e2e_run -e E2E_KIND_CLUSTER_NAME=${{ env.RUN_KIND_CLUSTER_NAME }}  \
+              -e PROJECT_IMAGE_VERSION=${{ inputs.ref }} \
               -e E2E_GINKGO_LABELS=${{ inputs.e2e_labels }} \
               -e E2E_IP_FAMILY=${{ inputs.ipfamily }} || RESULT=1
           if ((RESULT==0)) ; then

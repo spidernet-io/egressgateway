@@ -15,6 +15,7 @@ on:
     paths:
       - images/agent/**
       - images/controller/**
+      - images/nettools/**
 
 permissions: write-all
 
