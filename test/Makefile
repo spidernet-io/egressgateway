@@ -5,6 +5,7 @@ include ../Makefile.defs
 init_kind_env:
 	make init_one_kind -e KIND_CONFIG_PATH=./kindconfig/global-kind.yaml -e KIND_CLUSTER_NAME=$(E2E_KIND_CLUSTER_NAME) -e KIND_KUBECONFIG=$(E2E_KIND_KUBECONFIG_PATH)
 	make install_proscope
+	make run_nettool_server
 	make install_calico
 
 
@@ -84,6 +85,41 @@ install_calico:
 	export E2E_KIND_KUBECONFIG_PATH=$(E2E_KIND_KUBECONFIG_PATH); \
 	bash ./scripts/installCalico.sh
 
+
+# run_nettool_server
+.PHONY: run_nettool_server
+run_nettool_server: load_nettool_image
+	echo "run nettool server container"
+	{ docker run -itd --name $(NETTOOLS_SERVER)  --network kind $(NETTOOLS_IMAGE) $(NETTOOLS_SERVER) -protocol $(MOD) -tcpPort $(TCP_PORT) --udpPort $(UDP_PORT) -webPort $(WEB_PORT) & } || { echo "failed to run nettools server"; exit 1; }
+	make check_netttool_server
+
+# kind load nettool image
+.PHONY: load_nettool_image
+load_nettool_image: IMAGE_NAME := $(REGISTER)/$(GIT_REPO)-nettools
+load_nettool_image: IMAGE_TAG := $(GIT_COMMIT_VERSION)
+load_nettool_image: KIND_CLUSTER_NAME ?= $(E2E_KIND_CLUSTER_NAME)
+load_nettool_image:
+	make -C $(ROOT_DIR)	build_local_nettools_image ; \
+	IMAGE=`docker image ls | grep $(IMAGE_NAME) | grep $(IMAGE_TAG)` ; \
+	[ -z $${IMAGE} ] && { echo "failed to find nettool image"; exit 1; } ; \
+	IMG=`echo $${IMAGE} | awk '{{printf("%s:%s\n",$$1,$$2)}}'`; \
+	LOAD_IMG=$(IMAGE_NAME):$(NET_TOOLS_IMAGE_TAG) ; \
+	docker image tag $${IMG} $${LOAD_IMG}; \
+	kind load docker-image $${LOAD_IMG}  --name $(KIND_CLUSTER_NAME) || { echo "failed to load nettool image"; exit 1; }
+
+# check nettools server is ok
+.PHONY: check_netttool_server
+check_netttool_server:
+	echo "check nettools server is ok"
+	make -C $(ROOT_DIR) build_nettools_cilent_bin || { echo "failed to make nettool client bin"; exit 1; }
+	export TCP_PORT=$(TCP_PORT); \
+	export UDP_PORT=$(UDP_PORT); \
+	export WEB_PORT=$(WEB_PORT); \
+	export NETTOOLS_SERVER=$(NETTOOLS_SERVER); \
+	export CLIENT=$(NETTOOLS_CLIENT_BIN); \
+	export E2E_IP_FAMILY=$(E2E_IP_FAMILY); \
+	bash ./scripts/check-nettools-server.sh
+
 #==================
 
 # this will auto tag github ci image : agent:xxx -> github.com/spidernet-io/egressgateway/agent:xxx
@@ -147,6 +183,11 @@ deploy_project:
 		fi ; \
 		HELM_OPTION+=" --set egressgatewayAgent.prometheus.enabled=true --set egressgatewayController.prometheus.enabled=true  " ; \
 		HELM_OPTION+=" --set egressgatewayAgent.debug.logLevel=debug --set egressgatewayController.debug.logLevel=debug " ; \
+		if [ "$(E2E_IP_FAMILY)" == "dual" ] ; then HELM_OPTION+=" --set feature.enableIPv4=true --set feature.enableIPv6=true" ; fi ; \
+		if [ "$(E2E_IP_FAMILY)" == "ipv4" ] ; then HELM_OPTION+=" --set feature.enableIPv4=true --set feature.enableIPv6=false" ; fi ; \
+		if [ "$(E2E_IP_FAMILY)" == "ipv6" ] ; then HELM_OPTION+=" --set feature.enableIPv4=false --set feature.enableIPv6=true" ; fi ; \
+		if [ "$(PROJECT_FORWARD_METHOD)" == "active-passive" ] ; then HELM_OPTION+=" --set feature.forwardMethod=active-passive" ; fi ; \
+		if [ "$(PROJECT_FORWARD_METHOD)" == "active-active" ] ; then HELM_OPTION+=" --set feature.forwardMethod=active-active" ; fi ; \
 		helm --kubeconfig=$(KIND_KUBECONFIG) install project $(ROOT_DIR)/charts \
 				-n kube-system --wait --debug \
 				--set global.imageTagOverride=$(PROJECT_IMAGE_VERSION) \
@@ -198,6 +239,13 @@ e2e_test:
 		echo "find cluster node: $${NODE_LIST}" ; \
 		export E2E_KIND_CLUSTER_NODE_LIST="$${NODE_LIST}" ; \
 		export E2E_CLUSTER_NAME=$(KIND_CLUSTER_NAME) ; \
+		echo "nettools server info"; \
+		export IMAGE=$(NETTOOLS_IMAGE); \
+		export NETTOOLS_SERVER=$(NETTOOLS_SERVER); \
+		export MOD=$(MOD); \
+		export TCP_PORT=$(TCP_PORT); \
+		export UDP_PORT=$(UDP_PORT); \
+		export WEB_PORT=$(WEB_PORT); \
 		if [ "$(E2E_IP_FAMILY)" == "ipv4" ] ; then \
 			export E2E_IPV4_ENABLED=true ; export E2E_IPV6_ENABLED=false ; \
 		elif [ "$(E2E_IP_FAMILY)" == "ipv6" ] ; then \
