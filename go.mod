@@ -17,7 +17,7 @@ require (
 	github.com/jessevdk/go-flags v1.5.0
 	github.com/mitchellh/mapstructure v1.5.0
 	github.com/onsi/ginkgo/v2 v2.9.2
-	github.com/onsi/gomega v1.27.5
+	github.com/onsi/gomega v1.27.6
 	github.com/prometheus/client_golang v1.14.0
 	github.com/pyroscope-io/client v0.7.0
 	github.com/sasha-s/go-deadlock v0.3.1
