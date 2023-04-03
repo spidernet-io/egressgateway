@@ -913,7 +913,7 @@ k8s.io/utils/trace
 # modernc.org/memory v1.5.0
 ## explicit; go 1.18
 modernc.org/memory
-# sigs.k8s.io/controller-runtime v0.14.5
+# sigs.k8s.io/controller-runtime v0.14.6
 ## explicit; go 1.19
 sigs.k8s.io/controller-runtime
 sigs.k8s.io/controller-runtime/pkg/builder
