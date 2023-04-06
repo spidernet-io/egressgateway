@@ -4,11 +4,10 @@
 package common
 
 import (
-	corev1 "k8s.io/api/core/v1"
-	"sigs.k8s.io/controller-runtime/pkg/client"
-
 	"github.com/spidernet-io/e2eframework/framework"
 	"github.com/spidernet-io/egressgateway/test/e2e/tools"
+	corev1 "k8s.io/api/core/v1"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 func GetAllNodes(f *framework.Framework) (nodes []string, err error) {
@@ -49,8 +48,10 @@ func LabelNodes(f *framework.Framework, nodes []string, labels map[string]string
 		if err != nil {
 			return err
 		}
-		node.SetLabels(labels)
-
+		for k, v := range labels {
+			node.Labels[k] = v
+		}
+		node.SetLabels(node.Labels)
 		err = f.UpdateResource(node)
 		if err != nil {
 			return err

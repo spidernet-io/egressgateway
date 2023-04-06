@@ -6,11 +6,14 @@ package common
 import (
 	"time"
 
+	"sigs.k8s.io/controller-runtime/pkg/client"
+
+	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+
 	"github.com/spidernet-io/e2eframework/framework"
 	egressv1 "github.com/spidernet-io/egressgateway/pkg/k8s/apis/egressgateway.spidernet.io/v1"
 	"github.com/spidernet-io/egressgateway/test/e2e/tools"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 func GetEgressNode(f *framework.Framework, name string, egressNode *egressv1.EgressNode) error {
@@ -29,6 +32,7 @@ func ListEgressNodes(f *framework.Framework, opt ...client.ListOption) (*egressv
 	return egressNodeList, nil
 }
 
+// GetEgressNodes return []string of the egressNodes name
 func GetEgressNodes(f *framework.Framework, opt ...client.ListOption) (egressNodes []string, e error) {
 	egressNodeList, e := ListEgressNodes(f, opt...)
 	if e != nil {
@@ -40,6 +44,7 @@ func GetEgressNodes(f *framework.Framework, opt ...client.ListOption) (egressNod
 	return
 }
 
+// CheckEgressNodeStatus check the status of the egressNode cr, parameter 'nodes' is the cluster's nodes name
 func CheckEgressNodeStatus(f *framework.Framework, nodes []string, opt ...client.ListOption) {
 	egressNodes, e := GetEgressNodes(f, opt...)
 	Expect(e).NotTo(HaveOccurred())
@@ -54,6 +59,7 @@ func CheckEgressNodeStatus(f *framework.Framework, nodes []string, opt ...client
 		egressNodeObj := &egressv1.EgressNode{}
 		e = GetEgressNode(f, node, egressNodeObj)
 		Expect(e).NotTo(HaveOccurred())
+		GinkgoWriter.Printf("egressNodeObj: %v\n", egressNodeObj)
 
 		// check egressNode status
 		status := egressNodeObj.Status
@@ -68,13 +74,17 @@ func CheckEgressNodeStatus(f *framework.Framework, nodes []string, opt ...client
 			// check vxlan ip
 			Expect(CheckEgressNodeIP(node, status.VxlanIPv4, time.Second*10)).To(BeTrue())
 			// check node ip
-			Expect(CheckEgressNodeIP(node, status.PhysicalInterfaceIPv4, time.Second*10)).To(BeTrue())
+			Expect(CheckNodeIP(node, status.PhysicalInterface, status.PhysicalInterfaceIPv4, time.Second*10)).To(BeTrue())
 		}
-		if enableV6 {
+		if enableV6 && !enableV4 {
 			// check vxlan ip
 			Expect(CheckEgressNodeIP(node, status.VxlanIPv6, time.Second*10)).To(BeTrue())
 			// check node ip
-			Expect(CheckEgressNodeIP(node, status.PhysicalInterfaceIPv6, time.Second*10)).To(BeTrue())
+			Expect(CheckNodeIP(node, status.PhysicalInterface, status.PhysicalInterfaceIPv6, time.Second*10)).To(BeTrue())
+		}
+		if enableV6 && enableV4 {
+			// check vxlan ip
+			Expect(CheckEgressNodeIP(node, status.VxlanIPv6, time.Second*10)).To(BeTrue())
 		}
 	}
 }
