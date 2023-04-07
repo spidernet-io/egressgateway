@@ -7,6 +7,7 @@ import (
 	"context"
 	"time"
 
+	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"github.com/spidernet-io/e2eframework/framework"
 	egressv1 "github.com/spidernet-io/egressgateway/pkg/k8s/apis/egressgateway.spidernet.io/v1"
@@ -91,10 +92,18 @@ func WaitEgressGatewayUpdatedStatus(f *framework.Framework, name string, expectN
 			return nil, err.TIME_OUT
 		default:
 			e = GetEgressGateway(f, name, gateway)
+			// gateway
+			GinkgoWriter.Printf("gateway: %v\n", gateway)
 			if e != nil {
 				return nil, e
 			}
+			// expectNodes
+			GinkgoWriter.Printf("expectNodes: %v\n", expectNodes)
+			for _, node := range gateway.Status.NodeList {
+				GinkgoWriter.Printf("node: %v\n", node.Name)
+			}
 			if len(gateway.Status.NodeList) == len(expectNodes) {
+				nodes = []string{}
 				for _, node := range gateway.Status.NodeList {
 					nodes = append(nodes, node.Name)
 				}

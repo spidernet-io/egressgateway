@@ -20,9 +20,10 @@ func TestEgressgateway(t *testing.T) {
 }
 
 var (
-	f   *framework.Framework
-	err error
-	c   client.WithWatch
+	f        *framework.Framework
+	err      error
+	c        client.WithWatch
+	allNodes []string
 )
 
 var _ = BeforeSuite(func() {
@@ -31,4 +32,11 @@ var _ = BeforeSuite(func() {
 	f, err = framework.NewFramework(GinkgoT(), []func(scheme *runtime.Scheme) error{egressgatewayv1.AddToScheme})
 	Expect(err).NotTo(HaveOccurred(), "failed to NewFramework, details: %w", err)
 	c = f.KClient
+	allNodes = f.Info.KindNodeList
+	Expect(allNodes).NotTo(BeEmpty())
+	for _, node := range allNodes {
+		getNode, err := f.GetNode(node)
+		Expect(err).NotTo(HaveOccurred())
+		GinkgoWriter.Printf("node: %v, nodeLabel: %v\n", getNode, getNode.Labels)
+	}
 })

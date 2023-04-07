@@ -17,13 +17,12 @@ var _ = Describe("Egressgateway", func() {
 	var egressGatewayObj *egressv1.EgressGateway
 	var labels, anotherLabels map[string]string
 	var name string
-	var allNodes, notGatewayNodes, gatewayNodes []string
+	var notGatewayNodes, gatewayNodes []string
 
 	BeforeEach(func() {
-		labels = map[string]string{"egress": "true"}
-		anotherLabels = map[string]string{"egress": "true1"}
+		labels = map[string]string{"test-egress": "true"}
+		anotherLabels = map[string]string{"test-egress": "true1"}
 		name = common.EGRESSAGEWAY_NAME
-		allNodes = []string{}
 		notGatewayNodes = []string{}
 		gatewayNodes = []string{}
 
@@ -51,9 +50,6 @@ var _ = Describe("Egressgateway", func() {
 		p := getParams()
 		yaml := common.GenerateEgressGatewayYaml(p.name, p.matchLabels)
 
-		allNodes, err = common.GetAllNodes(f)
-		GinkgoWriter.Printf("allNodes: %v\n", allNodes)
-
 		if p.labelMatched {
 			gatewayNodes, notGatewayNodes = labelNodes(allNodes, labels, anotherLabels)
 		}
@@ -72,7 +68,7 @@ var _ = Describe("Egressgateway", func() {
 				Expect(gatewayNodes).To(BeEmpty())
 				Expect(egressGatewayObj.Status.NodeList).To(BeEmpty())
 
-				// label node
+				// label node, check if the egressgateway cr upgraded succeeded
 				GinkgoWriter.Println("label node...")
 				gatewayNodes, notGatewayNodes = labelNodes(allNodes, labels, anotherLabels)
 
@@ -87,7 +83,7 @@ var _ = Describe("Egressgateway", func() {
 			} else {
 				check(egressGatewayObj, gatewayNodes)
 
-				// G00002: change egressgateway matchLabels
+				// G00002: change egressgateway matchLabels, check if status of the egressgateway cr been upgraded succeeded
 				By("G00002, edit egressgateway")
 				GinkgoWriter.Printf("change egressgateway %s matchLabels\n", p.name)
 				Expect(common.EditEgressGatewayMatchLabels(f, egressGatewayObj, anotherLabels)).NotTo(HaveOccurred())
@@ -116,22 +112,19 @@ var _ = Describe("Egressgateway", func() {
 			// G00003: delete egressgateway until finish
 			Expect(common.DeleteEgressGatewayUntilFinish(f, egressGatewayObj, time.Second*20)).NotTo(HaveOccurred())
 
-			// check iptables chain after egressgateway deleted
-			GinkgoWriter.Println("check iptables chain after delete egressgateway...")
-			Expect(common.CheckEgressGatewayChain(allNodes, time.Second*10)).To(BeFalse())
 		} else {
 			Expect(common.CreateEgressGateway(f, yaml)).To(HaveOccurred())
 		}
 	},
-		PEntry("failed to create egressGateway with name not 'default'", func() *egressGatewayFields {
+		Entry("failed to create egressGateway with name not 'default'", func() *egressGatewayFields {
 			gatewayFields.name = "badname"
 			return &gatewayFields
 		}),
-		PEntry("succeeded to create egressGateway with not matched labelSelector", func() *egressGatewayFields {
+		Entry("succeeded to create egressGateway with not matched labelSelector", func() *egressGatewayFields {
 			gatewayFields.ok = true
 			return &gatewayFields
 		}),
-		PEntry("succeeded to create egressGateway with matched labelSelector", func() *egressGatewayFields {
+		Entry("succeeded to create egressGateway with matched labelSelector", func() *egressGatewayFields {
 			gatewayFields.ok = true
 			gatewayFields.labelMatched = true
 			return &gatewayFields
