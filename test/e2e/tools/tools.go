@@ -6,6 +6,7 @@ package tools
 import (
 	"context"
 	"fmt"
+	"math/rand"
 	"os/exec"
 	"sort"
 	"time"
@@ -84,4 +85,27 @@ func GetContainerIPV4(container string, duration time.Duration) ([]byte, error) 
 func GetContainerIPV6(container string, duration time.Duration) ([]byte, error) {
 	a := fmt.Sprintf("docker inspect %s | grep -w GlobalIPv6Address  | sed 1d | awk '{print $2}' | tr -d '\",' | tr -d '\n'", container)
 	return ExecCommand(a, duration)
+}
+
+var r = rand.New(rand.NewSource(time.Now().UnixNano()))
+
+func GetRandomMac() string {
+	macAddress := make([]byte, 6)
+	r.Read(macAddress)
+	return fmt.Sprintf("%x:%x:%x:%x:%x:%x", macAddress[0], macAddress[1], macAddress[2], macAddress[3], macAddress[4], macAddress[5])
+}
+
+func GetRandomNum(num int) string {
+	return fmt.Sprintf("%d", r.Intn(num))
+}
+
+func GetRandomIPV4() string {
+	a, b, c, d := r.Intn(255), r.Intn(255), r.Intn(255), r.Intn(255)
+	return fmt.Sprintf("%d:%d:%d:%d", a, b, c, d)
+}
+
+func GetRandomIPV6() string {
+	n := make([]byte, 3)
+	r.Read(n)
+	return fmt.Sprintf("%x:%x::%x", n[0], n[1], n[2])
 }

@@ -7,4 +7,5 @@ import "errors"
 
 var (
 	INVALID_INPUT = errors.New("invalid input")
+	TIME_OUT      = errors.New("time out")
 )

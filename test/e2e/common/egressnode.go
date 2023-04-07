@@ -4,6 +4,8 @@
 package common
 
 import (
+	"context"
+	"fmt"
 	"time"
 
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -85,6 +87,27 @@ func CheckEgressNodeStatus(f *framework.Framework, nodes []string, opt ...client
 		if enableV6 && enableV4 {
 			// check vxlan ip
 			Expect(CheckEgressNodeIP(node, status.VxlanIPv6, time.Second*10)).To(BeTrue())
+		}
+	}
+}
+
+func WaitEgressNodePhysicalInterfaceUpgraded(f *framework.Framework, egressNodeName, expectInterfaceName string, duration time.Duration) error {
+	var egressNode *egressv1.EgressNode
+	ctx, cancel := context.WithTimeout(context.TODO(), duration)
+	defer cancel()
+	for {
+		select {
+		case <-ctx.Done():
+			return TIME_OUT
+		default:
+			err := GetEgressNode(f, egressNodeName, egressNode)
+			if err != nil {
+				return fmt.Errorf("failed to GetEgressNode, details: %v\n", err)
+			}
+			if egressNode.Status.PhysicalInterface == expectInterfaceName {
+				return nil
+			}
+			time.Sleep(time.Second)
 		}
 	}
 }
