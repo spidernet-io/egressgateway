@@ -129,6 +129,7 @@ jobs:
           context: ${{ matrix.context }}
           file: ./${{ matrix.context }}/Dockerfile
           push: ${{ env.RUN_PUSH }}
+          provenance: false
           github-token: ${{ secrets.WELAN_PAT }}
           platforms: ${{ env.BUILD_PLATFORM }}
           tags: |
