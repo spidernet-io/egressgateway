@@ -15,13 +15,14 @@ spec:
     listKind: EgressGatewayList
     plural: egressgateways
     shortNames:
-    - egn
+    - egw
     singular: egressgateway
   scope: Cluster
   versions:
-  - name: v1
+  - name: v1beta1
     schema:
       openAPIV3Schema:
+        description: EgressGateway egress gateway
         properties:
           apiVersion:
             description: 'APIVersion defines the versioned schema of this representation
@@ -85,39 +86,42 @@ spec:
                     type: object
                 type: object
                 x-kubernetes-map-type: atomic
+              ranges:
+                properties:
+                  ipv4:
+                    items:
+                      type: string
+                    type: array
+                  ipv6:
+                    items:
+                      type: string
+                    type: array
+                type: object
+              scope:
+                properties:
+                  namespaces:
+                    description: Namespaces represent the list of allowed namespaces
+                      to use, if empty, all namespaces are allowed to use.
+                    items:
+                      type: string
+                    type: array
+                type: object
             type: object
           status:
             properties:
               nodeList:
                 items:
                   properties:
-                    active:
-                      type: boolean
-                    interfaceStatus:
-                      items:
-                        properties:
-                          interfaceName:
-                            type: string
-                          ipv4List:
-                            items:
-                              type: string
-                            type: array
-                          ipv6List:
-                            items:
-                              type: string
-                            type: array
-                        required:
-                        - interfaceName
-                        - ipv4List
-                        - ipv6List
-                        type: object
-                      type: array
-                    name:
+                    ipv4:
                       type: string
-                    ready:
+                    ipv6:
+                      type: string
+                    policies:
+                      items:
+                        type: string
+                      type: array
+                    useNodeIP:
                       type: boolean
-                  required:
-                  - name
                   type: object
                 type: array
             type: object

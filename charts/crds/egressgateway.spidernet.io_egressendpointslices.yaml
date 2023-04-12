@@ -5,39 +5,24 @@ metadata:
   annotations:
     controller-gen.kubebuilder.io/version: (unknown)
   creationTimestamp: null
-  name: egressnodes.egressgateway.spidernet.io
+  name: egressendpointslices.egressgateway.spidernet.io
 spec:
   group: egressgateway.spidernet.io
   names:
     categories:
-    - egressnode
-    kind: EgressNode
-    listKind: EgressNodeList
-    plural: egressnodes
-    singular: egressnode
-  scope: Cluster
+    - egressendpointslice
+    kind: EgressEndpointSlice
+    listKind: EgressEndpointSliceList
+    plural: egressendpointslices
+    shortNames:
+    - ees
+    singular: egressendpointslice
+  scope: Namespace
   versions:
-  - additionalPrinterColumns:
-    - description: tunnelMac
-      jsonPath: .status.tunnelMac
-      name: tunnelMac
-      type: string
-    - description: tunnelIPv4
-      jsonPath: .status.vxlanIPv4
-      name: tunnelIPv4
-      type: string
-    - description: tunnelIPv6
-      jsonPath: .status.vxlanIPv6
-      name: tunnelIPv6
-      type: string
-    - description: phase
-      jsonPath: .status.phase
-      name: phase
-      type: string
-    name: v1beta1
+  - name: v1beta1
     schema:
       openAPIV3Schema:
-        description: EgressNode represents an egress node
+        description: EgressEndpointSlice is a list of endpoint
         properties:
           apiVersion:
             description: 'APIVersion defines the versioned schema of this representation
@@ -55,34 +40,25 @@ spec:
             type: object
           status:
             properties:
-              mark:
-                type: string
-              phase:
-                enum:
-                - Pending
-                - Init
-                - Failed
-                - Succeeded
-                - ""
-                type: string
-              tunnel:
-                properties:
-                  ipv4:
-                    type: string
-                  ipv6:
-                    type: string
-                  mac:
-                    type: string
-                  parent:
-                    properties:
-                      ipv4:
+              endpoints:
+                items:
+                  properties:
+                    IPv4List:
+                      items:
                         type: string
-                      ipv6:
+                      type: array
+                    IPv6List:
+                      items:
                         type: string
-                      name:
-                        type: string
-                    type: object
-                type: object
+                      type: array
+                    nodeName:
+                      type: string
+                    podName:
+                      type: string
+                    uuid:
+                      type: string
+                  type: object
+                type: array
             type: object
         required:
         - metadata
