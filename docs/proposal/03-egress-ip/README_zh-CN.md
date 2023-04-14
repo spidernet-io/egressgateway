@@ -219,10 +219,10 @@ data:
    ```
 6. 聚合不需要做 SNAT 规则的链。直接创建一次，不需要更新；
    ```shell
-   # iptables -t nat -N EGRESSGATEWAY-NO-SNAT
-   # iptables -t nat -I POSTROUTING 1  -j EGRESSGATEWAY-NO-SNAT -m comment --comment "egress gateway: no snat"
+   iptables -t nat -N EGRESSGATEWAY-NO-SNAT
+   iptables -t nat -I POSTROUTING 1  -j EGRESSGATEWAY-NO-SNAT -m comment --comment "egress gateway: no snat"
    
-   iptables -t nat -A POSTROUTING 1 -m mark --mark 0x12000000 -j ACCEPT -m comment --comment "egress gateway: no snat"
+   iptables -t nat -A EGRESSGATEWAY-NO-SNAT -m mark --mark 0x12000000 -j ACCEPT -m comment --comment "egress gateway: no snat"
    ```
 7. 聚合需要做 SNAT 规则的链。直接创建一次，不需要更新。
    ```shell
@@ -231,7 +231,7 @@ data:
    iptables -t nat -I POSTROUTING 1  -j EGRESSGATEWAY-SNAT-EIP -m comment --comment "egress gateway: snat EIP"
    ```
 
-#### 相对于 EIP 的 Egress Gateway 节点
+#### 相对于 EIP 的非 Egress Gateway 节点
 
 1. policy 命中的流量打标签，保证能从隧道走。其中 NODE_MARK 的值根据 policy 对应的 EIP 所在节点决定。
    ```shell
@@ -244,8 +244,15 @@ data:
    ```shell
    ip rule add fwmark $NODE_MARK table $TABLE_NUM
    ```
+3.适配 Weave 避免做 SNAT 成 Egress 隧道的 IP。做成开关
+   ```shell
+   iptables -t nat -A EGRESSGATEWAY-NO-SNAT \
+   -m set --match-set $IPSET_RULE_DEST_NAME dst  \
+   -m set --match-set $IPSET_RULE_SRC_NAME src  \
+   -j ACCEPT -m comment --comment "egress gateway: weave does not do SNAT"
+   ```
 
-#### 相对于 EIP 的非 Egress Gateway 节点
+#### 相对于 EIP 的 Egress Gateway 节点
 
 1. policy 命中的流量。出网关时做 SNAT。实时更新。
    ```shell
@@ -260,11 +267,11 @@ data:
 1. dummy 网卡及 EIP：每个节点只有一个名为 `egress.eip` 的 dummy 网卡，所有的 EIP 都生效在该节点上
    ```shell
    # 创建 dummy 网卡
-   ip link add eip type dummy
-   ip link set eip up
+   ip link add egress.eip type dummy
+   ip link set egress.eip up
    
    # 设置 EIP
-   ip addr add 10.6.168.100 dev eip
+   ip addr add 10.6.168.100 dev egress.eip
    ```
 
 2. 由于 EIP 是生效在 dummy 网卡上的，所以需要配置 ARP 代答。
