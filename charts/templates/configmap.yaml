@@ -28,3 +28,14 @@ data:
       id: {{ .Values.feature.vxlan.id }}
       port: {{ .Values.feature.vxlan.port }}
       disableChecksumOffload: {{ .Values.feature.vxlan.disableChecksumOffload }}
+    egressIgnoreCIDR:
+      autoDetect:
+        podCIDR: {{ .Values.feature.egressIgnoreCIDR.autoDetect.podCIDR }}
+        clusterIP: {{ .Values.feature.egressIgnoreCIDR.autoDetect.clusterIP }}
+        nodeIP: {{ .Values.feature.egressIgnoreCIDR.autoDetect.nodeIP }}
+      {{- if .Values.feature.egressIgnoreCIDR.custom }}
+      custom:
+      {{- with .Values.feature.egressIgnoreCIDR.custom }}
+      {{- toYaml . | trim | nindent 6 }}
+      {{- end }}
+      {{- end }}

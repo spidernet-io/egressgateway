@@ -5,60 +5,74 @@ metadata:
   creationTimestamp: null
   name: {{ include "project.name" . }}
 rules:
-- apiGroups:
-  - ""
-  resources:
-  - endpoints
-  - namespaces
-  - nodes
-  - pods
-  verbs:
-  - get
-  - list
-  - update
-  - watch
-- apiGroups:
-  - ""
-  resources:
-  - events
-  verbs:
-  - create
-  - delete
-  - get
-  - list
-  - update
-  - watch
-- apiGroups:
-  - coordination.k8s.io
-  resources:
-  - leases
-  verbs:
-  - create
-  - get
-  - update
-- apiGroups:
-  - egressgateway.spidernet.io
-  resources:
-  - egressclusterinfos
-  - egressendpointslice
-  - egressgatewaypolicies
-  - egressgateways
-  - egressnodes
-  verbs:
-  - create
-  - delete
-  - get
-  - list
-  - patch
-  - update
-  - watch
-- apiGroups:
-  - egressgateway.spidernet.io
-  resources:
-  - egressgatewaypolicies/status
-  - egressgateways/status
-  - egressnodes/status
-  verbs:
-  - get
-  - patch
-  - update
+  - apiGroups:
+      - ""
+    resources:
+      - endpoints
+      - namespaces
+      - nodes
+      - pods
+      - services
+    verbs:
+      - get
+      - list
+      - update
+      - watch
+  - apiGroups:
+      - ""
+    resources:
+      - events
+    verbs:
+      - create
+      - delete
+      - get
+      - list
+      - update
+      - watch
+  - apiGroups:
+      - coordination.k8s.io
+    resources:
+      - leases
+    verbs:
+      - create
+      - get
+      - update
+  - apiGroups:
+      - crd.projectcalico.org
+    resources:
+      - ippools
+    verbs:
+      - create
+      - delete
+      - get
+      - list
+      - patch
+      - update
+      - watch
+  - apiGroups:
+      - egressgateway.spidernet.io
+    resources:
+      - egressclusterinfos
+      - egressendpointslice
+      - egressgatewaypolicies
+      - egressgateways
+      - egressnodes
+    verbs:
+      - create
+      - delete
+      - get
+      - list
+      - patch
+      - update
+      - watch
+  - apiGroups:
+      - egressgateway.spidernet.io
+    resources:
+      - egressclusterinfos/status
+      - egressgatewaypolicies/status
+      - egressgateways/status
+      - egressnodes/status
+    verbs:
+      - get
+      - patch
+      - update
