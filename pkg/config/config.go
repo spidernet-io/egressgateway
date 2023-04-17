@@ -71,9 +71,10 @@ type FileConfig struct {
 	TunnelIpv6Subnet   string   `yaml:"tunnelIpv6Subnet"`
 	TunnelIPv4Net      *net.IPNet
 	TunnelIPv6Net      *net.IPNet
-	TunnelDetectMethod string `yaml:"tunnelDetectMethod"`
-	ForwardMethod      string `yaml:"forwardMethod"`
-	VXLAN              VXLAN  `yaml:"vxlan"`
+	TunnelDetectMethod string           `yaml:"tunnelDetectMethod"`
+	ForwardMethod      string           `yaml:"forwardMethod"`
+	VXLAN              VXLAN            `yaml:"vxlan"`
+	EgressIgnoreCIDR   EgressIgnoreCIDR `yaml:"egressIgnoreCIDR"`
 }
 
 const TunnelInterfaceDefaultRoute = "defaultRouteInterface"
@@ -95,6 +96,17 @@ type IPTables struct {
 	InitialPostWriteIntervalSecond int    `yaml:"initialPostWriteIntervalSecond"`
 	RestoreSupportsLock            bool   `yaml:"restoreSupportsLock"`
 	LockFilePath                   string `yaml:"lockFilePath"`
+}
+
+type EgressIgnoreCIDR struct {
+	AutoDetect `yaml:"autoDetect"`
+	Custom     []string `yaml:"custom"`
+}
+
+type AutoDetect struct {
+	PodCIDR   string `yaml:"podCIDR"`
+	ClusterIP bool   `yaml:"clusterIP"`
+	NodeIP    bool   `yaml:"nodeIP"`
 }
 
 // LoadConfig loads the configuration
@@ -132,6 +144,14 @@ func LoadConfig(isAgent bool) (*Config, error) {
 				LockProbeIntervalMillis: 50,
 				LockFilePath:            "/run/xtables.lock",
 				RestoreSupportsLock:     restoreSupportsLock,
+			},
+			EgressIgnoreCIDR: EgressIgnoreCIDR{
+				AutoDetect: AutoDetect{
+					PodCIDR:   "",
+					ClusterIP: true,
+					NodeIP:    true,
+				},
+				Custom: []string{},
 			},
 		},
 	}
