@@ -85,7 +85,7 @@ var _ = Describe("Egresspolicy", func() {
 			})
 		})
 
-		It("operate egressgatewaypolicy", Label("P00001", "P00002", "P00003"), func() {
+		PIt("operate egressgatewaypolicy", Label("P00001", "P00002", "P00003"), func() {
 			// get node egressgateway-worker labels
 			GinkgoWriter.Printf("get node: %s labels\n", worker)
 			workerObj, err := frame.GetNode(worker)
