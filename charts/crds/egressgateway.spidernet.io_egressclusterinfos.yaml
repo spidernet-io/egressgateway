@@ -5,39 +5,24 @@ metadata:
   annotations:
     controller-gen.kubebuilder.io/version: (unknown)
   creationTimestamp: null
-  name: egressnodes.egressgateway.spidernet.io
+  name: egressclusterinfos.egressgateway.spidernet.io
 spec:
   group: egressgateway.spidernet.io
   names:
     categories:
-    - egressnode
-    kind: EgressNode
-    listKind: EgressNodeList
-    plural: egressnodes
-    singular: egressnode
+    - egressclusterinfo
+    kind: EgressClusterInfo
+    listKind: EgressClusterInfoList
+    plural: egressclusterinfos
+    shortNames:
+    - eci
+    singular: egressclusterinfo
   scope: Cluster
   versions:
-  - additionalPrinterColumns:
-    - description: tunnelMac
-      jsonPath: .status.tunnelMac
-      name: tunnelMac
-      type: string
-    - description: tunnelIPv4
-      jsonPath: .status.vxlanIPv4
-      name: tunnelIPv4
-      type: string
-    - description: tunnelIPv6
-      jsonPath: .status.vxlanIPv6
-      name: tunnelIPv6
-      type: string
-    - description: phase
-      jsonPath: .status.phase
-      name: phase
-      type: string
-    name: v1beta1
+  - name: v1beta1
     schema:
       openAPIV3Schema:
-        description: EgressNode represents an egress node
+        description: EgressClusterInfo describes the status of cluster
         properties:
           apiVersion:
             description: 'APIVersion defines the versioned schema of this representation
@@ -55,32 +40,40 @@ spec:
             type: object
           status:
             properties:
-              mark:
-                type: string
-              phase:
-                enum:
-                - Pending
-                - Init
-                - Failed
-                - Succeeded
-                - ""
-                type: string
-              tunnel:
+              egressIgnoreCIDR:
                 properties:
-                  ipv4:
-                    type: string
-                  ipv6:
-                    type: string
-                  mac:
-                    type: string
-                  parent:
+                  clusterIP:
                     properties:
                       ipv4:
-                        type: string
+                        items:
+                          type: string
+                        type: array
                       ipv6:
-                        type: string
-                      name:
-                        type: string
+                        items:
+                          type: string
+                        type: array
+                    type: object
+                  nodeIP:
+                    properties:
+                      ipv4:
+                        items:
+                          type: string
+                        type: array
+                      ipv6:
+                        items:
+                          type: string
+                        type: array
+                    type: object
+                  podCIDR:
+                    properties:
+                      ipv4:
+                        items:
+                          type: string
+                        type: array
+                      ipv6:
+                        items:
+                          type: string
+                        type: array
                     type: object
                 type: object
             type: object

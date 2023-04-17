@@ -19,9 +19,10 @@ spec:
     singular: egressgatewaypolicy
   scope: Cluster
   versions:
-  - name: v1
+  - name: v1beta1
     schema:
       openAPIV3Schema:
+        description: EgressGatewayPolicy represents a single egress gateway policy
         properties:
           apiVersion:
             description: 'APIVersion defines the versioned schema of this representation
@@ -95,22 +96,20 @@ spec:
               destSubnet:
                 items:
                   type: string
-                minItems: 1
                 type: array
-              gatewayNodeConfig:
+              egressGatewayName:
+                type: string
+              egressIP:
                 properties:
-                  egressIPv4VIP:
+                  ipv4:
                     type: string
-                  egressIPv6VIP:
+                  ipv6:
                     type: string
-                  interface:
-                    type: string
-                required:
-                - interface
+                  useNodeIP:
+                    type: boolean
                 type: object
             required:
             - appliedTo
-            - destSubnet
             type: object
         required:
         - metadata
