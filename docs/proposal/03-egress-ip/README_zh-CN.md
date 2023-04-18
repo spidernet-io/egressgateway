@@ -64,39 +64,43 @@ apiVersion: egressgateway.spidernet.io/v1beta1
 kind: EgressGateway
 metadata:
   name: "eg1"
-spec:
+spec:                            # 1
   ranges:
-   ipv4:                    # 1
+   policy: "Random"              # 2
+   ipv4:
    - ""
    ipv6:
    - ""
-  nodeSelector:             # 2
+  nodeSelector:                  # 3
+    policy: "AverageSelecton"    # 4
     matchLabels:
       egress: "true"
-  scope:                    # 3
+  scope:                         # 5
     enable: true
     namespaces:
     - ns1
     - ns2
 status:
-  nodeList:                 # 4
-  - name: node1
+  nodeList:                 # 6
+  - name: node1             # 7
     eips:                   
-    - ipv4: ""
+    - ipv4: ""              # 8
       ipv6: ""
-      policies:             # 5
+      policies:             # 9
       - ""
-      useNodeIP: true       # 
 ```
 
 1. 设置 Egress IP 的范围；
    * 支持设置单个 IP `10.6.0.1` ，和段 `10.6.0.1-10.6.0.10 ` ， CIDR `10.6.0.1/26`  的方式 3 种方式；
    * 如果开启双栈要求，IPv4 的数量和 IPv6 的数量时一致的。由于此原因，会导致上面 CIDR 可能并不实用，因此优先级优先实现前 2 种；
-2. 设置 EgressGateway IP 可浮动的节点范围；
-3. 支持限制 EgressGateway 可被 EgressGatewayPolicy 引用的租户，默认可被所有租户引用；
-4. Egress Gateway Controller 用于记录显示 nodeSelector 匹配中的节点，对于 Node 更新 Label 或 nodeSelector 变动都会引起此字段变动，Agent 是此字段的消费者，会将属于自己节点的 IP 设置到默认名为 `egress.eip` 网卡；
-5. 生效 Egress IP 的节点 Agent 消费 policies 的策略生效 iptables 规则；
-6. 对于 `useNodeIP` 方式，仅会生效；
+2. EIP 的分配策略，暂时只支持 `Random` 随机分配
+3. 设置 EgressGateway IP 可浮动的节点范围；
+4. EgressGatewayPolicy 选网关节点的策略，暂时只支持 `AverageSelecton` 平均分配
+5. 支持限制 EgressGateway 可被 EgressGatewayPolicy 引用的租户，默认可被所有租户引用；
+6. Egress Gateway Controller 用于记录显示 nodeSelector 匹配中的节点，对于 Node 更新 Label 或 nodeSelector 变动都会引起此字段变动，Agent 是此字段的消费者，会将属于自己节点的 IP 设置到默认名为 `egress.eip` 网卡；
+7. 被引用该 EgressGateway 的 EgressGatewayPolicy 选中，作为网关的节点；
+8. 生效的 EIP，如果 EgressGatewayPolicy 中 useNodeIP 为 `true` 时，则该字段为空;
+9. Agent 通过该字段判断哪些节点是哪些 EgressGatewayPolicy 的网关节点及非网关节点；
 
 #### EgressGatewayPolicy
 
@@ -127,7 +131,7 @@ spec:
 ```
 
 1. 选择策略引用的 EgressGateway；
-2. Egress IP 分配策略；
+2. Egress IP 准入策略；
    * 若在创建时定义了 `ipv4` 或 `ipv6` 地址，则从 EgressGateway 的 `.ranges` 中分配一个 IP 地址，若用户在 policy1 中，申请使用了 IP 地址 `10.6.1.21` 和 `fd00:1` ，然后创建 policy2 中，申请使用了 IP 地址 `10.6.1.21` 和 `fd00:2` ，则会报错，此时 policy2 会分配失败；
    * 若未定义 `ipv4` 或 `ipv6` 地址，且 `useNodeIP` 为 true 时，则使用所引用 EgressGateway 的匹配中的 Node 的 IP 作为 Egress 地址。
    * 若未在创建时定义 `ipv4` 或 `ipv6` 地址，且 `useNodeIP` 为 `false` 时。
@@ -179,7 +183,7 @@ data:
 
 ### 数据面规则
 
-对需要生效的规则分为三类：所有节点，相对于 EIP 的「网关节点」和「非网关节点」。
+对需要生效的规则分为三类：所有节点，相对于 EgressGatewayPolicy 的「网关节点」和「非网关节点」。
 
 #### 所有节点
 
@@ -262,7 +266,27 @@ data:
        -j SNAT --to-source $EIP
    ```
 
-#### EIP 网卡
+### EgressGatewayPolicy 选网关节点及 EIP 分配逻辑
+一个 policy 会根据选网关节点的策略，选择一个节点作为网关节点。然后根据是否使用 EIP，来决定是否分配 EIP。分配的 EIP 将绑定到所选的网关节点上
+
+分配逻辑都是以单个 EgressGateway 为对象，而不是所有的 EgressGateway。
+
+#### policy 选网关节点的模式
+- 平均选择：当需要选择网关节点时，选择作为网关节点最少的一个节点。
+- 最少节点选择：尽量选同一个节点作为网关节点
+- 限度选择：一个节点最多只能成为几个 policy 的网关节点，限度可以设置，默认为 5。没有达到限度前，则优先选择该节点，达到限度就选其他的节点，如果都达到了限度，则随机选择
+
+
+#### EIP 分配逻辑
+- 随机分配：在所有的 EIP 中随机选择一个，不管该 EIP 是否已经分配
+- 优先使用未分配的 EIP：先使用未分配的 EIP，如果都使用了则再随机分配一个已使用的 EIP
+- 限度选择：一个 EIP 最多只能被几个 policy 使用，限度可以设置，默认为 5，没有达到限度前，则先分配该 EIP，达到限度则选其他的 EIP。都达到限度则随机分配。
+
+
+#### EIP 回收逻辑
+当一个 EIP 没有被 policy 使用时，则回收该 EIP，回收就是在 eips 中将该 EIP 字段删除
+
+#### 其他
 
 1. dummy 网卡及 EIP：每个节点只有一个名为 `egress.eip` 的 dummy 网卡，所有的 EIP 都生效在该节点上
    ```shell
