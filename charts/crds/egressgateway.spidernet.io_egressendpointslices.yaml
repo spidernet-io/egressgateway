@@ -17,7 +17,7 @@ spec:
     shortNames:
     - ees
     singular: egressendpointslice
-  scope: Namespace
+  scope: Namespaced
   versions:
   - name: v1beta1
     schema:
