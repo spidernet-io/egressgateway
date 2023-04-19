@@ -35,9 +35,7 @@ type EgressGatewaySpec struct {
 	// +kubebuilder:validation:Optional
 	Ranges Ranges `json:"ranges,omitempty"`
 	// +kubebuilder:validation:Required
-	NodeSelector *metav1.LabelSelector `json:"nodeSelector,omitempty"`
-	// +kubebuilder:validation:Optional
-	Scope Scope `json:"scope,omitempty"`
+	NodeSelector NodeSelector `json:"nodeSelector,omitempty"`
 }
 
 type Ranges struct {
@@ -45,12 +43,15 @@ type Ranges struct {
 	IPv4 []string `json:"ipv4,omitempty"`
 	// +kubebuilder:validation:Optional
 	IPv6 []string `json:"ipv6,omitempty"`
+	// +kubebuilder:validation:Optional
+	Policy []string `json:"policy,omitempty"`
 }
 
-type Scope struct {
-	// Namespaces represent the list of allowed namespaces to use, if empty, all namespaces are allowed to use.
+type NodeSelector struct {
 	// +kubebuilder:validation:Optional
-	Namespaces []string `json:"namespaces,omitempty"`
+	Policy string `json:"policy,omitempty"`
+	// +kubebuilder:validation:Required
+	Selector *metav1.LabelSelector `json:"selector,omitempty"`
 }
 
 type EgressGatewayStatus struct {

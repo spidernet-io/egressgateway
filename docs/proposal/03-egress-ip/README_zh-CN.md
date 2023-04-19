@@ -72,21 +72,17 @@ spec:                            # 1
    ipv6:
    - ""
   nodeSelector:                  # 3
+    selector: 
+      matchLabels:
+        egress: "true"
     policy: "AverageSelecton"    # 4
-    matchLabels:
-      egress: "true"
-  scope:                         # 5
-    enable: true
-    namespaces:
-    - ns1
-    - ns2
 status:
-  nodeList:                 # 6
-  - name: node1             # 7
+  nodeList:                 # 5
+  - name: node1             # 6
     eips:                   
-    - ipv4: ""              # 8
+    - ipv4: ""              # 7
       ipv6: ""
-      policies:             # 9
+      policies:             # 8
       - ""
 ```
 
@@ -94,13 +90,12 @@ status:
    * 支持设置单个 IP `10.6.0.1` ，和段 `10.6.0.1-10.6.0.10 ` ， CIDR `10.6.0.1/26`  的方式 3 种方式；
    * 如果开启双栈要求，IPv4 的数量和 IPv6 的数量时一致的。由于此原因，会导致上面 CIDR 可能并不实用，因此优先级优先实现前 2 种；
 2. EIP 的分配策略，暂时只支持 `Random` 随机分配
-3. 设置 EgressGateway IP 可浮动的节点范围；
-4. EgressGatewayPolicy 选网关节点的策略，暂时只支持 `AverageSelecton` 平均分配
-5. 支持限制 EgressGateway 可被 EgressGatewayPolicy 引用的租户，默认可被所有租户引用；
-6. Egress Gateway Controller 用于记录显示 nodeSelector 匹配中的节点，对于 Node 更新 Label 或 nodeSelector 变动都会引起此字段变动，Agent 是此字段的消费者，会将属于自己节点的 IP 设置到默认名为 `egress.eip` 网卡；
-7. 被引用该 EgressGateway 的 EgressGatewayPolicy 选中，作为网关的节点；
-8. 生效的 EIP，如果 EgressGatewayPolicy 中 useNodeIP 为 `true` 时，则该字段为空;
-9. Agent 通过该字段判断哪些节点是哪些 EgressGatewayPolicy 的网关节点及非网关节点；
+3. 设置 EgressGateway IP 可浮动的节点范围及策略；
+4. policy 选网关节点的策略，暂时只支持 `AverageSelecton` 平均分配
+5. Egress Gateway Controller 用于记录显示 nodeSelector 匹配中的节点，对于 Node 更新 Label 或 nodeSelector 变动都会引起此字段变动，Agent 是此字段的消费者，会将属于自己节点的 IP 设置到默认名为 `egress.eip` 网卡；
+6. 被引用该 EgressGateway 的 EgressGatewayPolicy 选中，作为网关的节点；
+7. 生效的 EIP，如果 EgressGatewayPolicy 中 useNodeIP 为 `true` 时，则该字段为空;
+8. Agent 通过该字段判断哪些节点是哪些 EgressGatewayPolicy 的网关节点及非网关节点；
 
 #### EgressGatewayPolicy
 
