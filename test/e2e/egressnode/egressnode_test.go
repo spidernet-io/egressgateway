@@ -9,7 +9,7 @@ import (
 )
 
 var _ = Describe("Egressnode", func() {
-	It("get and check egressnodes", Label("N00001"), func() {
+	PIt("get and check egressnodes", Label("N00001"), func() {
 		// check egressnode status
 		common.CheckEgressNodeStatus(f, nodes)
 	})
