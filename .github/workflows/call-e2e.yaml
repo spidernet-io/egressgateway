@@ -36,7 +36,7 @@ jobs:
     steps:
       - name: skip e2e
         run: |
-          - exit 0
+          exit 0
 
 
 #      - name: Prepare
