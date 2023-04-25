@@ -61,13 +61,18 @@ type EgressGatewayStatus struct {
 
 type EgressIPStatus struct {
 	// +kubebuilder:validation:Optional
+	Name string `json:"name,omitempty"`
+	// +kubebuilder:validation:Optional
+	Eips Eips `json:"epis,omitempty"`
+}
+
+type Eips struct {
+	// +kubebuilder:validation:Optional
 	IPv4 string `json:"ipv4,omitempty"`
 	// +kubebuilder:validation:Optional
 	IPv6 string `json:"ipv6,omitempty"`
 	// +kubebuilder:validation:Optional
 	Policies []string `json:"policies,omitempty"`
-	// +kubebuilder:validation:Optional
-	UseNodeIP bool `json:"useNodeIP,omitempty"`
 }
 
 func init() {

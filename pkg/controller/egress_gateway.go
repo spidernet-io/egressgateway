@@ -23,7 +23,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/source"
 
 	"github.com/spidernet-io/egressgateway/pkg/config"
-	egressv1 "github.com/spidernet-io/egressgateway/pkg/k8s/apis/egressgateway.spidernet.io/v1"
+	egressv1 "github.com/spidernet-io/egressgateway/pkg/k8s/apis/egressgateway.spidernet.io/v1beta1"
 	"github.com/spidernet-io/egressgateway/pkg/utils"
 )
 

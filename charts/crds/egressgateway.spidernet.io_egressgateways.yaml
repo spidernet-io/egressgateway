@@ -112,16 +112,19 @@ spec:
               nodeList:
                 items:
                   properties:
-                    ipv4:
+                    epis:
+                      properties:
+                        ipv4:
+                          type: string
+                        ipv6:
+                          type: string
+                        policies:
+                          items:
+                            type: string
+                          type: array
+                      type: object
+                    name:
                       type: string
-                    ipv6:
-                      type: string
-                    policies:
-                      items:
-                        type: string
-                      type: array
-                    useNodeIP:
-                      type: boolean
                   type: object
                 type: array
             type: object
