@@ -23,21 +23,25 @@ helm install egressgateway egressgateway/egressgateway --namespace kube-system
 
 ### Feature parameters
 
-| Name                                   | Description                                                                                         | Value                   |
-| -------------------------------------- | --------------------------------------------------------------------------------------------------- | ----------------------- |
-| `feature.enableIPv4`                   | Enable IPv4                                                                                         | `true`                  |
-| `feature.enableIPv6`                   | Enable IPv6                                                                                         | `false`                 |
-| `feature.startRouteTable`              | Start route table                                                                                   | `50`                    |
-| `feature.iptables.backendMode`         | The mode for iptables (`legacy` or `nft`). If left blank, it's automatically detected. Default: "". | `""`                    |
-| `feature.datapathMode`                 | iptables mode, [`iptables`, `ebpf`]                                                                 | `iptables`              |
-| `feature.tunnelIpv4Subnet`             | Tunnel IPv4 subnet                                                                                  | `172.31.0.0/16`         |
-| `feature.tunnelIpv6Subnet`             | Tunnel IPv6 subnet                                                                                  | `fd11::/112`            |
-| `feature.tunnelDetectMethod`           | Tunnel base on which interface [`defaultRouteInterface`, `interface=eth0`]                          | `defaultRouteInterface` |
-| `feature.forwardMethod`                | Tunnel base on which interface [`active-active`: require kernel >=4.4, `active-passive`]            | `active-passive`        |
-| `feature.vxlan.name`                   | The name of VXLAN device                                                                            | `egress.vxlan`          |
-| `feature.vxlan.port`                   | VXLAN port                                                                                          | `7789`                  |
-| `feature.vxlan.id`                     | VXLAN ID                                                                                            | `100`                   |
-| `feature.vxlan.disableChecksumOffload` | Disable checksum offload                                                                            | `true`                  |
+| Name                                            | Description                                                                                         | Value                   |
+| ----------------------------------------------- | --------------------------------------------------------------------------------------------------- | ----------------------- |
+| `feature.enableIPv4`                            | Enable IPv4                                                                                         | `true`                  |
+| `feature.enableIPv6`                            | Enable IPv6                                                                                         | `false`                 |
+| `feature.startRouteTable`                       | Start route table                                                                                   | `50`                    |
+| `feature.iptables.backendMode`                  | The mode for iptables (`legacy` or `nft`). If left blank, it's automatically detected. Default: "". | `""`                    |
+| `feature.datapathMode`                          | iptables mode, [`iptables`, `ebpf`]                                                                 | `iptables`              |
+| `feature.tunnelIpv4Subnet`                      | Tunnel IPv4 subnet                                                                                  | `172.31.0.0/16`         |
+| `feature.tunnelIpv6Subnet`                      | Tunnel IPv6 subnet                                                                                  | `fd11::/112`            |
+| `feature.tunnelDetectMethod`                    | Tunnel base on which interface [`defaultRouteInterface`, `interface=eth0`]                          | `defaultRouteInterface` |
+| `feature.forwardMethod`                         | Tunnel base on which interface [`active-active`: require kernel >=4.4, `active-passive`]            | `active-passive`        |
+| `feature.vxlan.name`                            | The name of VXLAN device                                                                            | `egress.vxlan`          |
+| `feature.vxlan.port`                            | VXLAN port                                                                                          | `7789`                  |
+| `feature.vxlan.id`                              | VXLAN ID                                                                                            | `100`                   |
+| `feature.vxlan.disableChecksumOffload`          | Disable checksum offload                                                                            | `true`                  |
+| `feature.egressIgnoreCIDR.autoDetect.podCIDR`   | cni cluster used                                                                                    | `calico`                |
+| `feature.egressIgnoreCIDR.autoDetect.clusterIP` | if ignore service ip                                                                                | `true`                  |
+| `feature.egressIgnoreCIDR.autoDetect.nodeIP`    | if ignore node ip                                                                                   | `true`                  |
+| `feature.egressIgnoreCIDR.custom`               | cidrs provided manually                                                                             | `[]`                    |
 
 ### Egressgateway agent parameters
 
