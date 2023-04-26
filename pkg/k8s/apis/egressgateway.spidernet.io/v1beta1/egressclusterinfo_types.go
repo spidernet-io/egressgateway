@@ -26,7 +26,7 @@ type EgressClusterInfo struct {
 	metav1.ObjectMeta `json:"metadata"`
 
 	// +kubebuilder:validation:Optional
-	Spec EgressEndpointSliceSpec `json:"spec,omitempty"`
+	Spec EgressClusterStatusSpec `json:"spec,omitempty"`
 	// +kubebuilder:validation:Optional
 	Status EgressClusterStatus `json:"status,omitempty"`
 }
@@ -52,4 +52,8 @@ type IPListPair struct {
 	IPv4 []string `json:"ipv4,omitempty"`
 	// +kubebuilder:validation:Optional
 	IPv6 []string `json:"ipv6,omitempty"`
+}
+
+func init() {
+	SchemeBuilder.Register(&EgressClusterInfo{}, &EgressClusterInfoList{})
 }
