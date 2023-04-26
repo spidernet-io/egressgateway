@@ -3,6 +3,7 @@ module github.com/spidernet-io/egressgateway
 go 1.20
 
 require (
+	github.com/agiledragon/gomonkey/v2 v2.9.0
 	github.com/cilium/ipam v0.0.0-20220824141044-46ef3d556735
 	github.com/go-logr/logr v1.2.3
 	github.com/go-openapi/errors v0.20.3
@@ -12,6 +13,7 @@ require (
 	github.com/go-openapi/strfmt v0.21.7
 	github.com/go-openapi/swag v0.22.3
 	github.com/go-swagger/go-swagger v0.30.4
+	github.com/golang/mock v1.6.0
 	github.com/google/gops v0.3.27
 	github.com/gorilla/websocket v1.5.0
 	github.com/jessevdk/go-flags v1.5.0

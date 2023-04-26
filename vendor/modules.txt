@@ -8,6 +8,10 @@ github.com/Masterminds/semver/v3
 ## explicit; go 1.13
 github.com/Masterminds/sprig/v3
 # github.com/asaskevich/govalidator v0.0.0-20230301143203-a9d515a09cc2
+# github.com/agiledragon/gomonkey/v2 v2.9.0
+## explicit; go 1.14
+github.com/agiledragon/gomonkey/v2
+github.com/agiledragon/gomonkey/v2/creflect
 ## explicit; go 1.13
 github.com/asaskevich/govalidator
 # github.com/beorn7/perks v1.0.1
@@ -125,6 +129,9 @@ github.com/gogo/protobuf/sortkeys
 # github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da
 ## explicit
 github.com/golang/groupcache/lru
+# github.com/golang/mock v1.6.0
+## explicit; go 1.11
+github.com/golang/mock/gomock
 # github.com/golang/protobuf v1.5.3
 ## explicit; go 1.9
 github.com/golang/protobuf/proto
