@@ -27,6 +27,7 @@ import (
 	"github.com/spidernet-io/egressgateway/pkg/utils"
 )
 
+//lint:ignore
 type egReconciler struct {
 	client client.Client
 	log    *zap.Logger
