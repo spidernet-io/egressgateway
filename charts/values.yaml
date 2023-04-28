@@ -28,9 +28,6 @@ feature:
   enableIPv6: false
   ## @param feature.startRouteTable Start route table
   startRouteTable: 50
-  iptables:
-    ## @param feature.iptables.backendMode The mode for iptables (`legacy` or `nft`). If left blank, it's automatically detected. Default: "".
-    backendMode: ""
   ## @param feature.datapathMode iptables mode, [`iptables`, `ebpf`]
   datapathMode: "iptables"
   ## @param feature.tunnelIpv4Subnet Tunnel IPv4 subnet
@@ -41,6 +38,9 @@ feature:
   tunnelDetectMethod: "defaultRouteInterface"
   ## @param feature.forwardMethod Tunnel base on which interface [`active-active`: require kernel >=4.4, `active-passive`]
   forwardMethod: "active-passive"
+  iptables:
+    ## @param feature.iptables.backendMode The mode for iptables (`legacy` or `nft`). If left blank, it's automatically detected. Default: "".
+    backendMode: ""
   vxlan:
     ## @param feature.vxlan.name The name of VXLAN device
     name: "egress.vxlan"
