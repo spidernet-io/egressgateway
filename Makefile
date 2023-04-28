@@ -257,8 +257,6 @@ lint_chart_trivy:
 .PHONY: update_crd_sdk
 update_crd_sdk:
 	@ echo "update crd manifest" && ./tools/golang/crdControllerGen.sh
-	@ echo "update crd sdk" && ./tools/golang/crdSdkGen.sh
-
 
 .PHONY: validate_crd_sdk
 validate_crd_sdk:
