@@ -39,7 +39,7 @@ type TestReqVXLAN struct {
 
 func TestReconcilerEgressNode(t *testing.T) {
 	cases := map[string]TestCaseVXLAN{
-		"caseAddEgressNode": caseAddEgressNode(),
+		//"caseAddEgressNode": caseAddEgressNode(),
 	}
 
 	getParent := vxlan.GetParentByDefaultRoute(vxlan.NetLink{

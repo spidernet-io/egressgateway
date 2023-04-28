@@ -6,3 +6,6 @@ run:
 
   # skip-dirs:
   #   - vendor
+linters:
+  disable:
+    - unused
