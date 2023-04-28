@@ -401,8 +401,7 @@ func (r *eciReconciler) initEgressClusterInfo() error {
 	opts := client.MatchingLabels(apiServerPodLabel)
 	err = r.client.List(context.Background(), &apiServerPodList, opts)
 	if err != nil {
-		s := fmt.Sprintf("Failed to List api-server pod, err(%v)", err)
-		r.log.Sugar().Errorf(s)
+		s := fmt.Sprintf("failed to List api-server pod, err: %v", err)
 		return fmt.Errorf(s)
 	}
 	apiServerPods := apiServerPodList.Items
@@ -418,9 +417,7 @@ func (r *eciReconciler) initEgressClusterInfo() error {
 				}
 			}
 			if len(ipRange) == 0 {
-				s := fmt.Sprintf("Failed to found service-cluster-ip-range")
-				r.log.Sugar().Errorf(s)
-				return fmt.Errorf(s)
+				return fmt.Errorf("failed to found service-cluster-ip-range")
 			}
 			// get service-cluster-ip-range, update it to eci status
 			ipRanges := strings.Split(ipRange, ",")
@@ -436,21 +433,16 @@ func (r *eciReconciler) initEgressClusterInfo() error {
 			r.eci.Status.EgressIgnoreCIDR.ClusterIP.IPv6 = []string{ipv6Range}
 
 		} else {
-			s := fmt.Sprintf("Failed to found api-server-pod containers")
-			r.log.Sugar().Errorf(s)
-			return fmt.Errorf(s)
+			return fmt.Errorf("failed to found api-server-pod containers")
 		}
 	} else {
-		s := fmt.Sprintf("Failed to found api-server pod")
-		r.log.Sugar().Errorf(s)
-		return fmt.Errorf(s)
+		return fmt.Errorf("failed to found api-server pod")
 	}
 	r.log.Sugar().Debugf("EgressCluterInfo: %v", r.eci)
 	r.log.Sugar().Infof("Update EgressClusterInfo: %v", r.eci.Name)
 	err = r.updateEgressClusterInfo()
 	if err != nil {
-		s := fmt.Sprintf("Failed to update EgressClusterInfo, err(%v)", err)
-		r.log.Sugar().Errorf(s)
+		s := fmt.Sprintf("Failed to update EgressClusterInfo, err: %v", err)
 		return fmt.Errorf(s)
 	}
 
@@ -526,7 +518,6 @@ func (r *eciReconciler) getEgressClusterInfo() error {
 // updateEgressClusterInfo update EgressClusterInfo cr
 func (r *eciReconciler) updateEgressClusterInfo() error {
 	return r.client.Status().Update(context.Background(), r.eci)
-
 }
 
 // getEgressIgnoreCIDRConfig get config about EgressIgnoreCIDR from egressgateway configmap
