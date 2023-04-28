@@ -12,30 +12,5 @@ metadata:
     {{- include "tplvalues.render" ( dict "value" .Values.global.commonAnnotations "context" $ ) | nindent 4 }}
   {{- end }}
 data:
-  conf.yml: |
-    enableIPv4: {{ .Values.feature.enableIPv4 }}
-    enableIPv6: {{ .Values.feature.enableIPv6 }}
-    startRouteTable: {{ .Values.feature.startRouteTable }}
-    datapathMode: {{ .Values.feature.datapathMode }}
-    tunnelIpv4Subnet: {{ .Values.feature.tunnelIpv4Subnet }}
-    tunnelIpv6Subnet: {{ .Values.feature.tunnelIpv6Subnet }}
-    tunnelDetectMethod: {{ .Values.feature.tunnelDetectMethod }}
-    forwardMethod: {{ .Values.feature.forwardMethod }}
-    iptables:
-      backendMode: {{ .Values.feature.iptables.backendMode }}
-    vxlan:
-      name: {{ .Values.feature.vxlan.name}}
-      id: {{ .Values.feature.vxlan.id }}
-      port: {{ .Values.feature.vxlan.port }}
-      disableChecksumOffload: {{ .Values.feature.vxlan.disableChecksumOffload }}
-    egressIgnoreCIDR:
-      autoDetect:
-        podCIDR: {{ .Values.feature.egressIgnoreCIDR.autoDetect.podCIDR }}
-        clusterIP: {{ .Values.feature.egressIgnoreCIDR.autoDetect.clusterIP }}
-        nodeIP: {{ .Values.feature.egressIgnoreCIDR.autoDetect.nodeIP }}
-      {{- if .Values.feature.egressIgnoreCIDR.custom }}
-      custom:
-      {{- with .Values.feature.egressIgnoreCIDR.custom }}
-      {{- toYaml . | trim | nindent 6 }}
-      {{- end }}
-      {{- end }}
+  conf.yml: |-
+    {{- include "tplvalues.render" ( dict "value" .Values.feature "context" $) | nindent 4 }}
