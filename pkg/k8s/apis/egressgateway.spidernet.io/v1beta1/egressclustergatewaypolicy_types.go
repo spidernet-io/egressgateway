@@ -26,7 +26,7 @@ type EgressClusterGatewayPolicy struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata"`
 
-	Spec EgressGatewayPolicySpec `json:"spec,omitempty"`
+	Spec EgressClusterGatewayPolicySpec `json:"spec,omitempty"`
 }
 
 type EgressClusterGatewayPolicySpec struct {
@@ -41,7 +41,14 @@ type EgressClusterGatewayPolicySpec struct {
 }
 
 type ClusterAppliedTo struct {
-	AppliedTo
+	// +kubebuilder:validation:Optional
+	PodSelector *metav1.LabelSelector `json:"podSelector,omitempty"`
+	// +kubebuilder:validation:Optional
+	PodSubnet *[]string `json:"podSubnet,omitempty"`
 	// +kubebuilder:validation:Optional
 	NamespaceSelector *metav1.LabelSelector `json:"namespaceSelector,omitempty"`
+}
+
+func init() {
+	SchemeBuilder.Register(&EgressClusterGatewayPolicy{}, &EgressClusterGatewayPolicyList{})
 }

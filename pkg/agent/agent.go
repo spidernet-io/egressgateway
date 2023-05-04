@@ -57,15 +57,15 @@ func New(cfg *config.Config, log *zap.Logger) (types.Service, error) {
 
 	metrics.RegisterMetricCollectors()
 
-	err = newEgressNodeController(mgr, cfg, log)
-	if err != nil {
-		return nil, fmt.Errorf("failed to create node controller: %w", err)
-	}
-
-	err = newPolicyController(mgr, log, cfg)
-	if err != nil {
-		return nil, fmt.Errorf("failed to create egress gateway policy controller: %w", err)
-	}
+	//err = newEgressNodeController(mgr, cfg, log)
+	//if err != nil {
+	//	return nil, fmt.Errorf("failed to create node controller: %w", err)
+	//}
+	//
+	//err = newPolicyController(mgr, log, cfg)
+	//if err != nil {
+	//	return nil, fmt.Errorf("failed to create egress gateway policy controller: %w", err)
+	//}
 
 	return &Agent{
 		client:  mgr.GetClient(),
