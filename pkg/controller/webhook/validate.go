@@ -9,29 +9,25 @@ import (
 	"fmt"
 	"net"
 
-	"k8s.io/api/admission/v1"
+	"sigs.k8s.io/controller-runtime/pkg/manager"
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
 	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
 
-	egressv1 "github.com/spidernet-io/egressgateway/pkg/k8s/apis/egressgateway.spidernet.io/v1"
+	"github.com/spidernet-io/egressgateway/pkg/config"
+	"github.com/spidernet-io/egressgateway/pkg/egressgateway"
+	egress "github.com/spidernet-io/egressgateway/pkg/k8s/apis/egressgateway.spidernet.io/v1beta1"
 )
 
 // ValidateHook ValidateHook
-func ValidateHook() *webhook.Admission {
+func ValidateHook(mgr manager.Manager, cfg *config.Config) *webhook.Admission {
 	return &webhook.Admission{
 		Handler: admission.HandlerFunc(func(ctx context.Context, req webhook.AdmissionRequest) webhook.AdmissionResponse {
-			if req.Operation == v1.Delete {
-				return webhook.Allowed("checked")
-			}
-
 			switch req.Kind.Kind {
 			case "EgressGateway":
-				if req.Name != "default" {
-					return webhook.Denied("Currently, we only support one instance of EgressGateway, " +
-						"the name of the EgressGateway must be 'default'.")
-				}
+				return (&egressgateway.EgressGatewayWebhook{Client: mgr.GetClient(), Config: cfg}).EgressGatewayValidate(ctx, req)
+
 			case "EgressGatewayPolicy":
-				policy := new(egressv1.EgressGatewayPolicy)
+				policy := new(egress.EgressGatewayPolicy)
 				err := json.Unmarshal(req.Object.Raw, policy)
 				if err != nil {
 					return webhook.Denied(fmt.Sprintf("json unmarshal EgressGatewayPolicy with error: %v", err))

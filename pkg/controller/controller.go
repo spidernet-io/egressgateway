@@ -63,7 +63,7 @@ func New(cfg *config.Config, log *zap.Logger) (types.Service, error) {
 
 	mgr.GetWebhookServer().Port = cfg.WebhookPort
 	mgr.GetWebhookServer().CertDir = cfg.TLSCertDir
-	mgr.GetWebhookServer().Register("/validate", webhook.ValidateHook())
+	mgr.GetWebhookServer().Register("/validate", webhook.ValidateHook(mgr, cfg))
 
 	//err = newEgressNodeController(mgr, log, cfg)
 	//if err != nil {

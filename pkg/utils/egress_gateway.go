@@ -11,4 +11,5 @@ import (
 
 func GetEIPRanges(eg egress.Ranges) (ipv4, ipv6 []net.IP) {
 
+	return nil, nil
 }
