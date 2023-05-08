@@ -30,7 +30,7 @@ require (
 	github.com/vishvananda/netlink v1.2.1-beta.2.0.20230130171208-05506ada9f99
 	go.uber.org/zap v1.24.0
 	golang.org/x/net v0.9.0
-	golang.org/x/sys v0.7.0
+	golang.org/x/sys v0.8.0
 	gopkg.in/yaml.v3 v3.0.1
 	k8s.io/api v0.26.3
 	k8s.io/apimachinery v0.27.1
