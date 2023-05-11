@@ -16,11 +16,17 @@ import (
 	egressv1 "github.com/spidernet-io/egressgateway/pkg/k8s/apis/egressgateway.spidernet.io/v1"
 )
 
+const EgressClusterInfo = "EgressClusterInfo"
+
 // ValidateHook ValidateHook
 func ValidateHook() *webhook.Admission {
 	return &webhook.Admission{
 		Handler: admission.HandlerFunc(func(ctx context.Context, req webhook.AdmissionRequest) webhook.AdmissionResponse {
 			if req.Operation == v1.Delete {
+				switch req.Kind.Kind {
+				case EgressClusterInfo:
+					return webhook.Denied("EgressClusterInfo 'default' is not allowed to be deleted")
+				}
 				return webhook.Allowed("checked")
 			}
 
