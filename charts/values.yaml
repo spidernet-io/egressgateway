@@ -45,9 +45,9 @@ feature:
     ## @param feature.vxlan.name The name of VXLAN device
     name: "egress.vxlan"
     ## @param feature.vxlan.port VXLAN port
-    port: "7789"
+    port: 7789
     ## @param feature.vxlan.id VXLAN ID
-    id: "100"
+    id: 100
     ## @param feature.vxlan.disableChecksumOffload Disable checksum offload
     disableChecksumOffload: true
   egressIgnoreCIDR:
