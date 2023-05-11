@@ -1,13 +1,13 @@
-# EgressGatewayPolicyCluster
+# EgressClusterGatewayPolicy
 
 ## 简介
 
-集群级别的 EgressGatewayPolicy
+集群级别的 EgressClusterGatewayPolicy
 
 ## CRD
 ```yaml
 apiVersion: egressgateway.spidernet.io/v1beta1
-kind: EgressGatewayPolicyCluster
+kind: EgressClusterGatewayPolicy
 metadata:
   namespace: "default"
   name: "policy-test"
