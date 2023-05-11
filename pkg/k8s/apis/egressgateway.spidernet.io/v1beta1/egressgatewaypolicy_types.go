@@ -17,11 +17,10 @@ type EgressGatewayPolicyList struct {
 }
 
 // EgressGatewayPolicy represents a single egress gateway policy
-// +kubebuilder:resource:categories={egressgatewaypolicy},path="egressgatewaypolicies",singular="egressgatewaypolicy",scope="Cluster",shortName={epo}
+// +kubebuilder:resource:categories={egressgatewaypolicy},path="egressgatewaypolicies",singular="egressgatewaypolicy",scope="Namespaced",shortName={epo}
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
 // +genclient
-// +genclient:nonNamespaced
 type EgressGatewayPolicy struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata"`
