@@ -3,19 +3,18 @@
 
 package common
 
-import (
-	"log"
-	"os"
-)
-
 // egressgateway
 const (
-	EGRESSGATEWAY_CHAIN               = "EGRESSGATEWAY-MARK-REQUEST"
-	EGRESSGATEWAY_CONFIGMAP_NAMESPACE = "kube-system"
-	EGRESSGATEWAY_CONFIGMAP_NAME      = "egressgateway"
-	EGRESSGATEWAY_CONFIGMAP_KEY       = "conf.yml"
-	EGRESS_VXLAN_INTERFACE_NAME       = "egress.vxlan"
-	EGRESSAGEWAY_NAME                 = "default"
+	EGRESSGATEWAY_CHAIN         = "EGRESSGATEWAY-MARK-REQUEST"
+	EGRESS_VXLAN_INTERFACE_NAME = "egress.vxlan"
+	EGRESSAGEWAY_NAME           = "default"
+)
+
+// egressgateway configmap
+const (
+	EGRESSGATEWAY_CONFIGMAP_NAME = "egressgateway"
+	EGRESSGATEWAY_CONFIGMAP_KEY  = "conf.yml"
+	CALICO                       = "calico"
 )
 
 // test
@@ -41,6 +40,16 @@ const (
 	WEB_PORT        = "WEB_PORT"
 )
 
+// kubeadm-config
+const (
+	kubeadmConfig        = "kubeadm-config"
+	clusterConfiguration = "ClusterConfiguration"
+	serviceSubnet        = "serviceSubnet"
+)
+
+// kube-system
+const kubeSystem = "kube-system"
+
 var NettoolsServer = map[string]string{
 	IMAGE:           "",
 	NETTOOLS_SERVER: "",
@@ -50,12 +59,12 @@ var NettoolsServer = map[string]string{
 	WEB_PORT:        "",
 }
 
-func init() {
-	for k := range NettoolsServer {
-		if env := os.Getenv(k); len(env) != 0 {
-			NettoolsServer[k] = env
-		} else {
-			log.Fatalf("can not found netTools server env: %s\n", k)
-		}
-	}
-}
+//func init() {
+//	for k := range NettoolsServer {
+//		if env := os.Getenv(k); len(env) != 0 {
+//			NettoolsServer[k] = env
+//		} else {
+//			log.Fatalf("can not found netTools server env: %s\n", k)
+//		}
+//	}
+//}

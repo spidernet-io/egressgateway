@@ -27,6 +27,28 @@ func GetIPV4V6(ips []string) (IPV4s, IPV6s []string, err error) {
 	return
 }
 
+func GetIPV4V6Cidr(ipCidrs []string) (IPV4Cidrs, IPV6Cidrs []string, err error) {
+	for _, ipCidr := range ipCidrs {
+		isIPv4Cidr, err := IsIPv4Cidr(ipCidr)
+		if err != nil {
+			return nil, nil, err
+		}
+		if isIPv4Cidr {
+			IPV4Cidrs = append(IPV4Cidrs, ipCidr)
+			continue
+		}
+
+		isIPv6Cidr, err := IsIPv6Cidr(ipCidr)
+		if err != nil {
+			return nil, nil, err
+		}
+		if isIPv6Cidr {
+			IPV6Cidrs = append(IPV6Cidrs, ipCidr)
+		}
+	}
+	return
+}
+
 func IsSameIPs(a, b []string) (bool, error) {
 	if len(a) != len(b) {
 		return false, nil
@@ -36,6 +58,27 @@ func IsSameIPs(a, b []string) (bool, error) {
 		return false, err
 	}
 	sortedB, err := SortIPs(b)
+	if err != nil {
+		return false, err
+	}
+
+	for i := range sortedA {
+		if sortedA[i] != sortedB[i] {
+			return false, nil
+		}
+	}
+	return true, nil
+}
+
+func IsSameIPCidrs(a, b []string) (bool, error) {
+	if len(a) != len(b) {
+		return false, nil
+	}
+	sortedA, err := SortIPCidrs(a)
+	if err != nil {
+		return false, err
+	}
+	sortedB, err := SortIPCidrs(b)
 	if err != nil {
 		return false, err
 	}
@@ -75,7 +118,7 @@ func IsIPv6(ip string) (bool, error) {
 }
 
 func SortIPs(ips []string) ([]string, error) {
-	sortedIPs := make([]string, len(ips))
+	sortedIPs := make([]string, 0)
 	for _, ip := range ips {
 		netIP := net.ParseIP(ip)
 		if netIP == nil {
@@ -86,6 +129,19 @@ func SortIPs(ips []string) ([]string, error) {
 	}
 	sort.Strings(sortedIPs)
 	return sortedIPs, nil
+}
+
+func SortIPCidrs(ips []string) ([]string, error) {
+	ipcidrs := make([]string, 0)
+	for _, ip := range ips {
+		_, netIP, err := net.ParseCIDR(ip)
+		if err != nil {
+			return nil, err
+		}
+		ipcidrs = append(ipcidrs, netIP.String())
+	}
+	sort.Strings(ipcidrs)
+	return ipcidrs, nil
 }
 
 func IsIPv4Cidr(cidr string) (bool, error) {

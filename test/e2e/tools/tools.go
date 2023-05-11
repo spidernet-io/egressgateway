@@ -6,12 +6,35 @@ package tools
 import (
 	"context"
 	"fmt"
+	"math/rand"
 	"os/exec"
 	"sort"
+	"strconv"
+	"strings"
 	"time"
 
 	"github.com/spidernet-io/egressgateway/test/e2e/err"
 )
+
+var r = rand.New(rand.NewSource(time.Now().UnixNano()))
+
+func GenerateString(lenNum int, isHex bool) string {
+	var chars []string
+	chars = []string{"a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z", "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z", "1", "2", "3", "4", "5", "6", "7", "8", "9", "0"}
+	if isHex {
+		chars = []string{"0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "a", "b", "c", "d", "e", "f"}
+	}
+	str := strings.Builder{}
+	length := len(chars)
+	for i := 0; i < lenNum; i++ {
+		str.WriteString(chars[r.Intn(length)])
+	}
+	return str.String()
+}
+
+func GenerateRandomNumber(max int) string {
+	return strconv.Itoa(r.Intn(max))
+}
 
 // SubtractionSlice  a, b are inclusion relationship
 func SubtractionSlice(a, b []string) []string {

@@ -80,10 +80,10 @@ func New(cfg *config.Config, log *zap.Logger) (types.Service, error) {
 	//	return nil, fmt.Errorf("failed to create egress gateway controller: %w", err)
 	//}
 
-	//err = newEgressClusterInfoController(mgr, log, cfg)
-	//if err != nil {
-	//	return nil, fmt.Errorf("failed to create egress cluster info controller: %w", err)
-	//}
+	err = newEgressClusterInfoController(mgr, log, cfg)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create egress cluster info controller: %w", err)
+	}
 
 	err = newEgressEndpointSliceController(mgr, log, cfg)
 	if err != nil {

@@ -16,7 +16,7 @@ import (
 func GetEgressConfigmap(f *framework.Framework) (*config.FileConfig, error) {
 	key := types.NamespacedName{
 		Name:      EGRESSGATEWAY_CONFIGMAP_NAME,
-		Namespace: EGRESSGATEWAY_CONFIGMAP_NAMESPACE,
+		Namespace: kubeSystem,
 	}
 	cm := &corev1.ConfigMap{}
 	e := f.GetResource(key, cm)
@@ -56,4 +56,12 @@ func GetForwardMethod(f *framework.Framework) (string, error) {
 		return "", e
 	}
 	return c.ForwardMethod, nil
+}
+
+func GetEgressIgnoreCIDR(f *framework.Framework) (*config.EgressIgnoreCIDR, error) {
+	c, e := GetEgressConfigmap(f)
+	if e != nil {
+		return nil, e
+	}
+	return &c.EgressIgnoreCIDR, nil
 }

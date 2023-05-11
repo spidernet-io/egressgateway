@@ -71,3 +71,16 @@ func GetHostIPV6Net(duration time.Duration) ([]byte, error) {
 	a := "ip -6 -br a show `ip r | grep default | awk '{print $5}'` | awk '{print $3}' | tr -d '\n' "
 	return exec.CommandContext(ctx, "sh", "-c", a).Output()
 }
+
+func RandomIPPoolV4Cidr() string {
+	n1 := tools.GenerateRandomNumber(200)
+	n2 := tools.GenerateRandomNumber(255)
+	n3 := tools.GenerateRandomNumber(255)
+	return fmt.Sprintf("%s.%s.%s.0/24", n1, n2, n3)
+}
+
+func RandomIPPoolV6Cidr() string {
+	n1 := tools.GenerateString(4, true)
+	n2 := tools.GenerateString(4, true)
+	return fmt.Sprintf("%s:%s::0/112", n1, n2)
+}
