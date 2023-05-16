@@ -295,8 +295,6 @@ func (r *eciReconciler) reconcileNode(ctx context.Context, req reconcile.Request
 
 	// get nodeIP, check if its changed
 	nodeIPv4, nodeIPv6 := utils.GetNodeIP(node)
-	oldNodeIPv4Map := r.nodeIPv4Map
-	oldNodeIPv6Map := r.nodeIPv6Map
 
 	_, v4Ok := r.nodeIPv4Map[req.Name]
 	_, v6Ok := r.nodeIPv6Map[req.Name]
@@ -324,8 +322,9 @@ func (r *eciReconciler) reconcileNode(ctx context.Context, req reconcile.Request
 	if needUpdateECI {
 		err = r.updateEgressClusterInfo(ctx)
 		if err != nil {
-			r.nodeIPv4Map = oldNodeIPv4Map
-			r.nodeIPv6Map = oldNodeIPv6Map
+			delete(r.nodeIPv4Map, req.Name)
+			delete(r.nodeIPv6Map, req.Name)
+
 			return reconcile.Result{Requeue: true}, err
 		}
 	}
@@ -397,55 +396,19 @@ func (r *eciReconciler) initEgressClusterInfo(ctx context.Context) error {
 	}
 
 	// get service-cluster-ip-range from api-server pod
-	apiServerPodList := corev1.PodList{}
-	opts := client.MatchingLabels(apiServerPodLabel)
-	err = r.client.List(context.Background(), &apiServerPodList, opts)
+	ipv4Range, ipv6Range, err := r.getClusterIPRangeFromApiServerPod()
 	if err != nil {
-		s := fmt.Sprintf("failed to List api-server pod, err: %v", err)
-		return fmt.Errorf(s)
+		return err
 	}
-	apiServerPods := apiServerPodList.Items
-	if len(apiServerPods) != 0 {
-		apiServerContainers := apiServerPodList.Items[0].Spec.Containers
-		if len(apiServerContainers) != 0 {
-			commands := apiServerContainers[0].Command
-			ipRange := ""
-			for _, c := range commands {
-				if strings.Contains(c, serviceClusterIpRange) {
-					ipRange = strings.Split(c, "=")[1]
-					break
-				}
-			}
-			if len(ipRange) == 0 {
-				return fmt.Errorf("failed to found service-cluster-ip-range")
-			}
-			// get service-cluster-ip-range, update it to eci status
-			ipRanges := strings.Split(ipRange, ",")
-			var ipv4Range, ipv6Range string
-			if len(ipRanges) == 1 {
-				ipv4Range = ipRanges[0]
-			}
-			if len(ipRanges) == 2 {
-				ipv4Range, ipv6Range = ipRanges[0], ipRanges[1]
-			}
-			r.log.Sugar().Infof("Get service-cluster-ip-range, ipv4Range: %v, ipv6Range: %v", ipv4Range, ipv6Range)
-			r.eci.Status.EgressIgnoreCIDR.ClusterIP.IPv4 = []string{ipv4Range}
-			r.eci.Status.EgressIgnoreCIDR.ClusterIP.IPv6 = []string{ipv6Range}
+	r.eci.Status.EgressIgnoreCIDR.ClusterIP.IPv4 = ipv4Range
+	r.eci.Status.EgressIgnoreCIDR.ClusterIP.IPv6 = ipv6Range
 
-		} else {
-			return fmt.Errorf("failed to found api-server-pod containers")
-		}
-	} else {
-		return fmt.Errorf("failed to found api-server pod")
-	}
 	r.log.Sugar().Debugf("EgressCluterInfo: %v", r.eci)
 	r.log.Sugar().Infof("Update EgressClusterInfo: %v", r.eci.Name)
 	err = r.updateEgressClusterInfo(ctx)
 	if err != nil {
-		s := fmt.Sprintf("Failed to update EgressClusterInfo, err: %v", err)
-		return fmt.Errorf(s)
+		return err
 	}
-
 	return nil
 }
 
@@ -524,4 +487,50 @@ func (r *eciReconciler) updateEgressClusterInfo(ctx context.Context) error {
 func (r *eciReconciler) getEgressIgnoreCIDRConfig() (string, bool, bool) {
 	i := r.config.FileConfig.EgressIgnoreCIDR
 	return i.PodCIDR, i.ClusterIP, i.NodeIP
+}
+
+// getClusterIPRangeFromApiServerPod get cluster ip ranges from api-server pod
+func (r *eciReconciler) getClusterIPRangeFromApiServerPod() (ipv4Range, ipv6Range []string, err error) {
+	apiServerPodList := corev1.PodList{}
+	opts := client.MatchingLabels(apiServerPodLabel)
+	err = r.client.List(context.Background(), &apiServerPodList, opts)
+	if err != nil {
+		return nil, nil, err
+	}
+	apiServerPods := apiServerPodList.Items
+	if len(apiServerPods) != 0 {
+		apiServerContainers := apiServerPodList.Items[0].Spec.Containers
+		if len(apiServerContainers) != 0 {
+			commands := apiServerContainers[0].Command
+			ipRange := ""
+			for _, c := range commands {
+				if strings.Contains(c, serviceClusterIpRange) {
+					ipRange = strings.Split(c, "=")[1]
+					break
+				}
+			}
+			if len(ipRange) == 0 {
+				return nil, nil, fmt.Errorf("failed to found service-cluster-ip-range")
+			}
+			// get service-cluster-ip-range, update it to eci status
+			ipRanges := strings.Split(ipRange, ",")
+			if len(ipRanges) == 1 {
+				if isV4, _ := utils.IsIPv4Cidr(ipRanges[0]); isV4 {
+					ipv4Range = ipRanges
+				}
+				if isV6, _ := utils.IsIPv6Cidr(ipRanges[0]); isV6 {
+					ipv6Range = ipRanges
+				}
+			}
+			if len(ipRanges) == 2 {
+				ipv4Range, ipv6Range = ipRanges[:0], ipRanges[1:]
+			}
+
+		} else {
+			return nil, nil, fmt.Errorf("failed to found api-server-pod containers")
+		}
+	} else {
+		return nil, nil, fmt.Errorf("failed to found api-server pod")
+	}
+	return
 }
