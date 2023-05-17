@@ -53,7 +53,7 @@ rules:
   resources:
   - egressclustergatewaypolicies
   - egressclusterinfos
-  - egressendpointslice
+  - egressendpointslices
   - egressgatewaypolicies
   - egressgateways
   - egressnodes

@@ -28,36 +28,31 @@ spec:
               of an object. Servers should convert recognized schemas to the latest
               internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
             type: string
+          endpoints:
+            items:
+              properties:
+                ipv4:
+                  items:
+                    type: string
+                  type: array
+                ipv6:
+                  items:
+                    type: string
+                  type: array
+                namespace:
+                  type: string
+                node:
+                  type: string
+                pod:
+                  type: string
+              type: object
+            type: array
           kind:
             description: 'Kind is a string value representing the REST resource this
               object represents. Servers may infer this from the endpoint the client
               submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
             type: string
           metadata:
-            type: object
-          spec:
-            type: object
-          status:
-            properties:
-              endpoints:
-                items:
-                  properties:
-                    IPv4List:
-                      items:
-                        type: string
-                      type: array
-                    IPv6List:
-                      items:
-                        type: string
-                      type: array
-                    nodeName:
-                      type: string
-                    podName:
-                      type: string
-                    uuid:
-                      type: string
-                  type: object
-                type: array
             type: object
         required:
         - metadata

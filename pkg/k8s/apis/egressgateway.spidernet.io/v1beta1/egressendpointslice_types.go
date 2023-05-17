@@ -27,28 +27,20 @@ type EgressEndpointSlice struct {
 	metav1.ObjectMeta `json:"metadata"`
 
 	// +kubebuilder:validation:Optional
-	Spec EgressEndpointSliceSpec `json:"spec,omitempty"`
-	// +kubebuilder:validation:Optional
-	Status EgressEndpointSliceSpecStatus `json:"status,omitempty"`
-}
-
-type EgressEndpointSliceSpec struct{}
-
-type EgressEndpointSliceSpecStatus struct {
 	Endpoints []EgressEndpoint `json:"endpoints,omitempty"`
 }
 
 type EgressEndpoint struct {
 	// +kubebuilder:validation:Optional
-	PodName string `json:"podName,omitempty"`
+	Namespace string `json:"namespace,omitempty"`
 	// +kubebuilder:validation:Optional
-	IPv4List []string `json:"IPv4List,omitempty"`
+	Pod string `json:"pod,omitempty"`
 	// +kubebuilder:validation:Optional
-	IPv6List []string `json:"IPv6List,omitempty"`
+	IPv4 []string `json:"ipv4,omitempty"`
 	// +kubebuilder:validation:Optional
-	NodeName string `json:"nodeName,omitempty"`
+	IPv6 []string `json:"ipv6,omitempty"`
 	// +kubebuilder:validation:Optional
-	UUID string `json:"uuid,omitempty"`
+	Node string `json:"node,omitempty"`
 }
 
 func init() {

@@ -62,19 +62,20 @@ type EnvConfig struct {
 }
 
 type FileConfig struct {
-	EnableIPv4         bool     `yaml:"enableIPv4"`
-	EnableIPv6         bool     `yaml:"enableIPv6"`
-	StartRouteTable    int      `yaml:"startRouteTable"`
-	IPTables           IPTables `yaml:"iptables"`
-	DatapathMode       string   `yaml:"datapathMode"`
-	TunnelIpv4Subnet   string   `yaml:"tunnelIpv4Subnet"`
-	TunnelIpv6Subnet   string   `yaml:"tunnelIpv6Subnet"`
-	TunnelIPv4Net      *net.IPNet
-	TunnelIPv6Net      *net.IPNet
-	TunnelDetectMethod string           `yaml:"tunnelDetectMethod"`
-	ForwardMethod      string           `yaml:"forwardMethod"`
-	VXLAN              VXLAN            `yaml:"vxlan"`
-	EgressIgnoreCIDR   EgressIgnoreCIDR `yaml:"egressIgnoreCIDR"`
+	EnableIPv4                bool     `yaml:"enableIPv4"`
+	EnableIPv6                bool     `yaml:"enableIPv6"`
+	StartRouteTable           int      `yaml:"startRouteTable"`
+	IPTables                  IPTables `yaml:"iptables"`
+	DatapathMode              string   `yaml:"datapathMode"`
+	TunnelIpv4Subnet          string   `yaml:"tunnelIpv4Subnet"`
+	TunnelIpv6Subnet          string   `yaml:"tunnelIpv6Subnet"`
+	TunnelIPv4Net             *net.IPNet
+	TunnelIPv6Net             *net.IPNet
+	TunnelDetectMethod        string           `yaml:"tunnelDetectMethod"`
+	ForwardMethod             string           `yaml:"forwardMethod"`
+	VXLAN                     VXLAN            `yaml:"vxlan"`
+	EgressIgnoreCIDR          EgressIgnoreCIDR `yaml:"egressIgnoreCIDR"`
+	MaxNumberEndpointPerSlice int              `yaml:"maxNumberEndpointPerSlice"`
 }
 
 const TunnelInterfaceDefaultRoute = "defaultRouteInterface"
