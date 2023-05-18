@@ -17,6 +17,7 @@ import (
 	"github.com/spidernet-io/egressgateway/pkg/config"
 	"github.com/spidernet-io/egressgateway/pkg/controller/metrics"
 	"github.com/spidernet-io/egressgateway/pkg/controller/webhook"
+	"github.com/spidernet-io/egressgateway/pkg/egressgateway"
 	"github.com/spidernet-io/egressgateway/pkg/logger"
 	"github.com/spidernet-io/egressgateway/pkg/schema"
 	"github.com/spidernet-io/egressgateway/pkg/types"
@@ -63,7 +64,7 @@ func New(cfg *config.Config, log *zap.Logger) (types.Service, error) {
 
 	mgr.GetWebhookServer().Port = cfg.WebhookPort
 	mgr.GetWebhookServer().CertDir = cfg.TLSCertDir
-	mgr.GetWebhookServer().Register("/validate", webhook.ValidateHook())
+	mgr.GetWebhookServer().Register("/validate", webhook.ValidateHook(mgr.GetClient(), cfg))
 
 	//err = newEgressNodeController(mgr, log, cfg)
 	//if err != nil {
@@ -75,10 +76,10 @@ func New(cfg *config.Config, log *zap.Logger) (types.Service, error) {
 	//	return nil, fmt.Errorf("failed to create node controller: %w", err)
 	//}
 	//
-	//err = newEgressGatewayController(mgr, log, cfg)
-	//if err != nil {
-	//	return nil, fmt.Errorf("failed to create egress gateway controller: %w", err)
-	//}
+	err = egressgateway.NewEgressGatewayController(mgr, log, cfg)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create egress gateway controller: %w", err)
+	}
 
 	err = newEgressClusterInfoController(mgr, log, cfg)
 	if err != nil {

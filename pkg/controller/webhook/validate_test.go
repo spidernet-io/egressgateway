@@ -12,9 +12,12 @@ import (
 	admissionv1 "k8s.io/api/admission/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
 
-	egressv1 "github.com/spidernet-io/egressgateway/pkg/k8s/apis/egressgateway.spidernet.io/v1"
+	"github.com/spidernet-io/egressgateway/pkg/config"
+	egressv1 "github.com/spidernet-io/egressgateway/pkg/k8s/apis/egressgateway.spidernet.io/v1beta1"
+	"github.com/spidernet-io/egressgateway/pkg/schema"
 )
 
 func TestValidateEgressGateway(t *testing.T) {
@@ -26,23 +29,17 @@ func TestValidateEgressGateway(t *testing.T) {
 		expAllow          bool
 		expErrMessage     string
 	}{
-		"no duplicates, valid": {
+		"EgressGateway the EIP format is incorrect": {
 			existingResources: nil,
 			newResource: &egressv1.EgressGateway{
 				ObjectMeta: metav1.ObjectMeta{
-					Name: "default",
+					Name: "eg-test",
 				},
-				Spec: egressv1.EgressGatewaySpec{},
-			},
-			expAllow: true,
-		},
-		"EgressGateway name not equal default": {
-			existingResources: nil,
-			newResource: &egressv1.EgressGateway{
-				ObjectMeta: metav1.ObjectMeta{
-					Name: "default-xxx",
+				Spec: egressv1.EgressGatewaySpec{
+					Ranges: egressv1.Ranges{
+						IPv4: []string{"1.1.1.1x"},
+					},
 				},
-				Spec: egressv1.EgressGatewaySpec{},
 			},
 			expAllow: false,
 		},
@@ -52,7 +49,17 @@ func TestValidateEgressGateway(t *testing.T) {
 			marshalledRequestObject, err := json.Marshal(c.newResource)
 			assert.NoError(t, err)
 
-			validator := ValidateHook()
+			builder := fake.NewClientBuilder()
+			builder.WithScheme(schema.GetScheme())
+			cli := builder.Build()
+			conf := &config.Config{
+				FileConfig: config.FileConfig{
+					EnableIPv4: true,
+					EnableIPv6: false,
+				},
+			}
+
+			validator := ValidateHook(cli, conf)
 			resp := validator.Handle(ctx, admission.Request{
 				AdmissionRequest: admissionv1.AdmissionRequest{
 					Name: c.newResource.Name,
@@ -130,7 +137,17 @@ func TestValidateEgressGatewayPolicy(t *testing.T) {
 			marshalledRequestObject, err := json.Marshal(policy)
 			assert.NoError(t, err)
 
-			validator := ValidateHook()
+			builder := fake.NewClientBuilder()
+			builder.WithScheme(schema.GetScheme())
+			cli := builder.Build()
+			conf := &config.Config{
+				FileConfig: config.FileConfig{
+					EnableIPv4: true,
+					EnableIPv6: true,
+				},
+			}
+
+			validator := ValidateHook(cli, conf)
 			resp := validator.Handle(ctx, admission.Request{
 				AdmissionRequest: admissionv1.AdmissionRequest{
 					Name: policy.Name,
@@ -187,7 +204,17 @@ func TestValidateEgressNode(t *testing.T) {
 					},
 				},
 			}
-			validator := ValidateHook()
+
+			builder := fake.NewClientBuilder()
+			builder.WithScheme(schema.GetScheme())
+			cli := builder.Build()
+			conf := &config.Config{
+				FileConfig: config.FileConfig{
+					EnableIPv4: true,
+					EnableIPv6: true,
+				},
+			}
+			validator := ValidateHook(cli, conf)
 			resp := validator.Handle(ctx, req)
 
 			assert.Equal(t, c.expAllow, resp.Allowed)
