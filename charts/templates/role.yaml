@@ -51,6 +51,7 @@ rules:
 - apiGroups:
   - egressgateway.spidernet.io
   resources:
+  - egressclusterendpointslices
   - egressclustergatewaypolicies
   - egressclusterinfos
   - egressendpointslices
