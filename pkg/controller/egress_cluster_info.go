@@ -523,7 +523,7 @@ func (r *eciReconciler) getClusterIPRangeFromApiServerPod() (ipv4Range, ipv6Rang
 				}
 			}
 			if len(ipRanges) == 2 {
-				ipv4Range, ipv6Range = ipRanges[:0], ipRanges[1:]
+				ipv4Range, ipv6Range = ipRanges[:1], ipRanges[1:]
 			}
 
 		} else {

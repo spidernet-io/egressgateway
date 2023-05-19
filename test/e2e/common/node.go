@@ -4,10 +4,13 @@
 package common
 
 import (
+	. "github.com/onsi/gomega"
 	"github.com/spidernet-io/e2eframework/framework"
-	"github.com/spidernet-io/egressgateway/test/e2e/tools"
 	corev1 "k8s.io/api/core/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+
+	"github.com/spidernet-io/egressgateway/pkg/utils"
+	"github.com/spidernet-io/egressgateway/test/e2e/tools"
 )
 
 func GetAllNodes(f *framework.Framework) (nodes []string, err error) {
@@ -77,4 +80,22 @@ func UnLabelNodes(f *framework.Framework, nodes []string, labels map[string]stri
 		}
 	}
 	return nil
+}
+
+func GetAllNodesIP(f *framework.Framework) (nodesIPv4, nodesIPv6 []string) {
+	nodesIPv4, nodesIPv6 = make([]string, 0), make([]string, 0)
+	allNodes := f.Info.KindNodeList
+	for _, node := range allNodes {
+		getNode, err := f.GetNode(node)
+		Expect(err).NotTo(HaveOccurred())
+		ipv4, ipv6 := utils.GetNodeIP(getNode)
+		if len(ipv4) != 0 {
+			nodesIPv4 = append(nodesIPv4, ipv4)
+
+		}
+		if len(ipv6) != 0 {
+			nodesIPv6 = append(nodesIPv6, ipv6)
+		}
+	}
+	return
 }

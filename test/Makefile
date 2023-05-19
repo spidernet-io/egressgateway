@@ -5,7 +5,6 @@ include ../Makefile.defs
 init_kind_env:
 	make init_one_kind -e KIND_CONFIG_PATH=./kindconfig/global-kind.yaml -e KIND_CLUSTER_NAME=$(E2E_KIND_CLUSTER_NAME) -e KIND_KUBECONFIG=$(E2E_KIND_KUBECONFIG_PATH)
 	make install_proscope
-	make run_nettool_server
 	make install_calico
 
 
