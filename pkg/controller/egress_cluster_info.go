@@ -42,10 +42,12 @@ type eciReconciler struct {
 const (
 	defaultEgressClusterInfoName = "default"
 	calico                       = "calico"
+	k8s                          = "k8s"
 	serviceClusterIpRange        = "service-cluster-ip-range"
+	clusterCidr                  = "cluster-cidr"
 )
 
-var apiServerPodLabel = map[string]string{"component": "kube-apiserver"}
+var kubeControllerManagerPodLabel = map[string]string{"component": "kube-controller-manager"}
 
 func (r *eciReconciler) Reconcile(ctx context.Context, req reconcile.Request) (reconcile.Result, error) {
 	kind, newReq, err := utils.ParseKindWithReq(req)
@@ -390,18 +392,36 @@ func (r *eciReconciler) initEgressClusterInfo(ctx context.Context) error {
 		return err
 	}
 
-	_, ignoreClusterCidr, _ := r.getEgressIgnoreCIDRConfig()
-	if !ignoreClusterCidr {
+	ignorePod, ignoreClusterCidr, _ := r.getEgressIgnoreCIDRConfig()
+	if !ignoreClusterCidr && (ignorePod == k8s || ignorePod == "") {
 		return nil
 	}
 
-	// get service-cluster-ip-range from api-server pod
-	ipv4Range, ipv6Range, err := r.getClusterIPRangeFromApiServerPod()
+	// get service-cluster-ip-range from kube-controller-manager pod
+	pod, err := getPod(r.client, kubeControllerManagerPodLabel)
 	if err != nil {
 		return err
 	}
-	r.eci.Status.EgressIgnoreCIDR.ClusterIP.IPv4 = ipv4Range
-	r.eci.Status.EgressIgnoreCIDR.ClusterIP.IPv6 = ipv6Range
+
+	if ignoreClusterCidr {
+		// get service-cluster-ip-range
+		ipv4Range, ipv6Range, err := r.getServiceClusterIPRange(pod)
+		if err != nil {
+			return err
+		}
+		r.eci.Status.EgressIgnoreCIDR.ClusterIP.IPv4 = ipv4Range
+		r.eci.Status.EgressIgnoreCIDR.ClusterIP.IPv6 = ipv6Range
+	}
+
+	if ignorePod == k8s || ignorePod == "" {
+		// get cluster-cidr
+		ipv4Range, ipv6Range, err := r.getClusterCidr(pod)
+		if err != nil {
+			return err
+		}
+		r.eci.Status.EgressIgnoreCIDR.PodCIDR.IPv4 = ipv4Range
+		r.eci.Status.EgressIgnoreCIDR.PodCIDR.IPv6 = ipv6Range
+	}
 
 	r.log.Sugar().Debugf("EgressCluterInfo: %v", r.eci)
 	r.log.Sugar().Infof("Update EgressClusterInfo: %v", r.eci.Name)
@@ -489,48 +509,63 @@ func (r *eciReconciler) getEgressIgnoreCIDRConfig() (string, bool, bool) {
 	return i.PodCIDR, i.ClusterIP, i.NodeIP
 }
 
-// getClusterIPRangeFromApiServerPod get cluster ip ranges from api-server pod
-func (r *eciReconciler) getClusterIPRangeFromApiServerPod() (ipv4Range, ipv6Range []string, err error) {
-	apiServerPodList := corev1.PodList{}
-	opts := client.MatchingLabels(apiServerPodLabel)
-	err = r.client.List(context.Background(), &apiServerPodList, opts)
-	if err != nil {
-		return nil, nil, err
-	}
-	apiServerPods := apiServerPodList.Items
-	if len(apiServerPods) != 0 {
-		apiServerContainers := apiServerPodList.Items[0].Spec.Containers
-		if len(apiServerContainers) != 0 {
-			commands := apiServerContainers[0].Command
-			ipRange := ""
-			for _, c := range commands {
-				if strings.Contains(c, serviceClusterIpRange) {
-					ipRange = strings.Split(c, "=")[1]
-					break
-				}
-			}
-			if len(ipRange) == 0 {
-				return nil, nil, fmt.Errorf("failed to found service-cluster-ip-range")
-			}
-			// get service-cluster-ip-range, update it to eci status
-			ipRanges := strings.Split(ipRange, ",")
-			if len(ipRanges) == 1 {
-				if isV4, _ := utils.IsIPv4Cidr(ipRanges[0]); isV4 {
-					ipv4Range = ipRanges
-				}
-				if isV6, _ := utils.IsIPv6Cidr(ipRanges[0]); isV6 {
-					ipv6Range = ipRanges
-				}
-			}
-			if len(ipRanges) == 2 {
-				ipv4Range, ipv6Range = ipRanges[:1], ipRanges[1:]
-			}
+// getServiceClusterIPRange get service-cluster-ip-range from kube controller manager
+func (r *eciReconciler) getServiceClusterIPRange(pod *corev1.Pod) (ipv4Range, ipv6Range []string, err error) {
+	return getCidr(pod, serviceClusterIpRange)
+}
 
-		} else {
-			return nil, nil, fmt.Errorf("failed to found api-server-pod containers")
+// getClusterCidr get cluster-cidr from kube controller manager
+func (r *eciReconciler) getClusterCidr(pod *corev1.Pod) (ipv4Range, ipv6Range []string, err error) {
+	return getCidr(pod, clusterCidr)
+}
+
+// getCidr get cidr value from kube controller manager
+func getCidr(pod *corev1.Pod, param string) (ipv4Range, ipv6Range []string, err error) {
+	containers := pod.Spec.Containers
+	if len(containers) == 0 {
+		return nil, nil, fmt.Errorf("failed to found containers")
+	}
+	commands := containers[0].Command
+	ipRange := ""
+	for _, c := range commands {
+		if strings.Contains(c, param) {
+			ipRange = strings.Split(c, "=")[1]
+			break
 		}
-	} else {
-		return nil, nil, fmt.Errorf("failed to found api-server pod")
+	}
+	if len(ipRange) == 0 {
+		return nil, nil, fmt.Errorf("failed to found %s\n", param)
+	}
+	// get cidr
+	ipRanges := strings.Split(ipRange, ",")
+	if len(ipRanges) == 1 {
+		if isV4, _ := utils.IsIPv4Cidr(ipRanges[0]); isV4 {
+			ipv4Range = ipRanges
+			ipv6Range = []string{}
+		}
+		if isV6, _ := utils.IsIPv6Cidr(ipRanges[0]); isV6 {
+			ipv6Range = ipRanges
+			ipv4Range = []string{}
+
+		}
+	}
+	if len(ipRanges) == 2 {
+		ipv4Range, ipv6Range = ipRanges[:1], ipRanges[1:]
 	}
 	return
+}
+
+// getPod get pod by label
+func getPod(c client.Client, label map[string]string) (*corev1.Pod, error) {
+	podList := corev1.PodList{}
+	opts := client.MatchingLabels(label)
+	err := c.List(context.Background(), &podList, opts)
+	if err != nil {
+		return nil, err
+	}
+	pods := podList.Items
+	if len(pods) == 0 {
+		return nil, fmt.Errorf("failed to get pod")
+	}
+	return &pods[0], nil
 }
