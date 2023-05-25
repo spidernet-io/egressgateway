@@ -101,9 +101,7 @@ spec:
                       type: string
                     type: array
                   policy:
-                    items:
-                      type: string
-                    type: array
+                    type: string
                 type: object
             type: object
           status:
@@ -111,16 +109,26 @@ spec:
               nodeList:
                 items:
                   properties:
-                    ipv4:
-                      type: string
-                    ipv6:
-                      type: string
-                    policies:
+                    epis:
                       items:
-                        type: string
+                        properties:
+                          ipv4:
+                            type: string
+                          ipv6:
+                            type: string
+                          policies:
+                            items:
+                              properties:
+                                name:
+                                  type: string
+                                namespace:
+                                  type: string
+                              type: object
+                            type: array
+                        type: object
                       type: array
-                    useNodeIP:
-                      type: boolean
+                    name:
+                      type: string
                   type: object
                 type: array
             type: object

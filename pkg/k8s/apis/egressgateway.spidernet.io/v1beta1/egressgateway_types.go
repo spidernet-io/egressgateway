@@ -44,7 +44,7 @@ type Ranges struct {
 	// +kubebuilder:validation:Optional
 	IPv6 []string `json:"ipv6,omitempty"`
 	// +kubebuilder:validation:Optional
-	Policy []string `json:"policy,omitempty"`
+	Policy string `json:"policy,omitempty"`
 }
 
 type NodeSelector struct {
@@ -59,15 +59,36 @@ type EgressGatewayStatus struct {
 	NodeList []EgressIPStatus `json:"nodeList,omitempty"`
 }
 
+func (status *EgressGatewayStatus) GetNodeIPs(nodeName string) []Eips {
+	for _, items := range status.NodeList {
+		if items.Name == nodeName {
+			return items.Eips
+		}
+	}
+	return make([]Eips, 0)
+}
+
 type EgressIPStatus struct {
+	// +kubebuilder:validation:Optional
+	Name string `json:"name,omitempty"`
+	// +kubebuilder:validation:Optional
+	Eips []Eips `json:"epis,omitempty"`
+}
+
+type Eips struct {
 	// +kubebuilder:validation:Optional
 	IPv4 string `json:"ipv4,omitempty"`
 	// +kubebuilder:validation:Optional
 	IPv6 string `json:"ipv6,omitempty"`
 	// +kubebuilder:validation:Optional
-	Policies []string `json:"policies,omitempty"`
+	Policies []Policy `json:"policies,omitempty"`
+}
+
+type Policy struct {
 	// +kubebuilder:validation:Optional
-	UseNodeIP bool `json:"useNodeIP,omitempty"`
+	Name string `json:"name,omitempty"`
+	// +kubebuilder:validation:Optional
+	Namespace string `json:"namespace,omitempty"`
 }
 
 func init() {
