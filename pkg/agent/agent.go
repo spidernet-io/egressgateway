@@ -67,6 +67,11 @@ func New(cfg *config.Config, log *zap.Logger) (types.Service, error) {
 	//	return nil, fmt.Errorf("failed to create egress gateway policy controller: %w", err)
 	//}
 
+	err = newEipCtrl(mgr, log, cfg)
+	if err != nil {
+		return nil, fmt.Errorf("failed to eip controller: %w", err)
+	}
+
 	return &Agent{
 		client:  mgr.GetClient(),
 		manager: mgr,

@@ -4,8 +4,9 @@ run:
   # Default: 1m
   timeout: 5m
 
-  # skip-dirs:
-  #   - vendor
+  skip-dirs:
+    - vendor
+    - pkg/layer2
 linters:
   disable:
     - unused

@@ -59,6 +59,15 @@ type EgressGatewayStatus struct {
 	NodeList []EgressIPStatus `json:"nodeList,omitempty"`
 }
 
+func (status *EgressGatewayStatus) GetNodeIPs(nodeName string) []Eips {
+	for _, items := range status.NodeList {
+		if items.Name == nodeName {
+			return items.Eips
+		}
+	}
+	return make([]Eips, 0)
+}
+
 type EgressIPStatus struct {
 	// +kubebuilder:validation:Optional
 	Name string `json:"name,omitempty"`
