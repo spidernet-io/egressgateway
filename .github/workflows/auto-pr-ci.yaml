@@ -3,6 +3,18 @@ name: Auto PR CI
 permissions: write-all
 on:
   workflow_call:
+    inputs:
+      kindNodeImage:
+        required: false
+        type: string
+      ipfamily:
+        required: false
+        type: string
+        default: 'all'
+      justE2E:
+        required: false
+        type: string
+        default: 'false'
   pull_request_target:
     types:
       - opened
@@ -31,6 +43,9 @@ on:
           - ipv6
           - dual
           - all
+      kindNodeImage:
+        description: 'kind node image tag'
+        required: false
 
 jobs:
   prepare:
@@ -43,6 +58,8 @@ jobs:
       ipfamily_ipv4only_e2e: ${{ env.RUN_E2E_IPV4_ONLY }}
       ipfamily_ipv6only_e2e: ${{ env.RUN_E2E_IPV6_ONLY }}
       ipfamily_dual_e2e: ${{ env.RUN_E2E_DUAL_STACK }}
+      kindNodeImage: ${{ env.RUN_kindNodeImage }}
+      JustE2E: ${{ env.RUN_JustE2E }}
     steps:
       - name: Check Code Changes
         uses: dorny/paths-filter@v2.11.1
@@ -69,12 +86,17 @@ jobs:
         id: get_ref
         run: |
           echo "event ${{ github.event_name }} "
+          echo "RUN_kindNodeImage=" >> $GITHUB_ENV
+          echo "RUN_JustE2E=false" >> $GITHUB_ENV
           if ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.ipfamily != '' }}; then
               echo "call by self workflow_dispatch"
               echo "RUN_TAG=${{ github.event.inputs.ref }}" >> $GITHUB_ENV
               echo "RUN_E2E_LABEL=${{ github.event.inputs.e2e_labels }}" >> $GITHUB_ENV
               echo "RUN_E2E_ENABLED=true" >> $GITHUB_ENV
               echo "RUN_UNITEST_ENABLED=true" >> $GITHUB_ENV
+              if ${{ github.event.inputs.kindNodeImage != '' }}; then
+                  echo "RUN_kindNodeImage=${{ github.event.inputs.kindNodeImage }}" >> $GITHUB_ENV
+              fi
               if ${{ github.event.inputs.ipfamily == 'ipv4' }}; then
                 echo "RUN_E2E_IPV4_ONLY=true" >> $GITHUB_ENV
                 echo "RUN_E2E_IPV6_ONLY=false" >> $GITHUB_ENV
@@ -131,9 +153,33 @@ jobs:
               echo "RUN_E2E_LABEL=" >> $GITHUB_ENV
               echo "RUN_E2E_ENABLED=true" >> $GITHUB_ENV
               echo "RUN_UNITEST_ENABLED=true" >> $GITHUB_ENV
-              echo "RUN_E2E_IPV4_ONLY=true" >> $GITHUB_ENV
-              echo "RUN_E2E_IPV6_ONLY=true" >> $GITHUB_ENV
-              echo "RUN_E2E_DUAL_STACK=true" >> $GITHUB_ENV
+              if ${{ inputs.kindNodeImage != '' }}; then
+                echo "RUN_kindNodeImage=${{ inputs.kindNodeImage }}" >> $GITHUB_ENV
+              fi
+              if ${{ inputs.justE2E == 'true' }}; then
+                echo "RUN_JustE2E=true" >> $GITHUB_ENV
+              fi
+              if ${{ inputs.ipfamily == 'ipv4' }}; then
+                echo "RUN_E2E_IPV4_ONLY=true" >> $GITHUB_ENV
+                echo "RUN_E2E_IPV6_ONLY=false" >> $GITHUB_ENV
+                echo "RUN_E2E_DUAL_STACK=false" >> $GITHUB_ENV
+              elif ${{ inputs.ipfamily == 'ipv6' }}; then
+                echo "RUN_E2E_IPV4_ONLY=false" >> $GITHUB_ENV
+                echo "RUN_E2E_IPV6_ONLY=true" >> $GITHUB_ENV
+                echo "RUN_E2E_DUAL_STACK=false" >> $GITHUB_ENV
+              elif ${{ inputs.ipfamily == 'dual' }}; then
+                echo "RUN_E2E_IPV4_ONLY=false" >> $GITHUB_ENV
+                echo "RUN_E2E_IPV6_ONLY=false" >> $GITHUB_ENV
+                echo "RUN_E2E_DUAL_STACK=true" >> $GITHUB_ENV
+              elif ${{ inputs.ipfamily == 'all' }}; then
+                echo "RUN_E2E_IPV4_ONLY=true" >> $GITHUB_ENV
+                echo "RUN_E2E_IPV6_ONLY=true" >> $GITHUB_ENV
+                echo "RUN_E2E_DUAL_STACK=true" >> $GITHUB_ENV
+              else
+                echo "RUN_E2E_IPV4_ONLY=true" >> $GITHUB_ENV
+                echo "RUN_E2E_IPV6_ONLY=true" >> $GITHUB_ENV
+                echo "RUN_E2E_DUAL_STACK=true" >> $GITHUB_ENV
+              fi
           fi
 
       # some event, the tag is not sha, so checkout it and get sha
@@ -151,7 +197,7 @@ jobs:
 
   call_unitest:
     needs: prepare
-    if: ${{ needs.prepare.outputs.unitest_enabled == 'true' }}
+    if: ${{ needs.prepare.outputs.unitest_enabled == 'true' && needs.prepare.outputs.JustE2E == 'false' }}
     # forbid to specify version for local workflow, GITHUB_REF Same as the caller workflow
     uses: ./.github/workflows/lint-golang.yaml
     with:
@@ -160,7 +206,7 @@ jobs:
 
   call_build_ci_image:
     needs: prepare
-    if: ${{ needs.prepare.outputs.e2e_enabled == 'true' }}
+    if: ${{ needs.prepare.outputs.e2e_enabled == 'true' && needs.prepare.outputs.JustE2E == 'false' }}
     # get  image:${{ needs.prepare.outputs.ref }} and image-ci:${{ needs.prepare.outputs.ref }}
     uses: ./.github/workflows/build-image-ci.yaml
     with:
@@ -169,7 +215,8 @@ jobs:
 
   lint_chart_against_release_image:
     needs: prepare
-    if: ${{ needs.prepare.outputs.e2e_enabled == 'true' }}
+    if: ${{ needs.prepare.outputs.e2e_enabled == 'true' && needs.prepare.outputs.JustE2E == 'false' }}
+    # forbid to specify version for local workflow, GITHUB_REF Same as the caller workflow
     uses: ./.github/workflows/call-lint-chart.yaml
     with:
       ref: ${{ needs.prepare.outputs.ref }}
@@ -177,69 +224,76 @@ jobs:
 
   e2e_dual-ubuntu-20-04:
     needs: [call_build_ci_image, prepare]
-    if: ${{ needs.prepare.outputs.e2e_enabled == 'true' && needs.prepare.outputs.ipfamily_dual_e2e == 'true' }}
+    if: ${{  always() && needs.prepare.outputs.e2e_enabled == 'true' && needs.prepare.outputs.ipfamily_dual_e2e == 'true' }}
     uses: ./.github/workflows/call-e2e.yaml
     with:
       ref: ${{ needs.prepare.outputs.ref }}
       ipfamily: dual
       e2e_labels: ${{ needs.prepare.outputs.e2e_labels }}
       os: ubuntu-20.04
+      kind_node_image: ${{ needs.prepare.outputs.kindNodeImage }}
     secrets: inherit
 
   e2e_ipv4-ubuntu-20-04:
     needs: [call_build_ci_image, prepare]
-    if: ${{ needs.prepare.outputs.e2e_enabled == 'true' && needs.prepare.outputs.ipfamily_ipv4only_e2e == 'true' }}
+    if: ${{  always() && needs.prepare.outputs.e2e_enabled == 'true' && needs.prepare.outputs.ipfamily_ipv4only_e2e == 'true' }}
     uses: ./.github/workflows/call-e2e.yaml
     with:
       ref: ${{ needs.prepare.outputs.ref }}
       ipfamily: ipv4
       e2e_labels: ${{ needs.prepare.outputs.e2e_labels }}
       os: ubuntu-20.04
+      kind_node_image: ${{ needs.prepare.outputs.kindNodeImage }}
     secrets: inherit
 
   e2e_ipv6-ubuntu-20-04:
     needs: [call_build_ci_image, prepare]
-    if: ${{ needs.prepare.outputs.e2e_enabled == 'true'  && needs.prepare.outputs.ipfamily_ipv6only_e2e == 'true' }}
+    if: ${{  always() && needs.prepare.outputs.e2e_enabled == 'true'  && needs.prepare.outputs.ipfamily_ipv6only_e2e == 'true' }}
     uses: ./.github/workflows/call-e2e.yaml
     with:
       ref: ${{ needs.prepare.outputs.ref }}
       ipfamily: ipv6
       e2e_labels: ${{ needs.prepare.outputs.e2e_labels }}
       os: ubuntu-20.04
+      kind_node_image: ${{ needs.prepare.outputs.kindNodeImage }}
     secrets: inherit
 
-  e2e_dual:
+  e2e_dual-ubuntu-latest:
     needs: [call_build_ci_image, prepare]
-    if: ${{ needs.prepare.outputs.e2e_enabled == 'true' && needs.prepare.outputs.ipfamily_dual_e2e == 'true' }}
+    if: ${{ always() && needs.prepare.outputs.e2e_enabled == 'true' && needs.prepare.outputs.ipfamily_dual_e2e == 'true' }}
     uses: ./.github/workflows/call-e2e.yaml
     with:
       ref: ${{ needs.prepare.outputs.ref }}
       ipfamily: dual
       e2e_labels: ${{ needs.prepare.outputs.e2e_labels }}
+      kind_node_image: ${{ needs.prepare.outputs.kindNodeImage }}
     secrets: inherit
 
-  e2e_ipv4:
+  e2e_ipv4-ubuntu-latest:
     needs: [call_build_ci_image, prepare]
-    if: ${{ needs.prepare.outputs.e2e_enabled == 'true' && needs.prepare.outputs.ipfamily_ipv4only_e2e == 'true' }}
+    if: ${{ always() && needs.prepare.outputs.e2e_enabled == 'true' && needs.prepare.outputs.ipfamily_ipv4only_e2e == 'true' }}
     uses: ./.github/workflows/call-e2e.yaml
     with:
       ref: ${{ needs.prepare.outputs.ref }}
       ipfamily: ipv4
       e2e_labels: ${{ needs.prepare.outputs.e2e_labels }}
+      kind_node_image: ${{ needs.prepare.outputs.kindNodeImage }}
     secrets: inherit
 
-  e2e_ipv6:
+  e2e_ipv6-ubuntu-latest:
     needs: [call_build_ci_image, prepare]
-    if: ${{ needs.prepare.outputs.e2e_enabled == 'true'  && needs.prepare.outputs.ipfamily_ipv6only_e2e == 'true' }}
+    if: ${{ always() && needs.prepare.outputs.e2e_enabled == 'true'  && needs.prepare.outputs.ipfamily_ipv6only_e2e == 'true' }}
     uses: ./.github/workflows/call-e2e.yaml
     with:
       ref: ${{ needs.prepare.outputs.ref }}
       ipfamily: ipv6
       e2e_labels: ${{ needs.prepare.outputs.e2e_labels }}
+      kind_node_image: ${{ needs.prepare.outputs.kindNodeImage }}
     secrets: inherit
 
   trivy_scan:
     needs: [call_build_ci_image, prepare]
+    if: ${{ needs.prepare.outputs.JustE2E == 'false' }}
     uses: ./.github/workflows/call-trivy.yaml
     with:
       ref: ${{ needs.prepare.outputs.ref }}

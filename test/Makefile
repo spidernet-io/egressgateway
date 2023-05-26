@@ -35,7 +35,9 @@ init_one_kind: checkBin clean
 	- sysctl -w fs.inotify.max_user_watches=524288 || true
 	- sysctl -w fs.inotify.max_user_instances=8192  || true
 	- kind delete cluster --name  $(KIND_CLUSTER_NAME)
-	kind create cluster --name  $(KIND_CLUSTER_NAME) --config $(E2E_RUNTIME_DIR)/kind_config_$(KIND_CLUSTER_NAME).yaml --kubeconfig $(KIND_KUBECONFIG)
+	KIND_OPTION="" ; \
+       		[ -n "$(E2E_KIND_NODE_IMAGE)" ] && KIND_OPTION=" --image $(E2E_KIND_NODE_IMAGE) " && echo "setup kind with E2E_KIND_NODE_IMAGE=$(E2E_KIND_NODE_IMAGE)"; \
+       		kind create cluster --name  $(KIND_CLUSTER_NAME) --config $(E2E_RUNTIME_DIR)/kind_config_$(KIND_CLUSTER_NAME).yaml --kubeconfig $(KIND_KUBECONFIG) $${KIND_OPTION}
 	- kubectl --kubeconfig $(KIND_KUBECONFIG) taint nodes --all node-role.kubernetes.io/master- || true
 	- kubectl --kubeconfig $(KIND_KUBECONFIG) taint nodes --all node-role.kubernetes.io/control-plane- || true
 	@echo "===================== deploy prometheus CRD ========== "
