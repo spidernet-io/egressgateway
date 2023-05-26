@@ -7,21 +7,21 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// EgressGatewayPolicyList contains a list of egress gateway policies
+// EgressPolicyList contains a list of egress gateway policies
 // +kubebuilder:object:root=true
-type EgressGatewayPolicyList struct {
+type EgressPolicyList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata"`
 
-	Items []EgressGatewayPolicy `json:"items"`
+	Items []EgressPolicy `json:"items"`
 }
 
-// EgressGatewayPolicy represents a single egress gateway policy
-// +kubebuilder:resource:categories={egressgatewaypolicy},path="egressgatewaypolicies",singular="egressgatewaypolicy",scope="Namespaced",shortName={epo}
+// EgressPolicy represents a single egress gateway policy
+// +kubebuilder:resource:categories={egresspolicy},path="egresspolicies",singular="egresspolicy",scope="Namespaced",shortName={egressp}
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
 // +genclient
-type EgressGatewayPolicy struct {
+type EgressPolicy struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata"`
 
@@ -53,5 +53,5 @@ type AppliedTo struct {
 }
 
 func init() {
-	SchemeBuilder.Register(&EgressGatewayPolicy{}, &EgressGatewayPolicyList{})
+	SchemeBuilder.Register(&EgressPolicy{}, &EgressPolicyList{})
 }

@@ -32,7 +32,7 @@ type EgressEndpointSlice struct {
 
 type EgressEndpoint struct {
 	// +kubebuilder:validation:Optional
-	Namespace string `json:"namespace,omitempty"`
+	Namespace string `json:"ns,omitempty"`
 	// +kubebuilder:validation:Optional
 	Pod string `json:"pod,omitempty"`
 	// +kubebuilder:validation:Optional

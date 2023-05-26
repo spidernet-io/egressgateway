@@ -66,7 +66,7 @@ func TestReconcilerEgressEndpointSlice(t *testing.T) {
 				assert.Equal(t, req.expRequeue, res.Requeue)
 
 				ctx := context.Background()
-				policy := new(egressv1.EgressGatewayPolicy)
+				policy := new(egressv1.EgressPolicy)
 				err = cli.Get(ctx, req.nn, policy)
 				if err != nil {
 					t.Fatal(err)
@@ -149,7 +149,7 @@ func compareMaps(podMap, epMap map[string]struct{}) error {
 func caseAddPolicy() TestCaseEPS {
 	labels := map[string]string{"app": "nginx1"}
 	initialObjects := []client.Object{
-		&egressv1.EgressGatewayPolicy{
+		&egressv1.EgressPolicy{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      "policy1",
 				Namespace: "default",
@@ -230,7 +230,7 @@ func caseAddPolicy() TestCaseEPS {
 func caseUpdatePod() TestCaseEPS {
 	labels := map[string]string{"app": "nginx1"}
 	initialObjects := []client.Object{
-		&egressv1.EgressGatewayPolicy{
+		&egressv1.EgressPolicy{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      "policy1",
 				Namespace: "default",
@@ -345,7 +345,7 @@ func caseUpdatePod() TestCaseEPS {
 func caseDeletePod() TestCaseEPS {
 	labels := map[string]string{"app": "nginx1"}
 	initialObjects := []client.Object{
-		&egressv1.EgressGatewayPolicy{
+		&egressv1.EgressPolicy{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      "policy1",
 				Namespace: "default",

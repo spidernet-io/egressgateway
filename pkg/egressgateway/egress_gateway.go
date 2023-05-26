@@ -55,7 +55,7 @@ func (r egnReconciler) Reconcile(ctx context.Context, req reconcile.Request) (re
 	switch kind {
 	case "EgressGateway":
 		return r.reconcileEG(ctx, newReq, log)
-	case "EgressGatewayPolicy":
+	case "EgressPolicy":
 		return r.reconcileEGP(ctx, newReq, log)
 	case "Node":
 		return r.reconcileNode(ctx, newReq, log)
@@ -211,7 +211,7 @@ func (r egnReconciler) reconcileEG(ctx context.Context, req reconcile.Request, l
 		for _, policy := range reSetPolicies {
 			err = r.reAllocatorPolicy(ctx, policy, eg, perNodeMap)
 			if err != nil {
-				log.Sugar().Errorf("reallocator Failed to reassign a gateway node for EgressGatewayPolicy %v: %v", policy, err)
+				log.Sugar().Errorf("reallocator Failed to reassign a gateway node for EgressPolicy %v: %v", policy, err)
 				return reconcile.Result{Requeue: true}, err
 			}
 		}
@@ -275,7 +275,7 @@ func (r egnReconciler) reconcileEN(ctx context.Context, req reconcile.Request, l
 				for _, policy := range policies {
 					err = r.reAllocatorPolicy(ctx, policy, &eg, perNodeMap)
 					if err != nil {
-						log.Sugar().Errorf("reallocator Failed to reassign a gateway node for EgressGatewayPolicy %v: %v", policy, err)
+						log.Sugar().Errorf("reallocator Failed to reassign a gateway node for EgressPolicy %v: %v", policy, err)
 						return reconcile.Result{Requeue: true}, err
 					}
 				}
@@ -306,11 +306,11 @@ func (r egnReconciler) reconcileEN(ctx context.Context, req reconcile.Request, l
 func (r egnReconciler) reconcileEGP(ctx context.Context, req reconcile.Request, log *zap.Logger) (reconcile.Result, error) {
 	deleted := false
 	isUpdete := false
-	egp := &egress.EgressGatewayPolicy{}
+	egp := &egress.EgressPolicy{}
 	err := r.client.Get(ctx, req.NamespacedName, egp)
 	if err != nil {
 		if !errors.IsNotFound(err) {
-			log.Sugar().Errorf("get EgressGatewayPolicy %v err:%v", req.NamespacedName, err)
+			log.Sugar().Errorf("get EgressPolicy %v err:%v", req.NamespacedName, err)
 			return reconcile.Result{}, err
 		}
 		deleted = true
@@ -365,7 +365,7 @@ func (r egnReconciler) reconcileEGP(ctx context.Context, req reconcile.Request, 
 
 		err := r.reAllocatorPolicy(ctx, policy, eg, perNodeMap)
 		if err != nil {
-			r.log.Sugar().Errorf("reallocator Failed to reassign a gateway node for EgressGatewayPolicy %v: %v", policy, err)
+			r.log.Sugar().Errorf("reallocator Failed to reassign a gateway node for EgressPolicy %v: %v", policy, err)
 			return reconcile.Result{Requeue: true}, err
 		}
 
@@ -403,7 +403,7 @@ func (r egnReconciler) reconcileEGP(ctx context.Context, req reconcile.Request, 
 
 						err := r.reAllocatorPolicy(ctx, policy, eg, perNodeMap)
 						if err != nil {
-							r.log.Sugar().Errorf("reallocator Failed to reassign a gateway node for EgressGatewayPolicy %v: %v", policy, err)
+							r.log.Sugar().Errorf("reallocator Failed to reassign a gateway node for EgressPolicy %v: %v", policy, err)
 							return reconcile.Result{Requeue: true}, err
 						}
 
@@ -468,7 +468,7 @@ func (r egnReconciler) deleteNodeFromEG(ctx context.Context, nodeName string, eg
 		for _, policy := range policies {
 			err := r.reAllocatorPolicy(ctx, policy, &eg, perNodeMap)
 			if err != nil {
-				r.log.Sugar().Errorf("reallocator Failed to reassign a gateway node for EgressGatewayPolicy %v: %v", policy, err)
+				r.log.Sugar().Errorf("reallocator Failed to reassign a gateway node for EgressPolicy %v: %v", policy, err)
 				return err
 			}
 		}
@@ -491,7 +491,7 @@ func (r egnReconciler) deleteNodeFromEG(ctx context.Context, nodeName string, eg
 }
 
 func (r egnReconciler) reAllocatorPolicy(ctx context.Context, policy egress.Policy, eg *egress.EgressGateway, nodeMap map[string]egress.EgressIPStatus) error {
-	egp := &egress.EgressGatewayPolicy{}
+	egp := &egress.EgressPolicy{}
 	err := r.client.Get(ctx, types.NamespacedName{Namespace: policy.Namespace, Name: policy.Name}, egp)
 	if err != nil {
 		return err
@@ -544,7 +544,7 @@ func (r egnReconciler) allocatorNode(selNodePolicy string, nodeMap map[string]eg
 	return perNode, nil
 }
 
-func (r egnReconciler) allocatorEIP(selEipLolicy string, nodeName string, egp egress.EgressGatewayPolicy, eg egress.EgressGateway) (string, string, error) {
+func (r egnReconciler) allocatorEIP(selEipLolicy string, nodeName string, egp egress.EgressPolicy, eg egress.EgressGateway) (string, string, error) {
 
 	if egp.Spec.EgressIP.UseNodeIP {
 		return "", "", nil
@@ -688,9 +688,9 @@ func NewEgressGatewayController(mgr manager.Manager, log *zap.Logger, cfg *confi
 		return fmt.Errorf("failed to watch Node: %w", err)
 	}
 
-	if err := c.Watch(&source.Kind{Type: &egress.EgressGatewayPolicy{}},
-		handler.EnqueueRequestsFromMapFunc(utils.KindToMapFlat("EgressGatewayPolicy"))); err != nil {
-		return fmt.Errorf("failed to watch EgressGatewayPolicy: %w", err)
+	if err := c.Watch(&source.Kind{Type: &egress.EgressPolicy{}},
+		handler.EnqueueRequestsFromMapFunc(utils.KindToMapFlat("EgressPolicy"))); err != nil {
+		return fmt.Errorf("failed to watch EgressPolicy: %w", err)
 	}
 
 	if err := c.Watch(&source.Kind{Type: &egress.EgressNode{}},

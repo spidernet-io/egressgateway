@@ -36,7 +36,7 @@ func ValidateHook(client client.Client, cfg *config.Config) *webhook.Admission {
 			switch req.Kind.Kind {
 			case "EgressGateway":
 				return (&egressgateway.EgressGatewayWebhook{Client: client, Config: cfg}).EgressGatewayValidate(ctx, req)
-			case "EgressGatewayPolicy":
+			case "EgressPolicy":
 				policy := new(egressv1.EgressGatewayPolicy)
 				err := json.Unmarshal(req.Object.Raw, policy)
 				if err != nil {

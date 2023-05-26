@@ -52,12 +52,12 @@ rules:
   - egressgateway.spidernet.io
   resources:
   - egressclusterendpointslices
-  - egressclustergatewaypolicies
   - egressclusterinfos
+  - egressclusterpolicies
   - egressendpointslices
-  - egressgatewaypolicies
   - egressgateways
   - egressnodes
+  - egresspolicies
   verbs:
   - create
   - delete
@@ -69,11 +69,11 @@ rules:
 - apiGroups:
   - egressgateway.spidernet.io
   resources:
-  - egressclustergatewaypolicies/status
   - egressclusterinfos/status
-  - egressgatewaypolicies/status
+  - egressclusterpolicies/status
   - egressgateways/status
   - egressnodes/status
+  - egresspolicies/status
   verbs:
   - get
   - patch

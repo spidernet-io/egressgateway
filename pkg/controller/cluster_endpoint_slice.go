@@ -44,7 +44,7 @@ func (r *endpointClusterReconciler) Reconcile(ctx context.Context, req reconcile
 
 	log.Info("reconcile")
 	deleted := false
-	policy := new(egressv1.EgressClusterGatewayPolicy)
+	policy := new(egressv1.EgressClusterPolicy)
 	err := r.client.Get(ctx, req.NamespacedName, policy)
 	if err != nil {
 		if !errors.IsNotFound(err) {
@@ -192,12 +192,12 @@ func (r *endpointClusterReconciler) Reconcile(ctx context.Context, req reconcile
 	return reconcile.Result{}, utilerrors.NewAggregate(errs)
 }
 
-func newClusterEndpointSlice(policy *egressv1.EgressClusterGatewayPolicy) *egressv1.EgressClusterEndpointSlice {
+func newClusterEndpointSlice(policy *egressv1.EgressClusterPolicy) *egressv1.EgressClusterEndpointSlice {
 	// TODO: change it on release v1
 	gvk := schema.GroupVersionKind{
 		Group:   "egressgateway.spidernet.io",
 		Version: "v1beta1",
-		Kind:    "EgressClusterGatewayPolicy",
+		Kind:    "EgressClusterPolicy",
 	}
 	ownerRef := metav1.NewControllerRef(policy, gvk)
 
@@ -213,7 +213,7 @@ func newClusterEndpointSlice(policy *egressv1.EgressClusterGatewayPolicy) *egres
 	}
 }
 
-func listPodsByClusterPolicy(ctx context.Context, cli client.Client, policy *egressv1.EgressClusterGatewayPolicy) ([]corev1.Pod, error) {
+func listPodsByClusterPolicy(ctx context.Context, cli client.Client, policy *egressv1.EgressClusterPolicy) ([]corev1.Pod, error) {
 	if policy.Spec.AppliedTo.NamespaceSelector == nil {
 		pods := new(corev1.PodList)
 		selector, err := metav1.LabelSelectorAsSelector(policy.Spec.AppliedTo.PodSelector)
@@ -319,13 +319,13 @@ func newEgressClusterEpSliceController(mgr manager.Manager, log *zap.Logger, cfg
 		return fmt.Errorf("failed to watch namespace: %v", err)
 	}
 
-	err = c.Watch(&source.Kind{Type: &egressv1.EgressClusterGatewayPolicy{}}, &handler.EnqueueRequestForObject{})
+	err = c.Watch(&source.Kind{Type: &egressv1.EgressClusterPolicy{}}, &handler.EnqueueRequestForObject{})
 	if err != nil {
-		return fmt.Errorf("failed to watch EgressClusterGatewayPolicy: %v", err)
+		return fmt.Errorf("failed to watch EgressClusterPolicy: %v", err)
 	}
 
 	err = c.Watch(&source.Kind{Type: &egressv1.EgressClusterEndpointSlice{}}, &handler.EnqueueRequestForOwner{
-		OwnerType:    &egressv1.EgressClusterGatewayPolicy{},
+		OwnerType:    &egressv1.EgressClusterPolicy{},
 		IsController: true,
 	})
 	if err != nil {
@@ -375,7 +375,7 @@ func enqueueNS(cli client.Client) handler.MapFunc {
 			return nil
 		}
 
-		policyList := new(egressv1.EgressClusterGatewayPolicyList)
+		policyList := new(egressv1.EgressClusterPolicyList)
 		err := cli.List(context.Background(), policyList)
 		if err != nil {
 			return nil
@@ -409,7 +409,7 @@ func enqueueEGCP(cli client.Client) handler.MapFunc {
 			return nil
 		}
 
-		policyList := new(egressv1.EgressClusterGatewayPolicyList)
+		policyList := new(egressv1.EgressClusterPolicyList)
 		err := cli.List(context.Background(), policyList)
 		if err != nil {
 			return nil

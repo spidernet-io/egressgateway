@@ -75,7 +75,7 @@ func (egw *EgressGatewayWebhook) EgressGatewayValidate(ctx context.Context, req 
 		for _, item := range eg.Status.NodeList {
 			for _, eip := range item.Eips {
 				if len(eip.Policies) != 0 {
-					return webhook.Denied(fmt.Sprintf("Do not delete %v:%v because it is already referenced by EgressGatewayPolicy", req.Namespace, req.Name))
+					return webhook.Denied(fmt.Sprintf("Do not delete %v:%v because it is already referenced by EgressPolicy", req.Namespace, req.Name))
 				}
 			}
 		}
