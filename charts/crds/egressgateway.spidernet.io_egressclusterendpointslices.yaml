@@ -39,9 +39,9 @@ spec:
                   items:
                     type: string
                   type: array
-                namespace:
-                  type: string
                 node:
+                  type: string
+                ns:
                   type: string
                 pod:
                   type: string

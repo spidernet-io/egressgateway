@@ -7,29 +7,29 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// EgressClusterGatewayPolicyList contains a list of egress gateway policies
+// EgressClusterPolicyList contains a list of egress gateway policies
 // +kubebuilder:object:root=true
-type EgressClusterGatewayPolicyList struct {
+type EgressClusterPolicyList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata"`
 
-	Items []EgressClusterGatewayPolicy `json:"items"`
+	Items []EgressClusterPolicy `json:"items"`
 }
 
-// EgressClusterGatewayPolicy represents a single egress gateway policy
-// +kubebuilder:resource:categories={egressclustergatewaypolicy},path="egressclustergatewaypolicies",singular="egressclustergatewaypolicy",scope="Cluster",shortName={ecpo}
+// EgressClusterPolicy represents a cluster egress policy
+// +kubebuilder:resource:categories={egressclusterpolicy},path="egressclusterpolicies",singular="egressclusterpolicy",scope="Cluster",shortName={egresscp}
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
 // +genclient
 // +genclient:nonNamespaced
-type EgressClusterGatewayPolicy struct {
+type EgressClusterPolicy struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata"`
 
-	Spec EgressClusterGatewayPolicySpec `json:"spec,omitempty"`
+	Spec EgressClusterPolicySpec `json:"spec,omitempty"`
 }
 
-type EgressClusterGatewayPolicySpec struct {
+type EgressClusterPolicySpec struct {
 	// +kubebuilder:validation:Optional
 	EgressGatewayName string `json:"egressGatewayName,omitempty"`
 	// +kubebuilder:validation:Optional
@@ -50,5 +50,5 @@ type ClusterAppliedTo struct {
 }
 
 func init() {
-	SchemeBuilder.Register(&EgressClusterGatewayPolicy{}, &EgressClusterGatewayPolicyList{})
+	SchemeBuilder.Register(&EgressClusterPolicy{}, &EgressClusterPolicyList{})
 }

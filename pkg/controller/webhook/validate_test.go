@@ -125,7 +125,7 @@ func TestValidateEgressGatewayPolicy(t *testing.T) {
 	for name, c := range cases {
 		t.Run(name, func(t *testing.T) {
 
-			policy := &egressv1.EgressGatewayPolicy{
+			policy := &egressv1.EgressPolicy{
 				ObjectMeta: metav1.ObjectMeta{
 					Name: "policy",
 				},
@@ -152,7 +152,7 @@ func TestValidateEgressGatewayPolicy(t *testing.T) {
 				AdmissionRequest: admissionv1.AdmissionRequest{
 					Name: policy.Name,
 					Kind: metav1.GroupVersionKind{
-						Kind: "EgressGatewayPolicy",
+						Kind: "EgressPolicy",
 					},
 					Operation: admissionv1.Create,
 					Object: runtime.RawExtension{
