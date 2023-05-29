@@ -26,6 +26,24 @@ type EgressGatewayWebhook struct {
 }
 
 func (egw *EgressGatewayWebhook) EgressGatewayValidate(ctx context.Context, req webhook.AdmissionRequest) webhook.AdmissionResponse {
+	// Check whether the deleted EgressGateway is referenced
+	if req.Operation == v1.Delete {
+		delEG := new(egress.EgressGateway)
+		err := json.Unmarshal(req.OldObject.Raw, delEG)
+		if err != nil {
+			return webhook.Denied(fmt.Sprintf("json unmarshal EgressGateway with error: %v", err))
+		}
+
+		for _, item := range delEG.Status.NodeList {
+			for _, eip := range item.Eips {
+				if len(eip.Policies) != 0 {
+					return webhook.Denied(fmt.Sprintf("Do not delete %v:%v because it is already referenced by EgressPolicy", req.Namespace, req.Name))
+				}
+			}
+		}
+		return webhook.Allowed("checked")
+	}
+
 	newEg := new(egress.EgressGateway)
 	err := json.Unmarshal(req.Object.Raw, newEg)
 	if err != nil {
@@ -68,18 +86,6 @@ func (egw *EgressGatewayWebhook) EgressGatewayValidate(ctx context.Context, req 
 		if !errors.IsNotFound(err) {
 			return webhook.Denied(fmt.Sprintf("failed to obtain the EgressGateway: %v", err))
 		}
-	}
-
-	// Check whether the deleted EgressGateway is referenced
-	if req.Operation == v1.Delete {
-		for _, item := range eg.Status.NodeList {
-			for _, eip := range item.Eips {
-				if len(eip.Policies) != 0 {
-					return webhook.Denied(fmt.Sprintf("Do not delete %v:%v because it is already referenced by EgressPolicy", req.Namespace, req.Name))
-				}
-			}
-		}
-		return webhook.Allowed("checked")
 	}
 
 	// Check whether the IP address to be deleted has been allocated
