@@ -7,7 +7,6 @@
 #  GH_TOKEN=${{ github.token }} LABEL_FEATURE="release/feature-new" LABEL_BUG="release/bug" PROJECT_REPO="spidernet-io/spiderpool" changelog.sh ./ v0.3.6
 #  GH_TOKEN=${{ github.token }} LABEL_FEATURE="release/feature-new" LABEL_BUG="release/bug" PROJECT_REPO="spidernet-io/spiderpool" changelog.sh ./ v0.3.6 v0.3.5
 
-set -x
 set -o errexit
 set -o nounset
 set -o pipefail
@@ -76,11 +75,13 @@ if [ -z "${START_TAG}" ] ; then
       SET_VERSION
     else
       if (( RC == 0 )) ;then
+        # For example, if DEST_TAG is v0.2.0-rc0, the expected value is 0.1.0
         SET_VERSION
         # remove rc
         DEST_TAG_WITHOUT_RC=` grep -oE "[vV]*[0-9]+\.[0-9]+\.[0-9]+" <<< "${DEST_TAG}" `
         RC=""
       else
+        # For example, if DEST_TAG is v0.2.0-rc2, the expected value is 0.2.0-rc1
         START_X=$V_X
         START_Y=$V_Y
         START_Z=$V_Z
@@ -88,9 +89,10 @@ if [ -z "${START_TAG}" ] ; then
       fi
     fi
     #------ result
-    START_TAG=` sed -E "s?[0-9]+\.[0-9]+\.[0-9]+?${START_X}.${START_Y}.${START_Z}?" <<<  "${DEST_TAG_WITHOUT_RC}" `
     if [ -n "${RC}" ] ; then
-      START_TAG=` sed -E "s?([vV]*[0-9]+\.[0-9]+\.[0-9]+[^0-9]*[^0-9]*)[0-9]+?\1${START_RC}?" <<<  "${START_TAG}" `
+      START_TAG="${START_X}.${START_Y}.${START_Z}-rc$START_RC"
+    else
+      START_TAG=` sed -E "s?[0-9]+\.[0-9]+\.[0-9]+?${START_X}.${START_Y}.${START_Z}?" <<<  "${DEST_TAG_WITHOUT_RC}" `
     fi
 fi
 
