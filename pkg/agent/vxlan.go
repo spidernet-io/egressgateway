@@ -24,7 +24,7 @@ import (
 	"github.com/spidernet-io/egressgateway/pkg/agent/route"
 	"github.com/spidernet-io/egressgateway/pkg/agent/vxlan"
 	"github.com/spidernet-io/egressgateway/pkg/config"
-	egressv1 "github.com/spidernet-io/egressgateway/pkg/k8s/apis/egressgateway.spidernet.io/v1"
+	egressv1 "github.com/spidernet-io/egressgateway/pkg/k8s/apis/egressgateway.spidernet.io/v1beta1"
 	"github.com/spidernet-io/egressgateway/pkg/utils"
 )
 
@@ -60,111 +60,11 @@ func (r *vxlanReconciler) Reconcile(ctx context.Context, req reconcile.Request) 
 	)
 	log.Info("reconciling")
 	switch kind {
-	case "EgressGateway":
-		return r.reconcileGateway(ctx, newReq, log)
 	case "EgressNode":
 		return r.reconcileEgressNode(ctx, newReq, log)
 	default:
 		return reconcile.Result{}, nil
 	}
-}
-
-// reconcileGateway
-func (r *vxlanReconciler) reconcileGateway(ctx context.Context, req reconcile.Request, log *zap.Logger) (reconcile.Result, error) {
-	gateway := new(egressv1.EgressGateway)
-	deleted := false
-	err := r.client.Get(ctx, req.NamespacedName, gateway)
-	if err != nil {
-		if !errors.IsNotFound(err) {
-			return reconcile.Result{}, err
-		}
-		deleted = true
-	}
-	deleted = deleted || !gateway.GetDeletionTimestamp().IsZero()
-
-	if deleted {
-		ipv4List := make([]net.IP, 0)
-		ipv6List := make([]net.IP, 0)
-
-		r.ruleRouteCache.Store("ipv4", ipv4List)
-		r.ruleRouteCache.Store("ipv6", ipv6List)
-
-		err = r.ruleRoute.Ensure(r.cfg.FileConfig.VXLAN.Name, ipv4List, ipv6List)
-		if err != nil {
-			return reconcile.Result{}, err
-		}
-
-		return reconcile.Result{}, nil
-	}
-
-	log.Info("calculate l3 route")
-	nodeList := make([]string, 0)
-	for _, node := range gateway.Status.NodeList {
-		if node.Ready && node.Active {
-			if node.Name == r.cfg.NodeName {
-				log.Info("current node is gateway node, skip")
-
-				ipv4List := make([]net.IP, 0)
-				ipv6List := make([]net.IP, 0)
-				r.ruleRouteCache.Store("ipv4", ipv4List)
-				r.ruleRouteCache.Store("ipv6", ipv6List)
-
-				return reconcile.Result{}, nil
-			}
-
-			log.Sugar().Infof("active node: %s", node.Name)
-
-			nodeList = append(nodeList, node.Name)
-		}
-	}
-
-	ipv4List := make([]net.IP, 0)
-	ipv6List := make([]net.IP, 0)
-
-	for _, node := range nodeList {
-		egressNode := new(egressv1.EgressNode)
-		err := r.client.Get(ctx, types.NamespacedName{Name: node}, egressNode)
-		if err != nil {
-			if !errors.IsNotFound(err) {
-				continue
-			}
-			return reconcile.Result{}, err
-		}
-
-		log.Sugar().Debugf("get egress node: %s", node)
-
-		ipv4 := egressNode.Status.VxlanIPv4
-		ipv6 := egressNode.Status.VxlanIPv6
-
-		if ipv4 != "" {
-			log.Sugar().Debugf("parse ip: %s", ipv4)
-			ip := net.ParseIP(ipv4)
-			if ip.To4() != nil {
-				log.Sugar().Debugf("append ip: %s", ipv4)
-				ipv4List = append(ipv4List, ip)
-			}
-		}
-
-		if ipv6 != "" {
-			log.Sugar().Debugf("parse ip: %s", ipv6)
-			ip := net.ParseIP(ipv6)
-			if ip.To16() != nil {
-				log.Sugar().Debugf("append ip: %s", ipv6)
-				ipv6List = append(ipv6List, ip)
-			}
-		}
-	}
-
-	r.ruleRouteCache.Store("ipv4", ipv4List)
-	r.ruleRouteCache.Store("ipv6", ipv6List)
-
-	log.Sugar().Infof("ensure route: %v, %v", ipv4List, ipv6List)
-	err = r.ruleRoute.Ensure(r.cfg.FileConfig.VXLAN.Name, ipv4List, ipv6List)
-	if err != nil {
-		return reconcile.Result{}, err
-	}
-
-	return reconcile.Result{}, nil
 }
 
 // reconcileEgressNode
@@ -199,9 +99,9 @@ func (r *vxlanReconciler) reconcileEgressNode(ctx context.Context, req reconcile
 	if isPeer {
 		var ip string
 		if r.version() == 4 {
-			ip = node.Status.PhysicalInterfaceIPv4
+			ip = node.Status.Tunnel.Parent.IPv4
 		} else {
-			ip = node.Status.PhysicalInterfaceIPv6
+			ip = node.Status.Tunnel.Parent.IPv6
 		}
 		if ip == "" {
 			log.Sugar().Info("peer %v, parent ip not ready, skip", node.Name)
@@ -209,14 +109,14 @@ func (r *vxlanReconciler) reconcileEgressNode(ctx context.Context, req reconcile
 		}
 
 		parentIP := net.ParseIP(ip)
-		mac, err := net.ParseMAC(node.Status.TunnelMac)
+		mac, err := net.ParseMAC(node.Status.Tunnel.MAC)
 		if err != nil {
-			log.Info("mac addr not ready, skip", zap.String("mac", node.Status.TunnelMac))
+			log.Info("mac addr not ready, skip", zap.String("mac", node.Status.Tunnel.MAC))
 			return reconcile.Result{}, nil
 		}
 
-		ipv4 := net.ParseIP(node.Status.VxlanIPv4).To4()
-		ipv6 := net.ParseIP(node.Status.VxlanIPv6).To16()
+		ipv4 := net.ParseIP(node.Status.Tunnel.IPv4).To4()
+		ipv6 := net.ParseIP(node.Status.Tunnel.IPv6).To16()
 
 		peer := vxlan.Peer{Parent: parentIP, MAC: mac}
 		if ipv4 != nil {
@@ -245,11 +145,11 @@ func (r *vxlanReconciler) reconcileEgressNode(ctx context.Context, req reconcile
 func (r *vxlanReconciler) ensureEgressNodeStatus(node *egressv1.EgressNode) error {
 	needUpdate := false
 
-	if r.version() == 4 && node.Status.PhysicalInterfaceIPv4 == "" {
+	if r.version() == 4 && node.Status.Tunnel.Parent.IPv4 == "" {
 		needUpdate = true
 	}
 
-	if r.version() == 6 && node.Status.PhysicalInterfaceIPv6 == "" {
+	if r.version() == 6 && node.Status.Tunnel.Parent.IPv6 == "" {
 		needUpdate = true
 	}
 
@@ -286,28 +186,28 @@ func (r *vxlanReconciler) updateEgressNodeStatus(node *egressv1.EgressNode, vers
 	}
 
 	needUpdate := false
-	if node.Status.PhysicalInterface != parent.Name {
+	if node.Status.Tunnel.Parent.Name != parent.Name {
 		needUpdate = true
-		node.Status.PhysicalInterface = parent.Name
+		node.Status.Tunnel.Parent.Name = parent.Name
 	}
 
 	if version == 4 {
-		if node.Status.PhysicalInterfaceIPv4 != parent.IP.String() {
+		if node.Status.Tunnel.Parent.IPv4 != parent.IP.String() {
 			needUpdate = true
-			node.Status.PhysicalInterfaceIPv4 = parent.IP.String()
+			node.Status.Tunnel.Parent.IPv6 = parent.IP.String()
 		}
-		if node.Status.PhysicalInterfaceIPv6 != "" {
+		if node.Status.Tunnel.Parent.IPv6 != "" {
 			needUpdate = true
-			node.Status.PhysicalInterfaceIPv6 = ""
+			node.Status.Tunnel.Parent.IPv4 = ""
 		}
 	} else {
-		if node.Status.PhysicalInterfaceIPv6 != parent.IP.String() {
+		if node.Status.Tunnel.Parent.IPv6 != parent.IP.String() {
 			needUpdate = true
-			node.Status.PhysicalInterfaceIPv6 = parent.IP.String()
+			node.Status.Tunnel.Parent.IPv6 = parent.IP.String()
 		}
-		if node.Status.PhysicalInterfaceIPv4 != "" {
+		if node.Status.Tunnel.Parent.IPv4 != "" {
 			needUpdate = true
-			node.Status.PhysicalInterfaceIPv4 = ""
+			node.Status.Tunnel.Parent.IPv4 = ""
 		}
 	}
 
@@ -324,11 +224,11 @@ func (r *vxlanReconciler) updateEgressNodeStatus(node *egressv1.EgressNode, vers
 	if needUpdate {
 		r.log.Info("update node status",
 			zap.String("phase", string(node.Status.Phase)),
-			zap.String("vxlanIPv4", node.Status.VxlanIPv4),
-			zap.String("vxlanIPv6", node.Status.VxlanIPv6),
-			zap.String("parentInterface", node.Status.PhysicalInterface),
-			zap.String("parentIPv4", node.Status.PhysicalInterfaceIPv4),
-			zap.String("parentIPv6", node.Status.PhysicalInterfaceIPv6),
+			zap.String("tunnelIPv4", node.Status.Tunnel.IPv4),
+			zap.String("tunnelIPv6", node.Status.Tunnel.IPv6),
+			zap.String("parentName", node.Status.Tunnel.Parent.Name),
+			zap.String("parentIPv4", node.Status.Tunnel.Parent.IPv4),
+			zap.String("parentIPv6", node.Status.Tunnel.Parent.IPv6),
 		)
 		ctx := context.Background()
 		err = r.client.Status().Update(ctx, node)
@@ -346,10 +246,10 @@ func (r *vxlanReconciler) parseVTEP(status egressv1.EgressNodeStatus) *vxlan.Pee
 	ready := true
 
 	if r.cfg.FileConfig.EnableIPv4 {
-		if status.VxlanIPv4 == "" {
+		if status.Tunnel.IPv4 == "" {
 			ready = false
 		} else {
-			ip := net.ParseIP(status.VxlanIPv4)
+			ip := net.ParseIP(status.Tunnel.IPv4)
 			if ip.To4() == nil {
 				ready = false
 			}
@@ -357,10 +257,10 @@ func (r *vxlanReconciler) parseVTEP(status egressv1.EgressNodeStatus) *vxlan.Pee
 		}
 	}
 	if r.cfg.FileConfig.EnableIPv6 {
-		if status.VxlanIPv6 == "" {
+		if status.Tunnel.IPv6 == "" {
 			ready = false
 		} else {
-			ip := net.ParseIP(status.VxlanIPv6)
+			ip := net.ParseIP(status.Tunnel.IPv4)
 			if ip.To16() == nil {
 				ready = false
 			}
@@ -368,7 +268,7 @@ func (r *vxlanReconciler) parseVTEP(status egressv1.EgressNodeStatus) *vxlan.Pee
 		}
 	}
 
-	mac, err := net.ParseMAC(status.TunnelMac)
+	mac, err := net.ParseMAC(status.Tunnel.MAC)
 	if err != nil {
 		ready = false
 	}
@@ -541,11 +441,6 @@ func newEgressNodeController(mgr manager.Manager, cfg *config.Config, log *zap.L
 	c, err := controller.New("vxlan", mgr, controller.Options{Reconciler: r})
 	if err != nil {
 		return err
-	}
-
-	if err := c.Watch(&source.Kind{Type: &egressv1.EgressGateway{}},
-		handler.EnqueueRequestsFromMapFunc(utils.KindToMapFlat("EgressGateway"))); err != nil {
-		return fmt.Errorf("failed to watch EgressGateway: %w", err)
 	}
 
 	if err := c.Watch(&source.Kind{Type: &egressv1.EgressNode{}},
