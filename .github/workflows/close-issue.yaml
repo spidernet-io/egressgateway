@@ -37,8 +37,8 @@ jobs:
               echo "error, must provide some options"
               exit 1
           fi
-          gh issue list ${OPTION} | egrep "^[0-9]+[[:space:]]+OPEN"
-          issueList=` gh issue list ${OPTION} | egrep "^[0-9]+[[:space:]]+OPEN" | awk '{print $1}' `
+          gh issue list -L 1000  ${OPTION} | egrep "^[0-9]+[[:space:]]+OPEN"
+          issueList=` gh issue list  -L 1000 ${OPTION} | egrep "^[0-9]+[[:space:]]+OPEN" | awk '{print $1}' `
           echo "--------"
           ACTION_URL="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
           for ITEM in $issueList ; do
