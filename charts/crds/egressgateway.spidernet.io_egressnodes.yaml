@@ -18,16 +18,20 @@ spec:
   versions:
   - additionalPrinterColumns:
     - description: tunnelMac
-      jsonPath: .status.tunnelMac
+      jsonPath: .status.tunnel.mac
       name: tunnelMac
       type: string
     - description: tunnelIPv4
-      jsonPath: .status.vxlanIPv4
+      jsonPath: .status.tunnel.ipv4
       name: tunnelIPv4
       type: string
     - description: tunnelIPv6
-      jsonPath: .status.vxlanIPv6
+      jsonPath: .status.tunnel.ipv6
       name: tunnelIPv6
+      type: string
+    - description: mark
+      jsonPath: .status.mark
+      name: mark
       type: string
     - description: phase
       jsonPath: .status.phase

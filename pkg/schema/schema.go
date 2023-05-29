@@ -4,13 +4,11 @@
 package schema
 
 import (
+	calicov1 "github.com/tigera/operator/pkg/apis/crd.projectcalico.org/v1"
 	"k8s.io/apimachinery/pkg/runtime"
-
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
 
-	calicov1 "github.com/tigera/operator/pkg/apis/crd.projectcalico.org/v1"
-
-	egressv1beta1 "github.com/spidernet-io/egressgateway/pkg/k8s/apis/egressgateway.spidernet.io/v1beta1"
+	egressv1 "github.com/spidernet-io/egressgateway/pkg/k8s/apis/egressgateway.spidernet.io/v1beta1"
 )
 
 var (
@@ -21,7 +19,7 @@ func init() {
 	if err := clientgoscheme.AddToScheme(scheme); err != nil {
 		panic(err)
 	}
-	if err := egressv1beta1.AddToScheme(scheme); err != nil {
+	if err := egressv1.AddToScheme(scheme); err != nil {
 		panic(err)
 	}
 	if err := calicov1.AddToScheme(scheme); err != nil {

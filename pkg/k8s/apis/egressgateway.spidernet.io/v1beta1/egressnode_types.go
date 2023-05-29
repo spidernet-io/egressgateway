@@ -18,14 +18,13 @@ type EgressNodeList struct {
 
 // EgressNode represents an egress node
 // +kubebuilder:resource:categories={egressnode},path="egressnodes",singular="egressnode",scope="Cluster"
-// +kubebuilder:printcolumn:JSONPath=".status.tunnelMac",description="tunnelMac",name="tunnelMac",type=string
-// +kubebuilder:printcolumn:JSONPath=".status.vxlanIPv4",description="tunnelIPv4",name="tunnelIPv4",type=string
-// +kubebuilder:printcolumn:JSONPath=".status.vxlanIPv6",description="tunnelIPv6",name="tunnelIPv6",type=string
+// +kubebuilder:printcolumn:JSONPath=".status.tunnel.mac",description="tunnelMac",name="tunnelMac",type=string
+// +kubebuilder:printcolumn:JSONPath=".status.tunnel.ipv4",description="tunnelIPv4",name="tunnelIPv4",type=string
+// +kubebuilder:printcolumn:JSONPath=".status.tunnel.ipv6",description="tunnelIPv6",name="tunnelIPv6",type=string
+// +kubebuilder:printcolumn:JSONPath=".status.mark",description="mark",name="mark",type=string
 // +kubebuilder:printcolumn:JSONPath=".status.phase",description="phase",name="phase",type=string
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
-// +genclient
-// +genclient:nonNamespaced
 type EgressNode struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata"`

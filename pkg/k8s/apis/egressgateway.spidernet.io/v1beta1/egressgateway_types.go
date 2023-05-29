@@ -21,8 +21,6 @@ type EgressGatewayList struct {
 // +kubebuilder:resource:categories={egressgateway},path="egressgateways",singular="egressgateway",scope="Cluster",shortName={egw}
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
-// +genclient
-// +genclient:nonNamespaced
 type EgressGateway struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata"`

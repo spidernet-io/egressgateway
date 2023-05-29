@@ -66,21 +66,15 @@ func New(cfg *config.Config, log *zap.Logger) (types.Service, error) {
 	mgr.GetWebhookServer().CertDir = cfg.TLSCertDir
 	mgr.GetWebhookServer().Register("/validate", webhook.ValidateHook(mgr.GetClient(), cfg))
 
-	//err = newEgressNodeController(mgr, log, cfg)
-	//if err != nil {
-	//	return nil, fmt.Errorf("failed to create egress node controller: %w", err)
-	//}
-	//
-	//err = newNodeController(mgr, log)
-	//if err != nil {
-	//	return nil, fmt.Errorf("failed to create node controller: %w", err)
-	//}
-	//
 	err = egressgateway.NewEgressGatewayController(mgr, log, cfg)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create egress gateway controller: %w", err)
 	}
 
+	err = newEgressNodeController(mgr, log, cfg)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create egress node controller: %w", err)
+	}
 	err = newEgressClusterInfoController(mgr, log, cfg)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create egress cluster info controller: %w", err)
