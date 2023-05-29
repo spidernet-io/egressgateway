@@ -1,0 +1,49 @@
+name: Close issue
+
+permissions: write-all
+on:
+  workflow_dispatch:
+    inputs:
+      assignees:
+        required: false
+        type: string
+      label:
+        required: false
+        type: string
+
+jobs:
+  close:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: close issue
+        env:
+          GITHUB_TOKEN: ${{ secrets.WELAN_PAT }}
+        run: |
+          set -x
+          OPTION=""
+          if ${{ inputs.assignees != '' }} ; then
+            OPTION+=" --assignee ${{ inputs.assignees }} "
+          fi
+          if ${{ inputs.label != '' }} ; then
+            OPTION+=" --label ${{ inputs.label }} "
+          fi
+          echo "OPTION=${OPTION}"
+          if [ -z "$OPTION" ]; then
+              echo "error, must provide some options"
+              exit 1
+          fi
+          gh issue list ${OPTION} | egrep "^[0-9]+[[:space:]]+OPEN"
+          issueList=` gh issue list ${OPTION} | egrep "^[0-9]+[[:space:]]+OPEN" | awk '{print $1}' `
+          echo "--------"
+          ACTION_URL="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          for ITEM in $issueList ; do
+              echo "close issue $ITEM "
+              gh issue comment $ITEM \
+                  --body "closed by CI <${ACTION_URL}> "
+              gh issue close $ITEM
+          done
