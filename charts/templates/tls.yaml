@@ -44,8 +44,12 @@ webhooks:
         apiVersions:
           - v1beta1
         operations:
+          - CREATE
+          - UPDATE
           - DELETE
         resources:
+        - egressgateways
+        - egresspolicies
         - egressclusterinfos
     sideEffects: None
 
