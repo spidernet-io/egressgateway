@@ -36,6 +36,48 @@ jobs:
         if: ${{ github.event_name != 'workflow_dispatch' }}
         uses: actions/checkout@v3
 
+      - name: github yaml format yq
+        env:
+          GITHUB_TOKEN: ${{ secrets.WELAN_PAT }}
+          JSON_DOC: ${{ toJSON(github) }}
+        run: |
+          set -x
+          echo "=================== install yq"
+          wget https://github.com/mikefarah/yq/releases/download/v4.30.7/yq_linux_amd64
+          chmod +x yq_linux_amd64
+          echo "=================== get pr number"
+          PR_NUMBER=""
+          if ${{ github.event_name == 'pull_request' }}; then
+              echo "trigger by pull_request"
+              PR_NUMBER=${{ github.event.number }}
+              [ -n "${PR_NUMBER}" ] || { echo "no PR number, ignore" ; exit 0 ; }     
+          elif ${{ github.event_name == 'push' }}; then
+              echo "trigger by push"
+              echo "${JSON_DOC}"
+              PR_NUMBER=` grep -Eio "Merge pull request #[0-9]+ " <<< "${JSON_DOC}" | grep -Eo "[0-9]+" | uniq ` || true
+              [ -n "${PR_NUMBER}" ] || { echo "no PR number, ignore" ; exit 0 ; }     
+          else
+              exit 1
+          fi
+          echo "============= get changed chart========"
+          URL="https://api.github.com/repos/${{ github.repository }}/pulls/${PR_NUMBER}/files"
+          files_changed_data=$(curl -s --header 'authorization: Bearer ${{ secrets.GITHUB_TOKEN }}' -X GET -G "$URL")
+          echo "files_changed_data: $files_changed_data"
+          files_changed="$(echo $files_changed_data | jq -r '.[] | .filename')"
+          echo "files_changed: $files_changed"
+          echo "============= checking yaml file========"
+          for FILEPATH in $files_changed ; do
+              if grep -E "\.github/.*\.yaml" <<< "$FILEPATH" &>/dev/null || grep -E "\.github/.*\.yaml" <<< "$FILEPATH" &>/dev/null ; then
+                  echo "------------ checking ${FILEPATH} "
+                  if ! ./yq_linux_amd64 ${FILEPATH} &>/dev/null ; then
+                    ./yq_linux_amd64 ${FILEPATH} || true
+                    echo "!!! error, $FILEPATH is not yaml format"
+                    exit 1
+                  fi
+              fi
+          done
+          echo "--- all done"
+
       - name: yaml-lint
         id: yaml-lint
         continue-on-error: true
