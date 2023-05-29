@@ -39,4 +39,4 @@ markdown_extensions:
 nav:
   - Home: README.md
   - Getting started:
-      - Install: usage/install.md
+      - Install: usage/Install.md

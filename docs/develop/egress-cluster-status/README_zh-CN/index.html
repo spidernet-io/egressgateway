@@ -15,7 +15,7 @@
     
     
       
-        <title>EgressNode zh CN - EgressGateway</title>
+        <title>EgressClusterStatus - EgressGateway</title>
       
     
     
@@ -63,7 +63,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#egressnode-crd" class="md-skip">
+        <a href="#egressclusterstatus" class="md-skip">
           Skip to content
         </a>
       
@@ -98,7 +98,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              EgressNode zh CN
+              EgressClusterStatus
             
           </span>
         </div>
@@ -332,6 +332,8 @@
   
   
   
+    
+  
   
     <label class="md-nav__title" for="__toc">
       <span class="md-nav__icon md-icon"></span>
@@ -340,37 +342,44 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#egressnode-crd" class="md-nav__link">
-    EgressNode CRD
+  <a href="#_1" class="md-nav__link">
+    简介
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#controller" class="md-nav__link">
-    controller 实现
+  <a href="#crd" class="md-nav__link">
+    CRD
   </a>
   
-    <nav class="md-nav" aria-label="controller 实现">
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_2" class="md-nav__link">
+    代码设计
+  </a>
+  
+    <nav class="md-nav" aria-label="代码设计">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#_1" class="md-nav__link">
+  <a href="#_3" class="md-nav__link">
     初始化
   </a>
   
 </li>
         
           <li class="md-nav__item">
-  <a href="#_2" class="md-nav__link">
-    节点事件：
+  <a href="#controller" class="md-nav__link">
+    Controller
   </a>
   
 </li>
         
           <li class="md-nav__item">
-  <a href="#egressnode" class="md-nav__link">
-    EgressNode事件：
+  <a href="#agent" class="md-nav__link">
+    agent
   </a>
   
 </li>
@@ -381,16 +390,22 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#ip" class="md-nav__link">
-    分配隧道 IP
+  <a href="#_4" class="md-nav__link">
+    其他
+  </a>
+  
+    <nav class="md-nav" aria-label="其他">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#_5" class="md-nav__link">
+    配置文件
   </a>
   
 </li>
-      
-        <li class="md-nav__item">
-  <a href="#_3" class="md-nav__link">
-    其他
-  </a>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -415,73 +430,57 @@
   
 
 
-  <h1>EgressNode zh CN</h1>
-
-<h2 id="egressnode-crd">EgressNode CRD</h2>
-<pre><code class="language-yaml">apiVersion: egressgateway.spidernet.io/v1
-kind: EgressNode
+<h1 id="egressclusterstatus">EgressClusterStatus</h1>
+<h2 id="_1">简介</h2>
+<p>为了简化 Egress 策略的配置，引入 Egress Ignore CIDR 功能，允许以手动和自动的方式获取集群的 CIDR。当 EgressGatewayPolicy 的 <code>destSubnet</code> 字段为空时，数据面将会自动匹配 EgressClusterStatus CR 中的 CIDR 之外的流量，并将其转发到 Egress 网关。</p>
+<h2 id="crd">CRD</h2>
+<pre><code class="language-yaml">apiVersion: egressgateway.spidernet.io/v1beta1
+kind: EgressClusterStatus
 metadata:
-  name: &quot;node1&quot;
-spec:
+   name: &quot;default&quot;  # 1
 status:
-  phase: &quot;Succeeded&quot;
-  vxlanIPv4IP: &quot;172.31.0.10/16&quot;
-  vxlanIPv6IP: &quot;fe80::/64&quot;
-  tunnelMac: &quot;xx:xx:xx:xx:xx&quot;
-  physicalInterface: &quot;eth1&quot;
-  physicalInterfaceIPv4: &quot;&quot;
-  physicalInterfaceIPv6: &quot;&quot;
+  egressIgnoreCIDR:
+    nodeIP:
+      ipv4:
+      - &quot;10.6.0.1&quot;
+      ipv6:
+      - &quot;fd00::1&quot;
+    clusterIP:
+      ipv4:
+      - &quot;10.6.0.1&quot;
+      ipv6:
+      - &quot;fd00::1&quot;
+    podCIDR:
+      ipv4:
+      - &quot;10.6.0.0/24&quot;
+      ipv6:
+      - &quot;fd00::1/122&quot;
 </code></pre>
-<p>用以存储各节点的隧道的信息，通过监控节点来生成</p>
-<p>字段说明
-* status
-    * <code>phase</code> 表示 EgressNode  的状态，’Succeeded’ 隧道IP已分配，且隧道已建成，’Pending’ 等待分配IP，’Init’ 分配隧道 IP 成功，’Failed’ 隧道 IP 分配失败
-    * <code>vxlanIPv4IP</code> 隧道 IPV4 地址
-    * <code>vxlanIPv6IP</code> 隧道 IPV6 地址
-    * <code>tunnelMac</code> 隧道 Mac 地址
-    * <code>physicalInterface</code> 隧道父网卡
-    * <code>physicalInterfaceIPv4</code> 父网卡 IPV4 地址
-    * <code>physicalInterfaceIPv6</code> 父网卡 IPV6 地址</p>
-<h2 id="controller">controller 实现</h2>
-<h3 id="_1">初始化</h3>
 <ol>
-<li>从 CM中获取 IPv4、IPv6 及对应的 CIDR</li>
-<li>会检查node 是否有对应的 EgressNode，没有的话就创建对应的EgressNode，且状态设置为 “pending”。有隧道 IP 则将 IP 与节点绑定，绑定前会检查 IP 是否合法，不合法则将状态设置为 “Pending”</li>
+<li>名称为 <code>default</code>，由系统维护只能创建一个;</li>
+<li>根据 <code>egressIgnoreCIDR.autoDetect</code> 配置检测出的集群 CIDR 或 IP。</li>
 </ol>
-<h3 id="_2">节点事件：</h3>
-<ul>
-<li>删除事件：删除对应的 EgressNode</li>
-<li>其他事件：如果没有对应的 EgressNode，则创建 EgressNode</li>
-<li>
-<p>其他事件：如果有对应的 EgressNode，则对EgressNode进行校验。校验逻辑如下：</p>
-</li>
-<li>
-<ul>
-<li>无隧道IP，将状态置为 “Pending”
-        如果有隧道IP，判断是否合法，不合法，就将状态置为 “Pending”
-        如果合法，校验 IP 是否已分配，如果已分配，且分配给其他节点了，则将状态置为 “Pending”
-        未分配给其他节点，就分配给本 “EgressNode”，将状态设置为 “Init”
-        如果已分配，且就是分配给本节点的，则将状态设置为 “Init”</li>
-</ul>
-</li>
-</ul>
-<h3 id="egressnode">EgressNode事件：</h3>
-<ul>
-<li>删除事件：先释放IP。如果 EgressNode 对应的节点存在，则释放IP，重新创建 EgressNode。</li>
-<li>其他事件：如果 EgressNode 状态为 “Init” 或 者“Succeeded” 时，不做任何处理。如果不是，则分配 IP，分配成功将状态设置为 “Init”，分配失败将状态设置为 “Failed”。这里是全局唯一会分配隧道 IP 的地方</li>
-</ul>
-<h2 id="ip">分配隧道 IP</h2>
-<ul>
-<li>controller 启动时，从 config 中拿到隧道 IP CRID，并在内存中维护一个 map 记录 IP 是否被分配</li>
-<li>隧道 IP 采用中心式，所以使用串行方式分配IP，在未分配的 IP 中随机分配</li>
-<li>分配前，检测隧道 IP 冲突，不冲突再分配（实现方式待定）</li>
-</ul>
-<h2 id="_3">其他</h2>
-<ul>
-<li>controller 启动时，对所的 CRD 的 IP 进行校验，且最终状态设置为 “Init” 或 “Failed” （此项待商榷）</li>
-<li>agent 监测到对应的 CRD 中 phase 字段为 “Init” 时，创建相应的隧道及路由，创建成功更新为 “Succeeded” 状态。失败则不更新</li>
-<li>Mac地址格式：根据节点名称，经过 SHA1 算法生成，所以每个节点的 Mac 地址是固定的</li>
-</ul>
+<h2 id="_2">代码设计</h2>
+<h3 id="_3">初始化</h3>
+<h3 id="controller">Controller</h3>
+<h3 id="agent">agent</h3>
+<h2 id="_4">其他</h2>
+<h3 id="_5">配置文件</h3>
+<p>修改配置文件，增加如下配置：</p>
+<pre><code class="language-yaml">feature:
+  egressIgnoreCIDR:
+    autoDetect:
+      podCIDR: &quot;&quot;     # 1
+      clusterIP: true # 2
+      nodeIP: true    # 3
+    custom:
+      - &quot;10.6.1.0/24&quot;
+</code></pre>
+<ol>
+<li>支持设置为支持 kube-ovn, calico, k8s 等；</li>
+<li>支持设置为 Service CIDR 自动检测；</li>
+<li>支持设置为 Node IP 自动检测，当新加一个节点时，自动将节点的的所有 IP 更新到 EgressClusterStatus。</li>
+</ol>
 
 
 
