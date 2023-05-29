@@ -15,7 +15,7 @@
     
     
       
-        <title>EgressNode zh CN - EgressGateway</title>
+        <title>EgressGateway - EgressGateway</title>
       
     
     
@@ -63,7 +63,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#egressnode-crd" class="md-skip">
+        <a href="#egressgateway" class="md-skip">
           Skip to content
         </a>
       
@@ -98,7 +98,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              EgressNode zh CN
+              EgressGateway
             
           </span>
         </div>
@@ -332,6 +332,8 @@
   
   
   
+    
+  
   
     <label class="md-nav__title" for="__toc">
       <span class="md-nav__icon md-icon"></span>
@@ -340,37 +342,71 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#egressnode-crd" class="md-nav__link">
-    EgressNode CRD
+  <a href="#_1" class="md-nav__link">
+    简介
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#controller" class="md-nav__link">
-    controller 实现
+  <a href="#crd" class="md-nav__link">
+    CRD
   </a>
   
-    <nav class="md-nav" aria-label="controller 实现">
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_2" class="md-nav__link">
+    代码设计
+  </a>
+  
+    <nav class="md-nav" aria-label="代码设计">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#_1" class="md-nav__link">
+  <a href="#_3" class="md-nav__link">
     初始化
   </a>
   
 </li>
         
           <li class="md-nav__item">
-  <a href="#_2" class="md-nav__link">
-    节点事件：
+  <a href="#controller" class="md-nav__link">
+    Controller
+  </a>
+  
+    <nav class="md-nav" aria-label="Controller">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#egressgateway-event" class="md-nav__link">
+    EgressGateway Event
   </a>
   
 </li>
         
           <li class="md-nav__item">
-  <a href="#egressnode" class="md-nav__link">
-    EgressNode事件：
+  <a href="#egressgatewaypolicy-event" class="md-nav__link">
+    EgressGatewayPolicy Event
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#node-event" class="md-nav__link">
+    Node Event
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#agent" class="md-nav__link">
+    agent
   </a>
   
 </li>
@@ -381,16 +417,49 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#ip" class="md-nav__link">
-    分配隧道 IP
+  <a href="#_4" class="md-nav__link">
+    其他
+  </a>
+  
+    <nav class="md-nav" aria-label="其他">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#policy-eip" class="md-nav__link">
+    policy 选网关节点及 EIP 分配逻辑
+  </a>
+  
+    <nav class="md-nav" aria-label="policy 选网关节点及 EIP 分配逻辑">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#policy" class="md-nav__link">
+    policy 选网关节点的模式
   </a>
   
 </li>
-      
-        <li class="md-nav__item">
-  <a href="#_3" class="md-nav__link">
-    其他
+        
+          <li class="md-nav__item">
+  <a href="#eip" class="md-nav__link">
+    EIP 分配逻辑
   </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#eip_1" class="md-nav__link">
+    EIP 回收逻辑
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -415,73 +484,103 @@
   
 
 
-  <h1>EgressNode zh CN</h1>
-
-<h2 id="egressnode-crd">EgressNode CRD</h2>
-<pre><code class="language-yaml">apiVersion: egressgateway.spidernet.io/v1
-kind: EgressNode
+<h1 id="egressgateway">EgressGateway</h1>
+<h2 id="_1">简介</h2>
+<p>用于选择一组节点作为 Egress 网关节点，Egress IP 可以在该范围浮动。集群级资源。</p>
+<h2 id="crd">CRD</h2>
+<pre><code class="language-yaml">apiVersion: egressgateway.spidernet.io/v1beta1
+kind: EgressGateway
 metadata:
-  name: &quot;node1&quot;
-spec:
-status:
-  phase: &quot;Succeeded&quot;
-  vxlanIPv4IP: &quot;172.31.0.10/16&quot;
-  vxlanIPv6IP: &quot;fe80::/64&quot;
-  tunnelMac: &quot;xx:xx:xx:xx:xx&quot;
-  physicalInterface: &quot;eth1&quot;
-  physicalInterfaceIPv4: &quot;&quot;
-  physicalInterfaceIPv6: &quot;&quot;
+  name: &quot;eg1&quot;
+spec:                           
+  ranges:                       # 1
+   policy: &quot;Random&quot;             # 2
+   ipv4:                        # 3
+   - &quot;&quot;
+   ipv6:                        # 4
+   - &quot;&quot;
+  nodeSelector:                 # 5
+    selector:                   # 6
+      matchLabels:
+        egress: &quot;true&quot;
+    policy: &quot;AverageSelecton&quot;   # 7
+status:                         # 8
+  nodeList:                     # 9
+  - name: node1                 # 10
+    eips:                       # 11
+    - ipv4: &quot;&quot;                  # 12
+      ipv6: &quot;&quot;                  # 13
+      policies:                 # 14
+      - &quot;&quot;
 </code></pre>
-<p>用以存储各节点的隧道的信息，通过监控节点来生成</p>
-<p>字段说明
-* status
-    * <code>phase</code> 表示 EgressNode  的状态，’Succeeded’ 隧道IP已分配，且隧道已建成，’Pending’ 等待分配IP，’Init’ 分配隧道 IP 成功，’Failed’ 隧道 IP 分配失败
-    * <code>vxlanIPv4IP</code> 隧道 IPV4 地址
-    * <code>vxlanIPv6IP</code> 隧道 IPV6 地址
-    * <code>tunnelMac</code> 隧道 Mac 地址
-    * <code>physicalInterface</code> 隧道父网卡
-    * <code>physicalInterfaceIPv4</code> 父网卡 IPV4 地址
-    * <code>physicalInterfaceIPv6</code> 父网卡 IPV6 地址</p>
-<h2 id="controller">controller 实现</h2>
-<h3 id="_1">初始化</h3>
 <ol>
-<li>从 CM中获取 IPv4、IPv6 及对应的 CIDR</li>
-<li>会检查node 是否有对应的 EgressNode，没有的话就创建对应的EgressNode，且状态设置为 “pending”。有隧道 IP 则将 IP 与节点绑定，绑定前会检查 IP 是否合法，不合法则将状态设置为 “Pending”</li>
+<li>ranges: 设置 Egress IP 的范围；</li>
+<li>支持设置单个 IP <code>10.6.0.1</code> ，和段 <code>10.6.0.1-10.6.0.10</code> ， CIDR <code>10.6.0.1/26</code>  的方式 3 种方式；</li>
+<li>如果开启双栈要求，IPv4 的数量和 IPv6 的数量要求一致。由于此原因，会导致上面 CIDR 可能并不实用，因此优先级优先实现前 2 种；</li>
+<li>policy(string): EIP 的分配策略，暂时只支持 <code>Random</code> 随机分配</li>
+<li>ipv4([]string): EIP 的 IPV4 范围</li>
+<li>ipv6([]string): EIP 的 IPV6 范围</li>
+<li>nodeSelector: 设置 EgressGateway IP 可浮动的节点范围及策略</li>
+<li>selector(LabelSelector): 筛选 EgressGateway IP 可浮动的节点范围</li>
+<li>policy(string): policy 选网关节点的策略，暂时只支持 <code>AverageSelecton</code> 平均分配</li>
+<li>status: 展示其所选网关节点、EIP 、被 policy 引用情况</li>
+<li>nodeList([]EgressIPStatus): </li>
+<li>name(string): 网关节点的名称</li>
+<li>eips([]Eips): 该网关节点上生效的 EIP 相关信息</li>
+<li>ipv4(string): IPV4 EIP，如果 policy 使用节点 IP，则该字段为空</li>
+<li>ipv6(string): IPV6 EIP，IPV6 与 IPV4 是一一对应的</li>
+<li>policies([]string): 以该节点作为网关节点的 policy 集合</li>
 </ol>
-<h3 id="_2">节点事件：</h3>
+<h2 id="_2">代码设计</h2>
+<h3 id="_3">初始化</h3>
+<h3 id="controller">Controller</h3>
+<h4 id="egressgateway-event">EgressGateway Event</h4>
 <ul>
-<li>删除事件：删除对应的 EgressNode</li>
-<li>其他事件：如果没有对应的 EgressNode，则创建 EgressNode</li>
+<li>Del：</li>
+<li>webhook 判断是否还被其他 Policy 引用，如果存在则不允许删除。</li>
 <li>
-<p>其他事件：如果有对应的 EgressNode，则对EgressNode进行校验。校验逻辑如下：</p>
+<p>通过了 webhook 的校验说明没有被引用，所以的规则也被清理，则可以直接删除</p>
 </li>
 <li>
-<ul>
-<li>无隧道IP，将状态置为 “Pending”
-        如果有隧道IP，判断是否合法，不合法，就将状态置为 “Pending”
-        如果合法，校验 IP 是否已分配，如果已分配，且分配给其他节点了，则将状态置为 “Pending”
-        未分配给其他节点，就分配给本 “EgressNode”，将状态设置为 “Init”
-        如果已分配，且就是分配给本节点的，则将状态设置为 “Init”</li>
-</ul>
+<p>Other：</p>
 </li>
+<li>EIP 减少，如果 EIP 被引用，禁止修改。分配 IPV4 与 IPV6 时，要求一一对应，所以两者的个数需要一致</li>
+<li>如果 nodeSelector 被修改，从 status 获取旧的 Node 信息，与最新的 Node 进行对比。将删除节点上的 EIP 重新分配到新的 Node 上。更新对应 EgressNode 中的 EIP 信息。</li>
 </ul>
-<h3 id="egressnode">EgressNode事件：</h3>
+<h4 id="egressgatewaypolicy-event">EgressGatewayPolicy Event</h4>
 <ul>
-<li>删除事件：先释放IP。如果 EgressNode 对应的节点存在，则释放IP，重新创建 EgressNode。</li>
-<li>其他事件：如果 EgressNode 状态为 “Init” 或 者“Succeeded” 时，不做任何处理。如果不是，则分配 IP，分配成功将状态设置为 “Init”，分配失败将状态设置为 “Failed”。这里是全局唯一会分配隧道 IP 的地方</li>
+<li>Del：list EgressEndpointSlice 找到被引用的 EgressGateway，再对 policy 与 EgressGateway 解绑。解绑需要做的事情有，找到对应的 EIP 信息。如果使用了 EIP，则判断是否需要回收 EIP。如果此时 EIP 已经没有 policy 使用，则回收 EIP，更新自身及 EgressNode 的 EIP 信息</li>
+<li>Other：</li>
+<li>暂定 policy 不能修改绑定的 EgressGateway。如果允许修改，则 list EgressGateway 找到原先绑定的 EgressGateway，进行解绑。再对新的进行绑定。</li>
+<li>新增 policy，则将 policy 与 EgressGateway 进行绑定，绑定中，判断是否需要分配 EIP</li>
 </ul>
-<h2 id="ip">分配隧道 IP</h2>
+<h4 id="node-event">Node Event</h4>
 <ul>
-<li>controller 启动时，从 config 中拿到隧道 IP CRID，并在内存中维护一个 map 记录 IP 是否被分配</li>
-<li>隧道 IP 采用中心式，所以使用串行方式分配IP，在未分配的 IP 中随机分配</li>
-<li>分配前，检测隧道 IP 冲突，不冲突再分配（实现方式待定）</li>
+<li>Del：list EgressGateway 挑选出在该节点生效的 EIP，将这些 EIP 重新分配到新的节点上。更新 EgressGateway 的 eip.policy </li>
+<li>Other：</li>
+<li>NoReady 事件时，相当于触发删除事件</li>
+<li>标签修改，通过遍历 EgressGateway 所有信息，是否涉及 nodeSelector。如果旧标签不涉及 EgressPolicy，则不做任何处理。如果有涉及，相当于触发了删除事件。如果新的标签符合 EgressGateway 条件，则更新对应的 EgressGateway 的 status 信息</li>
 </ul>
-<h2 id="_3">其他</h2>
+<h3 id="agent">agent</h3>
+<p>无</p>
+<h2 id="_4">其他</h2>
+<h3 id="policy-eip">policy 选网关节点及 EIP 分配逻辑</h3>
+<p>一个 policy 会根据选网关节点的策略，选择一个节点作为网关节点。然后根据是否使用 EIP，来决定是否分配 EIP。分配的 EIP 将绑定到所选的网关节点上</p>
+<p>分配逻辑都是以单个 EgressGateway 为对象，而不是所有的 EgressGateway。</p>
+<h4 id="policy">policy 选网关节点的模式</h4>
 <ul>
-<li>controller 启动时，对所的 CRD 的 IP 进行校验，且最终状态设置为 “Init” 或 “Failed” （此项待商榷）</li>
-<li>agent 监测到对应的 CRD 中 phase 字段为 “Init” 时，创建相应的隧道及路由，创建成功更新为 “Succeeded” 状态。失败则不更新</li>
-<li>Mac地址格式：根据节点名称，经过 SHA1 算法生成，所以每个节点的 Mac 地址是固定的</li>
+<li>平均选择：当需要选择网关节点时，选择作为网关节点最少的一个节点。</li>
+<li>最少节点选择：尽量选同一个节点作为网关节点</li>
+<li>限度选择：一个节点最多只能成为几个 policy 的网关节点，限度可以设置，默认为 5。没有达到限度前，则优选选择该节点，达到限度就先选其他的节点，如果都达到了限度，则再随机选择</li>
 </ul>
+<h4 id="eip">EIP 分配逻辑</h4>
+<ul>
+<li>随机分配：在所有的 EIP 中随机选择一个，不管该 EIP 是否已经分配</li>
+<li>优先使用未分配的 EIP：先使用未分配的 EIP，如果都使用了则再随机分配一个已使用的 EIP</li>
+<li>限度选择：一个 EIP 最多只能被几个 policy 使用，限度可以设置，默认为 5，没有达到限度前，则先分配该 EIP，达到限度则选其他的 EIP。都达到限度则随机分配。</li>
+</ul>
+<h4 id="eip_1">EIP 回收逻辑</h4>
+<p>当一个 EIP 没有被使用时，则回收该 EIP，回收就是在 eips 中将该 EIP 字段删除</p>
 
 
 

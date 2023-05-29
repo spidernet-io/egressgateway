@@ -15,7 +15,7 @@
     
     
       
-        <title>EgressNode zh CN - EgressGateway</title>
+        <title>EgressNode - EgressGateway</title>
       
     
     
@@ -63,7 +63,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#egressnode-crd" class="md-skip">
+        <a href="#egressnode" class="md-skip">
           Skip to content
         </a>
       
@@ -98,7 +98,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              EgressNode zh CN
+              EgressNode
             
           </span>
         </div>
@@ -332,6 +332,8 @@
   
   
   
+    
+  
   
     <label class="md-nav__title" for="__toc">
       <span class="md-nav__icon md-icon"></span>
@@ -340,38 +342,78 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#egressnode-crd" class="md-nav__link">
-    EgressNode CRD
+  <a href="#_1" class="md-nav__link">
+    简介
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#controller" class="md-nav__link">
-    controller 实现
+  <a href="#crd" class="md-nav__link">
+    CRD
   </a>
   
-    <nav class="md-nav" aria-label="controller 实现">
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_2" class="md-nav__link">
+    代码设计
+  </a>
+  
+    <nav class="md-nav" aria-label="代码设计">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#_1" class="md-nav__link">
+  <a href="#controller" class="md-nav__link">
+    Controller
+  </a>
+  
+    <nav class="md-nav" aria-label="Controller">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#_3" class="md-nav__link">
     初始化
   </a>
   
 </li>
         
           <li class="md-nav__item">
-  <a href="#_2" class="md-nav__link">
-    节点事件：
+  <a href="#egressnode-event" class="md-nav__link">
+    EgressNode Event
   </a>
   
 </li>
         
           <li class="md-nav__item">
-  <a href="#egressnode" class="md-nav__link">
-    EgressNode事件：
+  <a href="#node-event" class="md-nav__link">
+    Node Event
   </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#agent" class="md-nav__link">
+    agent
+  </a>
+  
+    <nav class="md-nav" aria-label="agent">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#_4" class="md-nav__link">
+    初始化
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
         
@@ -381,14 +423,7 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#ip" class="md-nav__link">
-    分配隧道 IP
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#_3" class="md-nav__link">
+  <a href="#_5" class="md-nav__link">
     其他
   </a>
   
@@ -415,73 +450,64 @@
   
 
 
-  <h1>EgressNode zh CN</h1>
-
-<h2 id="egressnode-crd">EgressNode CRD</h2>
-<pre><code class="language-yaml">apiVersion: egressgateway.spidernet.io/v1
+<h1 id="egressnode">EgressNode</h1>
+<h2 id="_1">简介</h2>
+<p>主要用于记录跨节点通信的隧道网卡信息。集群级资源，与 Kubernetes Node 资源名称一一对应。</p>
+<h2 id="crd">CRD</h2>
+<pre><code class="language-yaml">apiVersion: egressgateway.spidernet.io/v1beta1
 kind: EgressNode
 metadata:
-  name: &quot;node1&quot;
-spec:
+   name: &quot;node1&quot;
 status:
-  phase: &quot;Succeeded&quot;
-  vxlanIPv4IP: &quot;172.31.0.10/16&quot;
-  vxlanIPv6IP: &quot;fe80::/64&quot;
-  tunnelMac: &quot;xx:xx:xx:xx:xx&quot;
-  physicalInterface: &quot;eth1&quot;
-  physicalInterfaceIPv4: &quot;&quot;
-  physicalInterfaceIPv6: &quot;&quot;
+   tunnel:
+      ipv4: &quot;192.200.222.157&quot;  # 1
+      ipv6: &quot;fd01::f2&quot;         # 2        
+      mac: &quot;66:50:85:cb:b2:bf&quot; # 3
+      parent:
+         name: &quot;ens160&quot;        # 4
+         ipv4: &quot;10.6.1.21/16&quot;  # 5
+         ipv6: &quot;fd00::21/112&quot;  # 6
+   phase: &quot;Succeeded&quot;          # 7
+   mark: &quot;0x26000000&quot;          # 8
 </code></pre>
-<p>用以存储各节点的隧道的信息，通过监控节点来生成</p>
-<p>字段说明
-* status
-    * <code>phase</code> 表示 EgressNode  的状态，’Succeeded’ 隧道IP已分配，且隧道已建成，’Pending’ 等待分配IP，’Init’ 分配隧道 IP 成功，’Failed’ 隧道 IP 分配失败
-    * <code>vxlanIPv4IP</code> 隧道 IPV4 地址
-    * <code>vxlanIPv6IP</code> 隧道 IPV6 地址
-    * <code>tunnelMac</code> 隧道 Mac 地址
-    * <code>physicalInterface</code> 隧道父网卡
-    * <code>physicalInterfaceIPv4</code> 父网卡 IPV4 地址
-    * <code>physicalInterfaceIPv6</code> 父网卡 IPV6 地址</p>
-<h2 id="controller">controller 实现</h2>
-<h3 id="_1">初始化</h3>
 <ol>
-<li>从 CM中获取 IPv4、IPv6 及对应的 CIDR</li>
-<li>会检查node 是否有对应的 EgressNode，没有的话就创建对应的EgressNode，且状态设置为 “pending”。有隧道 IP 则将 IP 与节点绑定，绑定前会检查 IP 是否合法，不合法则将状态设置为 “Pending”</li>
+<li>隧道 IPv4 地址</li>
+<li>隧道 IPv6 地址</li>
+<li>隧道 MAC 地址</li>
+<li>隧道父网卡</li>
+<li>隧道父网卡 IPv4 地址</li>
+<li>隧道父网卡 IPv6 地址</li>
+<li>当前隧道就绪阶段，<code>Succeeded</code> 隧道IP已分配，且隧道已建成，<code>Pending</code> 等待分配IP，<code>Init</code> 分配隧道 IP 成功，<code>Failed</code> 隧道 IP 分配失败</li>
+<li>mark 值，此为新增此段，创建时生成。每个节点对应一个，全局唯一的标签。标签由前缀 + 唯一标识符生成。标签格式如下 <code>NODE_MARK = 0x26 + value + 0000</code>，<code>value</code> 为 16 位，支持的节点总数为 <code>2^16</code>。在下发 policy 规则时所打的标签，取决于该规则的网关节点。</li>
 </ol>
-<h3 id="_2">节点事件：</h3>
+<h2 id="_2">代码设计</h2>
+<h3 id="controller">Controller</h3>
+<h4 id="_3">初始化</h4>
+<ol>
+<li>从 CM 中获取双栈开启情况及对应的隧道 CIDR</li>
+<li>通过节点名称根据算法生成唯一的标签值</li>
+<li>会检查 node 是否有对应的 EgressNode，没有的话就创建对应的EgressNode，且状态设置为 <code>Pending</code>。有隧道 IP 则将 IP 与节点绑定，绑定前会检查 IP 是否合法，不合法则将状态设置为 <code>Pending</code></li>
+</ol>
+<h4 id="egressnode-event">EgressNode Event</h4>
 <ul>
-<li>删除事件：删除对应的 EgressNode</li>
-<li>其他事件：如果没有对应的 EgressNode，则创建 EgressNode</li>
-<li>
-<p>其他事件：如果有对应的 EgressNode，则对EgressNode进行校验。校验逻辑如下：</p>
-</li>
-<li>
+<li>Del：先释放隧道 IP，再删除。如果 EgressNode 对应的节点还存在，重新创建 EgressNode</li>
+<li>Other：</li>
+<li>phase != <code>Init</code> || phase != <code>Succeeded</code>：则分配 IP，分配成功将状态设置为 <code>Init</code>，分配失败将状态设置为 <code>Failed</code>。这里是全局唯一会分配隧道 IP 的地方</li>
+<li>mark != algorithm(NodeName)：该字段禁止修改，直接报错返回</li>
+</ul>
+<h4 id="node-event">Node Event</h4>
 <ul>
-<li>无隧道IP，将状态置为 “Pending”
-        如果有隧道IP，判断是否合法，不合法，就将状态置为 “Pending”
-        如果合法，校验 IP 是否已分配，如果已分配，且分配给其他节点了，则将状态置为 “Pending”
-        未分配给其他节点，就分配给本 “EgressNode”，将状态设置为 “Init”
-        如果已分配，且就是分配给本节点的，则将状态设置为 “Init”</li>
+<li>Del：删除对应的 EgressNode</li>
+<li>Other：</li>
+<li>节点对应的 EgressNode 不存在，则创建 EgressNode</li>
+<li>无隧道 IP，设置 phase == <code>Pending</code></li>
+<li>有隧道 IP，校验隧道是否合法，不合法则设置 phase == <code>Pending</code></li>
+<li>隧道 IP 合法，校验 IP 是否分配给本节点，不是则设置 phase == <code>Pending</code>。</li>
+<li>隧道 IP 是分配给本节点，phase != <code>Succeeded</code> 则设置 phase == <code>Init</code></li>
 </ul>
-</li>
-</ul>
-<h3 id="egressnode">EgressNode事件：</h3>
-<ul>
-<li>删除事件：先释放IP。如果 EgressNode 对应的节点存在，则释放IP，重新创建 EgressNode。</li>
-<li>其他事件：如果 EgressNode 状态为 “Init” 或 者“Succeeded” 时，不做任何处理。如果不是，则分配 IP，分配成功将状态设置为 “Init”，分配失败将状态设置为 “Failed”。这里是全局唯一会分配隧道 IP 的地方</li>
-</ul>
-<h2 id="ip">分配隧道 IP</h2>
-<ul>
-<li>controller 启动时，从 config 中拿到隧道 IP CRID，并在内存中维护一个 map 记录 IP 是否被分配</li>
-<li>隧道 IP 采用中心式，所以使用串行方式分配IP，在未分配的 IP 中随机分配</li>
-<li>分配前，检测隧道 IP 冲突，不冲突再分配（实现方式待定）</li>
-</ul>
-<h2 id="_3">其他</h2>
-<ul>
-<li>controller 启动时，对所的 CRD 的 IP 进行校验，且最终状态设置为 “Init” 或 “Failed” （此项待商榷）</li>
-<li>agent 监测到对应的 CRD 中 phase 字段为 “Init” 时，创建相应的隧道及路由，创建成功更新为 “Succeeded” 状态。失败则不更新</li>
-<li>Mac地址格式：根据节点名称，经过 SHA1 算法生成，所以每个节点的 Mac 地址是固定的</li>
-</ul>
+<h3 id="agent">agent</h3>
+<h4 id="_4">初始化</h4>
+<h2 id="_5">其他</h2>
 
 
 

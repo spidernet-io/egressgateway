@@ -1,0 +1,859 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+      
+      
+      <link rel="icon" href="../../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.4.3, mkdocs-material-9.1.14">
+    
+    
+      
+        <title>Egress IP - EgressGateway</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../../assets/stylesheets/main.85bb2934.min.css">
+      
+        
+        <link rel="stylesheet" href="../../../assets/stylesheets/palette.a6bdf11c.min.css">
+      
+      
+
+    
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../../..",location),__md_hash=e=>[...e].reduce((e,_)=>(e<<5)-e+_.charCodeAt(0),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+    
+  </head>
+  
+  
+    
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="#4478D1" data-md-color-accent="indigo">
+  
+    
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#egress-ip" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow md-header--lifted" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../../.." title="EgressGateway" class="md-header__button md-logo" aria-label="EgressGateway" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54Z"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3V6m0 5h18v2H3v-2m0 5h18v2H3v-2Z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            EgressGateway
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Egress IP
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+    
+    
+    
+      <label class="md-header__button md-icon" for="__search">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
+      </label>
+      <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12Z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+          <a href="javascript:void(0)" class="md-search__icon md-icon" title="Share" aria-label="Share" data-clipboard data-clipboard-text="" data-md-component="search-share" tabindex="-1">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7 0-.24-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9a3 3 0 0 0-3 3 3 3 0 0 0 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.15c-.05.21-.08.43-.08.66 0 1.61 1.31 2.91 2.92 2.91 1.61 0 2.92-1.3 2.92-2.91A2.92 2.92 0 0 0 18 16.08Z"/></svg>
+          </a>
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41Z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/spidernet-io/egressgateway" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.4.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2023 Fonticons, Inc.--><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81z"/></svg>
+  </div>
+  <div class="md-source__repository">
+    spidernet-io/egressgateway
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+    
+      
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+
+
+  <li class="md-tabs__item">
+    <a href="../../.." class="md-tabs__link">
+      Home
+    </a>
+  </li>
+
+      
+        
+  
+  
+
+
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../../usage/Install/" class="md-tabs__link">
+        Getting started
+      </a>
+    </li>
+  
+
+      
+    </ul>
+  </div>
+</nav>
+    
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../../.." title="EgressGateway" class="md-nav__button md-logo" aria-label="EgressGateway" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54Z"/></svg>
+
+    </a>
+    EgressGateway
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/spidernet-io/egressgateway" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.4.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2023 Fonticons, Inc.--><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81z"/></svg>
+  </div>
+  <div class="md-source__repository">
+    spidernet-io/egressgateway
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../.." class="md-nav__link">
+        Home
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+      
+      
+      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" >
+      
+      
+        
+          
+        
+      
+      
+        <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
+          Getting started
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+        <label class="md-nav__title" for="__nav_2">
+          <span class="md-nav__icon md-icon"></span>
+          Getting started
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../usage/Install/" class="md-nav__link">
+        Install
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#_1" class="md-nav__link">
+    概要
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_2" class="md-nav__link">
+    动机
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_3" class="md-nav__link">
+    目标
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_4" class="md-nav__link">
+    非目标
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_5" class="md-nav__link">
+    设计
+  </a>
+  
+    <nav class="md-nav" aria-label="设计">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#crd" class="md-nav__link">
+    CRD
+  </a>
+  
+    <nav class="md-nav" aria-label="CRD">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#egressnode" class="md-nav__link">
+    EgressNode
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#egressgateway" class="md-nav__link">
+    EgressGateway
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#egressgatewaypolicy" class="md-nav__link">
+    EgressGatewayPolicy
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#egressendpointslice" class="md-nav__link">
+    EgressEndpointSlice
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_6" class="md-nav__link">
+    数据面规则
+  </a>
+  
+    <nav class="md-nav" aria-label="数据面规则">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#_7" class="md-nav__link">
+    所有节点
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#eip-egress-gateway" class="md-nav__link">
+    相对于 EIP 的非 Egress Gateway 节点
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#eip-egress-gateway_1" class="md-nav__link">
+    相对于 EIP 的 Egress Gateway 节点
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#egressgatewaypolicy-eip" class="md-nav__link">
+    EgressGatewayPolicy 选网关节点及 EIP 分配逻辑
+  </a>
+  
+    <nav class="md-nav" aria-label="EgressGatewayPolicy 选网关节点及 EIP 分配逻辑">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#policy" class="md-nav__link">
+    policy 选网关节点的模式
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#eip" class="md-nav__link">
+    EIP 分配逻辑
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#eip_1" class="md-nav__link">
+    EIP 回收逻辑
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_8" class="md-nav__link">
+    其他
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_9" class="md-nav__link">
+    代码设计
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset">
+                
+                  
+  
+
+
+
+  
+  
+
+
+<h1 id="egress-ip">Egress IP</h1>
+<h2 id="_1">概要</h2>
+<p>更新 EgressGateway CRD 字段以支持设置 EIP 范围，调整 EgressGatewayEgressPolicy 为租户级，可以选择引用的 EgressGateway，EgressGateway CRD 增加字段限制被引用的租户。以上调整可以允许不同的 EgressGatewayPolicy 分配到不同的 EIP，可以根据不同需求灵活规划服务灵活规划集群出口网络，租户级的资源可以让不同的角色进行出口策略管理。增加 EgressEndpointSlice CRD 聚合集群策略匹配中的工作负载，提升 EgressGateway 的扩展性与性能。</p>
+<h2 id="_2">动机</h2>
+<p>当前已经发布 EgressGateway v0.1.0 支持使用 Egress Gateway 的节点 IP 作为出口 IP，它满足了将需要出集群的服务的流量聚合能力。一个集群中通常存在数十组甚至数百组不通的服务，其中多组应用需要访问不同外部网络，单个 EIP 在特定的限制或规则下显得捉襟见肘，比如不同 EIP 的具有不通的防火墙策略，不同EIP 具有不同的访问带宽。通过 EgressGatewayPolicy 为不同的应用或服务分配不同的 EIP 也可以，可以细粒度管理，能避免潜在的安全问题。</p>
+<h2 id="_3">目标</h2>
+<ul>
+<li>支持设置 Egress IP 范围</li>
+<li>支持设置租户级 EgressGatewayPolicy</li>
+<li>提升 EgressGateway 的性能和可扩展性</li>
+<li>更改涉及的配置参数更新</li>
+</ul>
+<h2 id="_4">非目标</h2>
+<ul>
+<li>提升数据面转发性能</li>
+<li>更新项目文档结构</li>
+</ul>
+<h2 id="_5">设计</h2>
+<h3 id="crd">CRD</h3>
+<h4 id="egressnode">EgressNode</h4>
+<p>用于记录跨节点通信的隧道网卡信息。集群级资源，与 Kubernetes Node 资源名称一一对应。</p>
+<pre><code class="language-yaml">apiVersion: egressgateway.spidernet.io/v1beta1
+kind: EgressNode
+metadata:
+   name: &quot;node1&quot;
+status:
+   tunnel:
+      ipv4: &quot;192.200.222.157&quot;  # 1
+      ipv6: &quot;fd01::f2&quot;         # 2        
+      mac: &quot;66:50:85:cb:b2:bf&quot; # 3
+      parent:
+         name: &quot;ens160&quot;        # 4
+         ipv4: &quot;10.6.1.21/16&quot;  # 5
+         ipv6: &quot;fd00::21/112&quot;  # 6
+   phase: &quot;Succeeded&quot;          # 7
+   mark: &quot;0x26000000&quot;          # 8
+</code></pre>
+<ol>
+<li>隧道 IPv4 地址</li>
+<li>隧道 IPv6 地址</li>
+<li>隧道 MAC 地址</li>
+<li>隧道父网卡</li>
+<li>隧道父网卡 IPv4 地址 </li>
+<li>隧道父网卡 IPv6 地址 </li>
+<li>当前隧道就绪阶段</li>
+<li>mark 地址，此为新增此段，创建时生成。每个节点对应一个，全局唯一的标签。标签由前缀 + 唯一标识符生成。标签格式如下 <code>NODE_MARK = 0x26 + value + 0000</code>，<code>value</code> 为 16 位，支持的节点总数为 <code>2^16</code>。在下发 policy 规则时所打的标签，取决于该规则的 EIP 所生效的节点。</li>
+</ol>
+<h4 id="egressgateway">EgressGateway</h4>
+<p>用于选择一组节点作为 Egress 网关节点，Egress IP 可以在该范围浮动。集群级资源。</p>
+<pre><code class="language-yaml">apiVersion: egressgateway.spidernet.io/v1beta1
+kind: EgressGateway
+metadata:
+  name: &quot;eg1&quot;
+spec:                            # 1
+  ranges:
+   policy: &quot;Random&quot;              # 2
+   ipv4:
+   - &quot;&quot;
+   ipv6:
+   - &quot;&quot;
+  nodeSelector:                  # 3
+    selector: 
+      matchLabels:
+        egress: &quot;true&quot;
+    policy: &quot;AverageSelecton&quot;    # 4
+status:
+  nodeList:                 # 5
+  - name: node1             # 6
+    eips:                   
+    - ipv4: &quot;&quot;              # 7
+      ipv6: &quot;&quot;
+      policies:             # 8
+      - &quot;&quot;
+</code></pre>
+<ol>
+<li>设置 Egress IP 的范围；</li>
+<li>支持设置单个 IP <code>10.6.0.1</code> ，和段 <code>10.6.0.1-10.6.0.10</code> ， CIDR <code>10.6.0.1/26</code>  的方式 3 种方式；</li>
+<li>如果开启双栈要求，IPv4 的数量和 IPv6 的数量时一致的。由于此原因，会导致上面 CIDR 可能并不实用，因此优先级优先实现前 2 种；</li>
+<li>EIP 的分配策略，暂时只支持 <code>Random</code> 随机分配</li>
+<li>设置 EgressGateway IP 可浮动的节点范围及策略；</li>
+<li>policy 选网关节点的策略，暂时只支持 <code>AverageSelecton</code> 平均分配</li>
+<li>Egress Gateway Controller 用于记录显示 nodeSelector 匹配中的节点，对于 Node 更新 Label 或 nodeSelector 变动都会引起此字段变动，Agent 是此字段的消费者，会将属于自己节点的 IP 设置到默认名为 <code>egress.eip</code> 网卡；</li>
+<li>被引用该 EgressGateway 的 EgressGatewayPolicy 选中，作为网关的节点；</li>
+<li>生效的 EIP，如果 EgressGatewayPolicy 中 useNodeIP 为 <code>true</code> 时，则该字段为空;</li>
+<li>Agent 通过该字段判断哪些节点是哪些 EgressGatewayPolicy 的网关节点及非网关节点；</li>
+</ol>
+<h4 id="egressgatewaypolicy">EgressGatewayPolicy</h4>
+<p>用于指定哪些 Pod 走 Egress 策略，以及 Egress 所使用的 IP 地址。租户级资源。</p>
+<pre><code class="language-yaml">apiVersion: egressgateway.spidernet.io/v1beta1
+kind: EgressGatewayPolicy
+metadata:
+  namespace: &quot;default&quot;
+  name: &quot;policy-test&quot;
+spec:
+  egressGatewayName: &quot;eg1&quot;  # 1
+  egressIP:                 # 2
+    ipv4: &quot;&quot;                            
+    ipv6: &quot;&quot;
+    useNodeIP: false        # 3
+  appliedTo:                # 4
+    podSelector:            # 4-a 
+      matchLabels:    
+        app: &quot;shopping&quot;
+    podSubnet:              # 4-b
+    - &quot;172.29.16.0/24&quot;
+    - 'fd00:1/126'
+  destSubnet:               # 5
+    - &quot;10.6.1.92/32&quot;
+    - &quot;fd00::92/128&quot;
+</code></pre>
+<ol>
+<li>选择策略引用的 EgressGateway；</li>
+<li>Egress IP 准入策略；</li>
+<li>若在创建时定义了 <code>ipv4</code> 或 <code>ipv6</code> 地址，则从 EgressGateway 的 <code>.ranges</code> 中分配一个 IP 地址，若用户在 policy1 中，申请使用了 IP 地址 <code>10.6.1.21</code> 和 <code>fd00:1</code> ，然后创建 policy2 中，申请使用了 IP 地址 <code>10.6.1.21</code> 和 <code>fd00:2</code> ，则会报错，此时 policy2 会分配失败；</li>
+<li>若未定义 <code>ipv4</code> 或 <code>ipv6</code> 地址，且 <code>useNodeIP</code> 为 true 时，则使用所引用 EgressGateway 的匹配中的 Node 的 IP 作为 Egress 地址。</li>
+<li>若未在创建时定义 <code>ipv4</code> 或 <code>ipv6</code> 地址，且 <code>useNodeIP</code> 为 <code>false</code> 时。<ul>
+<li>则自动从 EgressGateway 的 <code>.ranges</code> 中分配一个 IP 地址（开启 IPv6 时，请求分配一个 IPv4 和 一个 IPv6 地址）；</li>
+</ul>
+</li>
+<li>若 <code>egressGatewayName</code> 未定义；<ul>
+<li>继续则查看是当前 Namespace 的 label 键 <code>egressgateway.spidernet.io/default</code> 是否设置默认的 EgressGateway，如果有且允许此租户使用，则从此分配 EgressIP；</li>
+<li>继续查看是否有名称为 <code>default</code> 全局默认 EgressGateway，如果有且允许此租户使用，则从此分配 EgressIP。</li>
+</ul>
+</li>
+<li>支持使用节点 IP 作为 Egress IP（只允许选择一种）；</li>
+<li>选择需要应用 Egress Gateway Policy 的 Pod；
+   a. 以 Label 的方式进行选择
+   b. 直接指定 Pod 的网段 （a 和 b 不能同时使用）</li>
+<li>指定访问 Egress 的目标地址，若未指定目标地址，则生效的策略位目标地址非集群内 CIDR 时，全部转发到 Egress 节点。</li>
+</ol>
+<h4 id="egressendpointslice">EgressEndpointSlice</h4>
+<p>聚合 EgressGatewayPolicy 匹配中的端点，以提高扩展性，仅支持 EgressGatewayPolicy 使用 <code>podSelector</code> 的方式匹配 Pod 的情况。每个 EgressEndpointSlice 中的 Endpoint 个数默认不超过 100，最大值可以进行设置。是 EgressGatewayPolicy 的附属资源。</p>
+<pre><code class="language-yaml">apiVersion: egressgateway.spidernet.io/v1beta1
+kind: EgressEndpointSlice
+metadata:
+  name: &quot;policy-test-dx66t&quot;     # 1
+  namespace: &quot;default&quot;         
+  labels:
+    egressgateway.spidernet.io/egressgatewaypolicy: &quot;policy-test&quot;  # 2
+  ownerReferences:   # 3
+  - apiVersion: egressgateway.spidernet.io/v1beta1
+    blockOwnerDeletion: true
+    controller: true
+    kind: EgressGatewayPolicy
+    name: &quot;policy-test&quot;
+    uid: 1b2ec0a8-b929-4528-8f99-499f981d319e
+data:
+  endpoints:                   # 4
+  - podName: &quot;web-app&quot;         
+    ipv4List:
+    - &quot;172.29.30.123&quot; 
+    ipv6List:
+    - &quot;xxx&quot;         
+    nodeName: &quot;node1&quot;          # 5
+    uuid: &quot;&quot;
+</code></pre>
+<ol>
+<li>名称由 <code>policy-name-xxxxx</code> 组成，后面 5 位随机生成；</li>
+<li>所属的 EgressGatewayPolicy 名称；</li>
+<li>创建时同步设置 ownerReferences；</li>
+<li>匹配中的 endpoints 的列表；</li>
+<li>Pod 所在的节点。</li>
+</ol>
+<h3 id="_6">数据面规则</h3>
+<p>对需要生效的规则分为三类：所有节点，相对于 EgressGatewayPolicy 的「网关节点」和「非网关节点」。</p>
+<h4 id="_7">所有节点</h4>
+<ol>
+<li>各节点之间，隧道需要打通的规则就就不一一展开；</li>
+<li>将 policy 命中的流量，重新打标签。节点第一次变成网关节点时更新，或者节点 join 时做一次，后面不更新；
+   ```shell
+   iptables -t mangle -N EGRESSGATEWAY-RESET-MARK
+   iptables -t mangle -I FORWARD 1  -j EGRESSGATEWAY-RESET-MARK -m comment --comment "egress gateway: mark egress packet"</li>
+</ol>
+<p>iptables -t mangle -A EGRESSGATEWAY-RESET-MARK \
+       -m mark --mark $NODE_MARK/0x26000000 \
+       -j MARK --set-mark 0x12000000 \
+       -m comment --comment "egress gateway: change mark"
+   <code>3. 保持 policy 命中流量的标签。直接创建一次，不需要更新；</code>shell
+   iptables -t filter -I FORWARD 1 -m mark --mark 0x12000000 -j ACCEPT -m comment --comment "egress gateway: keep mark"
+   iptables -t filter -I OUTPUT 1 -m mark --mark 0x12000000 -j ACCEPT -m comment --comment "egress gateway: keep mark"
+   iptables -t mangle -I POSTROUTING 1 -m mark --mark 0x12000000 -j ACCEPT -m comment --comment "egress gateway: keep mark"
+   <code>4. policy 命中的源 IP、目的 IP 的 ipset；</code>shell
+   IPSET_RULE_DEST_NAME=egress-dest-uuid
+   ipset x $IPSET_RULE_DEST_NAME
+   ipset create $IPSET_RULE_DEST_NAME hash:net
+   ipset add $IPSET_RULE_DEST_NAME 10.6.105.150/32</p>
+<p>IPSET_RULE_SRC_NAME=egress-src-uuid
+   ipset x $IPSET_RULE_SRC_NAME
+   ipset create $IPSET_RULE_SRC_NAME hash:net
+   ipset add $IPSET_RULE_SRC_NAME 172.29.234.173/32
+   <code>5. 聚合 policy 命中流量打标签的链。直接创建一次，不需要更新；</code>shell
+   iptables -t mangle -N EGRESSGATEWAY-MARK-REQUEST
+   iptables -t mangle -I PREROUTING 1 -j EGRESSGATEWAY-MARK-REQUEST -m comment --comment "egress gateway: mark egress packet"
+   <code>6. 聚合不需要做 SNAT 规则的链。直接创建一次，不需要更新；</code>shell
+   iptables -t nat -N EGRESSGATEWAY-NO-SNAT
+   iptables -t nat -I POSTROUTING 1  -j EGRESSGATEWAY-NO-SNAT -m comment --comment "egress gateway: no snat"</p>
+<p>iptables -t nat -A EGRESSGATEWAY-NO-SNAT -m mark --mark 0x12000000 -j ACCEPT -m comment --comment "egress gateway: no snat"
+   <code>7. 聚合需要做 SNAT 规则的链。直接创建一次，不需要更新。</code>shell
+   iptables -t nat -N EGRESSGATEWAY-SNAT-EIP
+   # 需要在不需要 SNAT 的规则后面插入，才能保证该链在最前面
+   iptables -t nat -I POSTROUTING 1  -j EGRESSGATEWAY-SNAT-EIP -m comment --comment "egress gateway: snat EIP"
+   ```</p>
+<h4 id="eip-egress-gateway">相对于 EIP 的非 Egress Gateway 节点</h4>
+<ol>
+<li>policy 命中的流量打标签，保证能从隧道走。其中 NODE_MARK 的值根据 policy 对应的 EIP 所在节点决定。
+   <code>shell
+   iptables -A EGRESSGATEWAY-MARK-REQUEST -t mangle -m conntrack --ctdir ORIGINAL \
+   -m set --match-set $IPSET_RULE_DEST_NAME dst  \
+   -m set --match-set $IPSET_RULE_SRC_NAME src  \
+   -j MARK --set-mark $NODE_MARK -m comment --comment "rule uuid: mark request packet"</code></li>
+<li>策略路由规则
+   <code>shell
+   ip rule add fwmark $NODE_MARK table $TABLE_NUM</code>
+3.适配 Weave 避免做 SNAT 成 Egress 隧道的 IP。做成开关
+   <code>shell
+   iptables -t nat -A EGRESSGATEWAY-NO-SNAT \
+   -m set --match-set $IPSET_RULE_DEST_NAME dst  \
+   -m set --match-set $IPSET_RULE_SRC_NAME src  \
+   -j ACCEPT -m comment --comment "egress gateway: weave does not do SNAT"</code></li>
+</ol>
+<h4 id="eip-egress-gateway_1">相对于 EIP 的 Egress Gateway 节点</h4>
+<ol>
+<li>policy 命中的流量。出网关时做 SNAT。实时更新。
+   <code>shell
+   iptables -t nat -A EGRESSGATEWAY-SNAT-EIP \
+       -m set --match-set $IPSET_RULE_SRC_NAME src \
+       -m set --match-set $IPSET_RULE_DST_NAME dst \
+       -j SNAT --to-source $EIP</code></li>
+</ol>
+<h3 id="egressgatewaypolicy-eip">EgressGatewayPolicy 选网关节点及 EIP 分配逻辑</h3>
+<p>一个 policy 会根据选网关节点的策略，选择一个节点作为网关节点。然后根据是否使用 EIP，来决定是否分配 EIP。分配的 EIP 将绑定到所选的网关节点上</p>
+<p>分配逻辑都是以单个 EgressGateway 为对象，而不是所有的 EgressGateway。</p>
+<h4 id="policy">policy 选网关节点的模式</h4>
+<ul>
+<li>平均选择：当需要选择网关节点时，选择作为网关节点最少的一个节点。</li>
+<li>最少节点选择：尽量选同一个节点作为网关节点</li>
+<li>限度选择：一个节点最多只能成为几个 policy 的网关节点，限度可以设置，默认为 5。没有达到限度前，则优先选择该节点，达到限度就选其他的节点，如果都达到了限度，则随机选择</li>
+</ul>
+<h4 id="eip">EIP 分配逻辑</h4>
+<ul>
+<li>随机分配：在所有的 EIP 中随机选择一个，不管该 EIP 是否已经分配</li>
+<li>优先使用未分配的 EIP：先使用未分配的 EIP，如果都使用了则再随机分配一个已使用的 EIP</li>
+<li>限度选择：一个 EIP 最多只能被几个 policy 使用，限度可以设置，默认为 5，没有达到限度前，则先分配该 EIP，达到限度则选其他的 EIP。都达到限度则随机分配。</li>
+</ul>
+<h4 id="eip_1">EIP 回收逻辑</h4>
+<p>当一个 EIP 没有被 policy 使用时，则回收该 EIP，回收就是在 eips 中将该 EIP 字段删除</p>
+<h4 id="_8">其他</h4>
+<ol>
+<li>dummy 网卡及 EIP：每个节点只有一个名为 <code>egress.eip</code> 的 dummy 网卡，所有的 EIP 都生效在该节点上
+   ```shell
+   # 创建 dummy 网卡
+   ip link add egress.eip type dummy
+   ip link set egress.eip up</li>
+</ol>
+<p># 设置 EIP
+   ip addr add 10.6.168.100 dev egress.eip
+   ```</p>
+<ol>
+<li>由于 EIP 是生效在 dummy 网卡上的，所以需要配置 ARP 代答。
+   ```shell
+   sysctl -w net.ipv4.conf.all.arp_ignore=0</li>
+</ol>
+<p># 所有的物理网卡都需要设置代答，不确定从那种网卡出去
+   sysctl -w net.ipv4.conf.xxx.arp_ignore=0
+   ```</p>
+<ol>
+<li>
+<p>mangle-FORWARD match 重新打标签，因为 <code>NODE_MARK = 0x26 + value + 0000</code>，所以匹配时只要匹配前面16 位。
+   <code>shell
+   iptables -t mangle -I FORWARD 1 -m mark --mark 0x26000000/0x26000000 -j MARK --set-mark 0x12000000 -m comment --comment "egress gateway: change mark"</code></p>
+</li>
+<li>
+<p>更新 ipset 内容，CRD 中聚合了最新的 IP 内容，可以先创建临时 ipset 再通过 swap 进行交换，大量简化 ipset 操作，提高效率。
+   <code>shell
+   ipset create egress-dst-v4-xxx-tmp 
+   ipset add egress-dst-v4-xxx-tmp $NEW_IP_RANGE
+   ipset swap egress-dst-v4-xxx egress-dst-v4-xxx-tmp</code></p>
+</li>
+</ol>
+<h4 id="_9">代码设计</h4>
+<p><img alt="arch" src="../arch.png" /></p>
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12Z"/></svg>
+            Back to top
+          </button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    <script id="__config" type="application/json">{"base": "../../..", "features": ["navigation.instant", "navigation.tracking", "navigation.indexes", "navigation.tabs", "navigation.tabs.sticky", "navigation.top", "search.highlight", "search.suggest", "search.share"], "search": "../../../assets/javascripts/workers/search.208ed371.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
+    
+    
+      <script src="../../../assets/javascripts/bundle.b4d07000.min.js"></script>
+      
+    
+  </body>
+</html>
