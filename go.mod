@@ -32,7 +32,7 @@ require (
 	github.com/spf13/viper v1.15.0
 	github.com/spidernet-io/e2eframework v0.0.0-20230403061847-445757b963b3
 	github.com/stretchr/testify v1.8.3
-	github.com/tigera/operator v1.29.4
+	github.com/tigera/operator v1.30.0
 	github.com/vishvananda/netlink v1.2.1-beta.2.0.20230130171208-05506ada9f99
 	go.uber.org/zap v1.24.0
 	golang.org/x/net v0.10.0
@@ -122,7 +122,7 @@ require (
 	github.com/spf13/jwalterweatherman v1.1.0 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/subosito/gotenv v1.4.2 // indirect
-	github.com/tigera/api v0.0.0-20230403181112-f6b531acbe56 // indirect
+	github.com/tigera/api v0.0.0-20230406222214-ca74195900cb // indirect
 	github.com/toqueteos/webbrowser v1.2.0 // indirect
 	github.com/vishvananda/netns v0.0.0-20200728191858-db3c7e526aae // indirect
 	gitlab.com/golang-commonmark/puny v0.0.0-20191124015043-9f83538fa04f // indirect
@@ -145,7 +145,7 @@ require (
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
-	k8s.io/apiextensions-apiserver v0.26.1 // indirect
+	k8s.io/apiextensions-apiserver v0.26.3 // indirect
 	k8s.io/component-base v0.26.3 // indirect
 	k8s.io/gengo v0.0.0-20220902162205-c0856e24416d // indirect
 	k8s.io/klog/v2 v2.90.1 // indirect
