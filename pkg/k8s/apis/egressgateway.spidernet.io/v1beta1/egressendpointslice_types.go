@@ -21,7 +21,6 @@ type EgressEndpointSliceList struct {
 // +kubebuilder:resource:categories={egressendpointslice},path="egressendpointslices",singular="egressendpointslice",scope="Namespaced",shortName={ees}
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
-// +genclient
 type EgressEndpointSlice struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata"`

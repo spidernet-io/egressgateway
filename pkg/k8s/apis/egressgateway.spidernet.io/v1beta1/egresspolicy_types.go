@@ -20,7 +20,6 @@ type EgressPolicyList struct {
 // +kubebuilder:resource:categories={egresspolicy},path="egresspolicies",singular="egresspolicy",scope="Namespaced",shortName={egressp}
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
-// +genclient
 type EgressPolicy struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata"`

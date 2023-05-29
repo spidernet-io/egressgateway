@@ -39,7 +39,7 @@ type Range struct {
 	alloc allocator.Interface
 }
 
-func NewAllocatorCIDRRange(mask string) (Interface, error) {
+func NewAllocatorMarkRange(mask string) (Interface, error) {
 	start, end, err := rangeSize(mask)
 	if err != nil {
 		return nil, err

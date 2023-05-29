@@ -76,6 +76,7 @@ type FileConfig struct {
 	VXLAN                     VXLAN            `yaml:"vxlan"`
 	EgressIgnoreCIDR          EgressIgnoreCIDR `yaml:"egressIgnoreCIDR"`
 	MaxNumberEndpointPerSlice int              `yaml:"maxNumberEndpointPerSlice"`
+	Mark                      string           `yaml:"mark"`
 }
 
 const TunnelInterfaceDefaultRoute = "defaultRouteInterface"
@@ -154,6 +155,7 @@ func LoadConfig(isAgent bool) (*Config, error) {
 				},
 				Custom: []string{},
 			},
+			Mark: "0x26000000",
 		},
 	}
 

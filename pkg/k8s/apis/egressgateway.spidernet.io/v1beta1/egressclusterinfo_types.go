@@ -19,8 +19,6 @@ type EgressClusterInfoList struct {
 // +kubebuilder:resource:categories={egressclusterinfo},path="egressclusterinfos",singular="egressclusterinfo",scope="Cluster",shortName={eci}
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
-// +genclient
-// +genclient:nonNamespaced
 type EgressClusterInfo struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata"`
