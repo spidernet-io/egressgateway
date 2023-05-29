@@ -104,7 +104,7 @@ func (r *vxlanReconciler) reconcileEgressNode(ctx context.Context, req reconcile
 			ip = node.Status.Tunnel.Parent.IPv6
 		}
 		if ip == "" {
-			log.Sugar().Info("peer %v, parent ip not ready, skip", node.Name)
+			log.Sugar().Infof("peer %v, parent ip not ready, skip", node.Name)
 			return reconcile.Result{}, nil
 		}
 
@@ -194,11 +194,11 @@ func (r *vxlanReconciler) updateEgressNodeStatus(node *egressv1.EgressNode, vers
 	if version == 4 {
 		if node.Status.Tunnel.Parent.IPv4 != parent.IP.String() {
 			needUpdate = true
-			node.Status.Tunnel.Parent.IPv6 = parent.IP.String()
+			node.Status.Tunnel.Parent.IPv4 = parent.IP.String()
 		}
 		if node.Status.Tunnel.Parent.IPv6 != "" {
 			needUpdate = true
-			node.Status.Tunnel.Parent.IPv4 = ""
+			node.Status.Tunnel.Parent.IPv6 = ""
 		}
 	} else {
 		if node.Status.Tunnel.Parent.IPv6 != parent.IP.String() {
@@ -260,7 +260,7 @@ func (r *vxlanReconciler) parseVTEP(status egressv1.EgressNodeStatus) *vxlan.Pee
 		if status.Tunnel.IPv6 == "" {
 			ready = false
 		} else {
-			ip := net.ParseIP(status.Tunnel.IPv4)
+			ip := net.ParseIP(status.Tunnel.IPv6)
 			if ip.To16() == nil {
 				ready = false
 			}
