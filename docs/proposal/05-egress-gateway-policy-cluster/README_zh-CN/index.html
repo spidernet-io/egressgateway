@@ -15,7 +15,7 @@
     
     
       
-        <title>EgressNode zh CN - EgressGateway</title>
+        <title>EgressGatewayPolicyCluster - EgressGateway</title>
       
     
     
@@ -63,7 +63,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#egressnode-crd" class="md-skip">
+        <a href="#egressgatewaypolicycluster" class="md-skip">
           Skip to content
         </a>
       
@@ -98,7 +98,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              EgressNode zh CN
+              EgressGatewayPolicyCluster
             
           </span>
         </div>
@@ -332,6 +332,8 @@
   
   
   
+    
+  
   
     <label class="md-nav__title" for="__toc">
       <span class="md-nav__icon md-icon"></span>
@@ -340,56 +342,36 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#egressnode-crd" class="md-nav__link">
-    EgressNode CRD
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#controller" class="md-nav__link">
-    controller 实现
-  </a>
-  
-    <nav class="md-nav" aria-label="controller 实现">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
   <a href="#_1" class="md-nav__link">
-    初始化
+    动机
   </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#_2" class="md-nav__link">
-    节点事件：
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#egressnode" class="md-nav__link">
-    EgressNode事件：
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#ip" class="md-nav__link">
-    分配隧道 IP
+  <a href="#_2" class="md-nav__link">
+    目标
   </a>
   
 </li>
       
         <li class="md-nav__item">
   <a href="#_3" class="md-nav__link">
-    其他
+    设计
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#egressgatewaypolicy-crd" class="md-nav__link">
+    EgressGatewayPolicy CRD
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#egressgatewaypolicycluster-crd" class="md-nav__link">
+    EgressGatewayPolicyCluster CRD
   </a>
   
 </li>
@@ -415,73 +397,78 @@
   
 
 
-  <h1>EgressNode zh CN</h1>
-
-<h2 id="egressnode-crd">EgressNode CRD</h2>
-<pre><code class="language-yaml">apiVersion: egressgateway.spidernet.io/v1
-kind: EgressNode
+<h1 id="egressgatewaypolicycluster">EgressGatewayPolicyCluster</h1>
+<h2 id="_1">动机</h2>
+<p>补充没有集群级别 policy 的功能</p>
+<h2 id="_2">目标</h2>
+<ul>
+<li>支持集群级别的 policy</li>
+<li>支持优先级</li>
+</ul>
+<h2 id="_3">设计</h2>
+<ul>
+<li>集群级别的 policy，多了 <code>namespaceSelector</code> 字段。为空时，则作用于整个集群。不为空时，则作用于符合条件的 NS。</li>
+<li>由于新增了集群级别的 policy，当集群级别与 namespace 级别的两个 policy， <code>appliedTo</code>、<code>destSubnet</code> 一致，但 <code>egressGatewayName</code>  或<code>egressIP</code> 不一致时，两个策略谁最终生效就将成为一个问题。所以引入一个优先级的新字段 <code>priority</code> 来解决该问题。范围为 1-65536，数值越小，优先级越高。用户可以自行设置优先级。如果没设置时，EgressGatewayPolicy 默认优先级为 1000，EgressGatewayPolicyCluster 默认优先级为 32768.如果优先级一致时，则随机排序。</li>
+</ul>
+<h2 id="egressgatewaypolicy-crd">EgressGatewayPolicy CRD</h2>
+<pre><code class="language-yaml">apiVersion: egressgateway.spidernet.io/v1beta1
+kind: EgressGatewayPolicy
 metadata:
-  name: &quot;node1&quot;
+  namespace: &quot;default&quot;
+  name: &quot;policy-test&quot;
 spec:
-status:
-  phase: &quot;Succeeded&quot;
-  vxlanIPv4IP: &quot;172.31.0.10/16&quot;
-  vxlanIPv6IP: &quot;fe80::/64&quot;
-  tunnelMac: &quot;xx:xx:xx:xx:xx&quot;
-  physicalInterface: &quot;eth1&quot;
-  physicalInterfaceIPv4: &quot;&quot;
-  physicalInterfaceIPv6: &quot;&quot;
+  priority: 100             # 1
+  egressGatewayName: &quot;eg1&quot;
+  egressIP:
+    ipv4: &quot;&quot;                            
+    ipv6: &quot;&quot;
+    useNodeIP: false
+  appliedTo:
+    podSelector:
+      matchLabels:    
+        app: &quot;shopping&quot;
+    podSubnet:
+    - &quot;172.29.16.0/24&quot;
+    - 'fd00:1/126'
+  destSubnet:
+    - &quot;10.6.1.92/32&quot;
+    - &quot;fd00::92/128&quot;
 </code></pre>
-<p>用以存储各节点的隧道的信息，通过监控节点来生成</p>
-<p>字段说明
-* status
-    * <code>phase</code> 表示 EgressNode  的状态，’Succeeded’ 隧道IP已分配，且隧道已建成，’Pending’ 等待分配IP，’Init’ 分配隧道 IP 成功，’Failed’ 隧道 IP 分配失败
-    * <code>vxlanIPv4IP</code> 隧道 IPV4 地址
-    * <code>vxlanIPv6IP</code> 隧道 IPV6 地址
-    * <code>tunnelMac</code> 隧道 Mac 地址
-    * <code>physicalInterface</code> 隧道父网卡
-    * <code>physicalInterfaceIPv4</code> 父网卡 IPV4 地址
-    * <code>physicalInterfaceIPv6</code> 父网卡 IPV6 地址</p>
-<h2 id="controller">controller 实现</h2>
-<h3 id="_1">初始化</h3>
 <ol>
-<li>从 CM中获取 IPv4、IPv6 及对应的 CIDR</li>
-<li>会检查node 是否有对应的 EgressNode，没有的话就创建对应的EgressNode，且状态设置为 “pending”。有隧道 IP 则将 IP 与节点绑定，绑定前会检查 IP 是否合法，不合法则将状态设置为 “Pending”</li>
+<li>新增字段，策略的优先级</li>
 </ol>
-<h3 id="_2">节点事件：</h3>
-<ul>
-<li>删除事件：删除对应的 EgressNode</li>
-<li>其他事件：如果没有对应的 EgressNode，则创建 EgressNode</li>
-<li>
-<p>其他事件：如果有对应的 EgressNode，则对EgressNode进行校验。校验逻辑如下：</p>
-</li>
-<li>
-<ul>
-<li>无隧道IP，将状态置为 “Pending”
-        如果有隧道IP，判断是否合法，不合法，就将状态置为 “Pending”
-        如果合法，校验 IP 是否已分配，如果已分配，且分配给其他节点了，则将状态置为 “Pending”
-        未分配给其他节点，就分配给本 “EgressNode”，将状态设置为 “Init”
-        如果已分配，且就是分配给本节点的，则将状态设置为 “Init”</li>
-</ul>
-</li>
-</ul>
-<h3 id="egressnode">EgressNode事件：</h3>
-<ul>
-<li>删除事件：先释放IP。如果 EgressNode 对应的节点存在，则释放IP，重新创建 EgressNode。</li>
-<li>其他事件：如果 EgressNode 状态为 “Init” 或 者“Succeeded” 时，不做任何处理。如果不是，则分配 IP，分配成功将状态设置为 “Init”，分配失败将状态设置为 “Failed”。这里是全局唯一会分配隧道 IP 的地方</li>
-</ul>
-<h2 id="ip">分配隧道 IP</h2>
-<ul>
-<li>controller 启动时，从 config 中拿到隧道 IP CRID，并在内存中维护一个 map 记录 IP 是否被分配</li>
-<li>隧道 IP 采用中心式，所以使用串行方式分配IP，在未分配的 IP 中随机分配</li>
-<li>分配前，检测隧道 IP 冲突，不冲突再分配（实现方式待定）</li>
-</ul>
-<h2 id="_3">其他</h2>
-<ul>
-<li>controller 启动时，对所的 CRD 的 IP 进行校验，且最终状态设置为 “Init” 或 “Failed” （此项待商榷）</li>
-<li>agent 监测到对应的 CRD 中 phase 字段为 “Init” 时，创建相应的隧道及路由，创建成功更新为 “Succeeded” 状态。失败则不更新</li>
-<li>Mac地址格式：根据节点名称，经过 SHA1 算法生成，所以每个节点的 Mac 地址是固定的</li>
-</ul>
+<h2 id="egressgatewaypolicycluster-crd">EgressGatewayPolicyCluster CRD</h2>
+<pre><code class="language-yaml">apiVersion: egressgateway.spidernet.io/v1beta1
+kind: EgressGatewayPolicyCluster
+metadata:
+  namespace: &quot;default&quot;
+  name: &quot;policy-test&quot;
+spec:
+  priority: 100             # 1
+  egressGatewayName: &quot;eg1&quot;
+  egressIP:
+    ipv4: &quot;&quot;                            
+    ipv6: &quot;&quot;
+    useNodeIP: false
+  appliedTo:
+    podSelector:
+      matchLabels:    
+        app: &quot;shopping&quot;
+    podSubnet:
+    - &quot;172.29.16.0/24&quot;
+    - 'fd00:1/126'
+    namespaceSelector:      # 1
+      matchLabels:    
+        app: &quot;shopping&quot;
+  destSubnet:
+    - &quot;10.6.1.92/32&quot;
+    - &quot;fd00::92/128&quot;
+</code></pre>
+<ol>
+<li>策略的优先级</li>
+<li>namespace 筛选器</li>
+</ol>
+<p>其他方面，两者一致</p>
 
 
 
