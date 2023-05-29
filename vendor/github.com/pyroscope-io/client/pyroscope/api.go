@@ -15,6 +15,9 @@ type Config struct {
 	Tags                   map[string]string
 	ServerAddress          string // e.g http://pyroscope.services.internal:4040
 	AuthToken              string // specify this token when using pyroscope cloud
+	BasicAuthUser          string // http basic auth user
+	BasicAuthPassword      string // http basic auth password
+	TenantID               string // specify TenantId when using phlare multi-tenancy
 	SampleRate             uint32 // todo this one is not used
 	UploadRate             time.Duration
 	Logger                 Logger
@@ -23,6 +26,7 @@ type Config struct {
 	DisableAutomaticResets bool // disable automatic profiler reset every 10 seconds. Reset manually by calling Flush method
 	// Deprecated: the field is ignored and does nothing
 	DisableCumulativeMerge bool
+	HTTPHeaders            map[string]string
 }
 
 type Profiler struct {
@@ -49,11 +53,15 @@ func Start(cfg Config) (*Profiler, error) {
 	}
 
 	rc := remote.Config{
-		AuthToken: cfg.AuthToken,
-		Address:   cfg.ServerAddress,
-		Threads:   5, // per each profile type upload
-		Timeout:   30 * time.Second,
-		Logger:    cfg.Logger,
+		AuthToken:         cfg.AuthToken,
+		TenantID:          cfg.TenantID,
+		BasicAuthUser:     cfg.BasicAuthUser,
+		BasicAuthPassword: cfg.BasicAuthPassword,
+		HTTPHeaders:       cfg.HTTPHeaders,
+		Address:           cfg.ServerAddress,
+		Threads:           5, // per each profile type upload
+		Timeout:           30 * time.Second,
+		Logger:            cfg.Logger,
 	}
 	uploader, err := remote.NewRemote(rc)
 	if err != nil {
