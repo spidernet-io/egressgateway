@@ -16,12 +16,15 @@ import (
 
 	"github.com/spidernet-io/egressgateway/pkg/config"
 	"github.com/spidernet-io/egressgateway/pkg/egressgateway"
-	egressv1 "github.com/spidernet-io/egressgateway/pkg/k8s/apis/egressgateway.spidernet.io/v1"
+	egressv1 "github.com/spidernet-io/egressgateway/pkg/k8s/apis/egressgateway.spidernet.io/v1beta1"
 )
 
-const EgressClusterInfo = "EgressClusterInfo"
-const EgressGateway = "EgressGateway"
-const EgressPolicy = "EgressPolicy"
+const (
+	EgressClusterInfo   = "EgressClusterInfo"
+	EgressGateway       = "EgressGateway"
+	EgressPolicy        = "EgressPolicy"
+	EgressClusterPolicy = "EgressClusterPolicy"
+)
 
 // ValidateHook ValidateHook
 func ValidateHook(client client.Client, cfg *config.Config) *webhook.Admission {
@@ -36,33 +39,48 @@ func ValidateHook(client client.Client, cfg *config.Config) *webhook.Admission {
 				return webhook.Allowed("checked")
 			case EgressGateway:
 				return (&egressgateway.EgressGatewayWebhook{Client: client, Config: cfg}).EgressGatewayValidate(ctx, req)
+			case EgressClusterPolicy:
+				if req.Operation == v1.Delete {
+					return webhook.Allowed("checked")
+				}
+				policy := new(egressv1.EgressClusterPolicy)
+				err := json.Unmarshal(req.Object.Raw, policy)
+				if err != nil {
+					return webhook.Denied(fmt.Sprintf("json unmarshal EgressClusterPolicy with error: %v", err))
+				}
+				return validateSubnet(policy.Spec.DestSubnet)
 			case EgressPolicy:
 				if req.Operation == v1.Delete {
 					return webhook.Allowed("checked")
 				}
 
-				policy := new(egressv1.EgressGatewayPolicy)
+				policy := new(egressv1.EgressPolicy)
 				err := json.Unmarshal(req.Object.Raw, policy)
 				if err != nil {
-					return webhook.Denied(fmt.Sprintf("json unmarshal EgressGatewayPolicy with error: %v", err))
+					return webhook.Denied(fmt.Sprintf("json unmarshal EgressPolicy with error: %v", err))
 				}
-				invalidList := make([]string, 0)
-				for _, subnet := range policy.Spec.DestSubnet {
-					ip, _, err := net.ParseCIDR(subnet)
-					if err != nil {
-						invalidList = append(invalidList, subnet)
-						continue
-					}
-					if ip.To4() == nil && ip.To16() == nil {
-						invalidList = append(invalidList, subnet)
-					}
-				}
-				if len(invalidList) > 0 {
-					return webhook.Denied(fmt.Sprintf("invalid destSubnet list: %v", invalidList))
-				}
+				return validateSubnet(policy.Spec.DestSubnet)
 			}
 
 			return webhook.Allowed("checked")
 		}),
 	}
+}
+
+func validateSubnet(subnet []string) webhook.AdmissionResponse {
+	invalidList := make([]string, 0)
+	for _, subnet := range subnet {
+		ip, _, err := net.ParseCIDR(subnet)
+		if err != nil {
+			invalidList = append(invalidList, subnet)
+			continue
+		}
+		if ip.To4() == nil && ip.To16() == nil {
+			invalidList = append(invalidList, subnet)
+		}
+	}
+	if len(invalidList) > 0 {
+		return webhook.Denied(fmt.Sprintf("invalid destSubnet list: %v", invalidList))
+	}
+	return webhook.Allowed("checked")
 }
