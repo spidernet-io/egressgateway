@@ -7,7 +7,7 @@ env:
   DEST_BRANCH: github_pages
   DEST_DIRECTORY: 'changelogs/'
   PR_LABEL: pr/robot_update
-  PR_REVIWER: weizhoublue
+  PR_REVIEWER: lou-lan
 
 on:
   workflow_call:
@@ -142,4 +142,4 @@ jobs:
           signoff: true
           token: ${{ secrets.WELAN_PAT }}
           labels: ${{ env.PR_LABEL }}
-          reviewers: ${{ env.PR_REVIWER }}
+          reviewers: ${{ env.PR_REVIEWER }}
