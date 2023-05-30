@@ -7,6 +7,7 @@
 [![CodeFactor](https://www.codefactor.io/repository/github/spidernet-io/egressgateway/badge)](https://www.codefactor.io/repository/github/spidernet-io/egressgateway)
 [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=spidernet-io_egressgateway&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=spidernet-io_egressgateway)
 ![badge](https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/bzsuni/cc6d42eb27d8ee4c3d19c936eff2c478/raw/egressgatewaye2e.json)
+[![OpenSSF Best Practices](https://bestpractices.coreinfrastructure.org/projects/7410/badge)](https://bestpractices.coreinfrastructure.org/projects/7410)
 
 ## Background
 
