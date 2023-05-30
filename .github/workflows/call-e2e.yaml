@@ -160,7 +160,7 @@ jobs:
       - name: Upload e2e cluster log
         uses: actions/upload-artifact@v3.1.1
         with:
-          name: ${{ inputs.ipfamily }}-$${{ matrix.forward_method }}-debuglog-${{ env.RUN_VAR }}.txt
+          name: ${{ inputs.ipfamily }}-${{ matrix.forward-method }}-debuglog-${{ env.RUN_VAR }}.txt
           path: ${{ env.E2E_LOG_PATH }}
           retention-days: 30
 
@@ -168,7 +168,7 @@ jobs:
         if: ${{ env.RUN_UPLOAD_LOG == 'true' }}
         uses: actions/upload-artifact@v3.1.1
         with:
-          name: ${{ inputs.ipfamily }}-$${{ matrix.forward_method }}-e2ereport-${{ env.RUN_VAR }}.json
+          name: ${{ inputs.ipfamily }}-${{ matrix.forward-method }}-e2ereport-${{ env.RUN_VAR }}.json
           path: ${{ env.E2E_GINKGO_REPORT_PATH }}
           retention-days: 30
 
