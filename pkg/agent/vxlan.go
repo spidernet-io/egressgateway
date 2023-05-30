@@ -348,16 +348,16 @@ func (r *vxlanReconciler) keepVXLAN() {
 
 		r.log.Sugar().Debugf("route ensure has completed")
 
-		ipv4List, _ := r.ruleRouteCache.Load("ipv4")
-		ipv6List, _ := r.ruleRouteCache.Load("ipv6")
+		// ipv4List, _ := r.ruleRouteCache.Load("ipv4")
+		// ipv6List, _ := r.ruleRouteCache.Load("ipv6")
 
-		err = r.ruleRoute.Ensure(r.cfg.FileConfig.VXLAN.Name, ipv4List, ipv6List)
-		if err != nil {
-			r.log.Sugar().Errorf("ensure vxlan link with error: %v", err)
-			reduce = false
-			time.Sleep(time.Second)
-			continue
-		}
+		// err = r.ruleRoute.Ensure(r.cfg.FileConfig.VXLAN.Name, ipv4List, ipv6List)
+		// if err != nil {
+		//	 r.log.Sugar().Errorf("ensure vxlan link with error: %v", err)
+		//	 reduce = false
+		//	 time.Sleep(time.Second)
+		//	 continue
+		// }
 
 		r.log.Sugar().Debugf("route rule ensure has completed")
 

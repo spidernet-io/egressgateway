@@ -13,10 +13,6 @@ import (
 	"time"
 
 	"go.uber.org/zap"
-	corev1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/api/errors"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/utils/exec"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
@@ -28,7 +24,7 @@ import (
 	"github.com/spidernet-io/egressgateway/pkg/config"
 	"github.com/spidernet-io/egressgateway/pkg/ipset"
 	"github.com/spidernet-io/egressgateway/pkg/iptables"
-	egressv1 "github.com/spidernet-io/egressgateway/pkg/k8s/apis/egressgateway.spidernet.io/v1"
+	egressv1 "github.com/spidernet-io/egressgateway/pkg/k8s/apis/egressgateway.spidernet.io/v1beta1"
 	"github.com/spidernet-io/egressgateway/pkg/utils"
 )
 
@@ -48,76 +44,12 @@ type policeReconciler struct {
 }
 
 func (r *policeReconciler) initApplyPolicy() error {
-	policyList := new(egressv1.EgressGatewayPolicyList)
-	err := r.client.List(context.Background(), policyList)
-	if err != nil {
-		return err
-	}
-
-	gatewayList := new(egressv1.EgressGatewayList)
-	err = r.client.List(context.Background(), gatewayList)
-	if err != nil {
-		return err
-	}
-	if len(gatewayList.Items) == 0 {
-		return nil
-	}
-	isGatewayNode := false
-	hasGateway := false
-	for _, node := range gatewayList.Items[0].Status.NodeList {
-		if node.Name == r.cfg.NodeName {
-			isGatewayNode = true
-		}
-		if node.Active {
-			hasGateway = true
-		}
-	}
-
-	for _, table := range r.natTables {
-		chainMapRules := buildNatStaticRule()
-		for chain, rules := range chainMapRules {
-			table.InsertOrAppendRules(chain, rules)
-		}
-	}
-
-	for _, table := range r.filterTables {
-		chainMapRules := buildFilterStaticRule()
-		for chain, rules := range chainMapRules {
-			table.InsertOrAppendRules(chain, rules)
-		}
-	}
-
-	for _, table := range r.mangleTables {
-		table.UpdateChain(&iptables.Chain{
-			Name: "EGRESSGATEWAY-MARK-REQUEST",
-		})
-		chainMapRules := buildMangleStaticRule(isGatewayNode, hasGateway)
-		for chain, rules := range chainMapRules {
-			table.InsertOrAppendRules(chain, rules)
-		}
-	}
-
-	for _, policy := range policyList.Items {
-		log := r.log.With(
-			zap.String("namespacedName", policy.Name),
-			zap.String("kind", "policy"),
-		)
-		if policy.DeletionTimestamp.IsZero() {
-			err := r.addOrUpdatePolicy(context.Background(), true, &policy, log)
-			if err != nil {
-				return err
-			}
-		}
-	}
-
-	allTables := append(r.natTables, r.filterTables...)
-	allTables = append(allTables, r.mangleTables...)
-	for _, table := range allTables {
-		_, err = table.Apply()
-		if err != nil {
-			return err
-		}
-	}
+	// list egress gateway
+	// list policy/cluster-policy
+	// list egress endpoint slices/egress cluster policies
+	// build ipset
+	// build route table rule
+	// build iptables
 	return nil
 }
 
@@ -144,10 +76,8 @@ func (r *policeReconciler) Reconcile(ctx context.Context, req reconcile.Request)
 	switch kind {
 	case "EgressGateway":
 		return r.reconcileEG(ctx, newReq, log)
-	case "EgressGatewayPolicy":
+	case "EgressPolicy":
 		return r.reconcileEGP(ctx, newReq, log)
-	case "Pod":
-		return r.reconcilePod(ctx, newReq, log)
 	default:
 		return reconcile.Result{}, nil
 	}
@@ -157,278 +87,40 @@ func (r *policeReconciler) Reconcile(ctx context.Context, req reconcile.Request)
 // - add/update/delete egress gateway
 //   - iptables
 func (r *policeReconciler) reconcileEG(ctx context.Context, req reconcile.Request, log *zap.Logger) (reconcile.Result, error) {
-	gateway := new(egressv1.EgressGateway)
-	deleted := false
-	err := r.client.Get(ctx, req.NamespacedName, gateway)
-	if err != nil {
-		if !errors.IsNotFound(err) {
-			return reconcile.Result{}, err
-		}
-		deleted = true
-	}
-	deleted = deleted || !gateway.GetDeletionTimestamp().IsZero()
-
-	if deleted {
-		log.Sugar().Info("request item deleted, rebuild the iptables rules to overwrite the system rules.")
-		for _, table := range r.mangleTables {
-			chainMapRules := buildMangleStaticRule(false, false)
-
-			for chain, rules := range chainMapRules {
-				table.InsertOrAppendRules(chain, rules)
-				_, err := table.Apply()
-				if err != nil {
-					return reconcile.Result{Requeue: true}, err
-				}
-			}
-		}
-	}
-
-	isGatewayNode := false
-	hasGateway := false
-	for _, node := range gateway.Status.NodeList {
-		if node.Name == r.cfg.EnvConfig.NodeName {
-			isGatewayNode = true
-		}
-		if node.Active {
-			hasGateway = true
-		}
-	}
-
-	for _, table := range r.mangleTables {
-		log.Sugar().Debug("building a static rule for the mangle table",
-			zap.Bool("isGatewayNode", isGatewayNode),
-			zap.Bool("hasGateway", hasGateway))
-
-		chainMapRules := buildMangleStaticRule(isGatewayNode, hasGateway)
-
-		for chain, rules := range chainMapRules {
-			log.Debug("insert or append rules", zap.String("chain", chain))
-			table.InsertOrAppendRules(chain, rules)
-		}
-	}
-
-	for _, table := range r.mangleTables {
-		var rules []iptables.Rule
-		if table.IPVersion == 4 {
-			rules = buildRuleList(r.ruleV4Map)
-		} else {
-			rules = buildRuleList(r.ruleV6Map)
-		}
-		table.UpdateChain(&iptables.Chain{
-			Name:  "EGRESSGATEWAY-MARK-REQUEST",
-			Rules: rules,
-		})
-
-		_, err := table.Apply()
-		if err != nil {
-			log.Error("failed to apply iptables", zap.Error(err))
-			return reconcile.Result{Requeue: true}, err
-		}
-	}
-
 	return reconcile.Result{}, nil
 }
 
 func buildNatStaticRule() map[string][]iptables.Rule {
 	res := map[string][]iptables.Rule{
-		"POSTROUTING": {
-			{
-				Match:  iptables.MatchCriteria{}.MarkMatchesWithMask(0x12000000, 0xffffffff),
-				Action: iptables.AcceptAction{},
-			},
-		},
+		"POSTROUTING": {},
 	}
 	return res
 }
 
 func buildFilterStaticRule() map[string][]iptables.Rule {
-	res := map[string][]iptables.Rule{
-		"FORWARD": {
-			{
-				Match:  iptables.MatchCriteria{}.MarkMatchesWithMask(0x12000000, 0xffffffff),
-				Action: iptables.AcceptAction{},
-			},
-		},
-		"OUTPUT": {
-			{
-				Match:  iptables.MatchCriteria{}.MarkMatchesWithMask(0x12000000, 0xffffffff),
-				Action: iptables.AcceptAction{},
-			},
-		},
-	}
+	res := map[string][]iptables.Rule{}
 	return res
 }
 
 func buildMangleStaticRule(isGatewayNode bool, hasGateway bool) map[string][]iptables.Rule {
 	res := map[string][]iptables.Rule{
-		"FORWARD": {
-			{
-				Match:  iptables.MatchCriteria{}.MarkMatchesWithMask(0x11000000, 0xffffffff),
-				Action: iptables.SetMaskedMarkAction{Mark: 0x12000000, Mask: 0xffffffff},
-			},
-		},
-		"POSTROUTING": {
-			{
-				Match:  iptables.MatchCriteria{}.MarkMatchesWithMask(0x12000000, 0xffffffff),
-				Action: iptables.AcceptAction{},
-			},
-		},
-		"PREROUTING": {},
-	}
-	if !isGatewayNode && hasGateway {
-		res["PREROUTING"] = []iptables.Rule{
-			{
-				Match: iptables.MatchCriteria{},
-				Action: iptables.JumpAction{
-					Target: "EGRESSGATEWAY-MARK-REQUEST",
-				},
-			},
-		}
+		"FORWARD":     {},
+		"POSTROUTING": {},
+		"PREROUTING":  {},
 	}
 	return res
 }
 
-// reconcileEGP reconcile egress gateway policy
+// reconcileEGP reconcile egress policy
 // add/update/delete policy
 //   - ipset
 //   - iptables
 func (r *policeReconciler) reconcileEGP(ctx context.Context, req reconcile.Request, log *zap.Logger) (reconcile.Result, error) {
-	policy := new(egressv1.EgressGatewayPolicy)
-	deleted := false
-	err := r.client.Get(ctx, req.NamespacedName, policy)
-	if err != nil {
-		if !errors.IsNotFound(err) {
-			return reconcile.Result{}, err
-		}
-		deleted = true
-	}
-	deleted = deleted || !policy.GetDeletionTimestamp().IsZero()
-
-	// reconcile delete vtepEvent
-	if deleted {
-		setNames := buildIPSetNamesByPolicy(req.Name, true, true)
-		log.Info("request item deleted, delete related policies")
-
-		for _, table := range r.mangleTables {
-			rules, changed := r.removePolicyRule(req.Name, table.IPVersion)
-			if changed {
-				table.UpdateChain(&iptables.Chain{
-					Name:  "EGRESSGATEWAY-MARK-REQUEST",
-					Rules: rules,
-				})
-				_, err := table.Apply()
-				if err != nil {
-					return reconcile.Result{}, err
-				}
-			}
-		}
-
-		_ = setNames.Map(func(set SetName) error {
-			r.removeIPSet(log, set.Name)
-			return nil
-		})
-
-		return reconcile.Result{}, nil
-	}
-
-	err = r.addOrUpdatePolicy(ctx, false, policy, log)
-	if err != nil {
-		return reconcile.Result{
-			Requeue: true,
-		}, err
-	}
 	return reconcile.Result{}, nil
 }
 
 // addOrUpdatePolicy reconcile add or update egress policy
-func (r *policeReconciler) addOrUpdatePolicy(ctx context.Context, firstInit bool, policy *egressv1.EgressGatewayPolicy, log *zap.Logger) error {
-	setNames := buildIPSetNamesByPolicy(policy.Name, r.cfg.FileConfig.EnableIPv4, r.cfg.FileConfig.EnableIPv6)
-	err := setNames.Map(func(set SetName) error {
-		log.Debug("check ipset", zap.String("ipset", set.Name))
-		return r.createIPSet(log, set)
-	})
-	if err != nil {
-		return err
-	}
-
-	toAddList := make(map[string][]string, 0)
-	toDelList := make(map[string][]string, 0)
-
-	// calculate src ip list
-	podIPv4List, podIPv6List, err := r.getPodIPsByLabelSelector(ctx, policy.Spec.AppliedTo.PodSelector)
-	if err != nil {
-		return err
-	}
-
-	// calculate dst ip list
-	dstIPv4List, dstIPv6List, err := r.getDstCIDR(policy.Spec.DestSubnet)
-	if err != nil {
-		return err
-	}
-
-	err = setNames.Map(func(set SetName) error {
-		oldIPList, err := r.ipset.ListEntries(set.Name)
-		if err != nil {
-			return err
-		}
-		switch set.Kind {
-		case IPSrc:
-			if set.Stack == IPv4 && r.cfg.FileConfig.EnableIPv4 {
-				toAddList[set.Name], toDelList[set.Name] = findDiff(oldIPList, podIPv4List)
-			} else if r.cfg.FileConfig.EnableIPv6 {
-				toAddList[set.Name], toDelList[set.Name] = findDiff(oldIPList, podIPv6List)
-			}
-		case IPDst:
-			if set.Stack == IPv4 && r.cfg.FileConfig.EnableIPv4 {
-				toAddList[set.Name], toDelList[set.Name] = findDiff(oldIPList, dstIPv4List)
-			} else if r.cfg.FileConfig.EnableIPv6 {
-				toAddList[set.Name], toDelList[set.Name] = findDiff(oldIPList, dstIPv6List)
-			}
-		}
-		return nil
-	})
-	if err != nil {
-		return err
-	}
-
-	for set, ips := range toAddList {
-		log.Sugar().Debugf("add IPSet entries: %v", ips)
-		ipSet, ok := r.ipsetMap.Load(set)
-		if !ok {
-			continue
-		}
-		for _, ip := range ips {
-			err := r.ipset.AddEntry(ip, ipSet, true)
-			if err != nil && err != ipset.ErrAlreadyAddedEntry {
-				return err
-			}
-		}
-	}
-
-	for _, table := range r.mangleTables {
-		rules, changed := r.updatePolicyRule(policy.Name, table.IPVersion)
-		if changed {
-			table.UpdateChain(&iptables.Chain{
-				Name:  "EGRESSGATEWAY-MARK-REQUEST",
-				Rules: rules,
-			})
-			if !firstInit {
-				_, err := table.Apply()
-				if err != nil {
-					return err
-				}
-			}
-		}
-	}
-
-	for name, ips := range toDelList {
-		for _, ip := range ips {
-			err := r.ipset.DelEntry(ip, name)
-			if err != nil {
-				return err
-			}
-		}
-	}
+func (r *policeReconciler) addOrUpdatePolicy(ctx context.Context, firstInit bool, policy *egressv1.EgressPolicy, log *zap.Logger) error {
 	return nil
 }
 
@@ -583,52 +275,6 @@ func (r *policeReconciler) getDstCIDR(list []string) ([]string, []string, error)
 	return ipv4List, ipv6List, nil
 }
 
-func (r *policeReconciler) getPodIPsByLabelSelector(ctx context.Context, ls *metav1.LabelSelector) ([]string, []string, error) {
-	podList := &corev1.PodList{}
-	selPods, err := metav1.LabelSelectorAsSelector(ls)
-	if err != nil {
-		return nil, nil, err
-	}
-	err = r.client.List(ctx, podList, &client.ListOptions{
-		LabelSelector: selPods,
-	})
-	if err != nil {
-		return nil, nil, err
-	}
-
-	ipv4List, ipv6List := getPodIPsByPodList(podList)
-	return ipv4List, ipv6List, nil
-}
-
-func getPodIPsByPodList(podList *corev1.PodList) ([]string, []string) {
-	ipv4List := make([]string, 0)
-	ipv6List := make([]string, 0)
-
-	for _, pod := range podList.Items {
-		if pod.DeletionTimestamp.IsZero() {
-			ipv4ListTmp, ipv6ListTmp := getPodIPsBy(pod.Status.PodIPs)
-			ipv4List = append(ipv4List, ipv4ListTmp...)
-			ipv6List = append(ipv6List, ipv6ListTmp...)
-		}
-	}
-	return ipv4List, ipv6List
-}
-
-func getPodIPsBy(ips []corev1.PodIP) (ipv4List []string, ipv6List []string) {
-	for _, item := range ips {
-		ip := net.ParseIP(item.IP)
-		if ip == nil {
-			continue
-		}
-		if ip.To4() != nil {
-			ipv4List = append(ipv4List, item.IP)
-		} else {
-			ipv6List = append(ipv6List, item.IP)
-		}
-	}
-	return ipv4List, ipv6List
-}
-
 func (r *policeReconciler) removeIPSet(log *zap.Logger, name string) {
 	_, ok := r.ipsetMap.Load(name)
 	if ok {
@@ -665,100 +311,6 @@ func (r *policeReconciler) createIPSet(log *zap.Logger, set SetName) error {
 		r.ipsetMap.Store(set.Name, ipSet)
 	}
 	return nil
-}
-
-// reconcilePod reconcile pod
-// add/update/remove pod
-// - update ipset entry
-func (r *policeReconciler) reconcilePod(ctx context.Context, req reconcile.Request, log *zap.Logger) (reconcile.Result, error) {
-	pod := new(corev1.Pod)
-	deleted := false
-	err := r.client.Get(ctx, req.NamespacedName, pod)
-	if err != nil {
-		if !errors.IsNotFound(err) {
-			return reconcile.Result{}, err
-		}
-		deleted = true
-	}
-	if deleted {
-		log.Sugar().Debug("watch pod deleted vtepEvent, skip")
-		return reconcile.Result{}, nil
-	}
-	deleted = deleted || !pod.GetDeletionTimestamp().IsZero()
-
-	policyList := new(egressv1.EgressGatewayPolicyList)
-	err = r.client.List(ctx, policyList)
-	if err != nil {
-		return reconcile.Result{}, err
-	}
-
-	ipv4List, ipv6List := getPodIPsBy(pod.Status.PodIPs)
-
-	for _, item := range policyList.Items {
-		podLabelSelector, err := metav1.LabelSelectorAsSelector(item.Spec.AppliedTo.PodSelector)
-		if err != nil {
-			log.Sugar().Error(err)
-			continue
-		}
-		if !podLabelSelector.Matches(labels.Set(pod.Labels)) {
-			log.Sugar().Debugf("Pod is not selected by policy %s", item.Name)
-			continue
-		}
-
-		toAddList := make(map[string][]string, 0)
-		toDelList := make(map[string][]string, 0)
-
-		setNames := buildIPSetNamesByPolicy(item.Name, r.cfg.FileConfig.EnableIPv4, r.cfg.FileConfig.EnableIPv6)
-		err = setNames.Map(func(set SetName) error {
-			oldIPList, err := r.ipset.ListEntries(set.Name)
-			if err != nil {
-				return err
-			}
-
-			if set.Kind == IPSrc {
-				if set.Stack == IPv4 {
-					if deleted {
-						toDelList[set.Name] = findElements(true, oldIPList, ipv4List)
-					} else {
-						toAddList[set.Name] = findElements(false, oldIPList, ipv4List)
-					}
-				} else {
-					if deleted {
-						toDelList[set.Name] = findElements(true, oldIPList, ipv6List)
-					} else {
-						toAddList[set.Name] = findElements(false, oldIPList, ipv6List)
-					}
-				}
-			}
-			return nil
-		})
-		if err != nil {
-			return reconcile.Result{}, err
-		}
-
-		for set, ips := range toAddList {
-			for _, ip := range ips {
-				ipSet, ok := r.ipsetMap.Load(set)
-				if ok {
-					err := r.ipset.AddEntry(ip, ipSet, true)
-					if err != nil && err != ipset.ErrAlreadyAddedEntry {
-						return reconcile.Result{}, err
-					}
-				}
-			}
-		}
-
-		for name, ips := range toDelList {
-			for _, ip := range ips {
-				err := r.ipset.DelEntry(ip, name)
-				if err != nil {
-					return reconcile.Result{}, err
-				}
-			}
-		}
-	}
-
-	return reconcile.Result{}, nil
 }
 
 func newPolicyController(mgr manager.Manager, log *zap.Logger, cfg *config.Config) error {
@@ -847,14 +399,24 @@ func newPolicyController(mgr manager.Manager, log *zap.Logger, cfg *config.Confi
 		return fmt.Errorf("failed to watch EgressGateway: %w", err)
 	}
 
-	if err := c.Watch(&source.Kind{Type: &egressv1.EgressGatewayPolicy{}},
-		handler.EnqueueRequestsFromMapFunc(utils.KindToMapFlat("EgressGatewayPolicy"))); err != nil {
-		return fmt.Errorf("failed to watch EgressGatewayPolicy: %w", err)
+	if err := c.Watch(&source.Kind{Type: &egressv1.EgressPolicy{}},
+		handler.EnqueueRequestsFromMapFunc(utils.KindToMapFlat("EgressPolicy"))); err != nil {
+		return fmt.Errorf("failed to watch EgressPolicy: %w", err)
 	}
 
-	if err := c.Watch(&source.Kind{Type: &corev1.Pod{}},
-		handler.EnqueueRequestsFromMapFunc(utils.KindToMapFlat("Pod"))); err != nil {
-		return fmt.Errorf("failed to watch Pod: %w", err)
+	if err := c.Watch(&source.Kind{Type: &egressv1.EgressClusterPolicy{}},
+		handler.EnqueueRequestsFromMapFunc(utils.KindToMapFlat("EgressClusterPolicy"))); err != nil {
+		return fmt.Errorf("failed to watch EgressClusterPolicy: %w", err)
+	}
+
+	if err := c.Watch(&source.Kind{Type: &egressv1.EgressEndpointSlice{}},
+		handler.EnqueueRequestsFromMapFunc(utils.KindToMapFlat("EgressEndpointSlice"))); err != nil {
+		return fmt.Errorf("failed to watch EgressEndpointSlice: %w", err)
+	}
+
+	if err := c.Watch(&source.Kind{Type: &egressv1.EgressClusterEndpointSlice{}},
+		handler.EnqueueRequestsFromMapFunc(utils.KindToMapFlat("EgressClusterEndpointSlice"))); err != nil {
+		return fmt.Errorf("failed to watch EgressClusterEndpointSlice: %w", err)
 	}
 
 	return nil
