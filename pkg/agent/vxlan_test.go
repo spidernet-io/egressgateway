@@ -19,7 +19,7 @@ import (
 	"github.com/spidernet-io/egressgateway/pkg/agent/route"
 	"github.com/spidernet-io/egressgateway/pkg/agent/vxlan"
 	"github.com/spidernet-io/egressgateway/pkg/config"
-	egressv1 "github.com/spidernet-io/egressgateway/pkg/k8s/apis/egressgateway.spidernet.io/v1"
+	egressv1 "github.com/spidernet-io/egressgateway/pkg/k8s/apis/egressgateway.spidernet.io/v1beta1"
 	"github.com/spidernet-io/egressgateway/pkg/logger"
 	"github.com/spidernet-io/egressgateway/pkg/schema"
 	"github.com/spidernet-io/egressgateway/pkg/utils"
@@ -107,15 +107,7 @@ func caseAddEgressNode() TestCaseVXLAN {
 			&egressv1.EgressNode{
 				ObjectMeta: metav1.ObjectMeta{Name: "workstation1"},
 				Spec:       egressv1.EgressNodeSpec{},
-				Status: egressv1.EgressNodeStatus{
-					VxlanIPv4:             "",
-					VxlanIPv6:             "",
-					TunnelMac:             "",
-					Phase:                 "",
-					PhysicalInterface:     "",
-					PhysicalInterfaceIPv4: "",
-					PhysicalInterfaceIPv6: "",
-				},
+				Status:     egressv1.EgressNodeStatus{},
 			},
 		},
 		reqs: []TestReqVXLAN{

@@ -12,7 +12,7 @@ import (
 	. "github.com/onsi/gomega"
 
 	"github.com/spidernet-io/e2eframework/framework"
-	egressv1 "github.com/spidernet-io/egressgateway/pkg/k8s/apis/egressgateway.spidernet.io/v1"
+	egressv1 "github.com/spidernet-io/egressgateway/pkg/k8s/apis/egressgateway.spidernet.io/v1beta1"
 	"github.com/spidernet-io/egressgateway/test/e2e/tools"
 )
 
@@ -66,25 +66,25 @@ func CheckEgressNodeStatus(f *framework.Framework, nodes []string, opt ...client
 		// check phase
 		Expect(status.Phase).To(Equal(egressv1.EgressNodeSucceeded))
 		// check physicalInterface
-		Expect(CheckEgressNodeInterface(node, status.PhysicalInterface, time.Second*10)).To(BeTrue())
+		Expect(CheckEgressNodeInterface(node, status.Tunnel.Parent.Name, time.Second*10)).To(BeTrue())
 		// check mac
-		Expect(CheckEgressNodeMac(node, status.TunnelMac, time.Second*10)).To(BeTrue())
+		Expect(CheckEgressNodeMac(node, status.Tunnel.MAC, time.Second*10)).To(BeTrue())
 
 		if enableV4 {
 			// check vxlan ip
-			Expect(CheckEgressNodeIP(node, status.VxlanIPv4, time.Second*10)).To(BeTrue())
+			Expect(CheckEgressNodeIP(node, status.Tunnel.IPv4, time.Second*10)).To(BeTrue())
 			// check node ip
-			Expect(CheckNodeIP(node, status.PhysicalInterface, status.PhysicalInterfaceIPv4, time.Second*10)).To(BeTrue())
+			Expect(CheckNodeIP(node, status.Tunnel.Parent.Name, status.Tunnel.Parent.IPv4, time.Second*10)).To(BeTrue())
 		}
 		if enableV6 && !enableV4 {
 			// check vxlan ip
-			Expect(CheckEgressNodeIP(node, status.VxlanIPv6, time.Second*10)).To(BeTrue())
+			Expect(CheckEgressNodeIP(node, status.Tunnel.IPv6, time.Second*10)).To(BeTrue())
 			// check node ip
-			Expect(CheckNodeIP(node, status.PhysicalInterface, status.PhysicalInterfaceIPv6, time.Second*10)).To(BeTrue())
+			Expect(CheckNodeIP(node, status.Tunnel.Parent.Name, status.Tunnel.Parent.IPv6, time.Second*10)).To(BeTrue())
 		}
 		if enableV6 && enableV4 {
 			// check vxlan ip
-			Expect(CheckEgressNodeIP(node, status.VxlanIPv6, time.Second*10)).To(BeTrue())
+			Expect(CheckEgressNodeIP(node, status.Tunnel.IPv6, time.Second*10)).To(BeTrue())
 		}
 	}
 }
