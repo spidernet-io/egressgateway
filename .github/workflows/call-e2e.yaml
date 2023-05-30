@@ -61,10 +61,14 @@ jobs:
           TMP=` date +%m%d%H%M%S `
           E2E_CLUSTER_NAME="project${TMP}"
           echo "RUN_KIND_CLUSTER_NAME=${E2E_CLUSTER_NAME}" >> $GITHUB_ENV
-          TMP=${{ inputs.kind_node_image }}
-          VAR=${TMP##*:}
-          VAR=${VAR//./_}
-          echo "RUN_VAR=${VAR}" >> $GITHUB_ENV
+          if ${{ inputs.kind_node_image != '' }} ; then
+            TMP=${{ inputs.kind_node_image }}
+            VAR=${TMP##*:}
+            VAR=${VAR//./_}
+            echo "RUN_VAR=${VAR}" >> $GITHUB_ENV
+          else
+            echo "RUN_VAR=latest" >> $GITHUB_ENV            
+          fi
 
       - name: Checkout Code
         uses: actions/checkout@v3
