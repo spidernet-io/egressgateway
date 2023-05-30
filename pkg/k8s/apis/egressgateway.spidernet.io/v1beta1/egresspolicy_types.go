@@ -24,10 +24,10 @@ type EgressPolicy struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata"`
 
-	Spec EgressGatewayPolicySpec `json:"spec,omitempty"`
+	Spec EgressPolicySpec `json:"spec,omitempty"`
 }
 
-type EgressGatewayPolicySpec struct {
+type EgressPolicySpec struct {
 	// +kubebuilder:validation:Optional
 	EgressGatewayName string `json:"egressGatewayName,omitempty"`
 	// +kubebuilder:validation:Optional
@@ -39,9 +39,12 @@ type EgressGatewayPolicySpec struct {
 }
 
 type EgressIP struct {
-	IPv4      string `json:"ipv4,omitempty"`
-	IPv6      string `json:"ipv6,omitempty"`
-	UseNodeIP bool   `json:"useNodeIP,omitempty"`
+	// +kubebuilder:validation:Optional
+	IPv4 string `json:"ipv4,omitempty"`
+	// +kubebuilder:validation:Optional
+	IPv6 string `json:"ipv6,omitempty"`
+	// +kubebuilder:validation:Optional
+	UseNodeIP bool `json:"useNodeIP,omitempty"`
 }
 
 type AppliedTo struct {

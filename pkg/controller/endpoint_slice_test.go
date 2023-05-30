@@ -154,7 +154,7 @@ func caseAddPolicy() TestCaseEPS {
 				Name:      "policy1",
 				Namespace: "default",
 			},
-			Spec: egressv1.EgressGatewayPolicySpec{
+			Spec: egressv1.EgressPolicySpec{
 				EgressGatewayName: "",
 				EgressIP:          egressv1.EgressIP{},
 				AppliedTo: egressv1.AppliedTo{
@@ -235,7 +235,7 @@ func caseUpdatePod() TestCaseEPS {
 				Name:      "policy1",
 				Namespace: "default",
 			},
-			Spec: egressv1.EgressGatewayPolicySpec{
+			Spec: egressv1.EgressPolicySpec{
 				EgressGatewayName: "",
 				EgressIP:          egressv1.EgressIP{},
 				AppliedTo: egressv1.AppliedTo{
@@ -350,7 +350,7 @@ func caseDeletePod() TestCaseEPS {
 				Name:      "policy1",
 				Namespace: "default",
 			},
-			Spec: egressv1.EgressGatewayPolicySpec{
+			Spec: egressv1.EgressPolicySpec{
 				EgressGatewayName: "",
 				EgressIP:          egressv1.EgressIP{},
 				AppliedTo: egressv1.AppliedTo{
