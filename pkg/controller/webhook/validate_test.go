@@ -130,6 +130,17 @@ func TestValidateEgressGatewayPolicy(t *testing.T) {
 					Name: "policy",
 				},
 				Spec: egressv1.EgressGatewayPolicySpec{
+					EgressGatewayName: "test",
+					EgressIP: egressv1.EgressIP{
+						UseNodeIP: false,
+						IPv4:      "",
+						IPv6:      "",
+					},
+					AppliedTo: egressv1.AppliedTo{
+						PodSelector: &metav1.LabelSelector{
+							MatchLabels: map[string]string{"app": "test"},
+						},
+					},
 					DestSubnet: c.destSubnet,
 				},
 			}

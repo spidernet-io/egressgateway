@@ -59,6 +59,21 @@ func ValidateHook(client client.Client, cfg *config.Config) *webhook.Admission {
 				if err != nil {
 					return webhook.Denied(fmt.Sprintf("json unmarshal EgressPolicy with error: %v", err))
 				}
+
+				if len(policy.Spec.EgressGatewayName) == 0 {
+					return webhook.Denied("egressGatewayName cannot be empty")
+				}
+
+				if policy.Spec.EgressIP.UseNodeIP {
+					if len(policy.Spec.EgressIP.IPv4) != 0 || len(policy.Spec.EgressIP.IPv6) != 0 {
+						return webhook.Denied("useNodeIP cannot be used with egressIP.ipv4 or egressIP.ipv6 at the same time")
+					}
+				}
+
+				if len(policy.Spec.AppliedTo.PodSelector.MatchLabels) != 0 && len(policy.Spec.AppliedTo.PodSubnet) != 0 {
+					return webhook.Denied("podSelector and podSubnet cannot be used together")
+				}
+
 				return validateSubnet(policy.Spec.DestSubnet)
 			}
 
