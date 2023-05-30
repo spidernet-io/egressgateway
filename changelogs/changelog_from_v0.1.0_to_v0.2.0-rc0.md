@@ -37,4 +37,4 @@
 
 ## Total PR
 
-[ 70 PR](https://github.com/spidernet-io/egressgateway/compare/v0.1.0...v0.2.0-rc0)
+[ 73 PR](https://github.com/spidernet-io/egressgateway/compare/v0.1.0...v0.2.0-rc0)
