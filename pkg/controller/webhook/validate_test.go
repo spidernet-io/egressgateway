@@ -129,7 +129,7 @@ func TestValidateEgressGatewayPolicy(t *testing.T) {
 				ObjectMeta: metav1.ObjectMeta{
 					Name: "policy",
 				},
-				Spec: egressv1.EgressGatewayPolicySpec{
+				Spec: egressv1.EgressPolicySpec{
 					EgressGatewayName: "test",
 					EgressIP: egressv1.EgressIP{
 						UseNodeIP: false,

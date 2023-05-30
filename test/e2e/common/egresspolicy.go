@@ -5,12 +5,13 @@ package common
 
 import (
 	"context"
+	"time"
+
 	"github.com/spidernet-io/e2eframework/framework"
 	egressv1 "github.com/spidernet-io/egressgateway/pkg/k8s/apis/egressgateway.spidernet.io/v1beta1"
 	"github.com/spidernet-io/egressgateway/test/e2e/err"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	"time"
 )
 
 func GenerateEgressPolicyYaml(name string, labels map[string]string, dest []string) *egressv1.EgressPolicy {
@@ -18,7 +19,7 @@ func GenerateEgressPolicyYaml(name string, labels map[string]string, dest []stri
 		ObjectMeta: metav1.ObjectMeta{
 			Name: name,
 		},
-		Spec: egressv1.EgressGatewayPolicySpec{
+		Spec: egressv1.EgressPolicySpec{
 			AppliedTo: egressv1.AppliedTo{
 				PodSelector: &metav1.LabelSelector{
 					MatchLabels: labels,
