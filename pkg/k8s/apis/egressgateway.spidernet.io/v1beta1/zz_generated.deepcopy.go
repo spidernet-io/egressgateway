@@ -20,12 +20,8 @@ func (in *AppliedTo) DeepCopyInto(out *AppliedTo) {
 	}
 	if in.PodSubnet != nil {
 		in, out := &in.PodSubnet, &out.PodSubnet
-		*out = new([]string)
-		if **in != nil {
-			in, out := *in, *out
-			*out = make([]string, len(*in))
-			copy(*out, *in)
-		}
+		*out = make([]string, len(*in))
+		copy(*out, *in)
 	}
 }
 

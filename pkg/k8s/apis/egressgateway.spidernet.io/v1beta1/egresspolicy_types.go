@@ -48,7 +48,7 @@ type AppliedTo struct {
 	// +kubebuilder:validation:Optional
 	PodSelector *metav1.LabelSelector `json:"podSelector,omitempty"`
 	// +kubebuilder:validation:Optional
-	PodSubnet *[]string `json:"podSubnet,omitempty"`
+	PodSubnet []string `json:"podSubnet,omitempty"`
 }
 
 func init() {
