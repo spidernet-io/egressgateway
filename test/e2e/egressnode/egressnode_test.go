@@ -9,7 +9,7 @@ package egressnode_test
 //)
 //
 //var _ = Describe("Egressnode", func() {
-//	PIt("get and check egressnodes", Label("N00001"), func() {
+//	PIt("get and check egressnodes", func() {
 //		// check egressnode status
 //		common.CheckEgressNodeStatus(f, nodes)
 //	})
