@@ -36,7 +36,7 @@ package egressgateway_test
 //		})
 //	})
 //
-//	PDescribeTable("create egressgateway", Serial, Label("G00001", "G00002", "G00003"), func(getParams func() *egressGatewayFields) {
+//	PDescribeTable("create egressgateway", Serial, func(getParams func() *egressGatewayFields) {
 //		// get params
 //		p := getParams()
 //		yaml := common.GenerateEgressGatewayYaml(p.name, p.matchLabels)
