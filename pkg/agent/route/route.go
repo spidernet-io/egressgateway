@@ -4,41 +4,78 @@
 package route
 
 import (
-	"fmt"
 	"net"
 
 	"github.com/vishvananda/netlink"
 	"go.uber.org/zap"
+
+	"github.com/spidernet-io/egressgateway/pkg/markallocator"
 )
 
-func NewRuleRoute(mark, mask int, multiPath bool, log *zap.Logger) *RuleRoute {
+func NewRuleRoute(log *zap.Logger) *RuleRoute {
 	return &RuleRoute{
-		mark:      mark,
-		mask:      mask,
-		multiPath: multiPath,
-		log:       log,
+		log: log,
 	}
 }
 
 type RuleRoute struct {
-	mark      int
-	mask      int
-	table     int
-	multiPath bool
-	log       *zap.Logger
+	log *zap.Logger
 }
 
-func (r *RuleRoute) Ensure(linkName string, ipv4List, ipv6List []net.IP) error {
-	if len(ipv4List) > 0 {
-		r.log.Debug("ensure rule v4")
-		err := r.ensureRule(netlink.FAMILY_V4)
+func (r *RuleRoute) PurgeStaleRules(marks map[int]struct{}, baseMark string) error {
+	start, end, err := markallocator.RangeSize(baseMark)
+	if err != nil {
+		return err
+	}
+
+	clean := func(rules []netlink.Rule, family int) error {
+		for _, rule := range rules {
+			rule.Family = family
+			if _, ok := marks[rule.Mark]; !ok {
+				if int(start) <= rule.Mark && int(end) >= rule.Mark {
+					err := netlink.RuleDel(&rule)
+					if err != nil {
+						return err
+					}
+				}
+				return nil
+			}
+		}
+		return nil
+	}
+
+	rules, err := netlink.RuleList(netlink.FAMILY_V4)
+	if err != nil {
+		return err
+	}
+	if err := clean(rules, netlink.FAMILY_V4); err != nil {
+		return err
+	}
+
+	rules, err = netlink.RuleList(netlink.FAMILY_V6)
+	if err != nil {
+		return err
+	}
+	if err := clean(rules, netlink.FAMILY_V6); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (r *RuleRoute) Ensure(linkName string, ipv4, ipv6 *net.IP, table int, mark int) error {
+	if mark == 0 {
+		return nil
+	}
+	if ipv4 != nil {
+		err := r.ensureRule(netlink.FAMILY_V4, table, mark)
 		if err != nil {
 			return err
 		}
 	}
-	if len(ipv6List) > 0 {
-		r.log.Debug("ensure rule v6")
-		err := r.ensureRule(netlink.FAMILY_V6)
+
+	if ipv6 != nil {
+		err := r.ensureRule(netlink.FAMILY_V6, table, mark)
 		if err != nil {
 			return err
 		}
@@ -50,45 +87,21 @@ func (r *RuleRoute) Ensure(linkName string, ipv4List, ipv6List []net.IP) error {
 	}
 	r.log.Sugar().Debugf("get link %s", linkName)
 
-	if r.multiPath {
-		r.log.Debug("ensure multi route v4")
-		err := r.ensureMultiRoute(link, ipv4List, netlink.FAMILY_V4)
-		if err != nil {
-			return err
-		}
-		r.log.Debug("ensure multi route v6")
-		err = r.ensureMultiRoute(link, ipv6List, netlink.FAMILY_V6)
-		if err != nil {
-			return err
-		}
-	} else {
-		var ipv4, ipv6 *net.IP
-
-		if len(ipv4List) > 0 {
-			ipv4 = &ipv4List[0]
-		}
-
-		if len(ipv6List) > 0 {
-			ipv6 = &ipv6List[0]
-		}
-
-		r.log.Debug("ensure route v4")
-		err := r.ensureRoute(link, ipv4, netlink.FAMILY_V4)
-		if err != nil {
-			return err
-		}
-		r.log.Debug("ensure route v6")
-		err = r.ensureRoute(link, ipv6, netlink.FAMILY_V6)
-		if err != nil {
-			return err
-		}
+	r.log.Debug("ensure route v4")
+	err = r.ensureRoute(link, ipv4, netlink.FAMILY_V4, table)
+	if err != nil {
+		return err
 	}
-
+	r.log.Debug("ensure route v6")
+	err = r.ensureRoute(link, ipv6, netlink.FAMILY_V6, table)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
-func (r *RuleRoute) ensureRoute(link netlink.Link, ip *net.IP, family int) error {
-	routeFilter := &netlink.Route{Table: r.table}
+func (r *RuleRoute) ensureRoute(link netlink.Link, ip *net.IP, family int, table int) error {
+	routeFilter := &netlink.Route{Table: table}
 	routes, err := netlink.RouteListFiltered(family, routeFilter, netlink.RT_FILTER_TABLE)
 	if err != nil {
 		return err
@@ -96,7 +109,7 @@ func (r *RuleRoute) ensureRoute(link netlink.Link, ip *net.IP, family int) error
 
 	var find bool
 	for _, route := range routes {
-		if route.Table == r.table {
+		if route.Table == table {
 			if ip == nil || route.Gw.String() != ip.String() {
 				r.log.Sugar().Infof("delete route: %s, exp ip %v", route.String(), ip)
 				err := netlink.RouteDel(&route)
@@ -115,7 +128,7 @@ func (r *RuleRoute) ensureRoute(link netlink.Link, ip *net.IP, family int) error
 
 	if !find {
 		index := link.Attrs().Index
-		err = netlink.RouteAdd(&netlink.Route{LinkIndex: index, Gw: *ip, Table: r.table})
+		err = netlink.RouteAdd(&netlink.Route{LinkIndex: index, Gw: *ip, Table: table})
 		if err != nil {
 			return err
 		}
@@ -124,96 +137,44 @@ func (r *RuleRoute) ensureRoute(link netlink.Link, ip *net.IP, family int) error
 	return nil
 }
 
-func (r *RuleRoute) ensureMultiRoute(link netlink.Link, ips []net.IP, family int) error {
-	routeFilter := &netlink.Route{Table: r.table}
-	routes, err := netlink.RouteListFiltered(family, routeFilter, netlink.RT_FILTER_TABLE)
-	if err != nil {
-		return err
-	}
-	index := link.Attrs().Index
-
-	for _, route := range routes {
-		if route.Table == r.table {
-
-			expMap := make(map[string]net.IP, 0)
-			for _, ip := range ips {
-				expMap[ip.String()] = ip
-			}
-
-			needReplace := false
-
-			for _, path := range route.MultiPath {
-				if _, ok := expMap[path.Gw.String()]; !ok {
-					needReplace = true
-					continue
-				}
-				delete(expMap, path.Gw.String())
-			}
-
-			if len(expMap) > 0 || needReplace {
-				route := newMultiRoute(family, index, r.table, ips)
-				err = netlink.RouteReplace(route)
-				if err != nil {
-					return fmt.Errorf("replace route with error: %v", err)
-				}
-			}
-
-			return nil
-		}
-	}
-
-	route := newMultiRoute(family, index, r.table, ips)
-	err = netlink.RouteAdd(route)
-	if err != nil {
-		return fmt.Errorf("add route with error: %v", err)
-	}
-
-	return nil
-}
-
-func newMultiRoute(family, index, table int, ips []net.IP) *netlink.Route {
-	paths := make([]*netlink.NexthopInfo, 0)
-	for _, ip := range ips {
-		info := &netlink.NexthopInfo{LinkIndex: index, Gw: ip}
-		paths = append(paths, info)
-	}
-	gw := []byte{0, 0, 0, 0}
-	if family == netlink.FAMILY_V6 {
-		gw = []byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
-	}
-	route := &netlink.Route{Table: table, Protocol: 3, Gw: gw, MultiPath: paths}
-	return route
-}
-
-func (r *RuleRoute) ensureRule(family int) error {
-	rules, err := netlink.RuleList(family)
+func (r *RuleRoute) ensureRule(family int, table int, mark int) error {
+	t := netlink.NewRule()
+	t.Mark = mark
+	t.Family = family
+	rules, err := netlink.RuleListFiltered(family, t, netlink.RT_FILTER_MARK)
 	if err != nil {
 		return err
 	}
 	r.log.Sugar().Debugf("number of rule: %d", len(rules))
-	needAdd := true
+
+	found := false
 	for _, rule := range rules {
-		if rule.Table == r.table {
-			r.log.Sugar().Debugf("check same table rule: %v", rule.String())
-
-			if rule.Mask != r.mask || rule.Mark != r.mark {
-				r.log.Sugar().Debugf("delete rule: %v", rule.String())
-				err := netlink.RuleDel(&netlink.Rule{Table: r.table})
-				if err != nil {
-					return err
-				}
-				continue
-			}
-			needAdd = false
+		del := false
+		if rule.Table != table {
+			del = true
 		}
+		if found {
+			del = true
+		}
+		if del {
+			rule.Family = family
+			err = netlink.RuleDel(&rule)
+			if err != nil {
+				return err
+			}
+			continue
+		}
+		found = true
 	}
-	r.log.Sugar().Debugf("check rule done, is need add: %v", needAdd)
+	if found {
+		return nil
+	}
 
-	if needAdd {
+	if !found {
+		r.log.Sugar().Debugf("not found match rule, add it")
 		rule := netlink.NewRule()
-		rule.Table = r.table
-		rule.Mark = r.mark
-		rule.Mask = r.mask
+		rule.Table = table
+		rule.Mark = mark
 		rule.Family = family
 
 		r.log.Sugar().Debugf("add rule: %v", rule.String())

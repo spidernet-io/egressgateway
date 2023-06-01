@@ -125,11 +125,21 @@ func (r *vxlanReconciler) reconcileEgressNode(ctx context.Context, req reconcile
 		if ipv6 != nil {
 			peer.IPv6 = &ipv6
 		}
+		baseMark, err := parseMarkToInt(node.Status.Mark)
+		if err != nil {
+		} else {
+			peer.Mark = baseMark
+		}
 
 		r.peerMap.Store(node.Name, peer)
 		err = r.ensureRoute()
 		if err != nil {
 			log.Info("add egress node, ensure route with error", zap.Error(err))
+		}
+
+		err = r.ruleRoute.Ensure(r.cfg.FileConfig.VXLAN.Name, peer.IPv4, peer.IPv6, peer.Mark, peer.Mark)
+		if err != nil {
+			r.log.Sugar().Errorf("ensure vxlan link with error: %v", err)
 		}
 		return reconcile.Result{}, nil
 	}
@@ -348,16 +358,23 @@ func (r *vxlanReconciler) keepVXLAN() {
 
 		r.log.Sugar().Debugf("route ensure has completed")
 
-		// ipv4List, _ := r.ruleRouteCache.Load("ipv4")
-		// ipv6List, _ := r.ruleRouteCache.Load("ipv6")
-
-		// err = r.ruleRoute.Ensure(r.cfg.FileConfig.VXLAN.Name, ipv4List, ipv6List)
-		// if err != nil {
-		//	 r.log.Sugar().Errorf("ensure vxlan link with error: %v", err)
-		//	 reduce = false
-		//	 time.Sleep(time.Second)
-		//	 continue
-		// }
+		markMap := make(map[int]struct{})
+		r.peerMap.Range(func(key string, val vxlan.Peer) bool {
+			if val.Mark != 0 {
+				markMap[val.Mark] = struct{}{}
+			}
+			err = r.ruleRoute.Ensure(r.cfg.FileConfig.VXLAN.Name, val.IPv4, val.IPv6, val.Mark, val.Mark)
+			if err != nil {
+				r.log.Sugar().Errorf("ensure vxlan link with error: %v", err)
+				reduce = false
+			}
+			return true
+		})
+		err = r.ruleRoute.PurgeStaleRules(markMap, r.cfg.FileConfig.Mark)
+		if err != nil {
+			r.log.Sugar().Errorf("purge stale rules error: %v", err)
+			reduce = false
+		}
 
 		r.log.Sugar().Debugf("route rule ensure has completed")
 
@@ -410,11 +427,7 @@ func (r *vxlanReconciler) ensureRoute() error {
 }
 
 func newEgressNodeController(mgr manager.Manager, cfg *config.Config, log *zap.Logger) error {
-	multiPath := false
-	if cfg.FileConfig.ForwardMethod == config.ForwardMethodActiveActive {
-		multiPath = true
-	}
-	ruleRoute := route.NewRuleRoute(0x11000000, 0xffffffff, multiPath, log)
+	ruleRoute := route.NewRuleRoute(log)
 
 	r := &vxlanReconciler{
 		client:         mgr.GetClient(),
