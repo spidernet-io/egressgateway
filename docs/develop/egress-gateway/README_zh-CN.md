@@ -11,7 +11,7 @@ kind: EgressGateway
 metadata:
   name: "eg1"
 spec:                           
-  ranges:                       # 1
+  ippools:                      # 1
    policy: "Random"             # 2
    ipv4:                        # 3
    - ""
@@ -32,7 +32,7 @@ status:                         # 8
       - ""
 ```
 
-1. ranges: 设置 Egress IP 的范围；
+1. ippools: 设置 Egress IP 的范围；
    * 支持设置单个 IP `10.6.0.1` ，和段 `10.6.0.1-10.6.0.10 ` ， CIDR `10.6.0.1/26`  的方式 3 种方式；
    * 如果开启双栈要求，IPv4 的数量和 IPv6 的数量要求一致。由于此原因，会导致上面 CIDR 可能并不实用，因此优先级优先实现前 2 种；
 2. policy(string): EIP 的分配策略，暂时只支持 `Random` 随机分配

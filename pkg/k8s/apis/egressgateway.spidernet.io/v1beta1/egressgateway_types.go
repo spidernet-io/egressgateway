@@ -31,12 +31,12 @@ type EgressGateway struct {
 
 type EgressGatewaySpec struct {
 	// +kubebuilder:validation:Optional
-	Ranges Ranges `json:"ranges,omitempty"`
+	Ippools Ippools `json:"ippools,omitempty"`
 	// +kubebuilder:validation:Required
 	NodeSelector NodeSelector `json:"nodeSelector,omitempty"`
 }
 
-type Ranges struct {
+type Ippools struct {
 	// +kubebuilder:validation:Optional
 	IPv4 []string `json:"ipv4,omitempty"`
 	// +kubebuilder:validation:Optional

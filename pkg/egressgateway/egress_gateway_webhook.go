@@ -52,12 +52,12 @@ func (egw *EgressGatewayWebhook) EgressGatewayValidate(ctx context.Context, req 
 
 	// Checking the number of IPV4 and IPV6 addresses
 	var ipv4s, ipv6s []net.IP
-	ipv4Ranges, err := utils.MergeIPRanges(constant.IPv4, newEg.Spec.Ranges.IPv4)
+	ipv4Ranges, err := utils.MergeIPRanges(constant.IPv4, newEg.Spec.Ippools.IPv4)
 	if err != nil {
 		return webhook.Denied(fmt.Sprintf("Failed to check IP: %v", err))
 	}
 
-	ipv6Ranges, _ := utils.MergeIPRanges(constant.IPv6, newEg.Spec.Ranges.IPv6)
+	ipv6Ranges, _ := utils.MergeIPRanges(constant.IPv6, newEg.Spec.Ippools.IPv6)
 	if err != nil {
 		return webhook.Denied(fmt.Sprintf("Failed to check IP: %v", err))
 	}

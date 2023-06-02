@@ -36,7 +36,7 @@ func TestValidateEgressGateway(t *testing.T) {
 					Name: "eg-test",
 				},
 				Spec: egressv1.EgressGatewaySpec{
-					Ranges: egressv1.Ranges{
+					Ippools: egressv1.Ippools{
 						IPv4: []string{"1.1.1.1x"},
 					},
 				},
