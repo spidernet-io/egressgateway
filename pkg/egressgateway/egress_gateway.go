@@ -557,7 +557,7 @@ func (r egnReconciler) allocatorEIP(selEipLolicy string, nodeName string, egp eg
 		var useIpv4s []net.IP
 		var useIpv4sByNode []net.IP
 
-		ipv4Ranges, _ := utils.MergeIPRanges(constant.IPv4, eg.Spec.Ranges.IPv4)
+		ipv4Ranges, _ := utils.MergeIPRanges(constant.IPv4, eg.Spec.Ippools.IPv4)
 
 		perIpv4 = egp.Spec.EgressIP.IPv4
 		if len(perIpv4) != 0 {
@@ -611,7 +611,7 @@ func (r egnReconciler) allocatorEIP(selEipLolicy string, nodeName string, egp eg
 		var useIpv6s []net.IP
 		var useIpv6sByNode []net.IP
 
-		ipv6Ranges, _ := utils.MergeIPRanges(constant.IPv6, eg.Spec.Ranges.IPv6)
+		ipv6Ranges, _ := utils.MergeIPRanges(constant.IPv6, eg.Spec.Ippools.IPv6)
 
 		perIpv6 = egp.Spec.EgressIP.IPv6
 		if len(perIpv6) != 0 {

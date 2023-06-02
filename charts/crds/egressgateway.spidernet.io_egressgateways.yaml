@@ -37,6 +37,19 @@ spec:
             type: object
           spec:
             properties:
+              ippools:
+                properties:
+                  ipv4:
+                    items:
+                      type: string
+                    type: array
+                  ipv6:
+                    items:
+                      type: string
+                    type: array
+                  policy:
+                    type: string
+                type: object
               nodeSelector:
                 properties:
                   policy:
@@ -89,19 +102,6 @@ spec:
                         type: object
                     type: object
                     x-kubernetes-map-type: atomic
-                type: object
-              ranges:
-                properties:
-                  ipv4:
-                    items:
-                      type: string
-                    type: array
-                  ipv6:
-                    items:
-                      type: string
-                    type: array
-                  policy:
-                    type: string
                 type: object
             type: object
           status:
