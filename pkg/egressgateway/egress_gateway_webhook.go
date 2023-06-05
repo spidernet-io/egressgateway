@@ -7,12 +7,15 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"math/rand"
 	"net"
+	"time"
 
 	"github.com/spidernet-io/egressgateway/pkg/config"
 	"github.com/spidernet-io/egressgateway/pkg/constant"
 	egress "github.com/spidernet-io/egressgateway/pkg/k8s/apis/egressgateway.spidernet.io/v1beta1"
 	"github.com/spidernet-io/egressgateway/pkg/utils"
+	admissionv1 "k8s.io/api/admission/v1"
 	v1 "k8s.io/api/admission/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/types"
@@ -23,6 +26,12 @@ import (
 type EgressGatewayWebhook struct {
 	Client client.Client
 	Config *config.Config
+}
+
+type patchOperation struct {
+	Op    string      `json:"op"`
+	Path  string      `json:"path"`
+	Value interface{} `json:"value,omitempty"`
 }
 
 func (egw *EgressGatewayWebhook) EgressGatewayValidate(ctx context.Context, req webhook.AdmissionRequest) webhook.AdmissionResponse {
@@ -100,6 +109,91 @@ func (egw *EgressGatewayWebhook) EgressGatewayValidate(ctx context.Context, req 
 				return webhook.Denied(fmt.Sprintf("%v has been allocated and cannot be deleted", eip.IPv4))
 			}
 		}
+	}
+
+	// Check the defaultEIP
+	if len(newEg.Spec.Ippools.Ipv4DefaultEIP) != 0 {
+		result, err := utils.IsIPIncludedRange(constant.IPv4, newEg.Spec.Ippools.Ipv4DefaultEIP, ipv4Ranges)
+		if err != nil {
+			return webhook.Denied(fmt.Sprintf("Failed to check Ipv4DefaultEIP: %v", err))
+		}
+		if !result {
+			return webhook.Denied(fmt.Sprintf("%v is not covered by Ippools", newEg.Spec.Ippools.Ipv4DefaultEIP))
+		}
+	}
+
+	if len(newEg.Spec.Ippools.Ipv6DefaultEIP) != 0 {
+		result, err := utils.IsIPIncludedRange(constant.IPv6, newEg.Spec.Ippools.Ipv6DefaultEIP, ipv6Ranges)
+		if err != nil {
+			return webhook.Denied(fmt.Sprintf("Failed to check Ipv6DefaultEIP: %v", err))
+		}
+		if !result {
+			return webhook.Denied(fmt.Sprintf("%v is not covered by Ippools", newEg.Spec.Ippools.Ipv6DefaultEIP))
+		}
+	}
+
+	return webhook.Allowed("checked")
+}
+
+func (egw *EgressGatewayWebhook) EgressGatewayMutate(ctx context.Context, req webhook.AdmissionRequest) webhook.AdmissionResponse {
+	rander := rand.New(rand.NewSource(time.Now().UnixNano()))
+	isPatch := false
+	eg := new(egress.EgressGateway)
+	err := json.Unmarshal(req.Object.Raw, eg)
+	if err != nil {
+		return webhook.Denied(fmt.Sprintf("json unmarshal EgressGateway with error: %v", err))
+	}
+
+	reviewResponse := webhook.AdmissionResponse{}
+	var patch []patchOperation
+
+	if egw.Config.FileConfig.EnableIPv4 {
+		if len(eg.Spec.Ippools.Ipv4DefaultEIP) == 0 {
+			ipv4Ranges, err := utils.MergeIPRanges(constant.IPv4, eg.Spec.Ippools.IPv4)
+			if err != nil {
+				return webhook.Denied(fmt.Sprintf("ippools.ipv4 format error: %v", err))
+			}
+
+			ipv4s, _ := utils.ParseIPRanges(constant.IPv4, ipv4Ranges)
+			patch = append(patch, patchOperation{
+				Op:    "add",
+				Path:  "/spec/ippools/ipv4DefaultEIP",
+				Value: ipv4s[rander.Intn(len(ipv4s))].String(),
+			})
+			isPatch = true
+		}
+
+	}
+
+	if egw.Config.FileConfig.EnableIPv6 {
+		if len(eg.Spec.Ippools.Ipv6DefaultEIP) == 0 {
+			ipv6Ranges, err := utils.MergeIPRanges(constant.IPv6, eg.Spec.Ippools.IPv6)
+			if err != nil {
+				return webhook.Denied(fmt.Sprintf("ippools.ipv6 format error: %v", err))
+			}
+
+			ipv6s, _ := utils.ParseIPRanges(constant.IPv6, ipv6Ranges)
+			patch = append(patch, patchOperation{
+				Op:    "add",
+				Path:  "/spec/ippools/ipv6DefaultEIP",
+				Value: ipv6s[rander.Intn(len(ipv6s))].String(),
+			})
+			isPatch = true
+		}
+	}
+
+	if isPatch {
+		patchBytes, err := json.Marshal(patch)
+		if err != nil {
+			return webhook.Denied(fmt.Sprintf("failed to allocate defaultEIP.: %v", err))
+		}
+
+		reviewResponse.Allowed = true
+		reviewResponse.Patch = patchBytes
+		pt := admissionv1.PatchTypeJSONPatch
+		reviewResponse.PatchType = &pt
+
+		return reviewResponse
 	}
 
 	return webhook.Allowed("checked")

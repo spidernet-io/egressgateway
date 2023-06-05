@@ -43,11 +43,13 @@ spec:
                     items:
                       type: string
                     type: array
+                  ipv4DefaultEIP:
+                    type: string
                   ipv6:
                     items:
                       type: string
                     type: array
-                  policy:
+                  ipv6DefaultEIP:
                     type: string
                 type: object
               nodeSelector:

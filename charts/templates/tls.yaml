@@ -53,6 +53,51 @@ webhooks:
         - egressclusterinfos
     sideEffects: None
 
+apiVersion: admissionregistration.k8s.io/v1
+kind: MutatingWebhookConfiguration
+metadata:
+  name: {{ .Values.egressgatewayController.name | trunc 63 | trimSuffix "-" }}
+  annotations:
+    {{- if (eq .Values.egressgatewayController.tls.method "certmanager") }}
+    cert-manager.io/inject-ca-from: {{ .Release.Namespace }}/{{ .Values.egressgatewayController.name | trunc 63 | trimSuffix "-" }}-server-certs
+    {{- end }}
+webhooks:
+  - admissionReviewVersions:
+      - v1
+    clientConfig:
+      service:
+        name: {{ .Values.egressgatewayController.name | trunc 63 | trimSuffix "-" }}
+        namespace: {{ .Release.Namespace }}
+        path: "/mutate"
+        port: {{ .Values.egressgatewayController.webhookPort }}
+      {{- if (eq .Values.egressgatewayController.tls.method "provided") }}
+      caBundle: {{ .Values.egressgatewayController.tls.provided.tlsCa | required "missing tls.provided.tlsCa" }}
+      {{- else if (eq .Values.egressgatewayController.tls.method "auto") }}
+      caBundle: {{ .ca.Cert | b64enc }}
+      {{- end }}
+    failurePolicy: Fail
+    name: egressgateway.egressgateway.spidernet.io
+    rules:
+      - apiGroups:
+          - egressgateway.spidernet.io
+        apiVersions:
+          - v1
+        operations:
+          - CREATE
+          - UPDATE
+        resources:
+        - egressgateways
+      - apiGroups:
+          - egressgateway.spidernet.io
+        apiVersions:
+          - v1beta1
+        operations:
+          - CREATE
+          - UPDATE
+        resources:
+        - egressgateways
+    sideEffects: None
+
 {{- if eq .Values.egressgatewayController.tls.method "certmanager" -}}
 ---
 apiVersion: cert-manager.io/v1

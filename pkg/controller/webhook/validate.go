@@ -82,6 +82,21 @@ func ValidateHook(client client.Client, cfg *config.Config) *webhook.Admission {
 	}
 }
 
+// ValidateHook ValidateHook
+func MutateHook(client client.Client, cfg *config.Config) *webhook.Admission {
+	return &webhook.Admission{
+		Handler: admission.HandlerFunc(func(ctx context.Context, req webhook.AdmissionRequest) webhook.AdmissionResponse {
+
+			switch req.Kind.Kind {
+			case EgressGateway:
+				return (&egressgateway.EgressGatewayWebhook{Client: client, Config: cfg}).EgressGatewayMutate(ctx, req)
+			}
+
+			return webhook.Allowed("checked")
+		}),
+	}
+}
+
 func validateSubnet(subnet []string) webhook.AdmissionResponse {
 	invalidList := make([]string, 0)
 	for _, subnet := range subnet {

@@ -104,7 +104,7 @@ func (r egnReconciler) reconcileNode(ctx context.Context, req reconcile.Request,
 		isMatch := selNode.Matches(labels.Set(node.Labels))
 		if isMatch {
 			// If the tag matches, check whether information about the node exists. If it does not exist, add an empty one
-			_, isExist := GetEIPStatusByNode(node.Name, eg)
+			_, isExist := GetPoliciesByNode(node.Name, eg)
 			if !isExist {
 				eg.Status.NodeList = append(eg.Status.NodeList, egress.EgressIPStatus{Name: node.Name})
 
@@ -117,7 +117,7 @@ func (r egnReconciler) reconcileNode(ctx context.Context, req reconcile.Request,
 			}
 		} else {
 			// Labels do not match. If there is a node in status, delete the node from status and reallocate the policy
-			_, isExist := GetEIPStatusByNode(node.Name, eg)
+			_, isExist := GetPoliciesByNode(node.Name, eg)
 			if isExist {
 				err := r.deleteNodeFromEG(ctx, node.Name, eg)
 				if err != nil {
@@ -169,7 +169,6 @@ func (r egnReconciler) reconcileEG(ctx context.Context, req reconcile.Request, l
 	log.Sugar().Debugf("number of selected nodes: %d", len(newNodeList.Items))
 
 	// Get the node you want to delete
-
 	delNodeMap := make(map[string]egress.EgressIPStatus)
 	for _, oldNode := range eg.Status.NodeList {
 		delNodeMap[oldNode.Name] = oldNode
@@ -263,7 +262,7 @@ func (r egnReconciler) reconcileEN(ctx context.Context, req reconcile.Request, l
 			return reconcile.Result{Requeue: true}, nil
 		}
 		for _, eg := range egList.Items {
-			policies, isExist := GetEIPStatusByNode(en.Name, eg)
+			policies, isExist := GetPoliciesByNode(en.Name, eg)
 			if isExist {
 				perNodeMap := make(map[string]egress.EgressIPStatus, 0)
 				for _, node := range eg.Status.NodeList {
@@ -454,7 +453,7 @@ func (r egnReconciler) deleteNodeFromEGs(ctx context.Context, nodeName string, e
 // Delete the node from the EgressGateway
 func (r egnReconciler) deleteNodeFromEG(ctx context.Context, nodeName string, eg egress.EgressGateway) error {
 	// Get the policy that needs to be reassigned
-	policies, isExist := GetEIPStatusByNode(nodeName, eg)
+	policies, isExist := GetPoliciesByNode(nodeName, eg)
 
 	if isExist {
 		perNodeMap := make(map[string]egress.EgressIPStatus, 0)
@@ -491,20 +490,52 @@ func (r egnReconciler) deleteNodeFromEG(ctx context.Context, nodeName string, eg
 }
 
 func (r egnReconciler) reAllocatorPolicy(ctx context.Context, policy egress.Policy, eg *egress.EgressGateway, nodeMap map[string]egress.EgressIPStatus) error {
+	var perNode string
+	var ipv4, ipv6 string
 	egp := &egress.EgressPolicy{}
 	err := r.client.Get(ctx, types.NamespacedName{Namespace: policy.Namespace, Name: policy.Name}, egp)
 	if err != nil {
 		return err
 	}
 
-	perNode, err := r.allocatorNode("rr", nodeMap)
-	if err != nil {
-		return err
-	}
+	ipv4 = egp.Spec.EgressIP.IPv4
+	if len(ipv4) != 0 {
+		perNode = GetNodeByIP(ipv4, *eg)
+		if len(perNode) == 0 {
+			perNode, err = r.allocatorNode("rr", nodeMap)
+			if err != nil {
+				return err
+			}
+		}
 
-	ipv4, ipv6, err := r.allocatorEIP("", perNode, *egp, *eg)
-	if err != nil {
-		return err
+		ipv4, ipv6, err = r.allocatorEIP("", perNode, *egp, *eg)
+		if err != nil {
+			return err
+		}
+	} else {
+		allocatorPolicy := egp.Spec.EgressIP.AllocatorPolicy
+		if allocatorPolicy == egress.EipAllocatorRR {
+			perNode, err := r.allocatorNode("rr", nodeMap)
+			if err != nil {
+				return err
+			}
+
+			ipv4, ipv6, err = r.allocatorEIP("", perNode, *egp, *eg)
+			if err != nil {
+				return err
+			}
+		} else {
+			ipv4 = eg.Spec.Ippools.Ipv4DefaultEIP
+			ipv6 = eg.Spec.Ippools.Ipv6DefaultEIP
+
+			perNode = GetNodeByIP(ipv4, *eg)
+			if len(perNode) == 0 {
+				perNode, err = r.allocatorNode("rr", nodeMap)
+				if err != nil {
+					return err
+				}
+			}
+		}
 	}
 
 	err = setEipStatus(ipv4, ipv6, perNode, policy, nodeMap)
@@ -552,6 +583,7 @@ func (r egnReconciler) allocatorEIP(selEipLolicy string, nodeName string, egp eg
 
 	var perIpv4 string
 	var perIpv6 string
+	rander := rand.New(rand.NewSource(time.Now().UnixNano()))
 
 	if r.config.FileConfig.EnableIPv4 {
 		var useIpv4s []net.IP
@@ -579,7 +611,6 @@ func (r egnReconciler) allocatorEIP(selEipLolicy string, nodeName string, egp eg
 
 			ipv4s, _ := utils.ParseIPRanges(constant.IPv4, ipv4Ranges)
 			freeIpv4s := utils.IPsDiffSet(ipv4s, useIpv4s, false)
-			rander := rand.New(rand.NewSource(time.Now().UnixNano()))
 
 			if len(freeIpv4s) == 0 {
 				for _, node := range eg.Status.NodeList {
@@ -633,7 +664,6 @@ func (r egnReconciler) allocatorEIP(selEipLolicy string, nodeName string, egp eg
 
 			ipv6s, _ := utils.ParseIPRanges(constant.IPv6, ipv6Ranges)
 			freeIpv6s := utils.IPsDiffSet(ipv6s, useIpv6s, false)
-			rander := rand.New(rand.NewSource(time.Now().UnixNano()))
 
 			if len(freeIpv6s) == 0 {
 				for _, node := range eg.Status.NodeList {
@@ -714,6 +744,19 @@ func GetEipByIP(ipv4 string, eg egress.EgressGateway) egress.Eips {
 	return eipInfo
 }
 
+func GetNodeByIP(ipv4 string, eg egress.EgressGateway) string {
+	var nodeName string
+	for _, node := range eg.Status.NodeList {
+		for _, eip := range node.Eips {
+			if eip.IPv4 == ipv4 {
+				nodeName = node.Name
+			}
+		}
+	}
+
+	return nodeName
+}
+
 func setEipStatus(ipv4, ipv6 string, nodeName string, policy egress.Policy, nodeMap map[string]egress.EgressIPStatus) error {
 	eipStatus, ok := nodeMap[nodeName]
 	if !ok {
@@ -754,7 +797,7 @@ func mustMarshalJson(obj interface{}) string {
 	return string(raw)
 }
 
-func GetEIPStatusByNode(nodeName string, eg egress.EgressGateway) ([]egress.Policy, bool) {
+func GetPoliciesByNode(nodeName string, eg egress.EgressGateway) ([]egress.Policy, bool) {
 
 	var eipStatus egress.EgressIPStatus
 	var policies []egress.Policy
