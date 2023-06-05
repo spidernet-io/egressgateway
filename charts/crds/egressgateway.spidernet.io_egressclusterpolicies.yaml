@@ -148,6 +148,8 @@ spec:
                 type: string
               egressIP:
                 properties:
+                  allocatorPolicy:
+                    type: string
                   ipv4:
                     type: string
                   ipv6:

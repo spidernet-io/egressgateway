@@ -45,6 +45,8 @@ type EgressIP struct {
 	IPv6 string `json:"ipv6,omitempty"`
 	// +kubebuilder:validation:Optional
 	UseNodeIP bool `json:"useNodeIP,omitempty"`
+	// +kubebuilder:validation:Optional
+	AllocatorPolicy string `json:"allocatorPolicy,omitempty"`
 }
 
 type AppliedTo struct {
@@ -57,3 +59,10 @@ type AppliedTo struct {
 func init() {
 	SchemeBuilder.Register(&EgressPolicy{}, &EgressPolicyList{})
 }
+
+const (
+	// In the default mode, Ipv4DefaultEIP and Ipv6DefaultEIP are used if EIP is not specified
+	EipAllocatorDefault = "default"
+	// The unassigned EIP is preferred. If no EIP is available, select one at random
+	EipAllocatorRR = "rr"
+)

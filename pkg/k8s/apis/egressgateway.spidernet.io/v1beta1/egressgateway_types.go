@@ -42,7 +42,9 @@ type Ippools struct {
 	// +kubebuilder:validation:Optional
 	IPv6 []string `json:"ipv6,omitempty"`
 	// +kubebuilder:validation:Optional
-	Policy string `json:"policy,omitempty"`
+	Ipv4DefaultEIP string `json:"ipv4DefaultEIP,omitempty"`
+	// +kubebuilder:validation:Optional
+	Ipv6DefaultEIP string `json:"ipv6DefaultEIP,omitempty"`
 }
 
 type NodeSelector struct {

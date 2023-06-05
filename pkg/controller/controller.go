@@ -65,6 +65,7 @@ func New(cfg *config.Config, log *zap.Logger) (types.Service, error) {
 	mgr.GetWebhookServer().Port = cfg.WebhookPort
 	mgr.GetWebhookServer().CertDir = cfg.TLSCertDir
 	mgr.GetWebhookServer().Register("/validate", webhook.ValidateHook(mgr.GetClient(), cfg))
+	mgr.GetWebhookServer().Register("/mutate", webhook.MutateHook(mgr.GetClient(), cfg))
 
 	err = egressgateway.NewEgressGatewayController(mgr, log, cfg)
 	if err != nil {
