@@ -21,7 +21,7 @@ require (
 	github.com/mdlayher/ethernet v0.0.0-20220221185849-529eae5b6118
 	github.com/mdlayher/ndp v0.0.0-20200602162440-17ab9e3e5567
 	github.com/mitchellh/mapstructure v1.5.0
-	github.com/onsi/ginkgo/v2 v2.9.5
+	github.com/onsi/ginkgo/v2 v2.9.7
 	github.com/onsi/gomega v1.27.7
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus/client_golang v1.15.0
