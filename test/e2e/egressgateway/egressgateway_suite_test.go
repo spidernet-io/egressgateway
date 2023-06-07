@@ -4,10 +4,18 @@
 package egressgateway_test
 
 import (
+	"github.com/spidernet-io/egressgateway/test/e2e/common"
 	"testing"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+
+	"k8s.io/apimachinery/pkg/runtime"
+	"sigs.k8s.io/controller-runtime/pkg/client"
+
+	"github.com/spidernet-io/e2eframework/framework"
+
+	egressgatewayv1beta1 "github.com/spidernet-io/egressgateway/pkg/k8s/apis/egressgateway.spidernet.io/v1beta1"
 )
 
 func TestEgressgateway(t *testing.T) {
@@ -15,25 +23,26 @@ func TestEgressgateway(t *testing.T) {
 	RunSpecs(t, "Egressgateway Suite")
 }
 
-//
-//var (
-//	f        *framework.Framework
-//	err      error
-//	c        client.WithWatch
-//	allNodes []string
-//)
-//
-//var _ = BeforeSuite(func() {
-//	GinkgoRecover()
-//
-//	f, err = framework.NewFramework(GinkgoT(), []func(scheme *runtime.Scheme) error{egressgatewayv1.AddToScheme})
-//	Expect(err).NotTo(HaveOccurred(), "failed to NewFramework, details: %w", err)
-//	c = f.KClient
-//	allNodes = f.Info.KindNodeList
-//	Expect(allNodes).NotTo(BeEmpty())
-//	for _, node := range allNodes {
-//		getNode, err := f.GetNode(node)
-//		Expect(err).NotTo(HaveOccurred())
-//		GinkgoWriter.Printf("node: %v, nodeLabel: %v\n", getNode, getNode.Labels)
-//	}
-//})
+const gateway = "gateway"
+
+var (
+	f                  *framework.Framework
+	err                error
+	c                  client.WithWatch
+	allNodes           []string
+	enableV4, enableV6 bool
+)
+
+var _ = BeforeSuite(func() {
+	GinkgoRecover()
+
+	f, err = framework.NewFramework(GinkgoT(), []func(scheme *runtime.Scheme) error{egressgatewayv1beta1.AddToScheme})
+	Expect(err).NotTo(HaveOccurred(), "failed to NewFramework, details: %w", err)
+	c = f.KClient
+	allNodes = f.Info.KindNodeList
+	Expect(allNodes).NotTo(BeEmpty())
+
+	enableV4, enableV6, err = common.GetIPVersion(f)
+	Expect(err).NotTo(HaveOccurred())
+	GinkgoWriter.Printf("enableV4: %v, enableV6: %v\n", enableV4, enableV6)
+})

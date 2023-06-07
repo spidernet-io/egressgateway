@@ -55,11 +55,11 @@ var _ = Describe("Egressclusterinfo", Label("Egressclusterinfo"), func() {
 	It("create or update calico ippool", Serial, Label("I00002"), func() {
 		// CalicoIPPoolV6
 		if enableV6 {
-			createOrUpdateCalicoIPPoolAndCheck(f, "test-v6-", &calicoIPPools, common.RandomIPPoolV6Cidr, eci)
+			createOrUpdateCalicoIPPoolAndCheck(f, "test-v6-", "112", &calicoIPPools, common.RandomIPPoolV6Cidr, eci)
 		}
 		// CalicoIPPoolV4
 		if enableV4 {
-			createOrUpdateCalicoIPPoolAndCheck(f, "test-v4-", &calicoIPPools, common.RandomIPPoolV4Cidr, eci)
+			createOrUpdateCalicoIPPoolAndCheck(f, "test-v4-", "24", &calicoIPPools, common.RandomIPPoolV4Cidr, eci)
 		}
 	})
 })
@@ -136,14 +136,14 @@ func checkEgressIgnoreCIDRFields(eci *egressv1beta1.EgressClusterInfo) {
 	}
 }
 
-func createOrUpdateCalicoIPPoolAndCheck(f *framework.Framework, poolNamePre string, calicoIPPools *[]string, generateRandomCidr func() string, eci *egressv1beta1.EgressClusterInfo) {
+func createOrUpdateCalicoIPPoolAndCheck(f *framework.Framework, poolNamePre, cidrPrefix string, calicoIPPools *[]string, generateRandomCidr func(_ string) string, eci *egressv1beta1.EgressClusterInfo) {
 	// get EgressClusterInfo
 	GinkgoWriter.Printf("get EgressClusterInfo %s\n", egressClusterInfoName)
 	Expect(common.GetEgressClusterInfo(f, egressClusterInfoName, eci)).NotTo(HaveOccurred())
 
 	// CreateCalicoIPPool
 	GinkgoWriter.Println("create calico ippool")
-	ipPool := common.CreateCalicoIPPool(f, poolNamePre, generateRandomCidr)
+	ipPool := common.CreateCalicoIPPool(f, poolNamePre, cidrPrefix, generateRandomCidr)
 	Expect(ipPool).NotTo(BeNil())
 	*calicoIPPools = append(*calicoIPPools, ipPool.Name)
 
@@ -166,14 +166,14 @@ func createOrUpdateCalicoIPPoolAndCheck(f *framework.Framework, poolNamePre stri
 	if enableV4 {
 		// UpdateCalicoIPPoolCidr
 		GinkgoWriter.Println("UpdateCalicoIPPoolCidr v4")
-		updatedPool, err = common.UpdateCalicoIPPoolCidr(f, ipPool, common.RandomIPPoolV4Cidr)
+		updatedPool, err = common.UpdateCalicoIPPoolCidr(f, ipPool, "24", common.RandomIPPoolV4Cidr)
 		Expect(err).NotTo(HaveOccurred())
 	}
 
 	if enableV6 && !enableV4 {
 		// UpdateCalicoIPPoolCidr
 		GinkgoWriter.Println("UpdateCalicoIPPoolCidr v6")
-		updatedPool, err = common.UpdateCalicoIPPoolCidr(f, ipPool, common.RandomIPPoolV6Cidr)
+		updatedPool, err = common.UpdateCalicoIPPoolCidr(f, ipPool, "112", common.RandomIPPoolV6Cidr)
 		Expect(err).NotTo(HaveOccurred())
 	}
 

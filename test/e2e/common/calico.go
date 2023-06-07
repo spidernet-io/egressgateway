@@ -63,20 +63,20 @@ func GetCalicoIPPoolsCidr(f *framework.Framework) (v4Cidrs, v6Cidrs []string) {
 	return
 }
 
-func CreateCalicoIPPool(f *framework.Framework, namePrefix string, GenerateRandomCidr func() string, opts ...client.CreateOption) *calicov1.IPPool {
-	ippool := GenerateCalicoIPPoolYaml(namePrefix, GenerateRandomCidr)
+func CreateCalicoIPPool(f *framework.Framework, namePrefix, cidrPrefix string, GenerateRandomCidr func(_ string) string, opts ...client.CreateOption) *calicov1.IPPool {
+	ippool := GenerateCalicoIPPoolYaml(namePrefix, cidrPrefix, GenerateRandomCidr)
 	Expect(f.CreateResource(ippool, opts...)).NotTo(HaveOccurred())
 	return ippool
 }
 
-func GenerateCalicoIPPoolYaml(namePrefix string, GenerateRandomCidr func() string) *calicov1.IPPool {
+func GenerateCalicoIPPoolYaml(namePrefix, cidrPrefix string, GenerateRandomCidr func(prefix string) string) *calicov1.IPPool {
 	name := namePrefix + tools.GenerateRandomNumber(10000)
 	return &calicov1.IPPool{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: name,
 		},
 		Spec: calicov1.IPPoolSpec{
-			CIDR: GenerateRandomCidr(),
+			CIDR: GenerateRandomCidr(cidrPrefix),
 		},
 	}
 }
@@ -122,8 +122,8 @@ func WaitCalicoIPPoolDeleted(f *framework.Framework, name string, timeout time.D
 	}
 }
 
-func UpdateCalicoIPPoolCidr(f *framework.Framework, ippool *calicov1.IPPool, GenerateRandomCidr func() string, opts ...client.UpdateOption) (*calicov1.IPPool, error) {
-	ippool.Spec.CIDR = GenerateRandomCidr()
+func UpdateCalicoIPPoolCidr(f *framework.Framework, ippool *calicov1.IPPool, cidrPrefix string, GenerateRandomCidr func(_ string) string, opts ...client.UpdateOption) (*calicov1.IPPool, error) {
+	ippool.Spec.CIDR = GenerateRandomCidr(cidrPrefix)
 	err := f.UpdateResource(ippool, opts...)
 	if err != nil {
 		return nil, err

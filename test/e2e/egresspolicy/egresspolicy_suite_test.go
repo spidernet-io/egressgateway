@@ -4,9 +4,20 @@
 package egresspolicy_test
 
 import (
+	"github.com/spidernet-io/egressgateway/test/e2e/tools"
+	"testing"
+	"time"
+
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-	"testing"
+
+	v1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/runtime"
+	"sigs.k8s.io/controller-runtime/pkg/client"
+
+	"github.com/spidernet-io/e2eframework/framework"
+	egressgatewayv1beta1 "github.com/spidernet-io/egressgateway/pkg/k8s/apis/egressgateway.spidernet.io/v1beta1"
+	"github.com/spidernet-io/egressgateway/test/e2e/common"
 )
 
 func TestEgresspolicy(t *testing.T) {
@@ -14,53 +25,70 @@ func TestEgresspolicy(t *testing.T) {
 	RunSpecs(t, "Egresspolicy Suite")
 }
 
-//var (
-//	frame *framework.Framework
-//	err   error
-//	c     client.WithWatch
-//
-//	testV4, testV6                bool
-//	controlPlane, worker, worker2 string
-//
-//	delOpts client.DeleteOption
-//)
-//
-//var _ = BeforeSuite(func() {
-//	GinkgoRecover()
-//
-//	delOpts = client.GracePeriodSeconds(0)
-//
-//	frame, err = framework.NewFramework(GinkgoT(), []func(scheme *runtime.Scheme) error{egressgatewayv1.AddToScheme})
-//	Expect(err).NotTo(HaveOccurred(), "failed to NewFramework, details: %w", err)
-//	c = frame.KClient
-//
-//	// get ip version of cluster
-//	v4Enabled, v6Enabled, err := common.GetIPVersion(frame)
-//	Expect(err).NotTo(HaveOccurred())
-//	GinkgoWriter.Printf("v4Enabled: %v, v6Enabled: %v\n", v4Enabled, v6Enabled)
-//	if v4Enabled {
-//		testV4 = true
-//	}
-//	if v6Enabled && !v4Enabled {
-//		testV6 = true
-//	}
-//	GinkgoWriter.Printf("testV4: %v, testV6: %v\n", testV4, testV6)
-//
-//	// get all nodes
-//	nodes := frame.Info.KindNodeList
-//	GinkgoWriter.Printf("nodes: %v\n", nodes)
-//
-//	for _, node := range nodes {
-//		GinkgoWriter.Printf("node: %v\n", node)
-//
-//		switch {
-//		case strings.HasSuffix(node, "control-plane"):
-//			controlPlane = node
-//		case strings.HasSuffix(node, "worker"):
-//			worker = node
-//		case strings.HasSuffix(node, "worker2"):
-//			worker2 = node
-//		default:
-//		}
-//	}
-//})
+var (
+	f   *framework.Framework
+	err error
+	c   client.WithWatch
+
+	v4Enabled, v6Enabled bool
+	nodes                []string
+	nodeObjs             []*v1.Node
+
+	serverIPv4, serverIPv6 string
+	dst                    []string
+
+	delOpts client.DeleteOption
+)
+
+var _ = BeforeSuite(func() {
+	GinkgoRecover()
+
+	delOpts = client.GracePeriodSeconds(0)
+
+	f, err = framework.NewFramework(GinkgoT(), []func(scheme *runtime.Scheme) error{egressgatewayv1beta1.AddToScheme})
+	Expect(err).NotTo(HaveOccurred(), "failed to NewFramework, details: %w", err)
+	c = f.KClient
+
+	// IP version of cluster
+	v4Enabled, v6Enabled, err = common.GetIPVersion(f)
+	Expect(err).NotTo(HaveOccurred())
+	GinkgoWriter.Printf("v4Enabled: %v, v6Enabled: %v\n", v4Enabled, v6Enabled)
+
+	// all nodes
+	nodes = f.Info.KindNodeList
+	GinkgoWriter.Printf("nodes: %v\n", nodes)
+
+	for i, node := range nodes {
+		GinkgoWriter.Printf("%dTh node: %s\n", i, node)
+		getNode, err := f.GetNode(node)
+		Expect(err).NotTo(HaveOccurred())
+		nodeObjs = append(nodeObjs, getNode)
+	}
+	Expect(len(nodeObjs) > 2).To(BeTrue(), "test case needs at lest 3 nodes")
+
+	// net-tool server
+	dst = make([]string, 0)
+	if v4Enabled {
+		serverIpv4b, err := tools.GetContainerIPV4(common.Env[common.NETTOOLS_SERVER], time.Second*10)
+		Expect(err).NotTo(HaveOccurred())
+		serverIPv4 = string(serverIpv4b)
+		GinkgoWriter.Printf("serverIPv4: %v\n", serverIPv4)
+		Expect(serverIPv4).NotTo(BeEmpty())
+
+		dst = append(dst, serverIPv4+"/8")
+		GinkgoWriter.Printf("dst: %v\n", dst)
+	}
+
+	if v6Enabled {
+		serverIpv6b, err := tools.GetContainerIPV6(common.Env[common.NETTOOLS_SERVER], time.Second*10)
+		Expect(err).NotTo(HaveOccurred())
+		serverIPv6 = string(serverIpv6b)
+		Expect(serverIPv6).NotTo(BeEmpty())
+
+		dst = append(dst, serverIPv6+"/64")
+		GinkgoWriter.Printf("dst: %v\n", dst)
+
+		serverIPv6 = "[" + serverIPv6 + "]"
+		GinkgoWriter.Printf("serverIPv6: %v\n", serverIPv6)
+	}
+})

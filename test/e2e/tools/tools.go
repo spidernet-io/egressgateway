@@ -8,11 +8,13 @@ import (
 	"fmt"
 	"math/rand"
 	"os/exec"
+	"reflect"
 	"sort"
 	"strconv"
 	"strings"
 	"time"
 
+	"github.com/mohae/deepcopy"
 	"github.com/spidernet-io/egressgateway/test/e2e/err"
 )
 
@@ -32,8 +34,17 @@ func GenerateString(lenNum int, isHex bool) string {
 	return str.String()
 }
 
+func GenerateStringLower(lenNum int, isHex bool) string {
+	return strings.ToLower(GenerateString(lenNum, isHex))
+}
+
 func GenerateRandomNumber(max int) string {
 	return strconv.Itoa(r.Intn(max))
+}
+
+// GenerateRandomName generate random name by given prefix, used to e2e test
+func GenerateRandomName(prefix string) string {
+	return fmt.Sprintf("%s-%s-%s", prefix, GenerateStringLower(4, false), GenerateRandomNumber(1000))
 }
 
 // SubtractionSlice  a, b are inclusion relationship
@@ -59,17 +70,11 @@ func SubtractionSlice(a, b []string) []string {
 
 // IsSameSlice determine whether two slices are the same
 func IsSameSlice(a, b []string) bool {
-	sort.Strings(a)
-	sort.Strings(b)
-	if len(a) != len(b) {
-		return false
-	}
-	for i := range a {
-		if a[i] != b[i] {
-			return false
-		}
-	}
-	return true
+	ac := deepcopy.Copy(a).([]string)
+	bc := deepcopy.Copy(b).([]string)
+	sort.Strings(ac)
+	sort.Strings(bc)
+	return reflect.DeepEqual(ac, bc)
 }
 
 // ExecInKindNode exec command in kind node
