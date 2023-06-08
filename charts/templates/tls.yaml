@@ -96,6 +96,14 @@ webhooks:
           - UPDATE
         resources:
         - egressgateways
+      - apiGroups:
+          - egressgateway.spidernet.io
+        apiVersions:
+          - v1beta1
+        operations:
+          - DELETE
+        resources:
+        - egressclusterinfos
     sideEffects: None
 
 {{- if eq .Values.controller.tls.method "certmanager" -}}
