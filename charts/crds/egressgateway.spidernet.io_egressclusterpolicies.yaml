@@ -160,6 +160,18 @@ spec:
             required:
             - appliedTo
             type: object
+          status:
+            properties:
+              eip:
+                properties:
+                  ipv4:
+                    type: string
+                  ipv6:
+                    type: string
+                type: object
+              node:
+                type: string
+            type: object
         required:
         - metadata
         type: object
