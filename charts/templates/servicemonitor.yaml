@@ -1,24 +1,24 @@
-{{- if .Values.egressgatewayAgent.prometheus.serviceMonitor.install -}}
+{{- if .Values.agent.prometheus.serviceMonitor.install -}}
 apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
-  name: {{ .Values.egressgatewayAgent.name | trunc 63 | trimSuffix "-" }}
-  namespace: {{ default .Release.Namespace .Values.egressgatewayAgent.prometheus.serviceMonitor.namespace }}
+  name: {{ .Values.agent.name | trunc 63 | trimSuffix "-" }}
+  namespace: {{ default .Release.Namespace .Values.agent.prometheus.serviceMonitor.namespace }}
   labels:
     {{- include "project.egressgatewayAgent.labels" . | nindent 4 }}
     {{- if .Values.global.commonLabels }}
     {{- include "tplvalues.render" ( dict "value" .Values.global.commonLabels "context" $ ) | nindent 4 }}
     {{- end }}
-    {{- if .Values.egressgatewayAgent.prometheus.serviceMonitor.labels }}
-    {{- include "tplvalues.render" ( dict "value" .Values.egressgatewayAgent.prometheus.serviceMonitor.labels "context" $ ) | nindent 4 }}
+    {{- if .Values.agent.prometheus.serviceMonitor.labels }}
+    {{- include "tplvalues.render" ( dict "value" .Values.agent.prometheus.serviceMonitor.labels "context" $ ) | nindent 4 }}
     {{- end }}
-  {{- if or .Values.global.commonAnnotations .Values.egressgatewayAgent.prometheus.serviceMonitor.annotations }}
+  {{- if or .Values.global.commonAnnotations .Values.agent.prometheus.serviceMonitor.annotations }}
   annotations:
     {{- if .Values.global.commonAnnotations }}
     {{- include "tplvalues.render" ( dict "value" .Values.global.commonAnnotations "context" $ ) | nindent 4 }}
     {{- end }}
-    {{- if .Values.egressgatewayAgent.prometheus.serviceMonitor.annotations }}
-    {{- include "tplvalues.render" ( dict "value" .Values.egressgatewayAgent.prometheus.serviceMonitor.annotations "context" $ ) | nindent 4 }}
+    {{- if .Values.agent.prometheus.serviceMonitor.annotations }}
+    {{- include "tplvalues.render" ( dict "value" .Values.agent.prometheus.serviceMonitor.annotations "context" $ ) | nindent 4 }}
     {{- end }}
   {{- end }}
 spec:
@@ -35,32 +35,32 @@ spec:
       {{- if .Values.global.commonLabels }}
       {{- include "tplvalues.render" ( dict "value" .Values.global.commonLabels "context" $ ) | nindent 6 }}
       {{- end }}
-      {{- if .Values.egressgatewayAgent.podLabels }}
-      {{- include "tplvalues.render" ( dict "value" .Values.egressgatewayAgent.podLabels "context" $ ) | nindent 6 }}
+      {{- if .Values.agent.podLabels }}
+      {{- include "tplvalues.render" ( dict "value" .Values.agent.podLabels "context" $ ) | nindent 6 }}
       {{- end }}
   {{- end }}
 ---
-{{- if .Values.egressgatewayController.prometheus.serviceMonitor.install -}}
+{{- if .Values.controller.prometheus.serviceMonitor.install -}}
 apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
-  name: {{ .Values.egressgatewayController.name | trunc 63 | trimSuffix "-" }}
-  namespace: {{ default .Release.Namespace .Values.egressgatewayController.prometheus.serviceMonitor.namespace }}
+  name: {{ .Values.controller.name | trunc 63 | trimSuffix "-" }}
+  namespace: {{ default .Release.Namespace .Values.controller.prometheus.serviceMonitor.namespace }}
   labels:
     {{- include "project.egressgatewayController.labels" . | nindent 4 }}
     {{- if .Values.global.commonLabels }}
     {{- include "tplvalues.render" ( dict "value" .Values.global.commonLabels "context" $ ) | nindent 4 }}
     {{- end }}
-    {{- if .Values.egressgatewayController.prometheus.serviceMonitor.labels }}
-    {{- include "tplvalues.render" ( dict "value" .Values.egressgatewayController.prometheus.serviceMonitor.labels "context" $ ) | nindent 4 }}
+    {{- if .Values.controller.prometheus.serviceMonitor.labels }}
+    {{- include "tplvalues.render" ( dict "value" .Values.controller.prometheus.serviceMonitor.labels "context" $ ) | nindent 4 }}
     {{- end }}
-  {{- if or .Values.global.commonAnnotations .Values.egressgatewayController.prometheus.serviceMonitor.annotations }}
+  {{- if or .Values.global.commonAnnotations .Values.controller.prometheus.serviceMonitor.annotations }}
   annotations:
     {{- if .Values.global.commonAnnotations }}
     {{- include "tplvalues.render" ( dict "value" .Values.global.commonAnnotations "context" $ ) | nindent 4 }}
     {{- end }}
-    {{- if .Values.egressgatewayController.prometheus.serviceMonitor.annotations }}
-    {{- include "tplvalues.render" ( dict "value" .Values.egressgatewayController.prometheus.serviceMonitor.annotations "context" $ ) | nindent 4 }}
+    {{- if .Values.controller.prometheus.serviceMonitor.annotations }}
+    {{- include "tplvalues.render" ( dict "value" .Values.controller.prometheus.serviceMonitor.annotations "context" $ ) | nindent 4 }}
     {{- end }}
   {{- end }}
 spec:
@@ -77,7 +77,7 @@ spec:
       {{- if .Values.global.commonLabels }}
       {{- include "tplvalues.render" ( dict "value" .Values.global.commonLabels "context" $ ) | nindent 6 }}
       {{- end }}
-      {{- if .Values.egressgatewayController.podLabels }}
-      {{- include "tplvalues.render" ( dict "value" .Values.egressgatewayController.podLabels "context" $ ) | nindent 6 }}
+      {{- if .Values.controller.podLabels }}
+      {{- include "tplvalues.render" ( dict "value" .Values.controller.podLabels "context" $ ) | nindent 6 }}
       {{- end }}
 {{- end }}

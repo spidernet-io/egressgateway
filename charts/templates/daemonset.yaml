@@ -1,7 +1,7 @@
 apiVersion: apps/v1
 kind: DaemonSet
 metadata:
-  name:  {{ .Values.egressgatewayAgent.name | trunc 63 | trimSuffix "-" }}
+  name:  {{ .Values.agent.name | trunc 63 | trimSuffix "-" }}
   namespace: {{ .Release.Namespace }}
   labels:
     {{- include "project.egressgatewayAgent.labels" . | nindent 4 }}
@@ -16,19 +16,19 @@ spec:
   selector:
     matchLabels:
       {{- include "project.egressgatewayAgent.selectorLabels" . | nindent 6 }}
-  {{- with .Values.egressgatewayAgent.updateStrategy }}
+  {{- with .Values.agent.updateStrategy }}
   updateStrategy:
     {{- toYaml . | trim | nindent 4 }}
   {{- end }}
   template:
     metadata:
-      {{- if or .Values.egressgatewayAgent.podAnnotations .Values.global.commonAnnotations }}
+      {{- if or .Values.agent.podAnnotations .Values.global.commonAnnotations }}
       annotations:
         {{- if .Values.global.commonAnnotations }}
         {{- include "tplvalues.render" ( dict "value" .Values.global.commonAnnotations "context" $ ) | nindent 8 }}
         {{- end }}
-        {{- if .Values.egressgatewayAgent.podAnnotations }}
-        {{- include "tplvalues.render" ( dict "value" .Values.egressgatewayAgent.podAnnotations "context" $ ) | nindent 8 }}
+        {{- if .Values.agent.podAnnotations }}
+        {{- include "tplvalues.render" ( dict "value" .Values.agent.podAnnotations "context" $ ) | nindent 8 }}
         {{- end }}
         {{- end }}
       labels:
@@ -36,19 +36,19 @@ spec:
         {{- if .Values.global.commonLabels }}
         {{- include "tplvalues.render" ( dict "value" .Values.global.commonLabels "context" $ ) | nindent 8 }}
         {{- end }}
-        {{- if .Values.egressgatewayAgent.podLabels }}
-        {{- include "tplvalues.render" ( dict "value" .Values.egressgatewayAgent.podLabels "context" $ ) | nindent 8 }}
+        {{- if .Values.agent.podLabels }}
+        {{- include "tplvalues.render" ( dict "value" .Values.agent.podLabels "context" $ ) | nindent 8 }}
         {{- end }}
     spec:
-      {{- if .Values.egressgatewayAgent.image.imagePullSecrets }}
+      {{- if .Values.agent.image.imagePullSecrets }}
       imagePullSecrets:
-      {{- with .Values.egressgatewayAgent.image.imagePullSecrets }}
+      {{- with .Values.agent.image.imagePullSecrets }}
       {{- toYaml . | trim | nindent 6 }}
       {{- end }}
       {{- end }}
-      serviceAccountName: {{ .Values.egressgatewayAgent.name | trunc 63 | trimSuffix "-" }}
-      priorityClassName: {{ default "system-node-critical" .Values.egressgatewayAgent.priorityClassName }}
-      {{- if .Values.egressgatewayAgent.hostNetwork }}
+      serviceAccountName: {{ .Values.agent.name | trunc 63 | trimSuffix "-" }}
+      priorityClassName: {{ default "system-node-critical" .Values.agent.priorityClassName }}
+      {{- if .Values.agent.hostNetwork }}
       hostNetwork: true
       dnsPolicy: ClusterFirstWithHostNet
       {{- else }}
@@ -56,17 +56,17 @@ spec:
       dnsPolicy: ClusterFirst
       {{- end }}
       restartPolicy: Always
-      {{- with .Values.egressgatewayAgent.tolerations }}
+      {{- with .Values.agent.tolerations }}
       tolerations:
       {{- toYaml . | nindent 6 }}
       {{- end }}
-      {{- with .Values.egressgatewayAgent.nodeSelector }}
+      {{- with .Values.agent.nodeSelector }}
       nodeSelector:
       {{- toYaml . | nindent 8 }}
       {{- end }}
-      {{- if .Values.egressgatewayAgent.affinity }}
+      {{- if .Values.agent.affinity }}
       affinity:
-      {{- include "tplvalues.render" (dict "value" .Values.egressgatewayAgent.affinity "context" $) | nindent 6 }}
+      {{- include "tplvalues.render" (dict "value" .Values.agent.affinity "context" $) | nindent 6 }}
       {{- else }}
       affinity:
         nodeAffinity:
@@ -87,67 +87,67 @@ spec:
               {{- end }}
       {{- end }}
       containers:
-        - name: {{ .Values.egressgatewayAgent.name | trunc 63 | trimSuffix "-" }}
+        - name: {{ .Values.agent.name | trunc 63 | trimSuffix "-" }}
           securityContext:
             privileged: true
           image: {{ include "project.egressgatewayAgent.image" . | quote }}
-          imagePullPolicy: {{ .Values.egressgatewayAgent.image.pullPolicy }}
+          imagePullPolicy: {{ .Values.agent.image.pullPolicy }}
           command:
-            - {{ .Values.egressgatewayAgent.cmdBinName }}
-          {{- with .Values.egressgatewayAgent.extraArgs }}
+            - {{ .Values.agent.cmdBinName }}
+          {{- with .Values.agent.extraArgs }}
           {{- toYaml . | trim | nindent 8 }}
           {{- end }}
-          {{- if .Values.egressgatewayAgent.prometheus.enabled }}
+          {{- if .Values.agent.prometheus.enabled }}
           ports:
             - name: metrics
-              containerPort: {{ .Values.egressgatewayAgent.prometheus.port }}
+              containerPort: {{ .Values.agent.prometheus.port }}
               protocol: TCP
           {{- end }}
           {{- if semverCompare ">=1.20-0" .Capabilities.KubeVersion.Version }}
           startupProbe:
             httpGet:
               path: /readyz
-              port: {{ .Values.egressgatewayAgent.healthServer.port }}
+              port: {{ .Values.agent.healthServer.port }}
               scheme: HTTP
-            failureThreshold: {{ .Values.egressgatewayAgent.healthServer.startupProbe.failureThreshold }}
-            periodSeconds: {{ .Values.egressgatewayAgent.healthServer.startupProbe.periodSeconds }}
+            failureThreshold: {{ .Values.agent.healthServer.startupProbe.failureThreshold }}
+            periodSeconds: {{ .Values.agent.healthServer.startupProbe.periodSeconds }}
             successThreshold: 1
           {{- end }}
           livenessProbe:
             httpGet:
               path: /healthz
-              port: {{ .Values.egressgatewayAgent.healthServer.port }}
+              port: {{ .Values.agent.healthServer.port }}
               scheme: HTTP
             initialDelaySeconds: 60
-            periodSeconds: {{ .Values.egressgatewayAgent.healthServer.livenessProbe.periodSeconds }}
+            periodSeconds: {{ .Values.agent.healthServer.livenessProbe.periodSeconds }}
             successThreshold: 1
-            failureThreshold: {{ .Values.egressgatewayAgent.healthServer.livenessProbe.failureThreshold }}
+            failureThreshold: {{ .Values.agent.healthServer.livenessProbe.failureThreshold }}
             timeoutSeconds: 5
           readinessProbe:
             httpGet:
               path: /readyz
-              port: {{ .Values.egressgatewayAgent.healthServer.port }}
+              port: {{ .Values.agent.healthServer.port }}
               scheme: HTTP
             initialDelaySeconds: 5
-            periodSeconds: {{ .Values.egressgatewayAgent.healthServer.readinessProbe.periodSeconds }}
+            periodSeconds: {{ .Values.agent.healthServer.readinessProbe.periodSeconds }}
             successThreshold: 1
-            failureThreshold: {{ .Values.egressgatewayAgent.healthServer.readinessProbe.failureThreshold }}
+            failureThreshold: {{ .Values.agent.healthServer.readinessProbe.failureThreshold }}
             timeoutSeconds: 5
-          {{- with .Values.egressgatewayAgent.resources }}
+          {{- with .Values.agent.resources }}
           resources:
           {{- toYaml . | trim | nindent 12 }}
           {{- end }}
           env:
             - name: LOG_LEVEL
-              value: {{ .Values.egressgatewayAgent.debug.logLevel | quote }}
-            {{ if .Values.egressgatewayAgent.prometheus.enabled }}
+              value: {{ .Values.agent.debug.logLevel | quote }}
+            {{ if .Values.agent.prometheus.enabled }}
             - name: METRICS_BIND_ADDRESS
-              value: :{{ .Values.egressgatewayAgent.prometheus.port }}
+              value: :{{ .Values.agent.prometheus.port }}
             {{ end }}
             - name: HEALTH_PROBE_BIND_ADDRESS
-              value: :{{ .Values.egressgatewayAgent.healthServer.port }}
-            - name: GOPS_LISTEN_PORT
-              value: {{ .Values.egressgatewayAgent.debug.gopsPort | quote }}
+              value: :{{ .Values.agent.healthServer.port }}
+            - name: GOPS_PORT
+              value: {{ .Values.agent.debug.gopsPort | quote }}
             - name: CONFIGMAP_PATH
               value: "/tmp/config-map/conf.yml"
             - name: POD_NAME
@@ -163,10 +163,10 @@ spec:
                 fieldRef:
                   apiVersion: v1
                   fieldPath: spec.nodeName
-            {{- with .Values.egressgatewayAgent.extraEnv }}
+            {{- with .Values.agent.extraEnv }}
             {{- toYaml . | nindent 12 }}
             {{- end }}
-          {{- with .Values.egressgatewayAgent.securityContext }}
+          {{- with .Values.agent.securityContext }}
           securityContext:
           {{- toYaml . | nindent 10 }}
           {{- end }}
@@ -176,8 +176,8 @@ spec:
             - name: config-path
               mountPath: /tmp/config-map
               readOnly: true
-            {{- if .Values.egressgatewayAgent.extraVolumes }}
-            {{- include "tplvalues.render" ( dict "value" .Values.egressgatewayAgent.extraVolumeMounts "context" $ ) | nindent 12 }}
+            {{- if .Values.agent.extraVolumes }}
+            {{- include "tplvalues.render" ( dict "value" .Values.agent.extraVolumeMounts "context" $ ) | nindent 12 }}
             {{- end }}
       volumes:
         # To read the configuration from the config map
@@ -189,6 +189,6 @@ spec:
           configMap:
             defaultMode: 0400
             name: {{ .Values.global.configName }}
-      {{- if .Values.egressgatewayAgent.extraVolumeMounts }}
-      {{- include "tplvalues.render" ( dict "value" .Values.egressgatewayAgent.extraVolumeMounts "context" $ ) | nindent 6 }}
+      {{- if .Values.agent.extraVolumeMounts }}
+      {{- include "tplvalues.render" ( dict "value" .Values.agent.extraVolumeMounts "context" $ ) | nindent 6 }}
       {{- end }}
