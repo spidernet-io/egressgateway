@@ -60,47 +60,47 @@ feature:
     custom: []
 ## @section Egressgateway agent parameters
 ##
-egressgatewayAgent:
-  ## @param egressgatewayAgent.name The name of the egressgateway agent
+agent:
+  ## @param agent.name The name of the egressgateway agent
   name: "egressgateway-agent"
-  ## @param egressgatewayAgent.cmdBinName The binary name of egressgateway agent
+  ## @param agent.cmdBinName The binary name of egressgateway agent
   cmdBinName: "/usr/bin/agent"
-  ## @param egressgatewayAgent.hostNetwork Enable the host network mode for the egressgateway agent Pod.
+  ## @param agent.hostNetwork Enable the host network mode for the egressgateway agent Pod.
   hostNetwork: true
   image:
-    ## @param egressgatewayAgent.image.registry The image registry of egressgateway agent
+    ## @param agent.image.registry The image registry of egressgateway agent
     registry: ghcr.io
-    ## @param egressgatewayAgent.image.repository The image repository of egressgateway agent
+    ## @param agent.image.repository The image repository of egressgateway agent
     repository: spidernet-io/egressgateway-agent
-    ## @param egressgatewayAgent.image.pullPolicy The image pull policy of egressgateway agent
+    ## @param agent.image.pullPolicy The image pull policy of egressgateway agent
     pullPolicy: IfNotPresent
-    ## @param egressgatewayAgent.image.digest The image digest of egressgateway agent, which takes preference over tag
+    ## @param agent.image.digest The image digest of egressgateway agent, which takes preference over tag
     digest: ""
-    ## @param egressgatewayAgent.image.tag The image tag of egressgateway agent, overrides the image tag whose default is the chart appVersion.
+    ## @param agent.image.tag The image tag of egressgateway agent, overrides the image tag whose default is the chart appVersion.
     tag: "v0.1.0"
-    ## @param egressgatewayAgent.image.imagePullSecrets the image pull secrets of egressgateway agent
+    ## @param agent.image.imagePullSecrets the image pull secrets of egressgateway agent
     imagePullSecrets: []
     # - name: "image-pull-secret"
-  ## @skip egressgatewayAgent.nodeSelector.kubernetes.io/os
+  ## @skip agent.nodeSelector.kubernetes.io/os
   nodeSelector:
     kubernetes.io/os: linux
   serviceAccount:
-    ## @param egressgatewayAgent.serviceAccount.create Create the service account for the egressgateway agent
+    ## @param agent.serviceAccount.create Create the service account for the egressgateway agent
     create: true
-    ## @param egressgatewayAgent.serviceAccount.annotations The annotations of egressgateway agent service account
+    ## @param agent.serviceAccount.annotations The annotations of egressgateway agent service account
     annotations: {}
-  ## @skip egressgatewayAgent.updateStrategy.rollingUpdate.maxUnavailable
-  ## @skip egressgatewayAgent.updateStrategy.type
+  ## @skip agent.updateStrategy.rollingUpdate.maxUnavailable
+  ## @skip agent.updateStrategy.type
   updateStrategy:
     rollingUpdate:
       maxUnavailable: 2
     type: RollingUpdate
   service:
-    ## @param egressgatewayAgent.service.annotations The annotations for egressgateway agent service
+    ## @param agent.service.annotations The annotations for egressgateway agent service
     annotations: {}
-    ## @param egressgatewayAgent.service.type The type of Service for egressgateway agent
+    ## @param agent.service.type The type of Service for egressgateway agent
     type: ClusterIP
-  ## @skip egressgatewayAgent.tolerations
+  ## @skip agent.tolerations
   # --  Node tolerations
   # ref: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/
   tolerations:
@@ -133,131 +133,131 @@ egressgatewayAgent:
       effect: NoSchedule
     - key: CriticalAddonsOnly
       operator: Exists
-  ## @param egressgatewayAgent.priorityClassName The priority Class Name for egressgateway agent
+  ## @param agent.priorityClassName The priority Class Name for egressgateway agent
   priorityClassName: "system-node-critical"
-  ## @param egressgatewayAgent.affinity The affinity of egressgatewayAgent
+  ## @param agent.affinity The affinity of egressgateway agent
   affinity: {}
-  ## @param egressgatewayAgent.extraArgs The additional arguments of egressgatewayAgent container
+  ## @param agent.extraArgs The additional arguments of egressgateway agent container
   extraArgs: []
-  ## @param egressgatewayAgent.extraEnv The additional environment variables of egressgatewayAgent container
+  ## @param agent.extraEnv The additional environment variables of egressgateway agent container
   extraEnv: []
-  ## @param egressgatewayAgent.extraVolumes The additional volumes of egressgatewayAgent container
+  ## @param agent.extraVolumes The additional volumes of egressgateway agent container
   extraVolumes: []
-  ## @param egressgatewayAgent.extraVolumeMounts The additional hostPath mounts of egressgatewayAgent container
+  ## @param agent.extraVolumeMounts The additional hostPath mounts of egressgateway agent container
   extraVolumeMounts: []
-  ## @param egressgatewayAgent.podAnnotations The additional annotations of egressgatewayAgent pod
+  ## @param agent.podAnnotations The additional annotations of egressgateway agent pod
   podAnnotations: {}
-  ## @param egressgatewayAgent.podLabels The additional label of egressgatewayAgent pod
+  ## @param agent.podLabels The additional label of egressgateway agent pod
   podLabels: {}
   resources:
-    ## @param egressgatewayAgent.resources.limits.cpu The cpu limit of egressgatewayAgent pod
-    ## @param egressgatewayAgent.resources.limits.memory The memory limit of egressgatewayAgent pod
-    ## @param egressgatewayAgent.resources.requests.cpu The cpu requests of egressgatewayAgent pod
-    ## @param egressgatewayAgent.resources.requests.memory The memory requests of egressgatewayAgent pod
+    ## @param agent.resources.limits.cpu The cpu limit of egressgateway agent pod
+    ## @param agent.resources.limits.memory The memory limit of egressgateway agent pod
+    ## @param agent.resources.requests.cpu The cpu requests of egressgateway agent pod
+    ## @param agent.resources.requests.memory The memory requests of egressgateway agent pod
     limits:
       cpu: 500m
       memory: 512Mi
     requests:
       cpu: 100m
       memory: 128Mi
-  ## @param egressgatewayAgent.securityContext The security Context of egressgatewayAgent pod
+  ## @param agent.securityContext The security Context of egressgateway agent pod
   securityContext: {}
   # runAsUser: 0
 
   healthServer:
-    ## @param egressgatewayAgent.healthServer.port The http port for health checking of the egressgateway agent.
+    ## @param agent.healthServer.port The http port for health checking of the egressgateway agent.
     port: 5810
     startupProbe:
-      ## @param egressgatewayAgent.healthServer.startupProbe.failureThreshold The failure threshold of startup probe for egressgatewayAgent health checking
+      ## @param agent.healthServer.startupProbe.failureThreshold The failure threshold of startup probe for egressgateway agent health checking
       failureThreshold: 60
-      ## @param egressgatewayAgent.healthServer.startupProbe.periodSeconds The period seconds of startup probe for egressgatewayAgent health checking
+      ## @param agent.healthServer.startupProbe.periodSeconds The period seconds of startup probe for egressgateway agent health checking
       periodSeconds: 2
     livenessProbe:
-      ## @param egressgatewayAgent.healthServer.livenessProbe.failureThreshold The failure threshold of startup probe for egressgatewayAgent health checking
+      ## @param agent.healthServer.livenessProbe.failureThreshold The failure threshold of startup probe for egressgateway agent health checking
       failureThreshold: 6
-      ## @param egressgatewayAgent.healthServer.livenessProbe.periodSeconds The period seconds of startup probe for egressgatewayAgent health checking
+      ## @param agent.healthServer.livenessProbe.periodSeconds The period seconds of startup probe for egressgateway agent health checking
       periodSeconds: 10
     readinessProbe:
-      ## @param egressgatewayAgent.healthServer.readinessProbe.failureThreshold The failure threshold of startup probe for egressgatewayAgent health checking
+      ## @param agent.healthServer.readinessProbe.failureThreshold The failure threshold of startup probe for egressgateway agent health checking
       failureThreshold: 3
-      ## @param egressgatewayAgent.healthServer.readinessProbe.periodSeconds The period seconds of startup probe for egressgatewayAgent health checking
+      ## @param agent.healthServer.readinessProbe.periodSeconds The period seconds of startup probe for egressgateway agent health checking
       periodSeconds: 10
   prometheus:
-    ## @param egressgatewayAgent.prometheus.enabled Enable template agent to collect metrics
+    ## @param agent.prometheus.enabled Enable template agent to collect metrics
     enabled: false
-    ## @param egressgatewayAgent.prometheus.port The metrics port of template agent
+    ## @param agent.prometheus.port The metrics port of template agent
     port: 5811
     serviceMonitor:
-      ## @param egressgatewayAgent.prometheus.serviceMonitor.install Install ServiceMonitor for egressgateway. This requires the prometheus CRDs to be available
+      ## @param agent.prometheus.serviceMonitor.install Install ServiceMonitor for egressgateway. This requires the prometheus CRDs to be available
       install: false
-      ## @param egressgatewayAgent.prometheus.serviceMonitor.namespace The namespace of ServiceMonitor. Default to the namespace of helm instance
+      ## @param agent.prometheus.serviceMonitor.namespace The namespace of ServiceMonitor. Default to the namespace of helm instance
       namespace: ""
-      ## @param egressgatewayAgent.prometheus.serviceMonitor.annotations The additional annotations of egressgateway agent ServiceMonitor
+      ## @param agent.prometheus.serviceMonitor.annotations The additional annotations of egressgateway agent ServiceMonitor
       annotations: {}
-      ## @param egressgatewayAgent.prometheus.serviceMonitor.labels The additional label of egressgateway agent ServiceMonitor
+      ## @param agent.prometheus.serviceMonitor.labels The additional label of egressgateway agent ServiceMonitor
       labels: {}
     prometheusRule:
-      ## @param egressgatewayAgent.prometheus.prometheusRule.install Install prometheusRule for template agent. This requires the prometheus CRDs to be available
+      ## @param agent.prometheus.prometheusRule.install Install prometheusRule for template agent. This requires the prometheus CRDs to be available
       install: false
-      ## @param egressgatewayAgent.prometheus.prometheusRule.namespace The prometheus rule namespace. Default to the namespace of helm instance
+      ## @param agent.prometheus.prometheusRule.namespace The prometheus rule namespace. Default to the namespace of helm instance
       namespace: ""
-      ## @param egressgatewayAgent.prometheus.prometheusRule.annotations The additional annotations of egressgatewayAgent prometheusRule
+      ## @param agent.prometheus.prometheusRule.annotations The additional annotations of egressgateway agent prometheusRule
       annotations: {}
-      ## @param egressgatewayAgent.prometheus.prometheusRule.labels The additional label of egressgatewayAgent prometheusRule
+      ## @param agent.prometheus.prometheusRule.labels The additional label of egressgateway agent prometheusRule
       labels: {}
     grafanaDashboard:
-      ## @param egressgatewayAgent.prometheus.grafanaDashboard.install To install the Grafana dashboard for the template agent, the availability of Prometheus CRDs is required.
+      ## @param agent.prometheus.grafanaDashboard.install To install the Grafana dashboard for the egress gateway agent, the availability of Prometheus CRDs is required.
       install: false
-      ## @param egressgatewayAgent.prometheus.grafanaDashboard.namespace The grafana dashboard namespace. Default to the namespace of helm instance
+      ## @param agent.prometheus.grafanaDashboard.namespace The grafana dashboard namespace. Default to the namespace of helm instance
       namespace: ""
-      ## @param egressgatewayAgent.prometheus.grafanaDashboard.annotations The additional annotations of egressgatewayAgent grafanaDashboard
+      ## @param agent.prometheus.grafanaDashboard.annotations The additional annotations of egressgateway agent grafanaDashboard
       annotations: {}
-      ## @param egressgatewayAgent.prometheus.grafanaDashboard.labels The additional label of egressgatewayAgent grafanaDashboard
+      ## @param agent.prometheus.grafanaDashboard.labels The additional label of egressgateway agent grafanaDashboard
       labels: {}
   debug:
-    ## @param egressgatewayAgent.debug.logLevel The log level of template agent [debug, info, warn, error, fatal, panic]
+    ## @param agent.debug.logLevel The log level of egress gateway agent [`debug`, `info`, `warn`, `error`, `fatal`, `panic`]
     logLevel: "info"
-    ## @param egressgatewayAgent.debug.gopsPort The gops port of template agent
+    ## @param agent.debug.gopsPort The port used by gops tool for process monitoring and performance tuning.
     gopsPort: 5812
 ## @section Egressgateway controller parameters
 ##
-egressgatewayController:
-  ## @param egressgatewayController.name The egressgateway controller name
+controller:
+  ## @param controller.name The egressgateway controller name
   name: "egressgateway-controller"
-  ## @param egressgatewayController.replicas The replicas number of egressgateway controller
+  ## @param controller.replicas The replicas number of egressgateway controller
   replicas: 1
-  ## @param egressgatewayController.cmdBinName The binary name of egressgateway controller
+  ## @param controller.cmdBinName The binary name of egressgateway controller
   cmdBinName: "/usr/bin/controller"
-  ## @param egressgatewayController.hostNetwork Enable host network mode of egressgateway controller pod. Notice, if no CNI available before template installation, must enable this
+  ## @param controller.hostNetwork Enable host network mode of egressgateway controller pod. Notice, if no CNI available before template installation, must enable this
   hostNetwork: false
   image:
-    ## @param egressgatewayController.image.registry The image registry of egressgateway controller
+    ## @param controller.image.registry The image registry of egressgateway controller
     registry: ghcr.io
-    ## @param egressgatewayController.image.repository The image repository of egressgateway controller
+    ## @param controller.image.repository The image repository of egressgateway controller
     repository: spidernet-io/egressgateway-controller
-    ## @param egressgatewayController.image.pullPolicy The image pullPolicy of egressgateway controller
+    ## @param controller.image.pullPolicy The image pullPolicy of egressgateway controller
     pullPolicy: IfNotPresent
-    ## @param egressgatewayController.image.digest The image digest of egressgatewayController, which takes preference over tag
+    ## @param controller.image.digest The image digest of egressgatewayController, which takes preference over tag
     digest: ""
-    ## @param egressgatewayController.image.tag The image tag of egressgatewayController, overrides the image tag whose default is the chart appVersion.
+    ## @param controller.image.tag The image tag of egressgateway controller, overrides the image tag whose default is the chart appVersion.
     tag: "v0.1.0"
-    ## @param egressgatewayController.image.imagePullSecrets The image pull secrets of egressgateway controller
+    ## @param controller.image.imagePullSecrets The image pull secrets of egressgateway controller
     imagePullSecrets: []
     # - name: "image-pull-secret"
-  ## @skip egressgatewayController.nodeSelector.kubernetes.io/os
+  ## @skip controller.nodeSelector.kubernetes.io/os
   nodeSelector:
     kubernetes.io/os: linux
   serviceAccount:
-    ## @param egressgatewayController.serviceAccount.create Create the service account for the egressgatewayController
+    ## @param controller.serviceAccount.create Create the service account for the egressgateway controller
     create: true
-    ## @param egressgatewayController.serviceAccount.annotations The annotations of egressgatewayController service account
+    ## @param controller.serviceAccount.annotations The annotations of egressgateway controller service account
     annotations: {}
   service:
-    ## @param egressgatewayController.service.annotations The annotations for egressgatewayController service
+    ## @param controller.service.annotations The annotations for egressgateway controller service
     annotations: {}
-    ## @param egressgatewayController.service.type The type for egressgatewayController service
+    ## @param controller.service.type The type for egressgateway controller service
     type: ClusterIP
-  ## @skip egressgatewayController.tolerations
+  ## @skip controller.tolerations
   tolerations:
     - effect: NoExecute
       key: node.kubernetes.io/not-ready
@@ -288,39 +288,39 @@ egressgatewayController:
       effect: NoSchedule
     - key: CriticalAddonsOnly
       operator: Exists
-  ## @param egressgatewayController.priorityClassName The priority class name for egressgateway controller
+  ## @param controller.priorityClassName The priority class name for egressgateway controller
   priorityClassName: "system-node-critical"
-  ## @param egressgatewayController.affinity The affinity of egressgateway controller
+  ## @param controller.affinity The affinity of egressgateway controller
   affinity: {}
-  ## @param egressgatewayController.extraArgs The additional arguments of egressgateway controller container
+  ## @param controller.extraArgs The additional arguments of egressgateway controller container
   extraArgs: []
-  ## @param egressgatewayController.extraEnv The additional environment variables of egressgateway controller container
+  ## @param controller.extraEnv The additional environment variables of egressgateway controller container
   extraEnv: []
-  ## @param egressgatewayController.extraVolumes The additional volumes of egressgateway controller container
+  ## @param controller.extraVolumes The additional volumes of egressgateway controller container
   extraVolumes: []
   # - name: test-val
   #   mountPath: /host/tmp
 
-  ## @param egressgatewayController.extraVolumeMounts The additional hostPath mounts of egressgatewayController container
+  ## @param controller.extraVolumeMounts The additional hostPath mounts of egressgateway controller container
   extraVolumeMounts: []
   # - name: test-val
   #   mountPath: /tmp
 
-  ## @param egressgatewayController.podAnnotations The additional annotations of egressgateway controller pod
+  ## @param controller.podAnnotations The additional annotations of egressgateway controller pod
   podAnnotations: {}
   # test: 100
 
-  ## @param egressgatewayController.podLabels The additional label of egressgateway controller pod
+  ## @param controller.podLabels The additional label of egressgateway controller pod
   podLabels: {}
-  ## @param egressgatewayController.securityContext The security Context of egressgateway controller pod
+  ## @param controller.securityContext The security Context of egressgateway controller pod
   securityContext: {}
   # runAsUser: 0
 
   resources:
-    ## @param egressgatewayController.resources.limits.cpu The cpu limit of egressgatewayController pod
-    ## @param egressgatewayController.resources.limits.memory The memory limit of egressgatewayController pod
-    ## @param egressgatewayController.resources.requests.cpu The cpu requests of egressgatewayController pod
-    ## @param egressgatewayController.resources.requests.memory The memory requests of egressgatewayController pod
+    ## @param controller.resources.limits.cpu The cpu limit of egressgateway controller pod
+    ## @param controller.resources.limits.memory The memory limit of egressgateway controller pod
+    ## @param controller.resources.requests.cpu The cpu requests of egressgateway controller pod
+    ## @param controller.resources.requests.memory The memory requests of egressgateway controller pod
     limits:
       cpu: 500m
       memory: 512Mi
@@ -328,103 +328,103 @@ egressgatewayController:
       cpu: 100m
       memory: 128Mi
   podDisruptionBudget:
-    ## @param egressgatewayController.podDisruptionBudget.enabled Enable podDisruptionBudget for egressgatewayController pod
+    ## @param controller.podDisruptionBudget.enabled Enable podDisruptionBudget for egressgateway controller pod
     enabled: false
-    ## @param egressgatewayController.podDisruptionBudget.minAvailable Minimum number/percentage of pods that should remain scheduled.
+    ## @param controller.podDisruptionBudget.minAvailable Minimum number/percentage of pods that should remain scheduled.
     minAvailable: 1
   healthServer:
-    ## @param egressgatewayController.healthServer.port The http Port for egressgatewayController, for health checking and http service
+    ## @param controller.healthServer.port The http Port for egressgatewayController, for health checking and http service
     port: 5820
     startupProbe:
-      ## @param egressgatewayController.healthServer.startupProbe.failureThreshold The failure threshold of startup probe for egressgatewayController health checking
+      ## @param controller.healthServer.startupProbe.failureThreshold The failure threshold of startup probe for egressgateway controller health checking
       failureThreshold: 30
-      ## @param egressgatewayController.healthServer.startupProbe.periodSeconds The period seconds of startup probe for egressgatewayController health checking
+      ## @param controller.healthServer.startupProbe.periodSeconds The period seconds of startup probe for egressgatewayController health checking
       periodSeconds: 2
     livenessProbe:
-      ## @param egressgatewayController.healthServer.livenessProbe.failureThreshold The failure threshold of startup probe for egressgatewayController health checking
+      ## @param controller.healthServer.livenessProbe.failureThreshold The failure threshold of startup probe for egressgateway controller health checking
       failureThreshold: 6
-      ## @param egressgatewayController.healthServer.livenessProbe.periodSeconds The period seconds of startup probe for egressgatewayController health checking
+      ## @param controller.healthServer.livenessProbe.periodSeconds The period seconds of startup probe for egressgatewayController health checking
       periodSeconds: 10
     readinessProbe:
-      ## @param egressgatewayController.healthServer.readinessProbe.failureThreshold The failure threshold of startup probe for egressgatewayController health checking
+      ## @param controller.healthServer.readinessProbe.failureThreshold The failure threshold of startup probe for egressgateway controller health checking
       failureThreshold: 3
-      ## @param egressgatewayController.healthServer.readinessProbe.periodSeconds The period seconds of startup probe for egressgatewayController health checking
+      ## @param controller.healthServer.readinessProbe.periodSeconds The period seconds of startup probe for egressgateway controller health checking
       periodSeconds: 10
-  ## @param egressgatewayController.webhookPort The http port for egressgatewayController webhook
+  ## @param controller.webhookPort The http port for egressgatewayController webhook
   webhookPort: 5822
   prometheus:
-    ## @param egressgatewayController.prometheus.enabled Enable template Controller to collect metrics
+    ## @param controller.prometheus.enabled Enable egress gateway controller to collect metrics
     enabled: false
-    ## @param egressgatewayController.prometheus.port The metrics port of template Controller
+    ## @param controller.prometheus.port The metrics port of egress gateway controller
     port: 5821
     serviceMonitor:
-      ## @param egressgatewayController.prometheus.serviceMonitor.install Install ServiceMonitor for template agent. This requires the prometheus CRDs to be available
+      ## @param controller.prometheus.serviceMonitor.install Install ServiceMonitor for egress gateway agent. This requires the prometheus CRDs to be available
       install: false
-      ## @param egressgatewayController.prometheus.serviceMonitor.namespace The serviceMonitor namespace. Default to the namespace of helm instance
+      ## @param controller.prometheus.serviceMonitor.namespace The serviceMonitor namespace. Default to the namespace of helm instance
       namespace: ""
-      ## @param egressgatewayController.prometheus.serviceMonitor.annotations The additional annotations of egressgatewayController serviceMonitor
+      ## @param controller.prometheus.serviceMonitor.annotations The additional annotations of egressgatewayController serviceMonitor
       annotations: {}
-      ## @param egressgatewayController.prometheus.serviceMonitor.labels The additional label of egressgatewayController serviceMonitor
+      ## @param controller.prometheus.serviceMonitor.labels The additional label of egressgatewayController serviceMonitor
       labels: {}
     prometheusRule:
-      ## @param egressgatewayController.prometheus.prometheusRule.install Install prometheusRule for template agent. This requires the prometheus CRDs to be available
+      ## @param controller.prometheus.prometheusRule.install Install prometheusRule for egress gateway agent. This requires the prometheus CRDs to be available
       install: false
-      ## @param egressgatewayController.prometheus.prometheusRule.namespace The prometheusRule namespace. Default to the namespace of helm instance
+      ## @param controller.prometheus.prometheusRule.namespace The prometheusRule namespace. Default to the namespace of helm instance
       namespace: ""
-      ## @param egressgatewayController.prometheus.prometheusRule.annotations The additional annotations of egressgatewayController prometheus rule
+      ## @param controller.prometheus.prometheusRule.annotations The additional annotations of egressgatewayController prometheus rule
       annotations: {}
-      ## @param egressgatewayController.prometheus.prometheusRule.labels The additional label of egressgateway controller prometheus rule
+      ## @param controller.prometheus.prometheusRule.labels The additional label of egressgateway controller prometheus rule
       labels: {}
     grafanaDashboard:
-      ## @param egressgatewayController.prometheus.grafanaDashboard.install Install grafana dashboard for template agent. This requires the prometheus CRDs to be available
+      ## @param controller.prometheus.grafanaDashboard.install Install grafana dashboard for egress gateway agent. This requires the prometheus CRDs to be available
       install: false
-      ## @param egressgatewayController.prometheus.grafanaDashboard.namespace The grafanaDashboard namespace. Default to the namespace of helm instance
+      ## @param controller.prometheus.grafanaDashboard.namespace The grafanaDashboard namespace. Default to the namespace of helm instance
       namespace: ""
-      ## @param egressgatewayController.prometheus.grafanaDashboard.annotations The additional annotations of egressgatewayController grafanaDashboard
+      ## @param controller.prometheus.grafanaDashboard.annotations The additional annotations of egressgatewayController grafanaDashboard
       annotations: {}
-      ## @param egressgatewayController.prometheus.grafanaDashboard.labels The additional label of egressgatewayController grafanaDashboard
+      ## @param controller.prometheus.grafanaDashboard.labels The additional label of egressgatewayController grafanaDashboard
       labels: {}
   debug:
-    ## @param egressgatewayController.debug.logLevel The log level of template Controller [debug, info, warn, error, fatal, panic]
+    ## @param controller.debug.logLevel The log level of egress gateway controller [`debug`, `info`, `warn`, `error`, `fatal`, `panic`]
     logLevel: "info"
-    ## @param egressgatewayController.debug.gopsPort The gops port of template Controller
+    ## @param controller.debug.gopsPort The port used by gops tool for process monitoring and performance tuning.
     gopsPort: 5824
   ## TLS configuration for webhook
   tls:
-    ## @param egressgatewayController.tls.method the method for generating TLS certificates. [ provided , certmanager , auto]
+    ## @param controller.tls.method the method for generating TLS certificates. [`provided`, `certmanager`, `auto`]
     ## - provided:     provide all certificates by helm options
     ## - certmanager:  This method use cert-manager to generate & rotate certificates.
     ## - auto:         Auto generate cert.
     method: auto
-    ## @param egressgatewayController.tls.secretName The secret name for storing TLS certificates
-    secretName: "template-controller-server-certs"
+    ## @param controller.tls.secretName The secret name for storing TLS certificates
+    secretName: "egressgateway-controller-server-certs"
     ## for certmanager method
     certmanager:
-      ## @param egressgatewayController.tls.certmanager.certValidityDuration Generated certificates validity duration in days for 'certmanager' method
+      ## @param controller.tls.certmanager.certValidityDuration Generated certificates validity duration in days for 'certmanager' method
       certValidityDuration: 365
-      ## @param egressgatewayController.tls.certmanager.issuerName Issuer name of cert manager 'certmanager'. If not specified, a CA issuer will be created.
+      ## @param controller.tls.certmanager.issuerName Issuer name of cert manager 'certmanager'. If not specified, a CA issuer will be created.
       issuerName: ""
-      ## @param egressgatewayController.tls.certmanager.extraDnsNames Extra DNS names added to certificate when it's auto generated
+      ## @param controller.tls.certmanager.extraDnsNames Extra DNS names added to certificate when it's auto generated
       extraDnsNames: []
-      ## @param egressgatewayController.tls.certmanager.extraIPAddresses Extra IP addresses added to certificate when it's auto generated
+      ## @param controller.tls.certmanager.extraIPAddresses Extra IP addresses added to certificate when it's auto generated
       extraIPAddresses: []
     ## for provided method
     provided:
-      ## @param egressgatewayController.tls.provided.tlsCert Encoded tls certificate for provided method
-      ## @param egressgatewayController.tls.provided.tlsKey Encoded tls key for provided method
-      ## @param egressgatewayController.tls.provided.tlsCa Encoded tls CA for provided method
+      ## @param controller.tls.provided.tlsCert Encoded tls certificate for provided method
+      ## @param controller.tls.provided.tlsKey Encoded tls key for provided method
+      ## @param controller.tls.provided.tlsCa Encoded tls CA for provided method
       tlsCert: ""
       tlsKey: ""
       tlsCa: ""
     ## for auto method
     auto:
-      ## @param egressgatewayController.tls.auto.caExpiration CA expiration for auto method
+      ## @param controller.tls.auto.caExpiration CA expiration for auto method
       # in day, default 200 years
       caExpiration: '73000'
-      ## @param egressgatewayController.tls.auto.certExpiration Server cert expiration for auto method
+      ## @param controller.tls.auto.certExpiration Server cert expiration for auto method
       # in day, default 200 years
       certExpiration: '73000'
-      ## @param egressgatewayController.tls.auto.extraIpAddresses Extra IP addresses of server certificate for auto method
+      ## @param controller.tls.auto.extraIpAddresses Extra IP addresses of server certificate for auto method
       extraIpAddresses: []
-      ## @param egressgatewayController.tls.auto.extraDnsNames Extra DNS names of server cert for auto method
+      ## @param controller.tls.auto.extraDnsNames Extra DNS names of server cert for auto method
       extraDnsNames: []

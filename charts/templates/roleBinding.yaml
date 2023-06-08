@@ -8,8 +8,8 @@ roleRef:
   name: {{ include "project.name" . }}
 subjects:
   - kind: ServiceAccount
-    name: {{ .Values.egressgatewayAgent.name | trunc 63 | trimSuffix "-" }}
+    name: {{ .Values.agent.name | trunc 63 | trimSuffix "-" }}
     namespace: {{ .Release.Namespace }}
   - kind: ServiceAccount
-    name: {{ .Values.egressgatewayController.name | trunc 63 | trimSuffix "-" }}
+    name: {{ .Values.controller.name | trunc 63 | trimSuffix "-" }}
     namespace: {{ .Release.Namespace }}

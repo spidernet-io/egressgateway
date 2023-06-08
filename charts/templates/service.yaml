@@ -1,16 +1,16 @@
-{{- if .Values.egressgatewayAgent.prometheus.enabled }}
+{{- if .Values.agent.prometheus.enabled }}
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ .Values.egressgatewayAgent.name | trunc 63 | trimSuffix "-" }}
+  name: {{ .Values.agent.name | trunc 63 | trimSuffix "-" }}
   namespace: {{ .Release.Namespace | quote }}
-  {{- if or .Values.global.commonAnnotations .Values.egressgatewayAgent.service.annotations }}
+  {{- if or .Values.global.commonAnnotations .Values.agent.service.annotations }}
   annotations:
     {{- if .Values.global.commonAnnotations }}
     {{- include "tplvalues.render" ( dict "value" .Values.global.commonAnnotations "context" $ ) | nindent 4 }}
     {{- end }}
-    {{- if .Values.egressgatewayAgent.service.annotations }}
-    {{- include "tplvalues.render" ( dict "value" .Values.egressgatewayAgent.service.annotations "context" $ ) | nindent 4 }}
+    {{- if .Values.agent.service.annotations }}
+    {{- include "tplvalues.render" ( dict "value" .Values.agent.service.annotations "context" $ ) | nindent 4 }}
     {{- end }}
   {{- end }}
   labels:
@@ -19,10 +19,10 @@ metadata:
     {{- end }}
     {{- include "project.egressgatewayAgent.labels" . | nindent 4 }}
 spec:
-  type: {{ .Values.egressgatewayAgent.service.type }}
+  type: {{ .Values.agent.service.type }}
   ports:
     - name: metrics
-      port: {{ .Values.egressgatewayAgent.prometheus.port }}
+      port: {{ .Values.agent.prometheus.port }}
       targetPort: metrics
       protocol: TCP
   selector:
@@ -32,15 +32,15 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ .Values.egressgatewayController.name | trunc 63 | trimSuffix "-" }}
+  name: {{ .Values.controller.name | trunc 63 | trimSuffix "-" }}
   namespace: {{ .Release.Namespace | quote }}
-  {{- if or .Values.global.commonAnnotations .Values.egressgatewayController.service.annotations }}
+  {{- if or .Values.global.commonAnnotations .Values.controller.service.annotations }}
   annotations:
     {{- if .Values.global.commonAnnotations }}
     {{- include "tplvalues.render" ( dict "value" .Values.global.commonAnnotations "context" $ ) | nindent 4 }}
     {{- end }}
-    {{- if .Values.egressgatewayController.service.annotations }}
-    {{- include "tplvalues.render" ( dict "value" .Values.egressgatewayController.service.annotations "context" $ ) | nindent 4 }}
+    {{- if .Values.controller.service.annotations }}
+    {{- include "tplvalues.render" ( dict "value" .Values.controller.service.annotations "context" $ ) | nindent 4 }}
     {{- end }}
   {{- end }}
   labels:
@@ -49,16 +49,16 @@ metadata:
     {{- end }}
     {{- include "project.egressgatewayController.labels" . | nindent 4 }}
 spec:
-  type: {{ .Values.egressgatewayController.service.type }}
+  type: {{ .Values.controller.service.type }}
   ports:
-    {{- if .Values.egressgatewayController.prometheus.enabled }}
+    {{- if .Values.controller.prometheus.enabled }}
     - name: metrics
-      port: {{ .Values.egressgatewayController.prometheus.port }}
+      port: {{ .Values.controller.prometheus.port }}
       targetPort: metrics
       protocol: TCP
     {{- end }}
     - name: webhook
-      port: {{ .Values.egressgatewayController.webhookPort }}
+      port: {{ .Values.controller.webhookPort }}
       targetPort: webhook
       protocol: TCP
   selector:

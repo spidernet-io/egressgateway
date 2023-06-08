@@ -42,7 +42,7 @@ egressgatewayAgent Selector labels
 {{- define "project.egressgatewayAgent.selectorLabels" -}}
 app.kubernetes.io/name: {{ include "project.name" . }}
 app.kubernetes.io/instance: {{ .Release.Name }}
-app.kubernetes.io/component: {{ .Values.egressgatewayAgent.name | trunc 63 | trimSuffix "-" }}
+app.kubernetes.io/component: {{ .Values.agent.name | trunc 63 | trimSuffix "-" }}
 {{- end }}
 
 {{/*
@@ -51,7 +51,7 @@ egressgatewayAgent Selector labels
 {{- define "project.egressgatewayController.selectorLabels" -}}
 app.kubernetes.io/name: {{ include "project.name" . }}
 app.kubernetes.io/instance: {{ .Release.Name }}
-app.kubernetes.io/component: {{ .Values.egressgatewayController.name | trunc 63 | trimSuffix "-" }}
+app.kubernetes.io/component: {{ .Values.controller.name | trunc 63 | trimSuffix "-" }}
 {{- end }}
 
 
@@ -110,8 +110,8 @@ Return the appropriate apiVersion for RBAC resources.
 return the egressgatewayAgent image
 */}}
 {{- define "project.egressgatewayAgent.image" -}}
-{{- $registryName := .Values.egressgatewayAgent.image.registry -}}
-{{- $repositoryName := .Values.egressgatewayAgent.image.repository -}}
+{{- $registryName := .Values.agent.image.registry -}}
+{{- $repositoryName := .Values.agent.image.repository -}}
 {{- if .Values.global.imageRegistryOverride }}
     {{- printf "%s/%s" .Values.global.imageRegistryOverride $repositoryName -}}
 {{ else if $registryName }}
@@ -119,12 +119,12 @@ return the egressgatewayAgent image
 {{- else -}}
     {{- printf "%s" $repositoryName -}}
 {{- end -}}
-{{- if .Values.egressgatewayAgent.image.digest }}
-    {{- print "@" .Values.egressgatewayAgent.image.digest -}}
+{{- if .Values.agent.image.digest }}
+    {{- print "@" .Values.agent.image.digest -}}
 {{- else if .Values.global.imageTagOverride -}}
     {{- printf ":%s" .Values.global.imageTagOverride -}}
-{{- else if .Values.egressgatewayAgent.image.tag -}}
-    {{- printf ":%s" .Values.egressgatewayAgent.image.tag -}}
+{{- else if .Values.agent.image.tag -}}
+    {{- printf ":%s" .Values.agent.image.tag -}}
 {{- else -}}
     {{- printf ":v%s" .Chart.AppVersion -}}
 {{- end -}}
@@ -135,8 +135,8 @@ return the egressgatewayAgent image
 return the egressgatewayController image
 */}}
 {{- define "project.egressgatewayController.image" -}}
-{{- $registryName := .Values.egressgatewayController.image.registry -}}
-{{- $repositoryName := .Values.egressgatewayController.image.repository -}}
+{{- $registryName := .Values.controller.image.registry -}}
+{{- $repositoryName := .Values.controller.image.repository -}}
 {{- if .Values.global.imageRegistryOverride }}
     {{- printf "%s/%s" .Values.global.imageRegistryOverride $repositoryName -}}
 {{ else if $registryName }}
@@ -144,12 +144,12 @@ return the egressgatewayController image
 {{- else -}}
     {{- printf "%s" $repositoryName -}}
 {{- end -}}
-{{- if .Values.egressgatewayController.image.digest }}
-    {{- print "@" .Values.egressgatewayController.image.digest -}}
+{{- if .Values.controller.image.digest }}
+    {{- print "@" .Values.controller.image.digest -}}
 {{- else if .Values.global.imageTagOverride -}}
     {{- printf ":%s" .Values.global.imageTagOverride -}}
-{{- else if .Values.egressgatewayController.image.tag -}}
-    {{- printf ":%s" .Values.egressgatewayController.image.tag -}}
+{{- else if .Values.controller.image.tag -}}
+    {{- printf ":%s" .Values.controller.image.tag -}}
 {{- else -}}
     {{- printf ":v%s" .Chart.AppVersion -}}
 {{- end -}}
@@ -160,6 +160,6 @@ return the egressgatewayController image
 generate the CA cert
 */}}
 {{- define "generate-ca-certs" }}
-    {{- $ca := genCA "spidernet.io" (.Values.egressgatewayController.tls.auto.caExpiration | int) -}}
+    {{- $ca := genCA "spidernet.io" (.Values.controller.tls.auto.caExpiration | int) -}}
     {{- $_ := set . "ca" $ca -}}
 {{- end }}
