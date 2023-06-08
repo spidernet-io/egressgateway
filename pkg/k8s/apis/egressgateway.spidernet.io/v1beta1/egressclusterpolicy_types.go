@@ -26,7 +26,8 @@ type EgressClusterPolicy struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata"`
 
-	Spec EgressClusterPolicySpec `json:"spec,omitempty"`
+	Spec   EgressClusterPolicySpec `json:"spec,omitempty"`
+	Status EgressPolicyStatus      `json:"status,omitempty"`
 }
 
 type EgressClusterPolicySpec struct {
