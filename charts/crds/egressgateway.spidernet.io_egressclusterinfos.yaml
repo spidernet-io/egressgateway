@@ -14,7 +14,7 @@ spec:
     listKind: EgressClusterInfoList
     plural: egressclusterinfos
     shortNames:
-    - eci
+    - egci
     singular: egressclusterinfo
   scope: Cluster
   versions:

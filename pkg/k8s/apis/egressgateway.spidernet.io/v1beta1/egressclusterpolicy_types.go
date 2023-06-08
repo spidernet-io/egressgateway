@@ -17,7 +17,7 @@ type EgressClusterPolicyList struct {
 }
 
 // EgressClusterPolicy represents a cluster egress policy
-// +kubebuilder:resource:categories={egressclusterpolicy},path="egressclusterpolicies",singular="egressclusterpolicy",scope="Cluster",shortName={egresscp}
+// +kubebuilder:resource:categories={egressclusterpolicy},path="egressclusterpolicies",singular="egressclusterpolicy",scope="Cluster",shortName={egcp}
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
 // +genclient

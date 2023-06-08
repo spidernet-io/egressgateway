@@ -18,7 +18,7 @@ type EgressEndpointSliceList struct {
 
 // EgressEndpointSlice is a list of endpoint
 // +kubebuilder:object:root=true
-// +kubebuilder:resource:categories={egressendpointslice},path="egressendpointslices",singular="egressendpointslice",scope="Namespaced",shortName={ees}
+// +kubebuilder:resource:categories={egressendpointslice},path="egressendpointslices",singular="egressendpointslice",scope="Namespaced",shortName={egep}
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
 type EgressEndpointSlice struct {
