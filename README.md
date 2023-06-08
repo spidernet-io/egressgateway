@@ -21,7 +21,7 @@ There are two clusters A and B. Cluster A is VMWare-based and runs mainly Databa
 
 The gateway provides network egress capabilities for Kubernetes clusters.
 
-### features
+### Features
 
 * Solve IPv4 IPv6 dual-stack connectivity.
 * Solve the high availability of Egress Nodes.
@@ -33,7 +33,7 @@ The gateway provides network egress capabilities for Kubernetes clusters.
 * Supports automatic detection of cluster traffic for egress gateways policies.
 * Support namespace default egress instances.
 
-### compatibility
+### Compatibility
 
 * Calico
 
@@ -41,8 +41,11 @@ The gateway provides network egress capabilities for Kubernetes clusters.
 
 * EgressNode
 * EgressGateway
-* EgressGatewayPolicy
+* EgressPolicy
+* EgressClusterPolicy
 * EgressEndpointSlice
+* EgressClusterEndpointSlice
+* EgressClusterInfo
 
 You can follow the [Get Started](https://spidernet-io.github.io/egressgateway/usage/install) to set up your own playground!
 

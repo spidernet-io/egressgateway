@@ -20,22 +20,21 @@ metadata:
     kind: EgressGatewayPolicy
     name: "policy-test"
     uid: 1b2ec0a8-b929-4528-8f99-499f981d319e
-data:
-  endpoints:                   # 4
-  - podName: "web-app"         
-    ipv4List:
-    - "172.29.30.123" 
-    ipv6List:
-    - "xxx"         
-    nodeName: "node1"          # 5
-    uuid: ""
+endpoints:
+  - ipv4:                               # 4
+      - 10.21.52.120
+    ipv6:
+      - fd00:21::f910:6a0e:71b8:8113
+    node: workstation1                   # 5
+    ns: default
+    pod: mock-app-86b57bbf69-2xbp7    
 ```
 
 1. 名称由 `policy-name-xxxxx` 组成，后面 5 位随机生成；
 2. 所属的 EgressGatewayPolicy 名称；
-3. 创建时同步设置 ownerReferences；
+3. 所属的 ownerReferences 信息；
 4. 匹配中的 endpoints 的列表；
-5. Pod 所在的节点。
+5. Pod 所在的节点名称。
 
 ## 代码设计
 
@@ -43,6 +42,6 @@ data:
 
 ### Controller
 
-### agent
+### Agent
 
 ## 其他

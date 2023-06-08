@@ -1,4 +1,4 @@
-# EgressGatewayPolicy
+# EgressPolicy
 
 ## 简介
 用于指定哪些 Pod 走 Egress 策略，以及 Egress 所使用的 IP 地址。租户级资源。
@@ -6,7 +6,7 @@
 ## CRD
 ```yaml
 apiVersion: egressgateway.spidernet.io/v1beta1
-kind: EgressGatewayPolicy
+kind: EgressPolicy
 metadata:
   namespace: "default"
   name: "policy-test"

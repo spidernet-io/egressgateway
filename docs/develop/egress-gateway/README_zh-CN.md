@@ -1,6 +1,7 @@
 # EgressGateway
 
 ## 简介
+
 用于选择一组节点作为 Egress 网关节点，Egress IP 可以在该范围浮动。集群级资源。
 
 ## CRD
@@ -24,12 +25,13 @@ spec:
     policy: "AverageSelecton"   # 7
 status:                         # 8
   nodeList:                     # 9
-  - name: node1                 # 10
-    eips:                       # 11
-    - ipv4: ""                  # 12
-      ipv6: ""                  # 13
-      policies:                 # 14
-      - ""
+    - name: "node1"             # 10
+      epis:                     # 11
+        - ipv4: 10.6.1.55       # 12
+          ipv6: fd00::55        # 13
+          policies:             # 14
+            - name: app
+              namespace: default
 ```
 
 1. ippools: 设置 Egress IP 的范围；
