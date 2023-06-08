@@ -16,7 +16,7 @@ type EgressClusterInfoList struct {
 
 // EgressClusterInfo describes the status of cluster
 // +kubebuilder:object:root=true
-// +kubebuilder:resource:categories={egressclusterinfo},path="egressclusterinfos",singular="egressclusterinfo",scope="Cluster",shortName={eci}
+// +kubebuilder:resource:categories={egressclusterinfo},path="egressclusterinfos",singular="egressclusterinfo",scope="Cluster",shortName={egci}
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
 type EgressClusterInfo struct {

@@ -17,7 +17,7 @@ type EgressPolicyList struct {
 }
 
 // EgressPolicy represents a single egress gateway policy
-// +kubebuilder:resource:categories={egresspolicy},path="egresspolicies",singular="egresspolicy",scope="Namespaced",shortName={egressp}
+// +kubebuilder:resource:categories={egresspolicy},path="egresspolicies",singular="egresspolicy",scope="Namespaced",shortName={egp}
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
 type EgressPolicy struct {

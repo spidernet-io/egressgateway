@@ -14,7 +14,7 @@ spec:
     listKind: EgressClusterPolicyList
     plural: egressclusterpolicies
     shortNames:
-    - egresscp
+    - egcp
     singular: egressclusterpolicy
   scope: Cluster
   versions:

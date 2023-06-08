@@ -14,7 +14,7 @@ spec:
     listKind: EgressClusterEndpointSliceList
     plural: egressclusterendpointslices
     shortNames:
-    - eces
+    - egcep
     singular: egressclusterendpointslice
   scope: Cluster
   versions:
