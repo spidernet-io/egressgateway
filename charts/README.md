@@ -23,25 +23,24 @@ helm install egressgateway egressgateway/egressgateway --namespace kube-system
 
 ### Feature parameters
 
-| Name                                            | Description                                                                                         | Value                   |
-| ----------------------------------------------- | --------------------------------------------------------------------------------------------------- | ----------------------- |
-| `feature.enableIPv4`                            | Enable IPv4                                                                                         | `true`                  |
-| `feature.enableIPv6`                            | Enable IPv6                                                                                         | `false`                 |
-| `feature.startRouteTable`                       | Start route table                                                                                   | `50`                    |
-| `feature.datapathMode`                          | iptables mode, [`iptables`, `ebpf`]                                                                 | `iptables`              |
-| `feature.tunnelIpv4Subnet`                      | Tunnel IPv4 subnet                                                                                  | `172.31.0.0/16`         |
-| `feature.tunnelIpv6Subnet`                      | Tunnel IPv6 subnet                                                                                  | `fd11::/112`            |
-| `feature.tunnelDetectMethod`                    | Tunnel base on which interface [`defaultRouteInterface`, `interface=eth0`]                          | `defaultRouteInterface` |
-| `feature.forwardMethod`                         | Tunnel base on which interface [`active-active`: require kernel >=4.4, `active-passive`]            | `active-passive`        |
-| `feature.iptables.backendMode`                  | The mode for iptables (`legacy` or `nft`). If left blank, it's automatically detected. Default: "". | `""`                    |
-| `feature.vxlan.name`                            | The name of VXLAN device                                                                            | `egress.vxlan`          |
-| `feature.vxlan.port`                            | VXLAN port                                                                                          | `7789`                  |
-| `feature.vxlan.id`                              | VXLAN ID                                                                                            | `100`                   |
-| `feature.vxlan.disableChecksumOffload`          | Disable checksum offload                                                                            | `true`                  |
-| `feature.egressIgnoreCIDR.autoDetect.podCIDR`   | cni cluster used                                                                                    | `calico`                |
-| `feature.egressIgnoreCIDR.autoDetect.clusterIP` | if ignore service ip                                                                                | `true`                  |
-| `feature.egressIgnoreCIDR.autoDetect.nodeIP`    | if ignore node ip                                                                                   | `true`                  |
-| `feature.egressIgnoreCIDR.custom`               | cidrs provided manually                                                                             | `[]`                    |
+| Name                                            | Description                                                                                                                | Value                   |
+| ----------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- | ----------------------- |
+| `feature.enableIPv4`                            | Enable IPv4                                                                                                                | `true`                  |
+| `feature.enableIPv6`                            | Enable IPv6                                                                                                                | `false`                 |
+| `feature.datapathMode`                          | iptables mode, [`iptables`, `ebpf`]                                                                                        | `iptables`              |
+| `feature.tunnelIpv4Subnet`                      | Tunnel IPv4 subnet                                                                                                         | `172.31.0.0/16`         |
+| `feature.tunnelIpv6Subnet`                      | Tunnel IPv6 subnet                                                                                                         | `fd11::/112`            |
+| `feature.tunnelDetectMethod`                    | Tunnel base on which interface [`defaultRouteInterface`, `interface=eth0`]                                                 | `defaultRouteInterface` |
+| `feature.forwardMethod`                         | Tunnel base on which interface [`active-active`: require kernel >=4.4, `active-passive`]                                   | `active-passive`        |
+| `feature.iptables.backendMode`                  | Iptables mode can be specified as `nft` or `legacy`, with `auto` meaning automatic detection. The default value is `auto`. | `auto`                  |
+| `feature.vxlan.name`                            | The name of VXLAN device                                                                                                   | `egress.vxlan`          |
+| `feature.vxlan.port`                            | VXLAN port                                                                                                                 | `7789`                  |
+| `feature.vxlan.id`                              | VXLAN ID                                                                                                                   | `100`                   |
+| `feature.vxlan.disableChecksumOffload`          | Disable checksum offload                                                                                                   | `true`                  |
+| `feature.egressIgnoreCIDR.autoDetect.podCIDR`   | cni cluster used                                                                                                           | `calico`                |
+| `feature.egressIgnoreCIDR.autoDetect.clusterIP` | if ignore service ip                                                                                                       | `true`                  |
+| `feature.egressIgnoreCIDR.autoDetect.nodeIP`    | if ignore node ip                                                                                                          | `true`                  |
+| `feature.egressIgnoreCIDR.custom`               | CIDRs provided manually                                                                                                    | `[]`                    |
 
 ### Egressgateway agent parameters
 
@@ -55,7 +54,7 @@ helm install egressgateway egressgateway/egressgateway --namespace kube-system
 | `egressgatewayAgent.image.pullPolicy`                             | The image pull policy of egressgateway agent                                                              | `IfNotPresent`                     |
 | `egressgatewayAgent.image.digest`                                 | The image digest of egressgateway agent, which takes preference over tag                                  | `""`                               |
 | `egressgatewayAgent.image.tag`                                    | The image tag of egressgateway agent, overrides the image tag whose default is the chart appVersion.      | `v0.1.0`                           |
-| `egressgatewayAgent.image.imagePullSecrets`                       | the image image pull secrets of egressgateway agent                                                       | `[]`                               |
+| `egressgatewayAgent.image.imagePullSecrets`                       | the image pull secrets of egressgateway agent                                                             | `[]`                               |
 | `egressgatewayAgent.serviceAccount.create`                        | Create the service account for the egressgateway agent                                                    | `true`                             |
 | `egressgatewayAgent.serviceAccount.annotations`                   | The annotations of egressgateway agent service account                                                    | `{}`                               |
 | `egressgatewayAgent.service.annotations`                          | The annotations for egressgateway agent service                                                           | `{}`                               |
@@ -103,14 +102,14 @@ helm install egressgateway egressgateway/egressgateway --namespace kube-system
 | ---------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------- |
 | `egressgatewayController.name`                                         | The egressgateway controller name                                                                                                    | `egressgateway-controller`              |
 | `egressgatewayController.replicas`                                     | The replicas number of egressgateway controller                                                                                      | `1`                                     |
-| `egressgatewayController.cmdBinName`                                   | The binary name name of egressgateway controller                                                                                     | `/usr/bin/controller`                   |
+| `egressgatewayController.cmdBinName`                                   | The binary name of egressgateway controller                                                                                          | `/usr/bin/controller`                   |
 | `egressgatewayController.hostNetwork`                                  | Enable host network mode of egressgateway controller pod. Notice, if no CNI available before template installation, must enable this | `false`                                 |
 | `egressgatewayController.image.registry`                               | The image registry of egressgateway controller                                                                                       | `ghcr.io`                               |
 | `egressgatewayController.image.repository`                             | The image repository of egressgateway controller                                                                                     | `spidernet-io/egressgateway-controller` |
 | `egressgatewayController.image.pullPolicy`                             | The image pullPolicy of egressgateway controller                                                                                     | `IfNotPresent`                          |
 | `egressgatewayController.image.digest`                                 | The image digest of egressgatewayController, which takes preference over tag                                                         | `""`                                    |
 | `egressgatewayController.image.tag`                                    | The image tag of egressgatewayController, overrides the image tag whose default is the chart appVersion.                             | `v0.1.0`                                |
-| `egressgatewayController.image.imagePullSecrets`                       | The image image pull secrets of egressgateway controller                                                                             | `[]`                                    |
+| `egressgatewayController.image.imagePullSecrets`                       | The image pull secrets of egressgateway controller                                                                                   | `[]`                                    |
 | `egressgatewayController.serviceAccount.create`                        | Create the service account for the egressgatewayController                                                                           | `true`                                  |
 | `egressgatewayController.serviceAccount.annotations`                   | The annotations of egressgatewayController service account                                                                           | `{}`                                    |
 | `egressgatewayController.service.annotations`                          | The annotations for egressgatewayController service                                                                                  | `{}`                                    |

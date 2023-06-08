@@ -41,11 +41,7 @@ func ParseVersion(versionString string) (Version, error) {
 	major, _ := strconv.Atoi(match[1])
 	minor, _ := strconv.Atoi(match[2])
 	patch, _ := strconv.Atoi(match[3])
-	mode := "legacy"
-	if strings.Contains(versionString, "nf_tables") {
-		mode = "nft"
-	}
-	return Version{Major: major, Minor: minor, Patch: patch, BackendMode: mode}, nil
+	return Version{Major: major, Minor: minor, Patch: patch}, nil
 }
 
 func GetVersion() (Version, error) {
@@ -55,5 +51,43 @@ func GetVersion() (Version, error) {
 	if err != nil {
 		return ver, fmt.Errorf("run cmd 'iptables --version' wtith error: %v", err)
 	}
-	return ParseVersion(string(out))
+
+	ver, err = ParseVersion(string(out))
+	if err != nil {
+		return ver, err
+	}
+
+	nft4 := getOutput("iptables-nft-save")
+	legacy4 := getOutput("iptables-legacy-save")
+
+	nft6 := getOutput("ip6tables-nft-save")
+	legacy6 := getOutput("ip6tables-legacy-save")
+
+	if strings.Contains(nft4, "KUBE-IPTABLES") ||
+		strings.Contains(nft6, "KUBE-IPTABLES") ||
+		strings.Contains(nft4, "KUBE-KUBELET") ||
+		strings.Contains(nft6, "KUBE-KUBELET") {
+		ver.BackendMode = "nft"
+	} else if strings.Contains(legacy4, "KUBE-IPTABLES") ||
+		strings.Contains(legacy6, "KUBE-IPTABLES") ||
+		strings.Contains(legacy4, "KUBE-KUBELET") ||
+		strings.Contains(legacy6, "KUBE-KUBELET") {
+		ver.BackendMode = "legacy"
+	} else {
+		nftCount := strings.Count(nft4, "\n") + strings.Count(nft6, "\n")
+		legacyCount := strings.Count(legacy4, "\n") + strings.Count(legacy6, "\n")
+		if nftCount > legacyCount {
+			ver.BackendMode = "nft"
+		} else {
+			ver.BackendMode = "legacy"
+		}
+	}
+
+	return ver, nil
+}
+
+func getOutput(name string, args ...string) string {
+	cmd := exec.Command(name, args...)
+	out, _ := cmd.Output()
+	return string(out)
 }
