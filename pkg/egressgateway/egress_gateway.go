@@ -80,7 +80,7 @@ func (r egnReconciler) reconcileNode(ctx context.Context, req reconcile.Request,
 	deleted = deleted || !node.GetDeletionTimestamp().IsZero()
 
 	egList := &egress.EgressGatewayList{}
-	if err := r.client.List(context.Background(), egList); err != nil {
+	if err := r.client.List(ctx, egList); err != nil {
 		return reconcile.Result{Requeue: true}, nil
 	}
 

@@ -24,7 +24,8 @@ type EgressPolicy struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata"`
 
-	Spec EgressPolicySpec `json:"spec,omitempty"`
+	Spec   EgressPolicySpec   `json:"spec,omitempty"`
+	Status EgressPolicyStatus `json:"status,omitempty"`
 }
 
 type EgressPolicySpec struct {
@@ -36,6 +37,20 @@ type EgressPolicySpec struct {
 	AppliedTo AppliedTo `json:"appliedTo"`
 	// +kubebuilder:validation:Optional
 	DestSubnet []string `json:"destSubnet"`
+}
+
+type EgressPolicyStatus struct {
+	// +kubebuilder:validation:Optional
+	Eip Eip `json:"eip,omitempty"`
+	// +kubebuilder:validation:Optional
+	Node string `json:"node,omitempty"`
+}
+
+type Eip struct {
+	// +kubebuilder:validation:Optional
+	Ipv4 string `json:"ipv4,omitempty"`
+	// +kubebuilder:validation:Optional
+	Ipv6 string `json:"ipv6,omitempty"`
 }
 
 type EgressIP struct {
