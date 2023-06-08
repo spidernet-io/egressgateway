@@ -59,7 +59,7 @@ status:
   - 隧道 IP 合法，校验 IP 是否分配给本节点，不是则设置 phase == `Pending`。
   - 隧道 IP 是分配给本节点，phase != `Succeeded` 则设置 phase == `Init`
 
-### agent
+### Agent
 #### 初始化
 
 

@@ -1,4 +1,4 @@
-# 
+# EgressClusterPolicy
 
 ## Introduction
 
@@ -10,6 +10,6 @@
 
 ### Controller
 
-### agent
+### Agent
 
 ## Other
