@@ -11,11 +11,10 @@ import (
 	"go.uber.org/zap"
 )
 
-func NewRuleRoute(table int, mark, mask int, multiPath bool, log *zap.Logger) *RuleRoute {
+func NewRuleRoute(mark, mask int, multiPath bool, log *zap.Logger) *RuleRoute {
 	return &RuleRoute{
 		mark:      mark,
 		mask:      mask,
-		table:     table,
 		multiPath: multiPath,
 		log:       log,
 	}

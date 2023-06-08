@@ -64,7 +64,6 @@ type EnvConfig struct {
 type FileConfig struct {
 	EnableIPv4                bool     `yaml:"enableIPv4"`
 	EnableIPv6                bool     `yaml:"enableIPv6"`
-	StartRouteTable           int      `yaml:"startRouteTable"`
 	IPTables                  IPTables `yaml:"iptables"`
 	DatapathMode              string   `yaml:"datapathMode"`
 	TunnelIpv4Subnet          string   `yaml:"tunnelIpv4Subnet"`
@@ -116,6 +115,7 @@ func LoadConfig(isAgent bool) (*Config, error) {
 	var ver iptables.Version
 	var err error
 	var restoreSupportsLock bool
+
 	if isAgent {
 		ver, err = iptables.GetVersion()
 		if err != nil {
@@ -139,7 +139,6 @@ func LoadConfig(isAgent bool) (*Config, error) {
 		},
 		FileConfig: FileConfig{
 			IPTables: IPTables{
-				BackendMode:             ver.BackendMode,
 				RefreshIntervalSecond:   90,
 				PostWriteIntervalSecond: 1,
 				LockTimeoutSecond:       0,
@@ -198,6 +197,10 @@ func LoadConfig(isAgent bool) (*Config, error) {
 			}
 			config.FileConfig.TunnelIPv6Net = ipn
 		}
+	}
+
+	if config.FileConfig.IPTables.BackendMode == "auto" {
+		config.FileConfig.IPTables.BackendMode = ver.BackendMode
 	}
 
 	// load kube config

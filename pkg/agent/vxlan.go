@@ -414,7 +414,7 @@ func newEgressNodeController(mgr manager.Manager, cfg *config.Config, log *zap.L
 	if cfg.FileConfig.ForwardMethod == config.ForwardMethodActiveActive {
 		multiPath = true
 	}
-	ruleRoute := route.NewRuleRoute(cfg.FileConfig.StartRouteTable, 0x11000000, 0xffffffff, multiPath, log)
+	ruleRoute := route.NewRuleRoute(0x11000000, 0xffffffff, multiPath, log)
 
 	r := &vxlanReconciler{
 		client:         mgr.GetClient(),

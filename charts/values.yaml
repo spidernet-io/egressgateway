@@ -26,8 +26,6 @@ feature:
   enableIPv4: true
   ## @param feature.enableIPv6 Enable IPv6
   enableIPv6: false
-  ## @param feature.startRouteTable Start route table
-  startRouteTable: 50
   ## @param feature.datapathMode iptables mode, [`iptables`, `ebpf`]
   datapathMode: "iptables"
   ## @param feature.tunnelIpv4Subnet Tunnel IPv4 subnet
@@ -39,8 +37,8 @@ feature:
   ## @param feature.forwardMethod Tunnel base on which interface [`active-active`: require kernel >=4.4, `active-passive`]
   forwardMethod: "active-passive"
   iptables:
-    ## @param feature.iptables.backendMode The mode for iptables (`legacy` or `nft`). If left blank, it's automatically detected. Default: "".
-    backendMode: ""
+    ## @param feature.iptables.backendMode Iptables mode can be specified as `nft` or `legacy`, with `auto` meaning automatic detection. The default value is `auto`.
+    backendMode: "auto"
   vxlan:
     ## @param feature.vxlan.name The name of VXLAN device
     name: "egress.vxlan"
@@ -58,7 +56,7 @@ feature:
       clusterIP: true
       ## @param feature.egressIgnoreCIDR.autoDetect.nodeIP if ignore node ip
       nodeIP: true
-    ## @param feature.egressIgnoreCIDR.custom cidrs provided manually
+    ## @param feature.egressIgnoreCIDR.custom CIDRs provided manually
     custom: []
 ## @section Egressgateway agent parameters
 ##
@@ -80,7 +78,7 @@ egressgatewayAgent:
     digest: ""
     ## @param egressgatewayAgent.image.tag The image tag of egressgateway agent, overrides the image tag whose default is the chart appVersion.
     tag: "v0.1.0"
-    ## @param egressgatewayAgent.image.imagePullSecrets the image image pull secrets of egressgateway agent
+    ## @param egressgatewayAgent.image.imagePullSecrets the image pull secrets of egressgateway agent
     imagePullSecrets: []
     # - name: "image-pull-secret"
   ## @skip egressgatewayAgent.nodeSelector.kubernetes.io/os
@@ -228,7 +226,7 @@ egressgatewayController:
   name: "egressgateway-controller"
   ## @param egressgatewayController.replicas The replicas number of egressgateway controller
   replicas: 1
-  ## @param egressgatewayController.cmdBinName The binary name name of egressgateway controller
+  ## @param egressgatewayController.cmdBinName The binary name of egressgateway controller
   cmdBinName: "/usr/bin/controller"
   ## @param egressgatewayController.hostNetwork Enable host network mode of egressgateway controller pod. Notice, if no CNI available before template installation, must enable this
   hostNetwork: false
@@ -243,7 +241,7 @@ egressgatewayController:
     digest: ""
     ## @param egressgatewayController.image.tag The image tag of egressgatewayController, overrides the image tag whose default is the chart appVersion.
     tag: "v0.1.0"
-    ## @param egressgatewayController.image.imagePullSecrets The image image pull secrets of egressgateway controller
+    ## @param egressgatewayController.image.imagePullSecrets The image pull secrets of egressgateway controller
     imagePullSecrets: []
     # - name: "image-pull-secret"
   ## @skip egressgatewayController.nodeSelector.kubernetes.io/os
