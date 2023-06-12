@@ -7,7 +7,7 @@ require (
 	github.com/cilium/ipam v0.0.0-20220824141044-46ef3d556735
 	github.com/go-kit/log v0.2.1
 	github.com/go-logr/logr v1.2.4
-	github.com/go-openapi/errors v0.20.3
+	github.com/go-openapi/errors v0.20.4
 	github.com/go-openapi/loads v0.21.2
 	github.com/go-openapi/runtime v0.26.0
 	github.com/go-openapi/spec v0.20.9
