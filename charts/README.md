@@ -31,7 +31,6 @@ helm install egressgateway egressgateway/egressgateway --namespace kube-system
 | `feature.tunnelIpv4Subnet`                      | Tunnel IPv4 subnet                                                                                                         | `172.31.0.0/16`         |
 | `feature.tunnelIpv6Subnet`                      | Tunnel IPv6 subnet                                                                                                         | `fd11::/112`            |
 | `feature.tunnelDetectMethod`                    | Tunnel base on which interface [`defaultRouteInterface`, `interface=eth0`]                                                 | `defaultRouteInterface` |
-| `feature.forwardMethod`                         | Tunnel base on which interface [`active-active`: require kernel >=4.4, `active-passive`]                                   | `active-passive`        |
 | `feature.iptables.backendMode`                  | Iptables mode can be specified as `nft` or `legacy`, with `auto` meaning automatic detection. The default value is `auto`. | `auto`                  |
 | `feature.vxlan.name`                            | The name of VXLAN device                                                                                                   | `egress.vxlan`          |
 | `feature.vxlan.port`                            | VXLAN port                                                                                                                 | `7789`                  |

@@ -50,14 +50,6 @@ func GetIPVersion(f *framework.Framework) (enableV4, enableV6 bool, e error) {
 	return c.EnableIPv4, c.EnableIPv6, nil
 }
 
-func GetForwardMethod(f *framework.Framework) (string, error) {
-	c, e := GetEgressConfigmap(f)
-	if e != nil {
-		return "", e
-	}
-	return c.ForwardMethod, nil
-}
-
 func GetEgressIgnoreCIDR(f *framework.Framework) (*config.EgressIgnoreCIDR, error) {
 	c, e := GetEgressConfigmap(f)
 	if e != nil {

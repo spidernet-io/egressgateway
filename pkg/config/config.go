@@ -18,8 +18,6 @@ import (
 	"github.com/spidernet-io/egressgateway/pkg/iptables"
 )
 
-const ForwardMethodActiveActive = "active-active"
-
 type Config struct {
 	// From environment
 	EnvConfig
@@ -71,7 +69,6 @@ type FileConfig struct {
 	TunnelIPv4Net             *net.IPNet
 	TunnelIPv6Net             *net.IPNet
 	TunnelDetectMethod        string           `yaml:"tunnelDetectMethod"`
-	ForwardMethod             string           `yaml:"forwardMethod"`
 	VXLAN                     VXLAN            `yaml:"vxlan"`
 	EgressIgnoreCIDR          EgressIgnoreCIDR `yaml:"egressIgnoreCIDR"`
 	MaxNumberEndpointPerSlice int              `yaml:"maxNumberEndpointPerSlice"`
