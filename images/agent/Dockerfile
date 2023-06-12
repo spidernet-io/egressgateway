@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 ARG BASE_IMAGE=ghcr.io/spidernet-io/egressgateway-agent-base:2bc58a9e8e1d51f79c4da42a525a65264f2328e7
-ARG GOLANG_IMAGE=docker.io/library/golang:1.19
+ARG GOLANG_IMAGE=docker.io/library/golang:1.20.5
 
 #======= build bin ==========
 FROM --platform=${BUILDPLATFORM} ${GOLANG_IMAGE} as builder
