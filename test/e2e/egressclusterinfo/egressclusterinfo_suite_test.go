@@ -4,6 +4,7 @@
 package egressclusterinfo_test
 
 import (
+	egressgatewayv1beta1 "github.com/spidernet-io/egressgateway/pkg/k8s/apis/v1"
 	"github.com/spidernet-io/egressgateway/test/e2e/common"
 	calicov1 "github.com/tigera/operator/pkg/apis/crd.projectcalico.org/v1"
 	"testing"
@@ -14,8 +15,6 @@ import (
 	"github.com/spidernet-io/e2eframework/framework"
 	"k8s.io/apimachinery/pkg/runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-
-	egressgatewayv1beta1 "github.com/spidernet-io/egressgateway/pkg/k8s/apis/egressgateway.spidernet.io/v1beta1"
 )
 
 func TestEgressclusterinfo(t *testing.T) {

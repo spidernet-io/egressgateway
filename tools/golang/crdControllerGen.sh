@@ -10,7 +10,7 @@ set -o pipefail
 PROJECT_ROOT=$(dirname ${BASH_SOURCE[0]})/../..
 
 CHART_DIR=${1:-"${PROJECT_ROOT}/charts"}
-API_CODE_DIR=${2:-"${PROJECT_ROOT}/pkg/k8s/apis/egressgateway.spidernet.io/v1beta1"}
+API_CODE_DIR=${2:-"${PROJECT_ROOT}/pkg/k8s/apis/v1"}
 
 #======================
 

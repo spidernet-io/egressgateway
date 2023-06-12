@@ -10,20 +10,20 @@ import (
 	. "github.com/onsi/gomega"
 
 	"github.com/spidernet-io/e2eframework/framework"
+	egressv1 "github.com/spidernet-io/egressgateway/pkg/k8s/apis/v1"
 	calicov1 "github.com/tigera/operator/pkg/apis/crd.projectcalico.org/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	egressv1beta1 "github.com/spidernet-io/egressgateway/pkg/k8s/apis/egressgateway.spidernet.io/v1beta1"
 	"github.com/spidernet-io/egressgateway/pkg/utils"
 	"github.com/spidernet-io/egressgateway/test/e2e/common"
 )
 
 var _ = Describe("Egressclusterinfo", Label("Egressclusterinfo"), func() {
-	var eci *egressv1beta1.EgressClusterInfo
+	var eci *egressv1.EgressClusterInfo
 	var calicoIPPools []string
 
 	BeforeEach(func() {
-		eci = new(egressv1beta1.EgressClusterInfo)
+		eci = new(egressv1.EgressClusterInfo)
 		calicoIPPools = make([]string, 0)
 
 		DeferCleanup(func() {
@@ -64,7 +64,7 @@ var _ = Describe("Egressclusterinfo", Label("Egressclusterinfo"), func() {
 	})
 })
 
-func checkEgressIgnoreCIDRFields(eci *egressv1beta1.EgressClusterInfo) {
+func checkEgressIgnoreCIDRFields(eci *egressv1.EgressClusterInfo) {
 	GinkgoWriter.Println("check EgressIgnoreCIDR Fields")
 	var (
 		eciNodesIPv4   = make([]string, 0)
@@ -136,7 +136,7 @@ func checkEgressIgnoreCIDRFields(eci *egressv1beta1.EgressClusterInfo) {
 	}
 }
 
-func createOrUpdateCalicoIPPoolAndCheck(f *framework.Framework, poolNamePre string, calicoIPPools *[]string, generateRandomCidr func() string, eci *egressv1beta1.EgressClusterInfo) {
+func createOrUpdateCalicoIPPoolAndCheck(f *framework.Framework, poolNamePre string, calicoIPPools *[]string, generateRandomCidr func() string, eci *egressv1.EgressClusterInfo) {
 	// get EgressClusterInfo
 	GinkgoWriter.Printf("get EgressClusterInfo %s\n", egressClusterInfoName)
 	Expect(common.GetEgressClusterInfo(f, egressClusterInfoName, eci)).NotTo(HaveOccurred())

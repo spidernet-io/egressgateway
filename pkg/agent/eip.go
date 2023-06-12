@@ -6,6 +6,7 @@ package agent
 import (
 	"context"
 	"fmt"
+	egressv1 "github.com/spidernet-io/egressgateway/pkg/k8s/apis/v1"
 	"github.com/spidernet-io/egressgateway/pkg/layer2"
 	"k8s.io/apimachinery/pkg/util/sets"
 	"net"
@@ -20,7 +21,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/source"
 
 	"github.com/spidernet-io/egressgateway/pkg/config"
-	egressv1 "github.com/spidernet-io/egressgateway/pkg/k8s/apis/egressgateway.spidernet.io/v1beta1"
 )
 
 type eip struct {

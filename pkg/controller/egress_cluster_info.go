@@ -9,6 +9,8 @@ import (
 	"strings"
 	"sync"
 
+	egressv1 "github.com/spidernet-io/egressgateway/pkg/k8s/apis/v1"
+	calicov1 "github.com/tigera/operator/pkg/apis/crd.projectcalico.org/v1"
 	"go.uber.org/zap"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -20,15 +22,12 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 	"sigs.k8s.io/controller-runtime/pkg/source"
 
-	calicov1 "github.com/tigera/operator/pkg/apis/crd.projectcalico.org/v1"
-
 	"github.com/spidernet-io/egressgateway/pkg/config"
-	egressv1beta1 "github.com/spidernet-io/egressgateway/pkg/k8s/apis/egressgateway.spidernet.io/v1beta1"
 	"github.com/spidernet-io/egressgateway/pkg/utils"
 )
 
 type eciReconciler struct {
-	eci               *egressv1beta1.EgressClusterInfo
+	eci               *egressv1.EgressClusterInfo
 	client            client.Client
 	log               *zap.Logger
 	config            *config.Config
@@ -343,7 +342,7 @@ func newEgressClusterInfoController(mgr manager.Manager, log *zap.Logger, cfg *c
 	}
 
 	r := &eciReconciler{
-		eci:               new(egressv1beta1.EgressClusterInfo),
+		eci:               new(egressv1.EgressClusterInfo),
 		client:            mgr.GetClient(),
 		log:               log,
 		config:            cfg,

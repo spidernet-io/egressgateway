@@ -5,10 +5,10 @@ package common
 
 import (
 	"context"
+	egressv1 "github.com/spidernet-io/egressgateway/pkg/k8s/apis/v1"
 	"time"
 
 	"github.com/spidernet-io/e2eframework/framework"
-	egressv1 "github.com/spidernet-io/egressgateway/pkg/k8s/apis/egressgateway.spidernet.io/v1beta1"
 	"github.com/spidernet-io/egressgateway/test/e2e/err"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"

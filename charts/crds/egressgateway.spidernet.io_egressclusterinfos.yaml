@@ -18,7 +18,7 @@ spec:
     singular: egressclusterinfo
   scope: Cluster
   versions:
-  - name: v1beta1
+  - name: v1
     schema:
       openAPIV3Schema:
         description: EgressClusterInfo describes the status of cluster

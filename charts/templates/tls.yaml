@@ -39,18 +39,6 @@ webhooks:
         - egressgateways
         - egressgatewaypolicies
         - egressclusterinfos
-      - apiGroups:
-          - egressgateway.spidernet.io
-        apiVersions:
-          - v1beta1
-        operations:
-          - CREATE
-          - UPDATE
-          - DELETE
-        resources:
-        - egressgateways
-        - egresspolicies
-        - egressclusterinfos
     sideEffects: None
 ---
 apiVersion: admissionregistration.k8s.io/v1
@@ -82,15 +70,6 @@ webhooks:
           - egressgateway.spidernet.io
         apiVersions:
           - v1
-        operations:
-          - CREATE
-          - UPDATE
-        resources:
-        - egressgateways
-      - apiGroups:
-          - egressgateway.spidernet.io
-        apiVersions:
-          - v1beta1
         operations:
           - CREATE
           - UPDATE

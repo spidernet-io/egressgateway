@@ -6,6 +6,7 @@ package agent
 import (
 	"context"
 	"fmt"
+	egressv1 "github.com/spidernet-io/egressgateway/pkg/k8s/apis/v1"
 	"github.com/vishvananda/netlink"
 	"net"
 	"strings"
@@ -24,7 +25,6 @@ import (
 	"github.com/spidernet-io/egressgateway/pkg/agent/route"
 	"github.com/spidernet-io/egressgateway/pkg/agent/vxlan"
 	"github.com/spidernet-io/egressgateway/pkg/config"
-	egressv1 "github.com/spidernet-io/egressgateway/pkg/k8s/apis/egressgateway.spidernet.io/v1beta1"
 	"github.com/spidernet-io/egressgateway/pkg/utils"
 )
 

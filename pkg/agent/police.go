@@ -7,6 +7,7 @@ import (
 	"context"
 	"crypto/sha1"
 	"fmt"
+	"github.com/spidernet-io/egressgateway/pkg/k8s/apis/v1"
 	"net"
 	"path"
 	"strconv"
@@ -30,7 +31,6 @@ import (
 	"github.com/spidernet-io/egressgateway/pkg/config"
 	"github.com/spidernet-io/egressgateway/pkg/ipset"
 	"github.com/spidernet-io/egressgateway/pkg/iptables"
-	egressv1 "github.com/spidernet-io/egressgateway/pkg/k8s/apis/egressgateway.spidernet.io/v1beta1"
 	"github.com/spidernet-io/egressgateway/pkg/utils"
 )
 
@@ -49,7 +49,7 @@ type policeReconciler struct {
 	mangleTables  []*iptables.Table
 	filterTables  []*iptables.Table
 	natTables     []*iptables.Table
-	policyMapNode *utils.SyncMap[egressv1.Policy, string]
+	policyMapNode *utils.SyncMap[v1.Policy, string]
 }
 
 type IP struct {
@@ -70,7 +70,7 @@ type IP struct {
 func (r *policeReconciler) initApplyPolicy() error {
 	r.log.Info("'init policy")
 
-	gateways := new(egressv1.EgressGatewayList)
+	gateways := new(v1.EgressGatewayList)
 	err := r.client.List(context.Background(), gateways)
 	if err != nil {
 		return fmt.Errorf("failed to list gateway: %v", err)
@@ -80,8 +80,8 @@ func (r *policeReconciler) initApplyPolicy() error {
 		return nil
 	}
 
-	nonCurrentEIPPolicy := make(map[egressv1.Policy]string)
-	currentEIPPolicy := make(map[egressv1.Policy]IP)
+	nonCurrentEIPPolicy := make(map[v1.Policy]string)
+	currentEIPPolicy := make(map[v1.Policy]IP)
 	for _, item := range gateways.Items {
 		for _, list := range item.Status.NodeList {
 			if list.Name == r.cfg.NodeName {
@@ -106,7 +106,7 @@ func (r *policeReconciler) initApplyPolicy() error {
 	for policy := range nonCurrentEIPPolicy {
 		var destSubnet []string
 		if policy.Namespace != "" {
-			policyObj := new(egressv1.EgressPolicy)
+			policyObj := new(v1.EgressPolicy)
 			namespacedName := types.NamespacedName{Namespace: policy.Namespace, Name: policy.Name}
 			err := r.client.Get(context.Background(), namespacedName, policyObj)
 			if err != nil {
@@ -116,7 +116,7 @@ func (r *policeReconciler) initApplyPolicy() error {
 			}
 			destSubnet = policyObj.Spec.DestSubnet
 		} else {
-			policyObj := new(egressv1.EgressClusterPolicy)
+			policyObj := new(v1.EgressClusterPolicy)
 			namespacedName := types.NamespacedName{Namespace: policy.Namespace, Name: policy.Name}
 			err := r.client.Get(context.Background(), namespacedName, policyObj)
 			if err != nil {
@@ -135,7 +135,7 @@ func (r *policeReconciler) initApplyPolicy() error {
 	for policy := range currentEIPPolicy {
 		var destSubnet []string
 		if policy.Namespace != "" {
-			policyObj := new(egressv1.EgressPolicy)
+			policyObj := new(v1.EgressPolicy)
 			namespacedName := types.NamespacedName{Namespace: policy.Namespace, Name: policy.Name}
 			err := r.client.Get(context.Background(), namespacedName, policyObj)
 			if err != nil {
@@ -145,7 +145,7 @@ func (r *policeReconciler) initApplyPolicy() error {
 			}
 			destSubnet = policyObj.Spec.DestSubnet
 		} else {
-			policyObj := new(egressv1.EgressClusterPolicy)
+			policyObj := new(v1.EgressClusterPolicy)
 			namespacedName := types.NamespacedName{Namespace: policy.Namespace, Name: policy.Name}
 			err := r.client.Get(context.Background(), namespacedName, policyObj)
 			if err != nil {
@@ -184,7 +184,7 @@ func (r *policeReconciler) initApplyPolicy() error {
 	for _, table := range r.mangleTables {
 		rules := make([]iptables.Rule, 0)
 		for policy, nodeName := range nonCurrentEIPPolicy {
-			node := new(egressv1.EgressNode)
+			node := new(v1.EgressNode)
 			err := r.client.Get(context.Background(), types.NamespacedName{Name: nodeName}, node)
 			if err != nil {
 				r.log.Warn("failed to get eip node information of policy, skip building rule of policy")
@@ -242,7 +242,7 @@ func (r *policeReconciler) initApplyPolicy() error {
 
 func (r *policeReconciler) updatePolicyIPSet(policyNs string, policyName string, iSEipNodeSet bool, destSubnet []string) error {
 	// calculate src ip list
-	srcIPv4List, srcIPv6List, err := r.getPolicySrcIPs(policyNs, policyName, func(e egressv1.EgressEndpoint) bool {
+	srcIPv4List, srcIPv6List, err := r.getPolicySrcIPs(policyNs, policyName, func(e v1.EgressEndpoint) bool {
 		if e.Node == r.cfg.EnvConfig.NodeName {
 			return true
 		}
@@ -328,12 +328,12 @@ func (r *policeReconciler) updatePolicyIPSet(policyNs string, policyName string,
 	return nil
 }
 
-func (r *policeReconciler) getPolicySrcIPs(policyNs, policyName string, filter func(slice egressv1.EgressEndpoint) bool) ([]string, []string, error) {
+func (r *policeReconciler) getPolicySrcIPs(policyNs, policyName string, filter func(slice v1.EgressEndpoint) bool) ([]string, []string, error) {
 	ctx := context.Background()
 
 	selector, err := metav1.LabelSelectorAsSelector(&metav1.LabelSelector{
 		MatchLabels: map[string]string{
-			egressv1.LabelPolicyName: policyName,
+			v1.LabelPolicyName: policyName,
 		},
 	})
 	if err != nil {
@@ -347,7 +347,7 @@ func (r *policeReconciler) getPolicySrcIPs(policyNs, policyName string, filter f
 	ipv6List := make([]string, 0)
 
 	if policyNs == "" {
-		eps := new(egressv1.EgressClusterEndpointSliceList)
+		eps := new(v1.EgressClusterEndpointSliceList)
 		err = r.client.List(ctx, eps, opt)
 		if err != nil {
 			return nil, nil, err
@@ -363,7 +363,7 @@ func (r *policeReconciler) getPolicySrcIPs(policyNs, policyName string, filter f
 			}
 		}
 	} else {
-		eps := new(egressv1.EgressEndpointSliceList)
+		eps := new(v1.EgressEndpointSliceList)
 		err = r.client.List(ctx, eps, opt)
 		if err != nil {
 			return nil, nil, err
@@ -562,7 +562,7 @@ func (r *policeReconciler) updatePolicyRule(policyName string, mark uint32, vers
 // watch update/delete events
 // - ipset
 func (r *policeReconciler) reconcilePolicy(ctx context.Context, req reconcile.Request, log *zap.Logger) (reconcile.Result, error) {
-	policy := new(egressv1.EgressPolicy)
+	policy := new(v1.EgressPolicy)
 	deleted := false
 	err := r.client.Get(ctx, req.NamespacedName, policy)
 	if err != nil {
@@ -584,7 +584,7 @@ func (r *policeReconciler) reconcilePolicy(ctx context.Context, req reconcile.Re
 		return reconcile.Result{}, nil
 	}
 
-	gateway := new(egressv1.EgressGateway)
+	gateway := new(v1.EgressGateway)
 	err = r.client.Get(ctx, types.NamespacedName{Namespace: policy.Namespace, Name: policy.Name}, gateway)
 	if err != nil {
 		if !errors.IsNotFound(err) {
@@ -621,7 +621,7 @@ func (r *policeReconciler) reconcilePolicy(ctx context.Context, req reconcile.Re
 // watch update/delete events
 // - ipset
 func (r *policeReconciler) reconcileClusterPolicy(ctx context.Context, req reconcile.Request, log *zap.Logger) (reconcile.Result, error) {
-	policy := new(egressv1.EgressClusterPolicy)
+	policy := new(v1.EgressClusterPolicy)
 	deleted := false
 	err := r.client.Get(ctx, req.NamespacedName, policy)
 	if err != nil {
@@ -643,7 +643,7 @@ func (r *policeReconciler) reconcileClusterPolicy(ctx context.Context, req recon
 		return reconcile.Result{}, nil
 	}
 
-	gateway := new(egressv1.EgressGateway)
+	gateway := new(v1.EgressGateway)
 	err = r.client.Get(ctx, types.NamespacedName{Namespace: policy.Namespace, Name: policy.Name}, gateway)
 	if err != nil {
 		if !errors.IsNotFound(err) {
@@ -677,7 +677,7 @@ func (r *policeReconciler) reconcileClusterPolicy(ctx context.Context, req recon
 }
 
 // addOrUpdatePolicy reconcile add or update egress policy
-func (r *policeReconciler) addOrUpdatePolicy(ctx context.Context, firstInit bool, policy *egressv1.EgressPolicy, log *zap.Logger) error {
+func (r *policeReconciler) addOrUpdatePolicy(ctx context.Context, firstInit bool, policy *v1.EgressPolicy, log *zap.Logger) error {
 	return nil
 }
 
@@ -915,28 +915,28 @@ func newPolicyController(mgr manager.Manager, log *zap.Logger, cfg *config.Confi
 		return err
 	}
 
-	if err := c.Watch(&source.Kind{Type: &egressv1.EgressGateway{}},
+	if err := c.Watch(&source.Kind{Type: &v1.EgressGateway{}},
 		handler.EnqueueRequestsFromMapFunc(utils.KindToMapFlat("EgressGateway"))); err != nil {
 		return fmt.Errorf("failed to watch EgressGateway: %w", err)
 	}
 
-	if err := c.Watch(&source.Kind{Type: &egressv1.EgressNode{}},
+	if err := c.Watch(&source.Kind{Type: &v1.EgressNode{}},
 		handler.EnqueueRequestsFromMapFunc(utils.KindToMapFlat("EgressNode"))); err != nil {
 		return fmt.Errorf("failed to watch EgressNode: %w", err)
 	}
 
-	if err := c.Watch(&source.Kind{Type: &egressv1.EgressPolicy{}},
+	if err := c.Watch(&source.Kind{Type: &v1.EgressPolicy{}},
 		handler.EnqueueRequestsFromMapFunc(utils.KindToMapFlat("EgressPolicy")), policyPredicate{}); err != nil {
 		return fmt.Errorf("failed to watch EgressPolicy: %w", err)
 	}
 
-	if err := c.Watch(&source.Kind{Type: &egressv1.EgressClusterPolicy{}},
+	if err := c.Watch(&source.Kind{Type: &v1.EgressClusterPolicy{}},
 		handler.EnqueueRequestsFromMapFunc(utils.KindToMapFlat("EgressClusterPolicy")), policyPredicate{}); err != nil {
 		return fmt.Errorf("failed to watch EgressClusterPolicy: %w", err)
 	}
 
 	if err := c.Watch(
-		&source.Kind{Type: &egressv1.EgressEndpointSlice{}},
+		&source.Kind{Type: &v1.EgressEndpointSlice{}},
 		handler.EnqueueRequestsFromMapFunc(enqueueEndpointSlice(r.client)),
 		epSlicePredicate{},
 	); err != nil {
@@ -944,7 +944,7 @@ func newPolicyController(mgr manager.Manager, log *zap.Logger, cfg *config.Confi
 	}
 
 	if err := c.Watch(
-		&source.Kind{Type: &egressv1.EgressClusterEndpointSlice{}},
+		&source.Kind{Type: &v1.EgressClusterEndpointSlice{}},
 		handler.EnqueueRequestsFromMapFunc(enqueueEndpointSlice(r.client)),
 		epSlicePredicate{},
 	); err != nil {
@@ -1041,7 +1041,7 @@ func (p epSlicePredicate) Generic(_ event.GenericEvent) bool { return false }
 func enqueueEndpointSlice(cli client.Client) handler.MapFunc {
 	return func(obj client.Object) []reconcile.Request {
 		namespace := obj.GetNamespace()
-		policyName, ok := obj.GetLabels()[egressv1.LabelPolicyName]
+		policyName, ok := obj.GetLabels()[v1.LabelPolicyName]
 		if !ok {
 			return nil
 		}

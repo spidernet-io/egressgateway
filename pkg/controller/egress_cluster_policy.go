@@ -6,6 +6,7 @@ package controller
 import (
 	"context"
 	"fmt"
+	"github.com/spidernet-io/egressgateway/pkg/k8s/apis/v1"
 
 	"go.uber.org/zap"
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -18,7 +19,6 @@ import (
 
 	"github.com/spidernet-io/egressgateway/pkg/config"
 	"github.com/spidernet-io/egressgateway/pkg/egressgateway"
-	egressv1 "github.com/spidernet-io/egressgateway/pkg/k8s/apis/egressgateway.spidernet.io/v1beta1"
 	"github.com/spidernet-io/egressgateway/pkg/utils"
 )
 
@@ -50,7 +50,7 @@ func (r *egcpReconciler) Reconcile(ctx context.Context, req reconcile.Request) (
 // - update egressclusterpolicy
 func (r *egcpReconciler) reconcileEG(ctx context.Context, req reconcile.Request, log *zap.Logger) (reconcile.Result, error) {
 	deleted := false
-	egw := new(egressv1.EgressGateway)
+	egw := new(v1.EgressGateway)
 	err := r.client.Get(ctx, req.NamespacedName, egw)
 	if err != nil {
 		if !errors.IsNotFound(err) {
@@ -64,14 +64,14 @@ func (r *egcpReconciler) reconcileEG(ctx context.Context, req reconcile.Request,
 		return reconcile.Result{Requeue: false}, nil
 	}
 
-	egcpList := &egressv1.EgressClusterPolicyList{}
+	egcpList := &v1.EgressClusterPolicyList{}
 	if err := r.client.List(ctx, egcpList); err != nil {
 		r.log.Sugar().Errorf("egcp->controller, event: eg(%v): Failed to get EgressClusterPolicyList\n", egw.Name)
 		return reconcile.Result{Requeue: true}, err
 	}
 
 	for _, item := range egcpList.Items {
-		policy := egressv1.Policy{Name: item.Name, Namespace: item.Namespace}
+		policy := v1.Policy{Name: item.Name, Namespace: item.Namespace}
 		eipStatus, isExist := egressgateway.GetEIPStatusByPolicy(policy, *egw)
 		if !isExist {
 			continue
@@ -119,7 +119,7 @@ func newEgressClusterPolicyController(mgr manager.Manager, log *zap.Logger, cfg 
 		return err
 	}
 
-	if err := c.Watch(&source.Kind{Type: &egressv1.EgressGateway{}},
+	if err := c.Watch(&source.Kind{Type: &v1.EgressGateway{}},
 		handler.EnqueueRequestsFromMapFunc(utils.KindToMapFlat("EgressGateway"))); err != nil {
 		return fmt.Errorf("failed to watch EgressGateway: %w", err)
 	}

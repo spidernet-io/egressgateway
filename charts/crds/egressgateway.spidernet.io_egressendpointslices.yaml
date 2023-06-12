@@ -18,7 +18,7 @@ spec:
     singular: egressendpointslice
   scope: Namespaced
   versions:
-  - name: v1beta1
+  - name: v1
     schema:
       openAPIV3Schema:
         description: EgressEndpointSlice is a list of endpoint

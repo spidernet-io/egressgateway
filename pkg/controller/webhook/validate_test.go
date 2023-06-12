@@ -6,6 +6,7 @@ package webhook
 import (
 	"context"
 	"encoding/json"
+	"github.com/spidernet-io/egressgateway/pkg/k8s/apis/v1"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -16,7 +17,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
 
 	"github.com/spidernet-io/egressgateway/pkg/config"
-	egressv1 "github.com/spidernet-io/egressgateway/pkg/k8s/apis/egressgateway.spidernet.io/v1beta1"
 	"github.com/spidernet-io/egressgateway/pkg/schema"
 )
 
@@ -25,18 +25,18 @@ func TestValidateEgressGateway(t *testing.T) {
 
 	cases := map[string]struct {
 		existingResources []runtime.Object
-		newResource       *egressv1.EgressGateway
+		newResource       *v1.EgressGateway
 		expAllow          bool
 		expErrMessage     string
 	}{
 		"EgressGateway the EIP format is incorrect": {
 			existingResources: nil,
-			newResource: &egressv1.EgressGateway{
+			newResource: &v1.EgressGateway{
 				ObjectMeta: metav1.ObjectMeta{
 					Name: "eg-test",
 				},
-				Spec: egressv1.EgressGatewaySpec{
-					Ippools: egressv1.Ippools{
+				Spec: v1.EgressGatewaySpec{
+					Ippools: v1.Ippools{
 						IPv4: []string{"1.1.1.1x"},
 					},
 				},
@@ -125,18 +125,18 @@ func TestValidateEgressGatewayPolicy(t *testing.T) {
 	for name, c := range cases {
 		t.Run(name, func(t *testing.T) {
 
-			policy := &egressv1.EgressPolicy{
+			policy := &v1.EgressPolicy{
 				ObjectMeta: metav1.ObjectMeta{
 					Name: "policy",
 				},
-				Spec: egressv1.EgressPolicySpec{
+				Spec: v1.EgressPolicySpec{
 					EgressGatewayName: "test",
-					EgressIP: egressv1.EgressIP{
+					EgressIP: v1.EgressIP{
 						UseNodeIP: false,
 						IPv4:      "",
 						IPv6:      "",
 					},
-					AppliedTo: egressv1.AppliedTo{
+					AppliedTo: v1.AppliedTo{
 						PodSelector: &metav1.LabelSelector{
 							MatchLabels: map[string]string{"app": "test"},
 						},
@@ -184,16 +184,16 @@ func TestValidateEgressNode(t *testing.T) {
 	ctx := context.Background()
 
 	cases := map[string]struct {
-		newResource   *egressv1.EgressNode
+		newResource   *v1.EgressNode
 		expAllow      bool
 		expErrMessage string
 	}{
 		"all valid": {
-			newResource: &egressv1.EgressNode{
+			newResource: &v1.EgressNode{
 				ObjectMeta: metav1.ObjectMeta{
 					Name: "node1",
 				},
-				Spec: egressv1.EgressNodeSpec{},
+				Spec: v1.EgressNodeSpec{},
 			},
 			expAllow: true,
 		},

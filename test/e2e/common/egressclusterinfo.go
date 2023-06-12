@@ -5,24 +5,24 @@ package common
 
 import (
 	"context"
+	"time"
 
+	egressv1 "github.com/spidernet-io/egressgateway/pkg/k8s/apis/v1"
 	"github.com/spidernet-io/egressgateway/pkg/utils"
 	e "github.com/spidernet-io/egressgateway/test/e2e/err"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	"time"
 
 	"github.com/spidernet-io/e2eframework/framework"
-	egressv1beta1 "github.com/spidernet-io/egressgateway/pkg/k8s/apis/egressgateway.spidernet.io/v1beta1"
 )
 
-func GetEgressClusterInfo(f *framework.Framework, name string, egressClusterInfo *egressv1beta1.EgressClusterInfo) error {
+func GetEgressClusterInfo(f *framework.Framework, name string, egressClusterInfo *egressv1.EgressClusterInfo) error {
 	key := client.ObjectKey{
 		Name: name,
 	}
 	return f.GetResource(key, egressClusterInfo)
 }
 
-func WaitEgressClusterInfoPodCidrUpdated(f *framework.Framework, oldEci *egressv1beta1.EgressClusterInfo, podType string, timeout time.Duration) (*egressv1beta1.EgressClusterInfo, error) {
+func WaitEgressClusterInfoPodCidrUpdated(f *framework.Framework, oldEci *egressv1.EgressClusterInfo, podType string, timeout time.Duration) (*egressv1.EgressClusterInfo, error) {
 	var podV4Cidr, podV6Cidr []string
 	var v4ok, v6ok bool
 	switch podType {
@@ -33,7 +33,7 @@ func WaitEgressClusterInfoPodCidrUpdated(f *framework.Framework, oldEci *egressv
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
 
-	eci := new(egressv1beta1.EgressClusterInfo)
+	eci := new(egressv1.EgressClusterInfo)
 	for {
 		select {
 		case <-ctx.Done():

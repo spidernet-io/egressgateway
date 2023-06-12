@@ -18,7 +18,7 @@ spec:
     singular: egresspolicy
   scope: Namespaced
   versions:
-  - name: v1beta1
+  - name: v1
     schema:
       openAPIV3Schema:
         description: EgressPolicy represents a single egress gateway policy

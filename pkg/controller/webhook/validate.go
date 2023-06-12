@@ -7,6 +7,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	v12 "github.com/spidernet-io/egressgateway/pkg/k8s/apis/v1"
 	"net"
 
 	v1 "k8s.io/api/admission/v1"
@@ -16,7 +17,6 @@ import (
 
 	"github.com/spidernet-io/egressgateway/pkg/config"
 	"github.com/spidernet-io/egressgateway/pkg/egressgateway"
-	egressv1 "github.com/spidernet-io/egressgateway/pkg/k8s/apis/egressgateway.spidernet.io/v1beta1"
 )
 
 const (
@@ -43,7 +43,7 @@ func ValidateHook(client client.Client, cfg *config.Config) *webhook.Admission {
 				if req.Operation == v1.Delete {
 					return webhook.Allowed("checked")
 				}
-				policy := new(egressv1.EgressClusterPolicy)
+				policy := new(v12.EgressClusterPolicy)
 				err := json.Unmarshal(req.Object.Raw, policy)
 				if err != nil {
 					return webhook.Denied(fmt.Sprintf("json unmarshal EgressClusterPolicy with error: %v", err))
@@ -54,7 +54,7 @@ func ValidateHook(client client.Client, cfg *config.Config) *webhook.Admission {
 					return webhook.Allowed("checked")
 				}
 
-				policy := new(egressv1.EgressPolicy)
+				policy := new(v12.EgressPolicy)
 				err := json.Unmarshal(req.Object.Raw, policy)
 				if err != nil {
 					return webhook.Denied(fmt.Sprintf("json unmarshal EgressPolicy with error: %v", err))

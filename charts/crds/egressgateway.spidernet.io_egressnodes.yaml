@@ -39,7 +39,7 @@ spec:
       jsonPath: .status.phase
       name: phase
       type: string
-    name: v1beta1
+    name: v1
     schema:
       openAPIV3Schema:
         description: EgressNode represents an egress node

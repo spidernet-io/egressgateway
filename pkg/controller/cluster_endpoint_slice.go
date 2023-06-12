@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/spidernet-io/egressgateway/pkg/coalescing"
+	"github.com/spidernet-io/egressgateway/pkg/k8s/apis/v1"
 	"reflect"
 	"time"
 
@@ -27,7 +28,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/source"
 
 	"github.com/spidernet-io/egressgateway/pkg/config"
-	egressv1 "github.com/spidernet-io/egressgateway/pkg/k8s/apis/egressgateway.spidernet.io/v1beta1"
 )
 
 type endpointClusterReconciler struct {
@@ -44,7 +44,7 @@ func (r *endpointClusterReconciler) Reconcile(ctx context.Context, req reconcile
 
 	log.Info("reconcile")
 	deleted := false
-	policy := new(egressv1.EgressClusterPolicy)
+	policy := new(v1.EgressClusterPolicy)
 	err := r.client.Get(ctx, req.NamespacedName, policy)
 	if err != nil {
 		if !errors.IsNotFound(err) {
@@ -74,10 +74,10 @@ func (r *endpointClusterReconciler) Reconcile(ctx context.Context, req reconcile
 	}
 
 	existingKeyMap := make(map[types.NamespacedName]bool)
-	slicesToUpdate := make([]egressv1.EgressClusterEndpointSlice, 0)
-	slicesToCreate := make([]egressv1.EgressClusterEndpointSlice, 0)
-	slicesToDelete := make([]egressv1.EgressClusterEndpointSlice, 0)
-	slicesNotChange := make([]egressv1.EgressClusterEndpointSlice, 0)
+	slicesToUpdate := make([]v1.EgressClusterEndpointSlice, 0)
+	slicesToCreate := make([]v1.EgressClusterEndpointSlice, 0)
+	slicesToDelete := make([]v1.EgressClusterEndpointSlice, 0)
+	slicesNotChange := make([]v1.EgressClusterEndpointSlice, 0)
 
 	for _, epSlice := range endpointSlices.Items {
 		needUpdate := false
@@ -101,7 +101,7 @@ func (r *endpointClusterReconciler) Reconcile(ctx context.Context, req reconcile
 		}
 	}
 
-	needToCreateEp := make([]egressv1.EgressEndpoint, 0)
+	needToCreateEp := make([]v1.EgressEndpoint, 0)
 
 	for _, pod := range pods {
 		key := types.NamespacedName{Namespace: pod.Namespace, Name: pod.Name}
@@ -121,7 +121,7 @@ func (r *endpointClusterReconciler) Reconcile(ctx context.Context, req reconcile
 					needToCreateEp = needToCreateEp[count:]
 				} else {
 					slicesToUpdate[i].Endpoints = append(slicesToUpdate[i].Endpoints, needToCreateEp...)
-					needToCreateEp = make([]egressv1.EgressEndpoint, 0)
+					needToCreateEp = make([]v1.EgressEndpoint, 0)
 					break
 				}
 			}
@@ -135,7 +135,7 @@ func (r *endpointClusterReconciler) Reconcile(ctx context.Context, req reconcile
 					needToCreateEp = needToCreateEp[count:]
 				} else {
 					slice.Endpoints = append(slice.Endpoints, needToCreateEp...)
-					needToCreateEp = make([]egressv1.EgressEndpoint, 0)
+					needToCreateEp = make([]v1.EgressEndpoint, 0)
 					break
 				}
 				slicesToUpdate = append(slicesToUpdate, slice)
@@ -154,7 +154,7 @@ func (r *endpointClusterReconciler) Reconcile(ctx context.Context, req reconcile
 		} else {
 			// < 100
 			epSlice.Endpoints = append(epSlice.Endpoints, needToCreateEp...)
-			needToCreateEp = make([]egressv1.EgressEndpoint, 0)
+			needToCreateEp = make([]v1.EgressEndpoint, 0)
 			slicesToCreate = append(slicesToCreate, *epSlice)
 		}
 	}
@@ -192,7 +192,7 @@ func (r *endpointClusterReconciler) Reconcile(ctx context.Context, req reconcile
 	return reconcile.Result{}, utilerrors.NewAggregate(errs)
 }
 
-func newClusterEndpointSlice(policy *egressv1.EgressClusterPolicy) *egressv1.EgressClusterEndpointSlice {
+func newClusterEndpointSlice(policy *v1.EgressClusterPolicy) *v1.EgressClusterEndpointSlice {
 	// TODO: change it on release v1
 	gvk := schema.GroupVersionKind{
 		Group:   "egressgateway.spidernet.io",
@@ -201,19 +201,19 @@ func newClusterEndpointSlice(policy *egressv1.EgressClusterPolicy) *egressv1.Egr
 	}
 	ownerRef := metav1.NewControllerRef(policy, gvk)
 
-	return &egressv1.EgressClusterEndpointSlice{
+	return &v1.EgressClusterEndpointSlice{
 		ObjectMeta: metav1.ObjectMeta{
 			GenerateName:    getEndpointSlicePrefix(policy.Name),
 			Namespace:       policy.Namespace,
 			OwnerReferences: []metav1.OwnerReference{*ownerRef},
 			Labels: map[string]string{
-				egressv1.LabelPolicyName: policy.Name,
+				v1.LabelPolicyName: policy.Name,
 			},
 		},
 	}
 }
 
-func listPodsByClusterPolicy(ctx context.Context, cli client.Client, policy *egressv1.EgressClusterPolicy) ([]corev1.Pod, error) {
+func listPodsByClusterPolicy(ctx context.Context, cli client.Client, policy *v1.EgressClusterPolicy) ([]corev1.Pod, error) {
 	if policy.Spec.AppliedTo.NamespaceSelector == nil {
 		pods := new(corev1.PodList)
 		selector, err := metav1.LabelSelectorAsSelector(policy.Spec.AppliedTo.PodSelector)
@@ -266,10 +266,10 @@ func listPodsByClusterPolicy(ctx context.Context, cli client.Client, policy *egr
 	return res, nil
 }
 
-func listClusterEndpointSlices(ctx context.Context, cli client.Client, policyName string) (*egressv1.EgressClusterEndpointSliceList, error) {
-	slices := new(egressv1.EgressClusterEndpointSliceList)
+func listClusterEndpointSlices(ctx context.Context, cli client.Client, policyName string) (*v1.EgressClusterEndpointSliceList, error) {
+	slices := new(v1.EgressClusterEndpointSliceList)
 	labelSelector := &metav1.LabelSelector{MatchLabels: map[string]string{
-		egressv1.LabelPolicyName: policyName,
+		v1.LabelPolicyName: policyName,
 	}}
 	selector, err := metav1.LabelSelectorAsSelector(labelSelector)
 	if err != nil {
@@ -319,13 +319,13 @@ func newEgressClusterEpSliceController(mgr manager.Manager, log *zap.Logger, cfg
 		return fmt.Errorf("failed to watch namespace: %v", err)
 	}
 
-	err = c.Watch(&source.Kind{Type: &egressv1.EgressClusterPolicy{}}, &handler.EnqueueRequestForObject{})
+	err = c.Watch(&source.Kind{Type: &v1.EgressClusterPolicy{}}, &handler.EnqueueRequestForObject{})
 	if err != nil {
 		return fmt.Errorf("failed to watch EgressClusterPolicy: %v", err)
 	}
 
-	err = c.Watch(&source.Kind{Type: &egressv1.EgressClusterEndpointSlice{}}, &handler.EnqueueRequestForOwner{
-		OwnerType:    &egressv1.EgressClusterPolicy{},
+	err = c.Watch(&source.Kind{Type: &v1.EgressClusterEndpointSlice{}}, &handler.EnqueueRequestForOwner{
+		OwnerType:    &v1.EgressClusterPolicy{},
 		IsController: true,
 	})
 	if err != nil {
@@ -375,7 +375,7 @@ func enqueueNS(cli client.Client) handler.MapFunc {
 			return nil
 		}
 
-		policyList := new(egressv1.EgressClusterPolicyList)
+		policyList := new(v1.EgressClusterPolicyList)
 		err := cli.List(context.Background(), policyList)
 		if err != nil {
 			return nil
@@ -409,7 +409,7 @@ func enqueueEGCP(cli client.Client) handler.MapFunc {
 			return nil
 		}
 
-		policyList := new(egressv1.EgressClusterPolicyList)
+		policyList := new(v1.EgressClusterPolicyList)
 		err := cli.List(context.Background(), policyList)
 		if err != nil {
 			return nil

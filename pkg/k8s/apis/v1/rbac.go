@@ -10,4 +10,4 @@
 
 // +kubebuilder:rbac:groups=crd.projectcalico.org,resources=ippools,verbs=get;list;watch;create;update;patch;delete
 
-package v1beta1
+package v1
