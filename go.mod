@@ -7,13 +7,13 @@ require (
 	github.com/cilium/ipam v0.0.0-20220824141044-46ef3d556735
 	github.com/go-kit/log v0.2.1
 	github.com/go-logr/logr v1.2.4
-	github.com/go-openapi/errors v0.20.3
+	github.com/go-openapi/errors v0.20.4
 	github.com/go-openapi/loads v0.21.2
 	github.com/go-openapi/runtime v0.26.0
 	github.com/go-openapi/spec v0.20.9
 	github.com/go-openapi/strfmt v0.21.7
-	github.com/go-openapi/swag v0.22.3
-	github.com/go-swagger/go-swagger v0.30.4
+	github.com/go-openapi/swag v0.22.4
+	github.com/go-swagger/go-swagger v0.30.5
 	github.com/google/gops v0.3.27
 	github.com/gorilla/websocket v1.5.0
 	github.com/jessevdk/go-flags v1.5.0
@@ -68,7 +68,7 @@ require (
 	github.com/go-openapi/analysis v0.21.4 // indirect
 	github.com/go-openapi/inflect v0.19.0 // indirect
 	github.com/go-openapi/jsonpointer v0.19.6 // indirect
-	github.com/go-openapi/jsonreference v0.20.1 // indirect
+	github.com/go-openapi/jsonreference v0.20.2 // indirect
 	github.com/go-openapi/validate v0.22.1 // indirect
 	github.com/go-task/slim-sprig v0.0.0-20230315185526-52ccab3ef572 // indirect
 	github.com/gobuffalo/flect v1.0.2 // indirect
@@ -133,7 +133,7 @@ require (
 	go.uber.org/multierr v1.8.0 // indirect
 	golang.org/x/crypto v0.9.0 // indirect
 	golang.org/x/mod v0.10.0 // indirect
-	golang.org/x/oauth2 v0.7.0 // indirect
+	golang.org/x/oauth2 v0.8.0 // indirect
 	golang.org/x/sync v0.2.0 // indirect
 	golang.org/x/term v0.8.0 // indirect
 	golang.org/x/text v0.9.0 // indirect
