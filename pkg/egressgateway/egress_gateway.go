@@ -41,6 +41,16 @@ type egnReconciler struct {
 	config *config.Config
 }
 
+type policyInfo struct {
+	egw             string
+	ipv4            string
+	ipv6            string
+	node            string
+	policy          egress.Policy
+	isUseNodeIP     bool
+	allocatorPolicy string
+}
+
 func (r egnReconciler) Reconcile(ctx context.Context, req reconcile.Request) (reconcile.Result, error) {
 	kind, newReq, err := utils.ParseKindWithReq(req)
 	if err != nil {
@@ -55,6 +65,8 @@ func (r egnReconciler) Reconcile(ctx context.Context, req reconcile.Request) (re
 	switch kind {
 	case "EgressGateway":
 		return r.reconcileEG(ctx, newReq, log)
+	case "EgressClusterPolicy":
+		fallthrough
 	case "EgressPolicy":
 		return r.reconcileEGP(ctx, newReq, log)
 	case "Node":
@@ -301,40 +313,70 @@ func (r egnReconciler) reconcileEN(ctx context.Context, req reconcile.Request, l
 	return reconcile.Result{}, nil
 }
 
-// reconcileEN reconcile egress gateway policy
+// reconcileEN reconcile egresspolicy and egressclusterpolicy
 func (r egnReconciler) reconcileEGP(ctx context.Context, req reconcile.Request, log *zap.Logger) (reconcile.Result, error) {
 	deleted := false
 	isUpdete := false
-	egp := &egress.EgressPolicy{}
-	err := r.client.Get(ctx, req.NamespacedName, egp)
-	if err != nil {
-		if !errors.IsNotFound(err) {
-			log.Sugar().Errorf("get EgressPolicy %v err:%v", req.NamespacedName, err)
-			return reconcile.Result{}, err
+	pi := policyInfo{}
+
+	if len(req.Namespace) == 0 {
+		egcp := &egress.EgressClusterPolicy{}
+		err := r.client.Get(ctx, req.NamespacedName, egcp)
+		if err != nil {
+			if !errors.IsNotFound(err) {
+				log.Sugar().Errorf("get EgressPolicy %v err:%v", req.NamespacedName, err)
+				return reconcile.Result{}, err
+			}
+			deleted = true
 		}
-		deleted = true
+
+		deleted = deleted || !egcp.GetDeletionTimestamp().IsZero()
+		if !deleted {
+			pi.policy = egress.Policy{Name: req.Name}
+			pi.ipv4 = egcp.Spec.EgressIP.IPv4
+			pi.ipv6 = egcp.Spec.EgressIP.IPv6
+			pi.isUseNodeIP = egcp.Spec.EgressIP.UseNodeIP
+			pi.egw = egcp.Spec.EgressGatewayName
+		}
+	} else {
+		egp := &egress.EgressPolicy{}
+		err := r.client.Get(ctx, req.NamespacedName, egp)
+		if err != nil {
+			if !errors.IsNotFound(err) {
+				log.Sugar().Errorf("get EgressPolicy %v err:%v", req.NamespacedName, err)
+				return reconcile.Result{}, err
+			}
+			deleted = true
+		}
+
+		deleted = deleted || !egp.GetDeletionTimestamp().IsZero()
+		if !deleted {
+			pi.policy = egress.Policy{Name: req.Name, Namespace: req.Namespace}
+			pi.ipv4 = egp.Spec.EgressIP.IPv4
+			pi.ipv6 = egp.Spec.EgressIP.IPv6
+			pi.isUseNodeIP = egp.Spec.EgressIP.UseNodeIP
+			pi.egw = egp.Spec.EgressGatewayName
+		}
 	}
 
-	deleted = deleted || !egp.GetDeletionTimestamp().IsZero()
-
-	policy := egress.Policy{Name: req.Name, Namespace: req.Namespace}
+	policy := pi.policy
 	if deleted {
-		egList := &egress.EgressGatewayList{}
-		if err := r.client.List(context.Background(), egList); err != nil {
+		egwList := &egress.EgressGatewayList{}
+		if err := r.client.List(context.Background(), egwList); err != nil {
 			return reconcile.Result{Requeue: true}, nil
 		}
-		for _, eg := range egList.Items {
-			_, isExist := GetEIPStatusByPolicy(policy, eg)
+		for _, egw := range egwList.Items {
+			_, isExist := GetEIPStatusByPolicy(policy, egw)
 			if isExist {
-				log.Sugar().Infof("delete policy %v from eg %v", policy, eg.Name)
+				log.Sugar().Infof("delete policy %v from eg %v", policy, egw.Name)
 				// Delete the policy from the EgressGateway. If the referenced EIP is not used by any other policy,
 				// the system reclaims the EIP.
-				DeletePolicyFromEG(policy, &eg)
+				DeletePolicyFromEG(policy, &egw)
 
-				log.Sugar().Debugf("update egress gateway status\n%s", mustMarshalJson(eg.Status))
-				err = r.client.Status().Update(ctx, &eg)
+				log.Sugar().Debugf("update egress gateway status\n%s", mustMarshalJson(egw.Status))
+				err := r.client.Status().Update(ctx, &egw)
 				if err != nil {
-					log.Sugar().Errorf("update egress gateway status\n%s", mustMarshalJson(eg.Status))
+					log.Sugar().Errorf("update egress gateway status\n%s", mustMarshalJson(egw.Status))
 					return reconcile.Result{Requeue: true}, err
 				}
 				return reconcile.Result{}, nil
@@ -343,9 +385,9 @@ func (r egnReconciler) reconcileEGP(ctx context.Context, req reconcile.Request, 
 		return reconcile.Result{}, nil
 	}
 
-	egName := egp.Spec.EgressGatewayName
+	egwName := pi.egw
 	eg := &egress.EgressGateway{}
-	err = r.client.Get(ctx, types.NamespacedName{Name: egName}, eg)
+	err := r.client.Get(ctx, types.NamespacedName{Name: egwName}, eg)
 	if err != nil {
 		if errors.IsNotFound(err) {
 			return reconcile.Result{}, err
@@ -381,14 +423,13 @@ func (r egnReconciler) reconcileEGP(ctx context.Context, req reconcile.Request, 
 			for j, p := range eip.Policies {
 				if p == policy {
 					isReAllocatorPolicy := false
-					if egp.Spec.EgressIP.UseNodeIP && (eip.IPv4 != "" || eip.IPv6 != "") {
+					if pi.isUseNodeIP && (eip.IPv4 != "" || eip.IPv6 != "") {
 						isReAllocatorPolicy = true
-					} else if egp.Spec.EgressIP.IPv4 != "" && egp.Spec.EgressIP.IPv4 != eip.IPv4 {
+					} else if pi.ipv4 != "" && pi.ipv4 != eip.IPv4 {
 						isReAllocatorPolicy = true
-					} else if egp.Spec.EgressIP.IPv6 != "" && egp.Spec.EgressIP.IPv6 != eip.IPv6 {
+					} else if pi.ipv6 != "" && pi.ipv6 != eip.IPv6 {
 						isReAllocatorPolicy = true
 					}
-
 					if isReAllocatorPolicy {
 						eipStatus.Eips[i].Policies = append(eipStatus.Eips[i].Policies[:j], eipStatus.Eips[i].Policies[j+1:]...)
 						perNodeMap := make(map[string]egress.EgressIPStatus, 0)
@@ -430,7 +471,6 @@ update:
 			return reconcile.Result{Requeue: true}, err
 		}
 	}
-
 	return reconcile.Result{}, nil
 }
 
@@ -492,13 +532,37 @@ func (r egnReconciler) deleteNodeFromEG(ctx context.Context, nodeName string, eg
 func (r egnReconciler) reAllocatorPolicy(ctx context.Context, policy egress.Policy, eg *egress.EgressGateway, nodeMap map[string]egress.EgressIPStatus) error {
 	var perNode string
 	var ipv4, ipv6 string
-	egp := &egress.EgressPolicy{}
-	err := r.client.Get(ctx, types.NamespacedName{Namespace: policy.Namespace, Name: policy.Name}, egp)
-	if err != nil {
-		return err
+	var err error
+	pi := policyInfo{}
+	pi.policy = policy
+
+	if len(pi.policy.Namespace) == 0 {
+		egcp := &egress.EgressClusterPolicy{}
+		err := r.client.Get(ctx, types.NamespacedName{Name: pi.policy.Name}, egcp)
+		if err != nil {
+			return err
+		}
+
+		pi.ipv4 = egcp.Spec.EgressIP.IPv4
+		pi.ipv6 = egcp.Spec.EgressIP.IPv6
+		pi.isUseNodeIP = egcp.Spec.EgressIP.UseNodeIP
+		pi.egw = egcp.Spec.EgressGatewayName
+		pi.allocatorPolicy = egcp.Spec.EgressIP.AllocatorPolicy
+	} else {
+		egp := &egress.EgressPolicy{}
+		err := r.client.Get(ctx, types.NamespacedName{Namespace: pi.policy.Namespace, Name: pi.policy.Name}, egp)
+		if err != nil {
+			return err
+		}
+
+		pi.ipv4 = egp.Spec.EgressIP.IPv4
+		pi.ipv6 = egp.Spec.EgressIP.IPv6
+		pi.isUseNodeIP = egp.Spec.EgressIP.UseNodeIP
+		pi.egw = egp.Spec.EgressGatewayName
+		pi.allocatorPolicy = egp.Spec.EgressIP.AllocatorPolicy
 	}
 
-	ipv4 = egp.Spec.EgressIP.IPv4
+	ipv4 = pi.ipv4
 	if len(ipv4) != 0 {
 		perNode = GetNodeByIP(ipv4, *eg)
 		if len(perNode) == 0 {
@@ -508,19 +572,19 @@ func (r egnReconciler) reAllocatorPolicy(ctx context.Context, policy egress.Poli
 			}
 		}
 
-		ipv4, ipv6, err = r.allocatorEIP("", perNode, *egp, *eg)
+		ipv4, ipv6, err = r.allocatorEIP("", perNode, pi, *eg)
 		if err != nil {
 			return err
 		}
 	} else {
-		allocatorPolicy := egp.Spec.EgressIP.AllocatorPolicy
+		allocatorPolicy := pi.allocatorPolicy
 		if allocatorPolicy == egress.EipAllocatorRR {
 			perNode, err := r.allocatorNode("rr", nodeMap)
 			if err != nil {
 				return err
 			}
 
-			ipv4, ipv6, err = r.allocatorEIP("", perNode, *egp, *eg)
+			ipv4, ipv6, err = r.allocatorEIP("", perNode, pi, *eg)
 			if err != nil {
 				return err
 			}
@@ -538,7 +602,7 @@ func (r egnReconciler) reAllocatorPolicy(ctx context.Context, policy egress.Poli
 		}
 	}
 
-	err = setEipStatus(ipv4, ipv6, perNode, policy, nodeMap)
+	err = setEipStatus(ipv4, ipv6, perNode, pi.policy, nodeMap)
 	if err != nil {
 		return err
 	}
@@ -575,12 +639,11 @@ func (r egnReconciler) allocatorNode(selNodePolicy string, nodeMap map[string]eg
 	return perNode, nil
 }
 
-func (r egnReconciler) allocatorEIP(selEipLolicy string, nodeName string, egp egress.EgressPolicy, eg egress.EgressGateway) (string, string, error) {
+func (r egnReconciler) allocatorEIP(selEipLolicy string, nodeName string, pi policyInfo, eg egress.EgressGateway) (string, string, error) {
 
-	if egp.Spec.EgressIP.UseNodeIP {
+	if pi.isUseNodeIP {
 		return "", "", nil
 	}
-
 	var perIpv4 string
 	var perIpv6 string
 	rander := rand.New(rand.NewSource(time.Now().UnixNano()))
@@ -590,8 +653,7 @@ func (r egnReconciler) allocatorEIP(selEipLolicy string, nodeName string, egp eg
 		var useIpv4sByNode []net.IP
 
 		ipv4Ranges, _ := utils.MergeIPRanges(constant.IPv4, eg.Spec.Ippools.IPv4)
-
-		perIpv4 = egp.Spec.EgressIP.IPv4
+		perIpv4 = pi.ipv4
 		if len(perIpv4) != 0 {
 			result, err := utils.IsIPIncludedRange(constant.IPv4, perIpv4, ipv4Ranges)
 			if err != nil {
@@ -644,7 +706,7 @@ func (r egnReconciler) allocatorEIP(selEipLolicy string, nodeName string, egp eg
 
 		ipv6Ranges, _ := utils.MergeIPRanges(constant.IPv6, eg.Spec.Ippools.IPv6)
 
-		perIpv6 = egp.Spec.EgressIP.IPv6
+		perIpv6 = pi.ipv6
 		if len(perIpv6) != 0 {
 			result, err := utils.IsIPIncludedRange(constant.IPv6, perIpv6, ipv6Ranges)
 			if err != nil {
@@ -721,6 +783,11 @@ func NewEgressGatewayController(mgr manager.Manager, log *zap.Logger, cfg *confi
 	if err := c.Watch(&source.Kind{Type: &egress.EgressPolicy{}},
 		handler.EnqueueRequestsFromMapFunc(utils.KindToMapFlat("EgressPolicy"))); err != nil {
 		return fmt.Errorf("failed to watch EgressPolicy: %w", err)
+	}
+
+	if err := c.Watch(&source.Kind{Type: &egress.EgressClusterPolicy{}},
+		handler.EnqueueRequestsFromMapFunc(utils.KindToMapFlat("EgressClusterPolicy"))); err != nil {
+		return fmt.Errorf("failed to watch EgressClusterPolicy: %w", err)
 	}
 
 	if err := c.Watch(&source.Kind{Type: &egress.EgressNode{}},
