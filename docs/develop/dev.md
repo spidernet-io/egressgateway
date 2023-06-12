@@ -206,7 +206,7 @@
 │   │   ├── egressgateway.md
 │   │   ├── egressnode.md
 │   │   ├── egresspolicy.md
-│   │   └── stress.md
+│   │   └── reliability.md
 │   ├── e2e
 │   │   ├── common
 │   │   │   ├── constant.go
