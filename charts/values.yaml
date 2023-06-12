@@ -34,8 +34,6 @@ feature:
   tunnelIpv6Subnet: "fd11::/112"
   ## @param feature.tunnelDetectMethod Tunnel base on which interface [`defaultRouteInterface`, `interface=eth0`]
   tunnelDetectMethod: "defaultRouteInterface"
-  ## @param feature.forwardMethod Tunnel base on which interface [`active-active`: require kernel >=4.4, `active-passive`]
-  forwardMethod: "active-passive"
   iptables:
     ## @param feature.iptables.backendMode Iptables mode can be specified as `nft` or `legacy`, with `auto` meaning automatic detection. The default value is `auto`.
     backendMode: "auto"
