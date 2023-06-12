@@ -40,7 +40,7 @@ type Range struct {
 }
 
 func NewAllocatorMarkRange(mask string) (Interface, error) {
-	start, end, err := rangeSize(mask)
+	start, end, err := RangeSize(mask)
 	if err != nil {
 		return nil, err
 	}
@@ -66,7 +66,7 @@ func bigForMark(mark string) (*big.Int, error) {
 	return big.NewInt(0).SetUint64(val), nil
 }
 
-func rangeSize(mask string) (uint64, uint64, error) {
+func RangeSize(mask string) (uint64, uint64, error) {
 	start, err := Parse(mask)
 	if err != nil {
 		return 0, 0, err

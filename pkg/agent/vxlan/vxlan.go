@@ -146,6 +146,7 @@ type Peer struct {
 	IPv6   *net.IP
 	Parent net.IP
 	MAC    net.HardwareAddr
+	Mark   int
 }
 
 func (dev *Device) ListNeigh() ([]netlink.Neigh, error) {

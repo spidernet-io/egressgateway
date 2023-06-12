@@ -61,11 +61,11 @@ func New(cfg *config.Config, log *zap.Logger) (types.Service, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to create node controller: %w", err)
 	}
-	//
-	//err = newPolicyController(mgr, log, cfg)
-	//if err != nil {
-	//	return nil, fmt.Errorf("failed to create egress gateway policy controller: %w", err)
-	//}
+
+	err = newPolicyController(mgr, log, cfg)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create egress gateway policy controller: %w", err)
+	}
 
 	err = newEipCtrl(mgr, log, cfg)
 	if err != nil {

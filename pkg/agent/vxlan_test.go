@@ -57,11 +57,7 @@ func TestReconcilerEgressNode(t *testing.T) {
 			builder.WithScheme(schema.GetScheme())
 			builder.WithObjects(c.initialObjects...)
 			ctx := context.Background()
-			multiPath := false
-			if c.config.FileConfig.ForwardMethod == config.ForwardMethodActiveActive {
-				multiPath = true
-			}
-			ruleRoute := route.NewRuleRoute(0x11000000, 0xffffffff, multiPath, log)
+			ruleRoute := route.NewRuleRoute(log)
 			reconciler := vxlanReconciler{
 				client:         builder.Build(),
 				log:            log,
