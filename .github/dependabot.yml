@@ -20,8 +20,7 @@ updates:
     reviewers:
       - "weizhoublue"
     labels:
-      - pr/release/none-required
-      - pr/dependabot/gomod
+      - release/none
 
   - package-ecosystem: github-actions
     directory: /
@@ -33,6 +32,8 @@ updates:
     rebase-strategy: "disabled"
     reviewers:
       - "weizhoublue"
+      - lou-lan
+      - dcwbq
     labels:
       - pr/dependabot/github-actions
       - pr/release/none-required
@@ -44,6 +45,7 @@ updates:
     open-pull-requests-limit: 5
     reviewers:
       - "weizhoublue"
+      - lou-lan
+      - dcwbq
     labels:
-      - pr/release/none-required
-      - pr/dependabot/docker
+      - release/none
