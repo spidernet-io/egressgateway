@@ -5,9 +5,9 @@
 
 SCRIPT_DIR="$( cd "$( dirname "$0" )" && pwd )"
 PROJECT_DIR="${SCRIPT_DIR}/../.."
-VEDNOR_DIR="vendor"
+VENDOR_DIR="vendor"
 
-SUMMARY="$(cloc "${PROJECT_DIR}"  --exclude-dir="${VEDNOR_DIR}" --md | tail -1)"
+SUMMARY="$(cloc "${PROJECT_DIR}"  --exclude-dir="${VENDOR_DIR}" --md | tail -1)"
 IFS='|' read -r -a TOKENS <<< "$SUMMARY"
 
 NUMBER_OF_FILES=${TOKENS[1]}

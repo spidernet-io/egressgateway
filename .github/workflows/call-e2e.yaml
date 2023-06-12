@@ -33,9 +33,6 @@ on:
 jobs:
   e2e_against_commit:
     runs-on: ${{ inputs.os }}
-    strategy:
-      matrix:
-        forward-method: [active-passive,active-active]
     steps:
       - name: Prepare
         id: prepare
@@ -44,7 +41,6 @@ jobs:
           lsb_release -a
           echo -e "\033[32miptables --version \033[0m"
           iptables --version
-          echo -e "\033[32m forwardMethod of egressgateway: ${{ matrix.forward-method }} \033[0m"
           echo "ref: ${{ inputs.ref }} "
           echo "e2e_labels: ${{ inputs.e2e_labels }}"
           if ${{ inputs.ipfamily == 'ipv4' }} ; then
@@ -126,7 +122,6 @@ jobs:
           command: |
             make e2e_init -e E2E_KIND_CLUSTER_NAME=${{ env.RUN_KIND_CLUSTER_NAME }} \
                 -e PROJECT_IMAGE_VERSION=${{ inputs.ref }} \
-                -e PROJECT_FORWARD_METHOD=${{ matrix.forward-method }} \
                 -e E2E_IP_FAMILY=${{ inputs.ipfamily }} \
                 -e PYROSCOPE_LOCAL_PORT='' \
                 -e E2E_KIND_NODE_IMAGE=${{ inputs.kind_node_image }}
@@ -134,12 +129,7 @@ jobs:
       - name: Run e2e Test
         continue-on-error: true
         run: |
-          echo ${{ github.event.inputs.labels }}
-          E2E_LABELS=forwardMethod
-          if ${{ matrix.forward-method == 'active-passive' }}; then
-            E2E_LABELS=${{ inputs.e2e_labels }}
-          fi
-          echo "E2E_LABELS === ${E2E_LABELS}"
+          E2E_LABELS=${{ inputs.e2e_labels }}
           echo "inputLabels === ${{ github.event.inputs.labels }}"
           RESULT=0
           make e2e_run -e E2E_KIND_CLUSTER_NAME=${{ env.RUN_KIND_CLUSTER_NAME }}  \
@@ -164,7 +154,7 @@ jobs:
       - name: Upload e2e cluster log
         uses: actions/upload-artifact@v3.1.1
         with:
-          name: ${{ inputs.ipfamily }}-${{ matrix.forward-method }}-debuglog-${{ env.RUN_VAR }}.txt
+          name: ${{ inputs.ipfamily }}-debuglog-${{ env.RUN_VAR }}.txt
           path: ${{ env.E2E_LOG_PATH }}
           retention-days: 30
 
@@ -172,7 +162,7 @@ jobs:
         if: ${{ env.RUN_UPLOAD_LOG == 'true' }}
         uses: actions/upload-artifact@v3.1.1
         with:
-          name: ${{ inputs.ipfamily }}-${{ matrix.forward-method }}-e2ereport-${{ env.RUN_VAR }}.json
+          name: ${{ inputs.ipfamily }}-e2e-report-${{ env.RUN_VAR }}.json
           path: ${{ env.E2E_GINKGO_REPORT_PATH }}
           retention-days: 30
 

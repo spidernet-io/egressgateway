@@ -170,9 +170,6 @@ E2E_KIND_IPV6_SERVICE_CIDR = fd41::/108
 E2E_KIND_IPV4_POD_CIDR = 172.40.0.0/16
 E2E_KIND_IPV6_POD_CIDR = fd40::/48
 
-# egressGateway forwardMethod: [`active-active`: require kernel >=4.4, `active-passive`]
-PROJECT_FORWARD_METHOD ?= active-passive
-
 #====== calico
 CALICO_VERSION = v3.24.0
 INSTALL_TIME_OUT = 300s

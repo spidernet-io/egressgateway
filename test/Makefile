@@ -72,7 +72,7 @@ install_proscope:
 		ServerAddress=$$(docker network inspect kind -f {{\(index\ $$.IPAM.Config\ 0\).Gateway}}) ; \
 		echo "setup pyroscope on $${ServerAddress}:$(PYROSCOPE_LOCAL_PORT)" ; \
 		docker run -d --name $(PYROSCOPE_CONTAINER_NAME) -p $(PYROSCOPE_LOCAL_PORT):4040 $(PYROSCOPE_IMAGE_NAME) server ; \
-		echo "finish setuping pyroscope " ; \
+		echo "finish setup pyroscope" ; \
     fi
 
 
@@ -187,8 +187,6 @@ deploy_project:
 		if [ "$(E2E_IP_FAMILY)" == "dual" ] ; then HELM_OPTION+=" --set feature.enableIPv4=true --set feature.enableIPv6=true" ; fi ; \
 		if [ "$(E2E_IP_FAMILY)" == "ipv4" ] ; then HELM_OPTION+=" --set feature.enableIPv4=true --set feature.enableIPv6=false" ; fi ; \
 		if [ "$(E2E_IP_FAMILY)" == "ipv6" ] ; then HELM_OPTION+=" --set feature.enableIPv4=false --set feature.enableIPv6=true" ; fi ; \
-		if [ "$(PROJECT_FORWARD_METHOD)" == "active-passive" ] ; then HELM_OPTION+=" --set feature.forwardMethod=active-passive" ; fi ; \
-		if [ "$(PROJECT_FORWARD_METHOD)" == "active-active" ] ; then HELM_OPTION+=" --set feature.forwardMethod=active-active" ; fi ; \
 		helm --kubeconfig=$(KIND_KUBECONFIG) install project $(ROOT_DIR)/charts \
 				-n kube-system --wait --debug \
 				--set global.imageTagOverride=$(PROJECT_IMAGE_VERSION) \
