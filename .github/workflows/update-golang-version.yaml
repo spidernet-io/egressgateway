@@ -40,4 +40,4 @@ jobs:
           signoff: true
           token: ${{ secrets.WELAN_PAT }}
           labels: pr/robot_update
-          reviewers: weizhoublue
+          reviewers: lou-lan,dcwbq
