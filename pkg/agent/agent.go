@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/go-logr/logr"
 	"go.uber.org/zap"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -16,6 +17,7 @@ import (
 
 	"github.com/spidernet-io/egressgateway/pkg/agent/metrics"
 	"github.com/spidernet-io/egressgateway/pkg/config"
+	"github.com/spidernet-io/egressgateway/pkg/logger"
 	"github.com/spidernet-io/egressgateway/pkg/schema"
 	"github.com/spidernet-io/egressgateway/pkg/types"
 )
@@ -28,8 +30,8 @@ type Agent struct {
 func New(cfg *config.Config, log *zap.Logger) (types.Service, error) {
 	syncPeriod := time.Second * 15
 	mgrOpts := manager.Options{
-		Scheme: schema.GetScheme(),
-		//Logger:                 log,
+		Scheme:                 schema.GetScheme(),
+		Logger:                 logr.New(logger.NewLogSink(log, cfg.KLOGLevel)),
 		HealthProbeBindAddress: cfg.HealthProbeBindAddress,
 		SyncPeriod:             &syncPeriod,
 	}
