@@ -15,9 +15,8 @@ import (
 	"github.com/spidernet-io/egressgateway/pkg/ethtool"
 )
 
-// Device is vxlan device
+// Device is vxlan device manager
 type Device struct {
-	name      string
 	lock      sync.RWMutex
 	link      *netlink.Vxlan
 	getParent func(version int) (*Parent, error)
@@ -25,8 +24,6 @@ type Device struct {
 
 func New(options ...func(*Device)) *Device {
 	d := &Device{
-		name: "",
-		link: nil,
 		getParent: GetParentByDefaultRoute(NetLink{
 			RouteListFiltered: netlink.RouteListFiltered,
 			LinkByIndex:       netlink.LinkByIndex,
@@ -48,8 +45,12 @@ func WithCustomGetParent(getParent func(version int) (*Parent, error)) func(devi
 
 // EnsureLink ensure vxlan device
 // name, vni, port, mac, mtu, ipv4, ipv6, disableChecksumOffload
-func (dev *Device) EnsureLink(name string, vni int, port int, mac net.HardwareAddr, mtu int, ipv4 *net.IPNet, ipv6 *net.IPNet,
+func (dev *Device) EnsureLink(name string, vni int, port int, mac net.HardwareAddr, mtu int,
+	ipv4, ipv6 *net.IPNet,
 	disableChecksumOffload bool) error {
+
+	dev.lock.Lock()
+	defer dev.lock.Unlock()
 
 	v := 4
 	if ipv4 == nil && ipv6 != nil {
@@ -73,11 +74,10 @@ func (dev *Device) EnsureLink(name string, vni int, port int, mac net.HardwareAd
 		Learning:     false,
 	}
 
-	link, err = dev.ensureLink(link)
+	dev.link, err = dev.ensureLink(link)
 	if err != nil {
 		return err
 	}
-	dev.setLink(link)
 
 	err = dev.ensureAddr(ipv4, link, netlink.FAMILY_V4)
 	if err != nil {
@@ -150,6 +150,9 @@ type Peer struct {
 }
 
 func (dev *Device) ListNeigh() ([]netlink.Neigh, error) {
+	dev.lock.Lock()
+	defer dev.lock.Unlock()
+
 	if dev.notReady() {
 		return nil, nil
 	}
@@ -161,6 +164,9 @@ func (dev *Device) ListNeigh() ([]netlink.Neigh, error) {
 }
 
 func (dev *Device) Add(peer Peer) error {
+	dev.lock.RLock()
+	defer dev.lock.RUnlock()
+
 	if dev.notReady() {
 		return nil
 	}
@@ -301,13 +307,5 @@ func (dev *Device) ensureAddr(ipn *net.IPNet, link netlink.Link, family int) err
 }
 
 func (dev *Device) notReady() bool {
-	dev.lock.RLock()
-	defer dev.lock.RUnlock()
 	return dev.link == nil
-}
-
-func (dev *Device) setLink(link *netlink.Vxlan) {
-	dev.lock.Lock()
-	defer dev.lock.Unlock()
-	dev.link = link
 }
