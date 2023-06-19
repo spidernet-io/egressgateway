@@ -38,9 +38,9 @@ require (
 	golang.org/x/net v0.10.0
 	golang.org/x/sys v0.8.0
 	gopkg.in/yaml.v3 v3.0.1
-	k8s.io/api v0.26.3
-	k8s.io/apimachinery v0.27.2
-	k8s.io/client-go v0.26.3
+	k8s.io/api v0.27.3
+	k8s.io/apimachinery v0.27.3
+	k8s.io/client-go v0.27.3
 	k8s.io/code-generator v0.27.2
 	k8s.io/utils v0.0.0-20230313181309-38a27ef9d749
 	modernc.org/memory v1.6.0
