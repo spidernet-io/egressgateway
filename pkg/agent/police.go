@@ -56,6 +56,45 @@ type policeReconciler struct {
 	policyMapNode *utils.SyncMap[egressv1.Policy, string]
 }
 
+func (r *policeReconciler) Reconcile(ctx context.Context, req reconcile.Request) (reconcile.Result, error) {
+	r.doOnce.Do(func() {
+		r.log.Sugar().Info("first reconcile of policy controller, init apply policy")
+	redo:
+		err := r.initApplyPolicy()
+		if err != nil {
+			r.log.Sugar().Error("first reconcile of policy controller, init apply policy, with error:", err)
+			goto redo
+		}
+	})
+	kind, newReq, err := utils.ParseKindWithReq(req)
+	if err != nil {
+		r.log.Sugar().Infof("parse req(%v) with error: %v", req, err)
+		return reconcile.Result{}, err
+	}
+	log := r.log.With(
+		zap.String("namespacedName", newReq.NamespacedName.String()),
+		zap.String("kind", kind),
+	)
+	log.Info("reconciling")
+	var res reconcile.Result
+	switch kind {
+	case "EgressGateway":
+		res, err = r.reconcileGateway(ctx, newReq, log)
+		return res, err
+	case "EgressClusterPolicy":
+		res, err = r.reconcileClusterPolicy(ctx, newReq, log)
+		return res, err
+	case "EgressPolicy":
+		res, err = r.reconcilePolicy(ctx, newReq, log)
+		return res, err
+	case "EgressClusterInfo":
+		res, err = r.reconcileClusterInfo(ctx, newReq, log)
+	default:
+		return reconcile.Result{}, nil
+	}
+	return res, err
+}
+
 type PolicyCommon struct {
 	NodeName   string
 	DestSubnet []string
@@ -76,9 +115,10 @@ type IP struct {
 // build iptables
 func (r *policeReconciler) initApplyPolicy() error {
 	r.log.Info("'apply policy")
+	ctx := context.Background()
 
 	gateways := new(egressv1.EgressGatewayList)
-	err := r.client.List(context.Background(), gateways)
+	err := r.client.List(ctx, gateways)
 	if err != nil {
 		return fmt.Errorf("failed to list gateway: %v", err)
 	}
@@ -111,26 +151,9 @@ func (r *policeReconciler) initApplyPolicy() error {
 	}
 
 	for policy, val := range unSnatPolicies {
-		if policy.Namespace != "" {
-			policyObj := new(egressv1.EgressPolicy)
-			namespacedName := types.NamespacedName{Namespace: policy.Namespace, Name: policy.Name}
-			err := r.client.Get(context.Background(), namespacedName, policyObj)
-			if err != nil {
-				if !errors.IsNotFound(err) {
-					return err
-				}
-			}
-			val.DestSubnet = policyObj.Spec.DestSubnet
-		} else {
-			policyObj := new(egressv1.EgressClusterPolicy)
-			namespacedName := types.NamespacedName{Namespace: policy.Namespace, Name: policy.Name}
-			err := r.client.Get(context.Background(), namespacedName, policyObj)
-			if err != nil {
-				if !errors.IsNotFound(err) {
-					return err
-				}
-			}
-			val.DestSubnet = policyObj.Spec.DestSubnet
+		val.DestSubnet, err = r.getPolicySubnet(policy.Namespace, policy.Name)
+		if err != nil {
+			return err
 		}
 		err := r.updatePolicyIPSet(policy.Namespace, policy.Name, false, val.DestSubnet)
 		if err != nil {
@@ -139,26 +162,9 @@ func (r *policeReconciler) initApplyPolicy() error {
 	}
 
 	for policy, val := range snatPolicies {
-		if policy.Namespace != "" {
-			policyObj := new(egressv1.EgressPolicy)
-			namespacedName := types.NamespacedName{Namespace: policy.Namespace, Name: policy.Name}
-			err := r.client.Get(context.Background(), namespacedName, policyObj)
-			if err != nil {
-				if !errors.IsNotFound(err) {
-					return err
-				}
-			}
-			val.DestSubnet = policyObj.Spec.DestSubnet
-		} else {
-			policyObj := new(egressv1.EgressClusterPolicy)
-			namespacedName := types.NamespacedName{Namespace: policy.Namespace, Name: policy.Name}
-			err := r.client.Get(context.Background(), namespacedName, policyObj)
-			if err != nil {
-				if !errors.IsNotFound(err) {
-					return err
-				}
-			}
-			val.DestSubnet = policyObj.Spec.DestSubnet
+		val.DestSubnet, err = r.getPolicySubnet(policy.Namespace, policy.Name)
+		if err != nil {
+			return err
 		}
 		err := r.updatePolicyIPSet(policy.Namespace, policy.Name, true, val.DestSubnet)
 		if err != nil {
@@ -257,6 +263,33 @@ func (r *policeReconciler) initApplyPolicy() error {
 	return nil
 }
 
+func (r *policeReconciler) getPolicySubnet(ns, name string) ([]string, error) {
+	var obj client.Object
+	key := types.NamespacedName{Namespace: ns, Name: name}
+	getSubnet := func(obj client.Object) []string {
+		switch obj := obj.(type) {
+		case *egressv1.EgressPolicy:
+			return obj.Spec.DestSubnet
+		case *egressv1.EgressClusterPolicy:
+			return obj.Spec.DestSubnet
+		default:
+			return nil
+		}
+	}
+	if ns != "" {
+		obj = new(egressv1.EgressPolicy)
+	} else {
+		obj = new(egressv1.EgressClusterPolicy)
+	}
+	err := r.client.Get(context.Background(), key, obj)
+	if err != nil {
+		if !errors.IsNotFound(err) {
+			return nil, err
+		}
+	}
+	return getSubnet(obj), err
+}
+
 func (r *policeReconciler) updatePolicyIPSet(policyNs string, policyName string, isEipNodeSet bool, destSubnet []string) error {
 	// calculate src ip list
 	srcIPv4List, srcIPv6List, err := r.getPolicySrcIPs(policyNs, policyName, func(e egressv1.EgressEndpoint) bool {
@@ -347,18 +380,13 @@ func (r *policeReconciler) updatePolicyIPSet(policyNs string, policyName string,
 
 func (r *policeReconciler) getPolicySrcIPs(policyNs, policyName string, filter func(slice egressv1.EgressEndpoint) bool) ([]string, []string, error) {
 	ctx := context.Background()
-
 	selector, err := metav1.LabelSelectorAsSelector(&metav1.LabelSelector{
-		MatchLabels: map[string]string{
-			egressv1.LabelPolicyName: policyName,
-		},
+		MatchLabels: map[string]string{egressv1.LabelPolicyName: policyName},
 	})
 	if err != nil {
 		return nil, nil, err
 	}
-	opt := &client.ListOptions{
-		LabelSelector: selector,
-	}
+	opt := &client.ListOptions{LabelSelector: selector}
 
 	ipv4List := make([]string, 0)
 	ipv6List := make([]string, 0)
@@ -482,40 +510,6 @@ func buildNatStaticRule(base uint32) map[string][]iptables.Rule {
 		},
 	}}
 	return res
-}
-
-func (r *policeReconciler) Reconcile(ctx context.Context, req reconcile.Request) (reconcile.Result, error) {
-	r.doOnce.Do(func() {
-		r.log.Sugar().Info("first reconcile of policy controller, init apply policy")
-	redo:
-		err := r.initApplyPolicy()
-		if err != nil {
-			r.log.Sugar().Error("first reconcile of policy controller, init apply policy, with error:", err)
-			goto redo
-		}
-	})
-	kind, newReq, err := utils.ParseKindWithReq(req)
-	if err != nil {
-		r.log.Sugar().Infof("parse req(%v) with error: %v", req, err)
-		return reconcile.Result{}, err
-	}
-	log := r.log.With(
-		zap.String("namespacedName", newReq.NamespacedName.String()),
-		zap.String("kind", kind),
-	)
-	log.Info("reconciling")
-	switch kind {
-	case "EgressGateway":
-		return r.reconcileGateway(ctx, newReq, log)
-	case "EgressClusterPolicy":
-		return r.reconcileClusterPolicy(ctx, newReq, log)
-	case "EgressPolicy":
-		return r.reconcilePolicy(ctx, newReq, log)
-	case "EgressClusterInfo":
-		return r.reconcileClusterInfo(ctx, newReq, log)
-	default:
-		return reconcile.Result{}, nil
-	}
 }
 
 func (r *policeReconciler) reconcileClusterInfo(ctx context.Context, req reconcile.Request, log *zap.Logger) (reconcile.Result, error) {
@@ -690,42 +684,6 @@ func buildMangleStaticRule(base uint32) map[string][]iptables.Rule {
 	return res
 }
 
-// updatePolicyRule make policy to rule
-func (r *policeReconciler) updatePolicyRule(policyName string, mark uint32, version uint8) ([]iptables.Rule, bool) {
-	changed := false
-	tmp := ""
-	var ruleMap *utils.SyncMap[string, iptables.Rule]
-	switch version {
-	case 4:
-		ruleMap = r.ruleV4Map
-		if _, ok := ruleMap.Load(policyName); ok {
-			break
-		}
-		tmp = "v4-"
-		changed = true
-	case 6:
-		ruleMap = r.ruleV6Map
-		if _, ok := ruleMap.Load(policyName); ok {
-			break
-		}
-		tmp = "v6-"
-		changed = true
-	default:
-		panic("not supported ip version")
-	}
-	if !changed {
-		return make([]iptables.Rule, 0), changed
-	}
-	matchCriteria := iptables.MatchCriteria{}.
-		SourceIPSet(formatIPSetName("egress-src-"+tmp, policyName)).
-		DestIPSet(formatIPSetName("egress-dst-"+tmp, policyName)).
-		CTDirectionOriginal(iptables.DirectionOriginal)
-	action := iptables.SetMaskedMarkAction{Mark: mark, Mask: 0xffffffff}
-	rule := iptables.Rule{Match: matchCriteria, Action: action, Comment: []string{}}
-	ruleMap.Store(policyName, rule)
-	return buildRuleList(ruleMap), changed
-}
-
 // reconcilePolicy reconcile egress policy
 // watch update/delete events
 // - ipset
@@ -844,41 +802,6 @@ func (r *policeReconciler) reconcileClusterPolicy(ctx context.Context, req recon
 	return reconcile.Result{}, nil
 }
 
-// addOrUpdatePolicy reconcile add or update egress policy
-func (r *policeReconciler) addOrUpdatePolicy(ctx context.Context, firstInit bool, policy *egressv1.EgressPolicy, log *zap.Logger) error {
-	return nil
-}
-
-func (r *policeReconciler) removePolicyRule(policyName string, version uint8) ([]iptables.Rule, bool) {
-	changed := false
-	var ruleMap *utils.SyncMap[string, iptables.Rule]
-	switch version {
-	case 4:
-		ruleMap = r.ruleV4Map
-	case 6:
-		ruleMap = r.ruleV6Map
-	default:
-		panic("not supported ip version")
-	}
-	if _, ok := ruleMap.Load(policyName); ok {
-		ruleMap.Delete(policyName)
-		changed = true
-	}
-	if !changed {
-		return make([]iptables.Rule, 0), changed
-	}
-	return buildRuleList(ruleMap), changed
-}
-
-func buildRuleList(ruleMap *utils.SyncMap[string, iptables.Rule]) []iptables.Rule {
-	list := make([]iptables.Rule, 0)
-	ruleMap.Range(func(key string, val iptables.Rule) bool {
-		list = append(list, val)
-		return true
-	})
-	return list
-}
-
 func findDiff(oldList, newList []string) (toAdd, toDel []string) {
 	oldCopy := make([]string, len(oldList))
 	copy(oldCopy, oldList)
@@ -926,21 +849,6 @@ func findDiff(oldList, newList []string) (toAdd, toDel []string) {
 		}
 	}
 	return toAdd, toDel
-}
-
-func findElements(include bool, parent []string, sub []string) []string {
-	parentCopy := make([]string, len(parent))
-	parentMap := make(map[string]struct{})
-	for _, s := range parentCopy {
-		parentMap[s] = struct{}{}
-	}
-	res := make([]string, 0)
-	for _, s := range sub {
-		if _, ok := parentMap[s]; ok == include {
-			res = append(res, s)
-		}
-	}
-	return res
 }
 
 func (r *policeReconciler) getDstCIDR(list []string) ([]string, []string, error) {
