@@ -770,27 +770,27 @@ func NewEgressGatewayController(mgr manager.Manager, log *zap.Logger, cfg *confi
 		return err
 	}
 
-	if err := c.Watch(&source.Kind{Type: &egress.EgressGateway{}},
+	if err = c.Watch(source.Kind(mgr.GetCache(), &egress.EgressGateway{}),
 		handler.EnqueueRequestsFromMapFunc(utils.KindToMapFlat("EgressGateway"))); err != nil {
 		return fmt.Errorf("failed to watch EgressGateway: %w", err)
 	}
 
-	if err := c.Watch(&source.Kind{Type: &corev1.Node{}},
+	if err = c.Watch(source.Kind(mgr.GetCache(), &corev1.Node{}),
 		handler.EnqueueRequestsFromMapFunc(utils.KindToMapFlat("Node"))); err != nil {
 		return fmt.Errorf("failed to watch Node: %w", err)
 	}
 
-	if err := c.Watch(&source.Kind{Type: &egress.EgressPolicy{}},
+	if err = c.Watch(source.Kind(mgr.GetCache(), &egress.EgressPolicy{}),
 		handler.EnqueueRequestsFromMapFunc(utils.KindToMapFlat("EgressPolicy"))); err != nil {
 		return fmt.Errorf("failed to watch EgressPolicy: %w", err)
 	}
 
-	if err := c.Watch(&source.Kind{Type: &egress.EgressClusterPolicy{}},
+	if err = c.Watch(source.Kind(mgr.GetCache(), &egress.EgressClusterPolicy{}),
 		handler.EnqueueRequestsFromMapFunc(utils.KindToMapFlat("EgressClusterPolicy"))); err != nil {
 		return fmt.Errorf("failed to watch EgressClusterPolicy: %w", err)
 	}
 
-	if err := c.Watch(&source.Kind{Type: &egress.EgressNode{}},
+	if err = c.Watch(source.Kind(mgr.GetCache(), &egress.EgressNode{}),
 		handler.EnqueueRequestsFromMapFunc(utils.KindToMapFlat("EgressNode"))); err != nil {
 		return fmt.Errorf("failed to watch EgressNode: %w", err)
 	}

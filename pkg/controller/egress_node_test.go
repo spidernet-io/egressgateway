@@ -40,13 +40,17 @@ func TestEgressNodeCtrlForEgressNode(t *testing.T) {
 	}
 
 	initialObjects := []client.Object{
-		&egressv1.EgressNode{ObjectMeta: v1.ObjectMeta{Name: "node1"}},
 		&corev1.Node{ObjectMeta: v1.ObjectMeta{Name: "node1"}},
+		&egressv1.EgressNode{
+			ObjectMeta: v1.ObjectMeta{Name: "node1"},
+			Status:     egressv1.EgressNodeStatus{},
+		},
 	}
 
 	builder := fake.NewClientBuilder()
 	builder.WithScheme(schema.GetScheme())
 	builder.WithObjects(initialObjects...)
+	builder.WithStatusSubresource(initialObjects...)
 
 	mark, err := markallocator.NewAllocatorMarkRange("0x26000000")
 	if err != nil {

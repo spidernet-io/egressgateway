@@ -95,8 +95,8 @@ func newEipCtrl(mgr manager.Manager, log *zap.Logger, cfg *config.Config) error 
 		return err
 	}
 
-	err = c.Watch(&source.Kind{Type: &egressv1.EgressGateway{}}, &handler.EnqueueRequestForObject{})
-	if err != nil {
+	if err = c.Watch(source.Kind(mgr.GetCache(), &egressv1.EgressGateway{}),
+		&handler.EnqueueRequestForObject{}); err != nil {
 		return fmt.Errorf("failed to watch EgressGateway: %v", err)
 	}
 

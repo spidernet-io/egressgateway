@@ -13,6 +13,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/healthz"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
+	runtimeWebhook "sigs.k8s.io/controller-runtime/pkg/webhook"
 
 	"github.com/spidernet-io/egressgateway/pkg/config"
 	"github.com/spidernet-io/egressgateway/pkg/controller/metrics"
@@ -36,6 +37,10 @@ func New(cfg *config.Config, log *zap.Logger) (types.Service, error) {
 		HealthProbeBindAddress:  cfg.HealthProbeBindAddress,
 		LeaderElectionID:        cfg.LeaderElectionID,
 		LeaderElectionNamespace: cfg.LeaderElectionNamespace,
+		WebhookServer: runtimeWebhook.NewServer(runtimeWebhook.Options{
+			Port:    cfg.WebhookPort,
+			CertDir: cfg.TLSCertDir,
+		}),
 	}
 
 	if cfg.MetricsBindAddress != "" {
@@ -50,22 +55,16 @@ func New(cfg *config.Config, log *zap.Logger) (types.Service, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to create manager: %w", err)
 	}
-
-	err = mgr.AddHealthzCheck("healthz", healthz.Ping)
-	if err != nil {
+	if err := mgr.AddHealthzCheck("healthz", healthz.Ping); err != nil {
 		return nil, fmt.Errorf("failed to AddHealthzCheck: %w", err)
 	}
-	err = mgr.AddReadyzCheck("readyz", healthz.Ping)
-	if err != nil {
+	if err := mgr.AddReadyzCheck("readyz", healthz.Ping); err != nil {
 		return nil, fmt.Errorf("failed to AddReadyzCheck: %w", err)
 	}
-
-	metrics.RegisterMetricCollectors()
-
-	mgr.GetWebhookServer().Port = cfg.WebhookPort
-	mgr.GetWebhookServer().CertDir = cfg.TLSCertDir
 	mgr.GetWebhookServer().Register("/validate", webhook.ValidateHook(mgr.GetClient(), cfg))
 	mgr.GetWebhookServer().Register("/mutate", webhook.MutateHook(mgr.GetClient(), cfg))
+
+	metrics.RegisterMetricCollectors()
 
 	err = egressgateway.NewEgressGatewayController(mgr, log, cfg)
 	if err != nil {
@@ -101,10 +100,7 @@ func New(cfg *config.Config, log *zap.Logger) (types.Service, error) {
 		return nil, fmt.Errorf("failed to create cluster endpoint slice controller: %w", err)
 	}
 
-	return &Controller{
-		client:  mgr.GetClient(),
-		manager: mgr,
-	}, err
+	return &Controller{client: mgr.GetClient(), manager: mgr}, err
 }
 
 func (c *Controller) Start(ctx context.Context) error {

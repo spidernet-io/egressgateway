@@ -303,32 +303,27 @@ func newEgressClusterEpSliceController(mgr manager.Manager, log *zap.Logger, cfg
 		return err
 	}
 
-	err = c.Watch(&source.Kind{Type: &corev1.Pod{}},
-		handler.EnqueueRequestsFromMapFunc(enqueueEGCP(r.client)),
-		podPredicate{},
-	)
-	if err != nil {
+	if err = c.Watch(source.Kind(mgr.GetCache(), &corev1.Pod{}),
+		handler.EnqueueRequestsFromMapFunc(enqueueEGCP(r.client)), podPredicate{}); err != nil {
 		return fmt.Errorf("failed to watch pod: %v", err)
 	}
 
-	err = c.Watch(&source.Kind{Type: &corev1.Namespace{}},
-		handler.EnqueueRequestsFromMapFunc(enqueueNS(r.client)),
-		nsPredicate{},
-	)
-	if err != nil {
+	if err = c.Watch(source.Kind(mgr.GetCache(), &corev1.Namespace{}),
+		handler.EnqueueRequestsFromMapFunc(enqueueNS(r.client)), nsPredicate{}); err != nil {
 		return fmt.Errorf("failed to watch namespace: %v", err)
 	}
 
-	err = c.Watch(&source.Kind{Type: &egressv1.EgressClusterPolicy{}}, &handler.EnqueueRequestForObject{})
-	if err != nil {
+	if err = c.Watch(source.Kind(mgr.GetCache(), &egressv1.EgressClusterPolicy{}),
+		&handler.EnqueueRequestForObject{}); err != nil {
 		return fmt.Errorf("failed to watch EgressClusterPolicy: %v", err)
 	}
 
-	err = c.Watch(&source.Kind{Type: &egressv1.EgressClusterEndpointSlice{}}, &handler.EnqueueRequestForOwner{
-		OwnerType:    &egressv1.EgressClusterPolicy{},
-		IsController: true,
-	})
-	if err != nil {
+	opt := handler.OnlyControllerOwner()
+	eventHandler := handler.EnqueueRequestForOwner(
+		mgr.GetScheme(), mgr.GetRESTMapper(), &egressv1.EgressClusterPolicy{}, opt,
+	)
+	if err = c.Watch(source.Kind(mgr.GetCache(), &egressv1.EgressClusterEndpointSlice{}),
+		eventHandler); err != nil {
 		return fmt.Errorf("failed to watch EgressClusterEndpointSlice: %v", err)
 	}
 
@@ -369,14 +364,14 @@ func (p nsPredicate) Generic(_ event.GenericEvent) bool {
 }
 
 func enqueueNS(cli client.Client) handler.MapFunc {
-	return func(obj client.Object) []reconcile.Request {
+	return func(ctx context.Context, obj client.Object) []reconcile.Request {
 		ns, ok := obj.(*corev1.Namespace)
 		if !ok {
 			return nil
 		}
 
 		policyList := new(egressv1.EgressClusterPolicyList)
-		err := cli.List(context.Background(), policyList)
+		err := cli.List(ctx, policyList)
 		if err != nil {
 			return nil
 		}
@@ -403,14 +398,14 @@ func enqueueNS(cli client.Client) handler.MapFunc {
 }
 
 func enqueueEGCP(cli client.Client) handler.MapFunc {
-	return func(obj client.Object) []reconcile.Request {
+	return func(ctx context.Context, obj client.Object) []reconcile.Request {
 		pod, ok := obj.(*corev1.Pod)
 		if !ok {
 			return nil
 		}
 
 		policyList := new(egressv1.EgressClusterPolicyList)
-		err := cli.List(context.Background(), policyList)
+		err := cli.List(ctx, policyList)
 		if err != nil {
 			return nil
 		}

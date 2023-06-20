@@ -302,26 +302,19 @@ func newEgressEndpointSliceController(mgr manager.Manager, log *zap.Logger, cfg 
 		return err
 	}
 
-	err = c.Watch(
-		&source.Kind{Type: &corev1.Pod{}},
-		handler.EnqueueRequestsFromMapFunc(enqueuePod(r.client)),
-		podPredicate{},
-	)
-	if err != nil {
-		return fmt.Errorf("failed to watch pod: %v", err)
+	if err = c.Watch(source.Kind(mgr.GetCache(), &corev1.Pod{}),
+		handler.EnqueueRequestsFromMapFunc(enqueuePod(r.client)), podPredicate{}); err != nil {
+		return fmt.Errorf("failed to watch Pod: %v", err)
 	}
 
-	err = c.Watch(&source.Kind{Type: &egressv1.EgressPolicy{}}, &handler.EnqueueRequestForObject{})
-	if err != nil {
+	if err = c.Watch(source.Kind(mgr.GetCache(), &egressv1.EgressPolicy{}),
+		&handler.EnqueueRequestForObject{}); err != nil {
 		return fmt.Errorf("failed to watch EgressPolicy: %v", err)
 	}
 
-	err = c.Watch(&source.Kind{Type: &egressv1.EgressEndpointSlice{}}, &handler.EnqueueRequestForOwner{
-		OwnerType:    &egressv1.EgressPolicy{},
-		IsController: true,
-	})
-
-	if err != nil {
+	opt := handler.OnlyControllerOwner()
+	h := handler.EnqueueRequestForOwner(mgr.GetScheme(), mgr.GetRESTMapper(), &egressv1.EgressPolicy{}, opt)
+	if err = c.Watch(source.Kind(mgr.GetCache(), &egressv1.EgressEndpointSlice{}), h); err != nil {
 		return fmt.Errorf("failed to watch EgressEndpointSlice: %v", err)
 	}
 
@@ -371,14 +364,14 @@ func (p podPredicate) Generic(_ event.GenericEvent) bool {
 }
 
 func enqueuePod(cli client.Client) handler.MapFunc {
-	return func(obj client.Object) []reconcile.Request {
+	return func(ctx context.Context, obj client.Object) []reconcile.Request {
 		pod, ok := obj.(*corev1.Pod)
 		if !ok {
 			return nil
 		}
 
 		policyList := new(egressv1.EgressPolicyList)
-		err := cli.List(context.Background(), policyList)
+		err := cli.List(ctx, policyList)
 		if err != nil {
 			return nil
 		}

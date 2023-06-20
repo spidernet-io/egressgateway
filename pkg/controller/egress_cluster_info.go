@@ -365,7 +365,7 @@ func newEgressClusterInfoController(mgr manager.Manager, log *zap.Logger, cfg *c
 
 	if ignoreNodeIP {
 		log.Sugar().Infof("egressClusterInfo controller watch Node")
-		if err := watchSource(c, &source.Kind{Type: &corev1.Node{}}, "Node"); err != nil {
+		if err := watchSource(c, source.Kind(mgr.GetCache(), &corev1.Node{}), "Node"); err != nil {
 			return err
 		}
 	}
@@ -373,8 +373,7 @@ func newEgressClusterInfoController(mgr manager.Manager, log *zap.Logger, cfg *c
 	switch podCidr {
 	case calico:
 		log.Sugar().Infof("egressClusterInfo controller watch calico")
-		if err := watchSource(c, &source.Kind{Type: &calicov1.IPPool{}}, "IPPool"); err != nil {
-			log.Sugar().Errorf("egressClusterInfo controller failed to watch calico")
+		if err := watchSource(c, source.Kind(mgr.GetCache(), &calicov1.IPPool{}), "IPPool"); err != nil {
 			return err
 		}
 	default:
