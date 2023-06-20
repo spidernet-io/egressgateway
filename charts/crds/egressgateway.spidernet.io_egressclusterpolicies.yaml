@@ -149,12 +149,14 @@ spec:
               egressIP:
                 properties:
                   allocatorPolicy:
+                    default: default
                     type: string
                   ipv4:
                     type: string
                   ipv6:
                     type: string
                   useNodeIP:
+                    default: false
                     type: boolean
                 type: object
             required:

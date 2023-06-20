@@ -59,8 +59,10 @@ type EgressIP struct {
 	// +kubebuilder:validation:Optional
 	IPv6 string `json:"ipv6,omitempty"`
 	// +kubebuilder:validation:Optional
+	// +kubebuilder:default:=false
 	UseNodeIP bool `json:"useNodeIP,omitempty"`
 	// +kubebuilder:validation:Optional
+	// +kubebuilder:default:="default"
 	AllocatorPolicy string `json:"allocatorPolicy,omitempty"`
 }
 
