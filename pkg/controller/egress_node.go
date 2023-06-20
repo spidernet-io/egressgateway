@@ -590,13 +590,13 @@ func newEgressNodeController(mgr manager.Manager, log *zap.Logger, cfg *config.C
 	}
 
 	log.Sugar().Infof("egressnode controller watch EgressNode")
-	if err := c.Watch(&source.Kind{Type: &egressv1.EgressNode{}},
+	if err := c.Watch(source.Kind(mgr.GetCache(), &egressv1.EgressNode{}),
 		handler.EnqueueRequestsFromMapFunc(utils.KindToMapFlat("EgressNode"))); err != nil {
 		return fmt.Errorf("failed to watch EgressNode: %w", err)
 	}
 
 	log.Sugar().Infof("egressnode controller watch Node")
-	if err := c.Watch(&source.Kind{Type: &corev1.Node{}},
+	if err := c.Watch(source.Kind(mgr.GetCache(), &corev1.Node{}),
 		handler.EnqueueRequestsFromMapFunc(utils.KindToMapFlat("Node"))); err != nil {
 		return fmt.Errorf("failed to watch Node: %w", err)
 	}

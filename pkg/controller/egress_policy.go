@@ -119,7 +119,7 @@ func newEgressPolicyController(mgr manager.Manager, log *zap.Logger, cfg *config
 		return err
 	}
 
-	if err := c.Watch(&source.Kind{Type: &egressv1.EgressGateway{}},
+	if err := c.Watch(source.Kind(mgr.GetCache(), &egressv1.EgressGateway{}),
 		handler.EnqueueRequestsFromMapFunc(utils.KindToMapFlat("EgressGateway"))); err != nil {
 		return fmt.Errorf("failed to watch EgressGateway: %w", err)
 	}

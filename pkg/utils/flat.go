@@ -4,6 +4,7 @@
 package utils
 
 import (
+	"context"
 	"errors"
 	"strings"
 
@@ -16,7 +17,7 @@ import (
 var ErrInvalidRequest = errors.New("error invalid request")
 
 func KindToMapFlat(kind string) handler.MapFunc {
-	return func(obj client.Object) []reconcile.Request {
+	return func(ctx context.Context, obj client.Object) []reconcile.Request {
 		return []reconcile.Request{
 			{
 				NamespacedName: types.NamespacedName{

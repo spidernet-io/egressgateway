@@ -991,23 +991,23 @@ func newPolicyController(mgr manager.Manager, log *zap.Logger, cfg *config.Confi
 		return err
 	}
 
-	if err := c.Watch(&source.Kind{Type: &egressv1.EgressGateway{}},
+	if err := c.Watch(source.Kind(mgr.GetCache(), &egressv1.EgressGateway{}),
 		handler.EnqueueRequestsFromMapFunc(utils.KindToMapFlat("EgressGateway"))); err != nil {
 		return fmt.Errorf("failed to watch EgressGateway: %w", err)
 	}
 
-	if err := c.Watch(&source.Kind{Type: &egressv1.EgressPolicy{}},
+	if err := c.Watch(source.Kind(mgr.GetCache(), &egressv1.EgressPolicy{}),
 		handler.EnqueueRequestsFromMapFunc(utils.KindToMapFlat("EgressPolicy")), policyPredicate{}); err != nil {
 		return fmt.Errorf("failed to watch EgressPolicy: %w", err)
 	}
 
-	if err := c.Watch(&source.Kind{Type: &egressv1.EgressClusterPolicy{}},
+	if err := c.Watch(source.Kind(mgr.GetCache(), &egressv1.EgressClusterPolicy{}),
 		handler.EnqueueRequestsFromMapFunc(utils.KindToMapFlat("EgressClusterPolicy")), policyPredicate{}); err != nil {
 		return fmt.Errorf("failed to watch EgressClusterPolicy: %w", err)
 	}
 
 	if err := c.Watch(
-		&source.Kind{Type: &egressv1.EgressEndpointSlice{}},
+		source.Kind(mgr.GetCache(), &egressv1.EgressEndpointSlice{}),
 		handler.EnqueueRequestsFromMapFunc(enqueueEndpointSlice()),
 		epSlicePredicate{},
 	); err != nil {
@@ -1015,14 +1015,14 @@ func newPolicyController(mgr manager.Manager, log *zap.Logger, cfg *config.Confi
 	}
 
 	if err := c.Watch(
-		&source.Kind{Type: &egressv1.EgressClusterEndpointSlice{}},
+		source.Kind(mgr.GetCache(), &egressv1.EgressClusterEndpointSlice{}),
 		handler.EnqueueRequestsFromMapFunc(enqueueEndpointSlice()),
 		epSlicePredicate{},
 	); err != nil {
 		return fmt.Errorf("failed to watch EgressClusterEndpointSlice: %w", err)
 	}
 
-	if err := c.Watch(&source.Kind{Type: &egressv1.EgressClusterInfo{}},
+	if err := c.Watch(source.Kind(mgr.GetCache(), &egressv1.EgressClusterInfo{}),
 		handler.EnqueueRequestsFromMapFunc(utils.KindToMapFlat("EgressClusterInfo"))); err != nil {
 		return fmt.Errorf("failed to watch EgressClusterInfo: %w", err)
 	}
@@ -1115,7 +1115,7 @@ func (p epSlicePredicate) Update(_ event.UpdateEvent) bool   { return true }
 func (p epSlicePredicate) Generic(_ event.GenericEvent) bool { return false }
 
 func enqueueEndpointSlice() handler.MapFunc {
-	return func(obj client.Object) []reconcile.Request {
+	return func(ctx context.Context, obj client.Object) []reconcile.Request {
 		namespace := obj.GetNamespace()
 		policyName, ok := obj.GetLabels()[egressv1.LabelPolicyName]
 		if !ok {

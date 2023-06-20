@@ -456,7 +456,7 @@ func newEgressNodeController(mgr manager.Manager, cfg *config.Config, log *zap.L
 		return err
 	}
 
-	if err := c.Watch(&source.Kind{Type: &egressv1.EgressNode{}},
+	if err := c.Watch(source.Kind(mgr.GetCache(), &egressv1.EgressNode{}),
 		handler.EnqueueRequestsFromMapFunc(utils.KindToMapFlat("EgressNode"))); err != nil {
 		return fmt.Errorf("failed to watch EgressNode: %w", err)
 	}
