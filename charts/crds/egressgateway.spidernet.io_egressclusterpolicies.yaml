@@ -159,6 +159,9 @@ spec:
                     default: false
                     type: boolean
                 type: object
+              priority:
+                format: int64
+                type: integer
             required:
             - appliedTo
             type: object

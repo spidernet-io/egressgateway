@@ -131,6 +131,8 @@ spec:
                       type: array
                     name:
                       type: string
+                    status:
+                      type: string
                   type: object
                 type: array
             type: object

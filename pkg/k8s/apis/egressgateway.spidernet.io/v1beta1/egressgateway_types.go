@@ -73,6 +73,8 @@ type EgressIPStatus struct {
 	Name string `json:"name,omitempty"`
 	// +kubebuilder:validation:Optional
 	Eips []Eips `json:"epis,omitempty"`
+	// +kubebuilder:validation:Optional
+	Status string `json:"status,omitempty"`
 }
 
 type Eips struct {
