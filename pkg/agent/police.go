@@ -72,10 +72,8 @@ func (r *policeReconciler) Reconcile(ctx context.Context, req reconcile.Request)
 		return reconcile.Result{}, err
 	}
 	log := r.log.With(
-		zap.String("namespacedName", newReq.NamespacedName.String()),
 		zap.String("kind", kind),
 	)
-	log.Info("reconciling")
 	var res reconcile.Result
 	switch kind {
 	case "EgressGateway":
@@ -114,7 +112,7 @@ type IP struct {
 // build route table rule
 // build iptables
 func (r *policeReconciler) initApplyPolicy() error {
-	r.log.Info("'apply policy")
+	r.log.Info("apply policy")
 	ctx := context.Background()
 
 	gateways := new(egressv1.EgressGatewayList)
@@ -287,7 +285,7 @@ func (r *policeReconciler) getPolicySubnet(ns, name string) ([]string, error) {
 			return nil, err
 		}
 	}
-	return getSubnet(obj), err
+	return getSubnet(obj), nil
 }
 
 func (r *policeReconciler) updatePolicyIPSet(policyNs string, policyName string, isEipNodeSet bool, destSubnet []string) error {
