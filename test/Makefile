@@ -255,7 +255,7 @@ e2e_test:
 		export E2E_KUBECONFIG_PATH=$(KIND_KUBECONFIG) ; [ -f "$(KIND_KUBECONFIG)" ] || { echo "error, does not exist KUBECONFIG $(E2E_KUBECONFIG)" ; exit 1 ; } ; \
 		rm -f $(E2E_LOG_FILE) || true ; \
 		echo "=========== before test `date` ===========" >> $(E2E_LOG_FILE) ; \
-		./scripts/debugCluster.sh $(KIND_KUBECONFIG) "system" "$(E2E_LOG_FILE)" ; \
+		./scripts/debugCluster.sh $(KIND_KUBECONFIG) "system" "$(E2E_LOG_FILE)" $(E2E_NAMESPACE) ; \
 		RESULT=0 ; \
 		$(ROOT_DIR)/tools/golang/ginkgo.sh \
 			--race --timeout=$(E2E_TIMEOUT) --output-interceptor-mode=none  --slow-spec-threshold=15s \
@@ -263,9 +263,9 @@ e2e_test:
 			--label-filter="$(E2E_GINKGO_LABELS)" -randomize-suites -randomize-all  -vv --fail-fast  $(E2E_GINKGO_OPTION) \
 			-r e2e/*  || RESULT=1  ; \
 		echo "=========== after test `date` ===========" >> $(E2E_LOG_FILE) ; \
-		./scripts/debugCluster.sh $(KIND_KUBECONFIG) "system" "$(E2E_LOG_FILE)" ; \
-		KIND_CLUSTER_NAME=$(KIND_CLUSTER_NAME) ./scripts/debugCluster.sh $(KIND_KUBECONFIG) "detail" "$(E2E_LOG_FILE)" ; \
-		./scripts/debugCluster.sh $(KIND_KUBECONFIG) "error" "$(E2E_LOG_FILE)" || { echo "error, found error log, datarace/pacni/longlock !!!" ; RESULT=1 ; } ; \
+		./scripts/debugCluster.sh $(KIND_KUBECONFIG) "system" "$(E2E_LOG_FILE)" $(E2E_NAMESPACE) ; \
+		KIND_CLUSTER_NAME=$(KIND_CLUSTER_NAME) ./scripts/debugCluster.sh $(KIND_KUBECONFIG) "detail" "$(E2E_LOG_FILE)" $(E2E_NAMESPACE) ; \
+		./scripts/debugCluster.sh $(KIND_KUBECONFIG) "error" "$(E2E_LOG_FILE)" $(E2E_NAMESPACE) || { echo "error, found error log, datarace/pacni/longlock !!!" ; RESULT=1 ; } ; \
 		if (($${RESULT} != 0)) ; then \
 		   echo "failed to run e2e test"  ; \
 		   exit 1 ; \
