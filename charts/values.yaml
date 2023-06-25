@@ -56,6 +56,8 @@ feature:
       nodeIP: true
     ## @param feature.egressIgnoreCIDR.custom CIDRs provided manually
     custom: []
+  ## @param feature.maxNumberEndpointPerSlice max number of endpoints per slice
+  maxNumberEndpointPerSlice: 100
 ## @section Egressgateway agent parameters
 ##
 agent:

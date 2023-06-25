@@ -135,6 +135,7 @@ func LoadConfig(isAgent bool) (*Config, error) {
 			TLSCertDir:                "/etc/tls",
 		},
 		FileConfig: FileConfig{
+			MaxNumberEndpointPerSlice: 100,
 			IPTables: IPTables{
 				RefreshIntervalSecond:   90,
 				PostWriteIntervalSecond: 1,
