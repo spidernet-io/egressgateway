@@ -13,44 +13,49 @@ metadata:
   name: "eg1"
 spec:                           
   ippools:                      # 1
-   policy: "Random"             # 2
-   ipv4:                        # 3
-   - ""
-   ipv6:                        # 4
-   - ""
-  nodeSelector:                 # 5
-    selector:                   # 6
+    ipv4:                       # 2
+    - "10.6.1.55"
+    - "10.6.1.60-10.6.1.65"
+    - "10.6.1.70/28"
+    ipv6:                       # 3
+    - ""
+    ipv4DefaultEIP: ""          # 4
+    ipv6DefaultEIP: ""          # 5
+  nodeSelector:                 # 6
+    selector:                   # 7
       matchLabels:
         egress: "true"
-    policy: "AverageSelecton"   # 7
-status:                         # 8
-  nodeList:                     # 9
-    - name: "node1"             # 10
-      epis:                     # 11
-        - ipv4: 10.6.1.55       # 12
-          ipv6: fd00::55        # 13
-          policies:             # 14
-            - name: app
-              namespace: default
+    policy: "doing"   # 8
+status:                         # 9
+  nodeList:                     # 10
+    - name: "node1"             # 11
+      status: "Ready"           # 12
+      epis:                     # 13
+        - ipv4: "10.6.1.55"     # 14
+          ipv6: "fd00::55"      # 15
+          policies:             # 16
+          - name: "app"         # 17
+            namespace: "default"  # 18
 ```
 
 1. ippools: 设置 Egress IP 的范围；
-   * 支持设置单个 IP `10.6.0.1` ，和段 `10.6.0.1-10.6.0.10 ` ， CIDR `10.6.0.1/26`  的方式 3 种方式；
-   * 如果开启双栈要求，IPv4 的数量和 IPv6 的数量要求一致。由于此原因，会导致上面 CIDR 可能并不实用，因此优先级优先实现前 2 种；
-2. policy(string): EIP 的分配策略，暂时只支持 `Random` 随机分配
-3. ipv4([]string): EIP 的 IPV4 范围
-4. ipv6([]string): EIP 的 IPV6 范围
-5. nodeSelector: 设置 EgressGateway IP 可浮动的节点范围及策略
-6. selector(LabelSelector): 筛选 EgressGateway IP 可浮动的节点范围
-7. policy(string): policy 选网关节点的策略，暂时只支持 `AverageSelecton` 平均分配
-8. status: 展示其所选网关节点、EIP 、被 policy 引用情况
-9. nodeList([]EgressIPStatus): 
-10. name(string): 网关节点的名称
-11. eips([]Eips): 该网关节点上生效的 EIP 相关信息
-12. ipv4(string): IPV4 EIP，如果 policy 使用节点 IP，则该字段为空
-13. ipv6(string): IPV6 EIP，IPV6 与 IPV4 是一一对应的
-14. policies([]string): 以该节点作为网关节点的 policy 集合
-
+2. ipv4([]string): EIP 的 IPV4 内容，支持设置单个 IP `10.6.0.1` ，和段 `10.6.0.1-10.6.0.10 ` ， CIDR `10.6.0.1/26` 共3 种方式；
+3. ipv6([]string): EIP 的 IPV6 内容，如果开启双栈要求，IPv4 的数量和 IPv6 的数量要求一致，支持的格式与 IPV4 一致；
+4. ipv4DefaultEIP(string): 默认使用的 IPV4 EIP，如果 egp 未指定 EIP，且 EIP 分配的策略为 'default'，则该 egp 分配到的 EIP 就是 ipv4DefaultEIP；
+5. ipv6DefaultEIP(string): 默认使用的 IPV6 EIP，规则如 ipv4DefaultEIP；
+6. nodeSelector: 设置网关节点的匹配条件及策略
+7. selector: 设置节点的匹配内容
+8. policy(string): egp 选择网关节点的策略，目前只支持平均选择，其他策略待实现。
+9. status: 展示其所选网关节点、EIP 、被 policy 引用情况
+10. nodeList([]EgressIPStatus):
+11. name(string): 网关节点的名称
+12. status(string): 网关节点的状态
+13. eips([]Eips): 该网关节点上生效的 EIP 相关信息
+14. ipv4(string): IPV4 EIP，如果 egp、egcp 使用节点 IP，则该字段为空
+15. ipv6(string): IPV6 EIP，双栈情况下，IPV6 与 IPV4 是一一对应的
+16. policies([]string): 以该节点作为网关节点的 egp、egcp 集合
+17. name(string): egp、egcp 的名称
+18. namespace(string): egp 的 NS，如果是 egcp 则为空
 
 ## 代码设计
 
