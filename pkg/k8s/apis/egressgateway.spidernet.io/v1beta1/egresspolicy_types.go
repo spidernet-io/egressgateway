@@ -37,6 +37,8 @@ type EgressPolicySpec struct {
 	AppliedTo AppliedTo `json:"appliedTo"`
 	// +kubebuilder:validation:Optional
 	DestSubnet []string `json:"destSubnet"`
+	// +kubebuilder:validation:Optional
+	Priority uint64 `json:"priority,omitempty"`
 }
 
 type EgressPolicyStatus struct {

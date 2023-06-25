@@ -39,6 +39,8 @@ type EgressClusterPolicySpec struct {
 	AppliedTo ClusterAppliedTo `json:"appliedTo"`
 	// +kubebuilder:validation:Optional
 	DestSubnet []string `json:"destSubnet"`
+	// +kubebuilder:validation:Optional
+	Priority uint64 `json:"priority,omitempty"`
 }
 
 type ClusterAppliedTo struct {
