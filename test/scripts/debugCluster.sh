@@ -17,7 +17,7 @@ E2E_LOG_FILE_NAME="$3"
 echo "$CURRENT_FILENAME : E2E_KUBECONFIG $E2E_KUBECONFIG "
 
 # ====modify====
-COMPONENT_NAMESPACE="kube-system"
+COMPONENT_NAMESPACE="egressgateway"
 COMPONENT_GOROUTINE_MAX=300
 COMPONENT_PS_PROCESS_MAX=50
 CONTROLLER_LABEL="app.kubernetes.io/component=egressgateway-controller"

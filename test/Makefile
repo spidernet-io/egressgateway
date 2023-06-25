@@ -174,7 +174,7 @@ deploy_project:
 			kind load docker-image $${IMAGE}  --name $(KIND_CLUSTER_NAME)  ; \
 		done ; \
 	fi
-	- helm --kubeconfig=$(KIND_KUBECONFIG) uninstall -n kube-system project || true
+	- helm --kubeconfig=$(KIND_KUBECONFIG) uninstall -n ${E2E_NAMESPACE} project || true
 	HELM_OPTION="" ; \
     	if [ -n "$(PYROSCOPE_LOCAL_PORT)" ] ; then \
 			echo "add env" ; \
@@ -188,7 +188,7 @@ deploy_project:
 		if [ "$(E2E_IP_FAMILY)" == "ipv4" ] ; then HELM_OPTION+=" --set feature.enableIPv4=true --set feature.enableIPv6=false" ; fi ; \
 		if [ "$(E2E_IP_FAMILY)" == "ipv6" ] ; then HELM_OPTION+=" --set feature.enableIPv4=false --set feature.enableIPv6=true" ; fi ; \
 		helm --kubeconfig=$(KIND_KUBECONFIG) install project $(ROOT_DIR)/charts \
-				-n kube-system --wait --debug \
+				-n ${E2E_NAMESPACE} --create-namespace --wait --debug \
 				--set global.imageTagOverride=$(PROJECT_IMAGE_VERSION) \
 				$${HELM_OPTION} \
 				|| { KIND_CLUSTER_NAME=$(KIND_CLUSTER_NAME) ./scripts/debugCluster.sh $(KIND_KUBECONFIG) "detail"   ; exit 1 ; } ; \
