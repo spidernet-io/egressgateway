@@ -20,6 +20,10 @@ type EgressPolicyList struct {
 // +kubebuilder:resource:categories={egresspolicy},path="egresspolicies",singular="egresspolicy",scope="Namespaced",shortName={egp}
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
+// +kubebuilder:printcolumn:JSONPath=".spec.egressGatewayName",description="egressGatewayName",name="gateway",type=string
+// +kubebuilder:printcolumn:JSONPath=".status.eip.ipv4",description="ipv4",name="ipv4",type=string
+// +kubebuilder:printcolumn:JSONPath=".status.eip.ipv6",description="ipv6",name="ipv6",type=string
+// +kubebuilder:printcolumn:JSONPath=".status.node",description="egressNode",name="egressNode",type=string
 type EgressPolicy struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata"`
