@@ -222,8 +222,8 @@ update_chart_version:
 		echo "Update chart version to $${CHART_VERSION}, image tag to $${VERSION}" ; \
 		CHART_VERSION=$${CHART_VERSION} yq -i '.version = strenv(CHART_VERSION)' $(CHART_DIR)/Chart.yaml ; \
 		CHART_VERSION=$${CHART_VERSION} yq -i '.appVersion = strenv(CHART_VERSION)' $(CHART_DIR)/Chart.yaml ; \
-		VERSION=$${VERSION} yq -i '.egressgatewayAgent.image.tag = strenv(VERSION)' $(CHART_DIR)/values.yaml ; \
-		VERSION=$${VERSION} yq -i '.egressgatewayController.image.tag = strenv(VERSION)' $(CHART_DIR)/values.yaml ; \
+		VERSION=$${VERSION} yq -i '.agent.image.tag = strenv(VERSION)' $(CHART_DIR)/values.yaml ; \
+		VERSION=$${VERSION} yq -i '.controller.image.tag = strenv(VERSION)' $(CHART_DIR)/values.yaml ; \
    		echo -e "\033[32mAll versions have been updated\033[0m"
 
 
