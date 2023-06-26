@@ -5,6 +5,7 @@ package schema
 
 import (
 	calicov1 "github.com/tigera/operator/pkg/apis/crd.projectcalico.org/v1"
+	extensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
 
@@ -23,6 +24,9 @@ func init() {
 		panic(err)
 	}
 	if err := calicov1.AddToScheme(scheme); err != nil {
+		panic(err)
+	}
+	if err := extensionsv1.AddToScheme(scheme); err != nil {
 		panic(err)
 	}
 }

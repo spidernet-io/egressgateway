@@ -6,12 +6,13 @@ package controller
 import (
 	"context"
 	"fmt"
+	"strconv"
 	"strings"
 	"sync"
+	"time"
 
-	"github.com/go-logr/logr"
-	calicov1 "github.com/tigera/operator/pkg/apis/crd.projectcalico.org/v1"
 	corev1 "k8s.io/api/core/v1"
+	exv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -20,6 +21,9 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 	"sigs.k8s.io/controller-runtime/pkg/source"
+
+	"github.com/go-logr/logr"
+	calicov1 "github.com/tigera/operator/pkg/apis/crd.projectcalico.org/v1"
 
 	"github.com/spidernet-io/egressgateway/pkg/config"
 	egressv1beta1 "github.com/spidernet-io/egressgateway/pkg/k8s/apis/egressgateway.spidernet.io/v1beta1"
@@ -44,6 +48,12 @@ const (
 	k8s                          = "k8s"
 	serviceClusterIpRange        = "service-cluster-ip-range"
 	clusterCidr                  = "cluster-cidr"
+	ippoolCrdName                = "ippools.crd.projectcalico.org"
+)
+
+const (
+	kindNode   = "Node"
+	KindIPPool = "IPPool"
 )
 
 var kubeControllerManagerPodLabel = map[string]string{"component": "kube-controller-manager"}
@@ -66,9 +76,9 @@ func (r *eciReconciler) Reconcile(ctx context.Context, req reconcile.Request) (r
 	})
 
 	switch kind {
-	case "Node":
+	case kindNode:
 		return r.reconcileNode(ctx, newReq, log)
-	case "IPPool":
+	case KindIPPool:
 		return r.reconcileCalicoIPPool(ctx, newReq, log)
 	default:
 		return reconcile.Result{}, nil
@@ -353,8 +363,7 @@ func newEgressClusterInfoController(mgr manager.Manager, log logr.Logger, cfg *c
 	}
 
 	log.Info("new egressClusterInfo controller")
-	c, err := controller.New("egressClusterInfo", mgr,
-		controller.Options{Reconciler: r})
+	c, err := controller.New("egressClusterInfo", mgr, controller.Options{Reconciler: r})
 	if err != nil {
 		return err
 	}
@@ -363,18 +372,17 @@ func newEgressClusterInfoController(mgr manager.Manager, log logr.Logger, cfg *c
 
 	if ignoreNodeIP {
 		log.Info("egressClusterInfo controller watch Node")
-		if err := watchSource(c, source.Kind(mgr.GetCache(), &corev1.Node{}), "Node"); err != nil {
+		if err := watchSource(c, source.Kind(mgr.GetCache(), &corev1.Node{}), kindNode); err != nil {
 			return err
 		}
 	}
 
 	switch podCidr {
 	case calico:
-		log.Info("egressClusterInfo controller watch calico")
-		if err := watchSource(c, source.Kind(mgr.GetCache(), &calicov1.IPPool{}), "IPPool"); err != nil {
-			return err
-		}
+		log.V(1).Info("find calico in egressgateway configmap, check if calico exists in cluster")
+		go checkCalicoExists(mgr, log, c)
 	default:
+		log.V(1).Info("invalid filed in egressgateway configmap", "PodCIDR", podCidr)
 	}
 
 	return nil
@@ -576,4 +584,34 @@ func getPod(c client.Client, label map[string]string) (*corev1.Pod, error) {
 		return nil, fmt.Errorf("failed to get pod")
 	}
 	return &pods[0], nil
+}
+
+// checkCalicoExists once calico is detected, start watch
+func checkCalicoExists(mgr manager.Manager, log logr.Logger, c controller.Controller) {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	crdList := new(exv1.CustomResourceDefinitionList)
+FOUND:
+	for {
+		err := mgr.GetClient().List(ctx, crdList)
+		if err != nil {
+			log.V(1).Info("failed list crd, try again", "details", err)
+			continue
+		}
+		for i, item := range crdList.Items {
+			log.V(1).Info("list crd", strconv.Itoa(i)+"th crd", item.Name)
+			if item.Name == ippoolCrdName {
+				log.V(1).Info("find calico ippool crd, egressClusterInfo controller begin to watch calico ippool")
+			RETRY:
+				if err = watchSource(c, source.Kind(mgr.GetCache(), &calicov1.IPPool{}), KindIPPool); err != nil {
+					log.V(1).Info("failed watch calico ippool, try again", "details", err)
+					time.Sleep(time.Millisecond * 100)
+					goto RETRY
+				}
+				log.V(1).Info("egressClusterInfo controller succeeded to watch calico ippool")
+				break FOUND
+			}
+		}
+		time.Sleep(time.Second)
+	}
 }

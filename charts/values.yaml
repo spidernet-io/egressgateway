@@ -48,8 +48,8 @@ feature:
     disableChecksumOffload: true
   egressIgnoreCIDR:
     autoDetect:
-      ## @param feature.egressIgnoreCIDR.autoDetect.podCIDR cni cluster used
-      podCIDR: "calico"
+      ## @param feature.egressIgnoreCIDR.autoDetect.podCIDR cni cluster used, it can be `k8s`, `calico`. The default value is `k8s`
+      podCIDR: "k8s"
       ## @param feature.egressIgnoreCIDR.autoDetect.clusterIP if ignore service ip
       clusterIP: true
       ## @param feature.egressIgnoreCIDR.autoDetect.nodeIP if ignore node ip
