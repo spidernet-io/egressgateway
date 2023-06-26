@@ -714,7 +714,7 @@ func (r *policeReconciler) reconcilePolicy(ctx context.Context, req reconcile.Re
 		if !errors.IsNotFound(err) {
 			return reconcile.Result{Requeue: true}, err
 		}
-		return reconcile.Result{Requeue: true}, err
+		return reconcile.Result{}, nil
 	}
 
 	nodeName := ""
