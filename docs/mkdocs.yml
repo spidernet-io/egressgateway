@@ -7,6 +7,8 @@ remote_branch: github_pages
 theme:
   name: material
   navigation_depth: 2
+  features:
+    - content.code.annotate
   palette:
     scheme: default
     primary: "#4478D1"
@@ -45,6 +47,31 @@ markdown_extensions:
   - fenced_code
   - tables
   - attr_list
+  # Python Markdown Extensions
+  - pymdownx.arithmatex:
+      generic: true
+  - pymdownx.betterem:
+      smart_enable: all
+  - pymdownx.caret
+  - pymdownx.details
+  - pymdownx.emoji:
+      emoji_index: !!python/name:materialx.emoji.twemoji
+      emoji_generator: !!python/name:materialx.emoji.to_svg
+  - pymdownx.inlinehilite
+  - pymdownx.keys
+  - pymdownx.mark
+  - pymdownx.smartsymbols
+  - pymdownx.superfences
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.tasklist:
+      custom_checkbox: true
+  - pymdownx.tilde
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.snippets
 
 nav:
   - Overview: README.md

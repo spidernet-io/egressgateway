@@ -1,11 +1,11 @@
 ## Requirement
 
-Egressgateway currently supports collaboration with Calico CNI and will support collaboration with more CNIs in the future. 
+Egressgateway currently supports collaboration with Calico CNI and will support collaboration with more CNIs in the future.
 Below are the configuration methods for different CNIs:
 
 ### Calico
 
-Required settings `chainInsertMode` to `Append`, for example in the code, 
+Required settings `chainInsertMode` to `Append`, for example in the code,
 more reference [calico docs](https://projectcalico.docs.tigera.io/reference/resources/felixconfig):
 
 ```yaml
@@ -16,8 +16,10 @@ metadata:
 spec:
   ipv6Support: false
   ipipMTU: 1400
-  chainInsertMode: Append # this line
+  chainInsertMode: Append # (1)
 ```
+
+1. add this line
 
 ## Install
 
@@ -35,11 +37,15 @@ The following is a common chart setting option:
 ```yaml
 feature:
   enableIPv4: true
-  enableIPv6: false # Required pod support IPv6 Stack
-  tunnelIpv4Subnet: "192.200.0.1/16" # IPv4 tunnel subnet
-  tunnelIpv6Subnet: "fd01::21/112"   # IPv6 tunnel subnet
-  forwardMethod: "active-active"     # Support active-active or active-passive
+  enableIPv6: false # (1)
+  tunnelIpv4Subnet: "192.200.0.1/16" # (2)
+  tunnelIpv6Subnet: "fd01::21/112"   # (3)
 ```
+
+1. Required pod support IPv6 Stack
+2. IPv4 tunnel subnet
+3. IPv6 tunnel subnet
+
 
 ```shell
 helm install egressgateway egressgateway/egressgateway --values values.yaml --wait --debug
@@ -53,22 +59,25 @@ kubectl get crd | grep egress
 
 Create an EgressGateway CR that can set a node as an egress gateway node through matchLabels.
 
-```shell
-apiVersion: egressgateway.spidernet.io/v1
+```yaml
+apiVersion: egressgateway.spidernet.io/v1beta1
 kind: EgressGateway
 metadata:
   name: default
 spec:
   nodeSelector:
-    matchLabels:
-      kubernetes.io/hostname: workstation2 # change me, select a node in your cluster
+    selector:
+      matchLabels:
+        kubernetes.io/hostname: workstation2 # (1)
 ```
+
+1. Change me, select a node in your cluster
 
 ## Create Example App
 
 Create a testing Pod to simulate an application that requires egress.
 
-```shell
+```yaml
 apiVersion: v1
 kind: Pod
 metadata:
@@ -78,22 +87,24 @@ metadata:
   namespace: default
 spec:
   containers:
-      image: nginx
-      imagePullPolicy: IfNotPresent
-      name: nginx
-      resources: {}
+   - image: nginx
+     imagePullPolicy: IfNotPresent
+     name: nginx
+     resources: {}
   dnsPolicy: ClusterFirst
   enableServiceLinks: true
-  nodeName: workstation1 # change me, select a non-egress gateway node in your cluster
+  nodeName: workstation1 # (1)
 ```
+
+1. Change me, select a non-egress gateway node in your cluster
 
 ## Create EgressGatewayPolicy
 
 By creating an EgressGatewayPolicy CR, you can control which Pod accesses which address needs to go through the egress gateway.
 
 ```yaml
-apiVersion: egressgateway.spidernet.io/v1
-kind: EgressGatewayPolicy
+apiVersion: egressgateway.spidernet.io/v1beta1
+kind: EgressPolicy
 metadata:
   name: mock-app
 spec:
