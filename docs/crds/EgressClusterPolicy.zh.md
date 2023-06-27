@@ -7,7 +7,7 @@ EgressClusterGatewayPolicy CRD 用于定义集群级 Egress 策略规则。其�
 ## CRD
 ```yaml
 apiVersion: egressgateway.spidernet.io/v1beta1
-kind: EgressClusterGatewayPolicy
+kind: EgressClusterPolicy
 metadata:
   name: "policy-test"
 spec:
@@ -33,13 +33,3 @@ spec:
 ```
 
 1. namespaceSelector：该属性使用 selector 选择匹配租户列表，再使用 `podSelector` 选择租户范围下匹配中的 Pod，然后对选择中的 Pod 应用 Egress 策略。
-
-## 代码设计
-
-### 初始化
-
-### Controller
-
-### Agent
-
-## 其他

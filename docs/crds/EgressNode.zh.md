@@ -1,5 +1,3 @@
-# EgressNode
-
 ## 简介
 
 主要用于记录跨节点通信的隧道网卡信息。集群级资源，与 Kubernetes Node 资源名称一一对应。
@@ -47,20 +45,14 @@ status:
 
 - Del：先释放隧道 IP，再删除。如果 EgressNode 对应的节点还存在，重新创建 EgressNode
 - Other：
-  - phase != `Init` || phase != `Succeeded`：则分配 IP，分配成功将状态设置为 `Init`，分配失败将状态设置为 `Failed`。这里是全局唯一会分配隧道 IP 的地方
-  - mark != algorithm(NodeName)：该字段禁止修改，直接报错返回
-  
+    - phase != `Init` || phase != `Succeeded`：则分配 IP，分配成功将状态设置为 `Init`，分配失败将状态设置为 `Failed`。这里是全局唯一会分配隧道 IP 的地方
+    - mark != algorithm(NodeName)：该字段禁止修改，直接报错返回
+
 #### Node Event
 - Del：删除对应的 EgressNode
 - Other：
-  - 节点对应的 EgressNode 不存在，则创建 EgressNode
-  - 无隧道 IP，设置 phase == `Pending`
-  - 有隧道 IP，校验隧道是否合法，不合法则设置 phase == `Pending`
-  - 隧道 IP 合法，校验 IP 是否分配给本节点，不是则设置 phase == `Pending`。
-  - 隧道 IP 是分配给本节点，phase != `Succeeded` 则设置 phase == `Init`
-
-### Agent
-#### 初始化
-
-
-## 其他
+    - 节点对应的 EgressNode 不存在，则创建 EgressNode
+    - 无隧道 IP，设置 phase == `Pending`
+    - 有隧道 IP，校验隧道是否合法，不合法则设置 phase == `Pending`
+    - 隧道 IP 合法，校验 IP 是否分配给本节点，不是则设置 phase == `Pending`。
+    - 隧道 IP 是分配给本节点，phase != `Succeeded` 则设置 phase == `Init`

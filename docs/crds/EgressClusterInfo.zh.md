@@ -1,6 +1,5 @@
-# EgressClusterInfo
-
 ## 简介
+
 为了简化 Egress 策略的配置，引入 Egress Ignore CIDR 功能，允许自动获取集群的 CIDR。当 EgressGatewayPolicy 的 `destSubnet` 字段为空时，数据面将会自动匹配 EgressClusterStatus CR 中的 CIDR 之外的流量，并将其转发到 Egress 网关。
 
 ## CRD
@@ -46,17 +45,20 @@ status:
 
 ### Controller
 #### Node Event
+
 - Create：node 创建时，将 node 的 ip 自动添加到 egressclusterinfos CR `status.egressIgnoreCIDR.nodeIP` 中。
 - Update：node ip 有更新时，将 node 的 ip 自动更新到 egressclusterinfos CR `status.egressIgnoreCIDR.nodeIP` 中。
 - Delete：node 被删除时，将 node 的 ip 从 egressclusterinfos CR `status.egressIgnoreCIDR.nodeIP` 中删除。
 
 #### Calico IPPool Event
+
 当 egressgateway 配置文件的 `egressIgnoreCIDR.autoDetect.podCIDR` 为 "calico" 时，监听 Calico 的 IPPool Event。
 - Create：calico ippool 创建时，将 ippool cidr 自动添加到 egressclusterinfos CR `status.egressIgnoreCIDR.podCIDR` 中。
 - Update：calico ippool 有更新时，将 ippool cidr 自动更新到 egressclusterinfos CR `status.egressIgnoreCIDR.podCIDR` 中。
 - Delete：calico ippool 被删除时，将 ippool cidr 从 egressclusterinfos CR `status.egressIgnoreCIDR.podCIDR` 中删除。
 
 ### Agent
+
 无
 
 ## 其他

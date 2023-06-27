@@ -1,5 +1,3 @@
-# Install
-
 ## Requirement
 
 Egressgateway currently supports collaboration with Calico CNI and will support collaboration with more CNIs in the future. 

@@ -408,7 +408,7 @@ preview_doc:
         --entrypoint sh \
         --stop-timeout 3 \
         --stop-signal "SIGKILL" \
-        squidfunk/mkdocs-material  -c "cd /host ; cp docs/mkdocs.yml ./ ;  mkdocs serve -a 0.0.0.0:8000"
+        squidfunk/mkdocs-material  -c "pip install mkdocs-static-i18n; cd /host ; cp docs/mkdocs.yml ./ ;  mkdocs serve -a 0.0.0.0:8000"
 	#sleep 10 ; if curl 127.0.0.1:8000 &>/dev/null  ; then echo "succeeded to set up preview server" ; else echo "error, failed to set up preview server" ; docker stop doc_previewer ; exit 1 ; fi
 
 
@@ -426,7 +426,7 @@ build_doc:
 		docker run --rm --name doc_builder  \
 		-v ${PROJECT_DOC_DIR}:/host/docs \
         --entrypoint sh \
-        squidfunk/mkdocs-material -c "cd /host ; cp ./docs/mkdocs.yml ./ ; mkdocs build ; cd site ; tar -czvf site.tar.gz * ; mv ${OUTPUT_TAR} ../docs/"
+        squidfunk/mkdocs-material -c "pip install mkdocs-static-i18n; cd /host ; cp ./docs/mkdocs.yml ./ ; mkdocs build ; cd site ; tar -czvf site.tar.gz * ; mv ${OUTPUT_TAR} ../docs/"
 	@ [ -f "$(PROJECT_DOC_DIR)/$(OUTPUT_TAR)" ] || { echo "failed to build site to $(PROJECT_DOC_DIR)/$(OUTPUT_TAR) " ; exit 1 ; }
 	@ mv $(PROJECT_DOC_DIR)/$(OUTPUT_TAR) $(DOC_OUTPUT)/$(OUTPUT_TAR)
 	@ echo "succeeded to build site to $(DOC_OUTPUT)/$(OUTPUT_TAR) "

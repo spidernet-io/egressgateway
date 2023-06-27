@@ -53,7 +53,7 @@ You can follow the [Get Started](https://spidernet-io.github.io/egressgateway/us
 
 <img src="./docs/proposal/03-egress-ip/arch.png" width="100%"></img>
 
-Refer to [develop](./docs/develop/dev.md).
+Refer to [develop](docs/develop/Develop.en.md).
 
 ## License
 
