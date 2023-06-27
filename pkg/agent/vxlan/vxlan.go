@@ -5,7 +5,9 @@ package vxlan
 
 import (
 	"fmt"
+	"io"
 	"net"
+	"os"
 	"reflect"
 	"sync"
 	"syscall"
@@ -89,6 +91,11 @@ func (dev *Device) EnsureLink(name string, vni int, port int, mac net.HardwareAd
 		return err
 	}
 
+	err = dev.ensureFilter(ipv4, ipv6)
+	if err != nil {
+		return err
+	}
+
 	if disableChecksumOffload {
 		err = ethtool.EthtoolTXOff(name)
 		if err != nil {
@@ -139,6 +146,23 @@ func (dev *Device) ensureLink(vxlan *netlink.Vxlan) (*netlink.Vxlan, error) {
 	}
 
 	return vxlan, nil
+}
+
+func (dev *Device) ensureFilter(ipv4, ipv6 *net.IPNet) error {
+	name := "all"
+	if ipv4 != nil {
+		err := writeProcSys(fmt.Sprintf("/proc/sys/net/ipv4/conf/%s/rp_filter", name), "2")
+		if err != nil {
+			return err
+		}
+	}
+	if ipv6 != nil {
+		err := writeProcSys(fmt.Sprintf("/proc/sys/net/ipv6/conf/%s/rp_filter", name), "2")
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 type Peer struct {
@@ -308,4 +332,26 @@ func (dev *Device) ensureAddr(ipn *net.IPNet, link netlink.Link, family int) err
 
 func (dev *Device) notReady() bool {
 	return dev.link == nil
+}
+
+func writeProcSys(path, value string) error {
+	f, err := os.OpenFile(path, os.O_WRONLY, 0)
+	if err != nil {
+		return fmt.Errorf("failed to open file: %w", err)
+	}
+	defer func() {
+		if cErr := f.Close(); cErr != nil && err == nil {
+			err = fmt.Errorf("failed to close file: %w", cErr)
+		}
+	}()
+
+	n, err := f.Write([]byte(value))
+	if err != nil {
+		return fmt.Errorf("failed to write value: %w", err)
+	}
+	if n < len(value) {
+		return io.ErrShortWrite
+	}
+
+	return nil
 }
