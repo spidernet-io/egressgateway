@@ -3,26 +3,38 @@ docs_dir: docs
 site_dir: site
 repo_name: spidernet-io/egressgateway
 repo_url: https://github.com/spidernet-io/egressgateway
-# remote branch for mkdocs gh-deploy
 remote_branch: github_pages
 theme:
   name: material
-  # The maximum depth of the navigation tree in the sidebar
   navigation_depth: 2
   palette:
     scheme: default
     primary: "#4478D1"
-    language: zh
-  features:
-    - navigation.instant
-    - navigation.tracking
-    - navigation.indexes
-    - navigation.top
-    - search.highlight
-    - search.suggest
-    - search.share
+#  features:
+#    - navigation.instant
+#    - navigation.tracking
+#    - navigation.indexes
+#    - navigation.top
+#    - search.highlight
+#    - search.suggest
+#    - search.share
 
 plugins:
+  - i18n:
+      default_language: !ENV [DEFAULT_LANGUAGE, "en"]
+      default_language_only: !ENV [DEFAULT_LANGUAGE_ONLY, false]
+      docs_structure: suffix
+      material_alternate: true
+      languages:
+        default:
+          name: Default (en)
+          build: true
+        en:
+          name: English
+          build: true
+        zh:
+          name: 中文
+          build: true
   - tags
   - search
 
@@ -35,6 +47,26 @@ markdown_extensions:
   - attr_list
 
 nav:
-  - Home: README.md
+  - Overview: README.md
   - Getting started:
       - Install: usage/Install.md
+      - Upgrade: usage/Upgrade.md
+      - Uninstall: usage/Uninstall.md
+  - Concepts:
+      - Architecture: concepts/Architecture.md
+      - Datapath: concepts/Datapath.md
+  - CRDs:
+      - EgressNode: crds/EgressNode.md
+      - EgressGateway: crds/EgressGateway.md
+      - EgressPolicy: crds/EgressPolicy.md
+      - EgressClusterPolicy: crds/EgressClusterPolicy.md
+      - EgressEndpointSlice: crds/EgressEndpointSlice.md
+      - EgressClusterEndpointSlice: crds/EgressClusterEndpointSlice.md
+      - EgressClusterInfo: crds/EgressClusterInfo.md
+  - Troubleshooting: Troubleshooting.md
+  - Develop:
+      - DataFlow: develop/Dataflow.md
+      - Contribute: develop/Contribute.md
+      - Release: develop/Release.md
+  - Community:
+      - Roadmap: develop/Roadmap.md
