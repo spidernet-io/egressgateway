@@ -6,6 +6,7 @@ init_kind_env:
 	make init_one_kind -e KIND_CONFIG_PATH=./kindconfig/global-kind.yaml -e KIND_CLUSTER_NAME=$(E2E_KIND_CLUSTER_NAME) -e KIND_KUBECONFIG=$(E2E_KIND_KUBECONFIG_PATH)
 	make install_proscope
 	make install_calico
+	make run_nettool_server
 
 
 .PHONY: init_one_kind
@@ -245,6 +246,8 @@ e2e_test:
 		export TCP_PORT=$(TCP_PORT); \
 		export UDP_PORT=$(UDP_PORT); \
 		export WEB_PORT=$(WEB_PORT); \
+		echo "egressgateway info"; \
+		export EGRESS_NAMESPACE=$(E2E_NAMESPACE); \
 		if [ "$(E2E_IP_FAMILY)" == "ipv4" ] ; then \
 			export E2E_IPV4_ENABLED=true ; export E2E_IPV6_ENABLED=false ; \
 		elif [ "$(E2E_IP_FAMILY)" == "ipv6" ] ; then \

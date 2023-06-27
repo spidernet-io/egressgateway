@@ -41,10 +41,10 @@ func GenerateDeployYaml(DeployName, NodeName, serverIP string, replicas int32, l
 					Containers: []corev1.Container{
 						{
 							Name:            DeployName,
-							Image:           NettoolsServer[IMAGE],
+							Image:           Env[IMAGE],
 							ImagePullPolicy: corev1.PullIfNotPresent,
 							Command: []string{"bin/sh", "-c",
-								fmt.Sprintf("sleep 10s && nettools-client -addr %s -protocol %s -tcpPort %s -udpPort %s -webPort %s", serverIP, NettoolsServer[MOD], NettoolsServer[TCP_PORT], NettoolsServer[UDP_PORT], NettoolsServer[WEB_PORT])},
+								fmt.Sprintf("sleep 10s && nettools-client -addr %s -protocol %s -tcpPort %s -udpPort %s -webPort %s", serverIP, Env[MOD], Env[TCP_PORT], Env[UDP_PORT], Env[WEB_PORT])},
 						},
 					},
 				},

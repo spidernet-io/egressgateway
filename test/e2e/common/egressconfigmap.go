@@ -16,7 +16,7 @@ import (
 func GetEgressConfigmap(f *framework.Framework) (*config.FileConfig, error) {
 	key := types.NamespacedName{
 		Name:      EGRESSGATEWAY_CONFIGMAP_NAME,
-		Namespace: kubeSystem,
+		Namespace: Env[EGRESS_NAMESPACE],
 	}
 	cm := &corev1.ConfigMap{}
 	e := f.GetResource(key, cm)
