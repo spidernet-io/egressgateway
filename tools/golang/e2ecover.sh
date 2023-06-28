@@ -1,4 +1,5 @@
 #!/bin/bash
+shopt -s extglob
 
 # Copyright 2022 Authors of spidernet-io
 # SPDX-License-Identifier: Apache-2.0
@@ -6,7 +7,6 @@
 CURRENT_DIR_PATH=$( dirname $0 )
 CURRENT_DIR_PATH=$(cd ${CURRENT_DIR_PATH} ; pwd)
 PROJECT_ROOT_PATH=$(cd ${CURRENT_DIR_PATH}/../.. ; pwd)
-
 ALL_CASE=$( cat ${PROJECT_ROOT_PATH}/test/doc/!(*_zh.md) | grep -E -o "\|[[:space:]]*[a-zA-Z][0-9]{5}[[:space:]]*\|" | tr -d '|' | tr '\n' ' ' )
 if [ -z "$ALL_CASE" ] ;then
   echo "0/0"
