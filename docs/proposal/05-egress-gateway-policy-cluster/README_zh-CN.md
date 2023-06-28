@@ -14,10 +14,10 @@
 * 由于新增了集群级别的 policy，当集群级别与 namespace 级别的两个 policy， `appliedTo`、`destSubnet` 一致，但 `egressGatewayName`  或`egressIP` 不一致时，两个策略谁最终生效就将成为一个问题。所以引入一个优先级的新字段 `priority` 来解决该问题。范围为 1-65536，数值越小，优先级越高。用户可以自行设置优先级。如果没设置时，EgressGatewayPolicy 默认优先级为 1000，EgressGatewayPolicyCluster 默认优先级为 32768.如果优先级一致时，则随机排序。
 
 
-## EgressGatewayPolicy CRD
+## EgressPolicy CRD
 ```yaml
 apiVersion: egressgateway.spidernet.io/v1beta1
-kind: EgressGatewayPolicy
+kind: EgressPolicy
 metadata:
   namespace: "default"
   name: "policy-test"
@@ -42,10 +42,10 @@ spec:
 
 1. 新增字段，策略的优先级
 
-## EgressGatewayPolicyCluster CRD
+## EgressClusterPolicy CRD
 ```yaml
 apiVersion: egressgateway.spidernet.io/v1beta1
-kind: EgressGatewayPolicyCluster
+kind: EgressClusterPolicy
 metadata:
   namespace: "default"
   name: "policy-test"
