@@ -32,7 +32,7 @@ There are two clusters A and B. Cluster A is VMWare-based and runs mainly Databa
 * EgressClusterEndpointSlice
 * EgressClusterInfo
 
-You can follow the [Get Started](https://spidernet-io.github.io/egressgateway/usage/install) to set up your own playground!
+You can follow the [Get Started](https://spidernet-io.github.io/egressgateway/en/usage/Install) to set up your own playground!
 
 ## Develop
 

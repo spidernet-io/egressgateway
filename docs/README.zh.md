@@ -32,7 +32,7 @@ EgressGateway 项目为 Kubernetes 提供 Egress 能力。
 * EgressClusterEndpointSlice
 * EgressClusterInfo
 
-你可以跟随[起步](https://spidernet-io.github.io/egressgateway/usage/install)指南搭建你自己的测试环境～
+你可以跟随[起步](https://spidernet-io.github.io/egressgateway/zh/usage/Install)指南搭建你自己的测试环境～
 
 ## Develop
 
