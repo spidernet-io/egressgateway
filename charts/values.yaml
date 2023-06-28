@@ -101,38 +101,8 @@ agent:
     ## @param agent.service.type The type of Service for egressgateway agent
     type: ClusterIP
   ## @skip agent.tolerations
-  # --  Node tolerations
-  # ref: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/
   tolerations:
-    - effect: NoExecute
-      key: node.kubernetes.io/not-ready
-      operator: Exists
-    - effect: NoExecute
-      key: node.kubernetes.io/unreachable
-      operator: Exists
-    - effect: NoSchedule
-      key: node.kubernetes.io/disk-pressure
-      operator: Exists
-    - effect: NoSchedule
-      key: node.kubernetes.io/memory-pressure
-      operator: Exists
-    - effect: NoSchedule
-      key: node.kubernetes.io/pid-pressure
-      operator: Exists
-    - effect: NoSchedule
-      key: node.kubernetes.io/unschedulable
-      operator: Exists
-    - effect: NoSchedule
-      key: node.kubernetes.io/network-unavailable
-      operator: Exists
-    - key: node.kubernetes.io/not-ready
-      effect: NoSchedule
-    - key: node-role.kubernetes.io/master
-      effect: NoSchedule
-    - key: node-role.kubernetes.io/control-plane
-      effect: NoSchedule
-    - key: CriticalAddonsOnly
-      operator: Exists
+    - operator: Exists
   ## @param agent.priorityClassName The priority Class Name for egressgateway agent
   priorityClassName: "system-node-critical"
   ## @param agent.affinity The affinity of egressgateway agent
@@ -259,35 +229,7 @@ controller:
     type: ClusterIP
   ## @skip controller.tolerations
   tolerations:
-    - effect: NoExecute
-      key: node.kubernetes.io/not-ready
-      operator: Exists
-    - effect: NoExecute
-      key: node.kubernetes.io/unreachable
-      operator: Exists
-    - effect: NoSchedule
-      key: node.kubernetes.io/disk-pressure
-      operator: Exists
-    - effect: NoSchedule
-      key: node.kubernetes.io/memory-pressure
-      operator: Exists
-    - effect: NoSchedule
-      key: node.kubernetes.io/pid-pressure
-      operator: Exists
-    - effect: NoSchedule
-      key: node.kubernetes.io/unschedulable
-      operator: Exists
-    - effect: NoSchedule
-      key: node.kubernetes.io/network-unavailable
-      operator: Exists
-    - key: node.kubernetes.io/not-ready
-      effect: NoSchedule
-    - key: node-role.kubernetes.io/master
-      effect: NoSchedule
-    - key: node-role.kubernetes.io/control-plane
-      effect: NoSchedule
-    - key: CriticalAddonsOnly
-      operator: Exists
+    - operator: Exists
   ## @param controller.priorityClassName The priority class name for egressgateway controller
   priorityClassName: "system-node-critical"
   ## @param controller.affinity The affinity of egressgateway controller
