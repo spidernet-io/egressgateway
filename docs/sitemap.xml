@@ -1,3 +1,195 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">
+    <url>
+         <loc>None./</loc>
+         <lastmod>2023-06-28</lastmod>
+         <changefreq>daily</changefreq>
+         <xhtml:link rel="alternate" hreflang="en" href="Noneen/"/>
+         <xhtml:link rel="alternate" hreflang="zh" href="Nonezh/"/>
+         
+    </url>
+    <url>
+         <loc>NoneTroubleshooting/</loc>
+         <lastmod>2023-06-28</lastmod>
+         <changefreq>daily</changefreq>
+         <xhtml:link rel="alternate" hreflang="en" href="Noneen/Troubleshooting/"/>
+         <xhtml:link rel="alternate" hreflang="zh" href="Nonezh/Troubleshooting/"/>
+         
+    </url>
+    <url>
+         <loc>Noneconcepts/Architecture/</loc>
+         <lastmod>2023-06-28</lastmod>
+         <changefreq>daily</changefreq>
+         <xhtml:link rel="alternate" hreflang="en" href="Noneen/concepts/Architecture/"/>
+         <xhtml:link rel="alternate" hreflang="zh" href="Nonezh/concepts/Architecture/"/>
+         
+    </url>
+    <url>
+         <loc>Noneconcepts/Datapath/</loc>
+         <lastmod>2023-06-28</lastmod>
+         <changefreq>daily</changefreq>
+         <xhtml:link rel="alternate" hreflang="en" href="Noneen/concepts/Datapath/"/>
+         <xhtml:link rel="alternate" hreflang="zh" href="Nonezh/concepts/Datapath/"/>
+         
+    </url>
+    <url>
+         <loc>Nonecrds/EgressClusterEndpointSlice/</loc>
+         <lastmod>2023-06-28</lastmod>
+         <changefreq>daily</changefreq>
+         <xhtml:link rel="alternate" hreflang="en" href="Noneen/crds/EgressClusterEndpointSlice/"/>
+         <xhtml:link rel="alternate" hreflang="zh" href="Nonezh/crds/EgressClusterEndpointSlice/"/>
+         
+    </url>
+    <url>
+         <loc>Nonecrds/EgressClusterInfo/</loc>
+         <lastmod>2023-06-28</lastmod>
+         <changefreq>daily</changefreq>
+         <xhtml:link rel="alternate" hreflang="en" href="Noneen/crds/EgressClusterInfo/"/>
+         <xhtml:link rel="alternate" hreflang="zh" href="Nonezh/crds/EgressClusterInfo/"/>
+         
+    </url>
+    <url>
+         <loc>Nonecrds/EgressClusterPolicy/</loc>
+         <lastmod>2023-06-28</lastmod>
+         <changefreq>daily</changefreq>
+         <xhtml:link rel="alternate" hreflang="en" href="Noneen/crds/EgressClusterPolicy/"/>
+         <xhtml:link rel="alternate" hreflang="zh" href="Nonezh/crds/EgressClusterPolicy/"/>
+         
+    </url>
+    <url>
+         <loc>Nonecrds/EgressEndpointSlice/</loc>
+         <lastmod>2023-06-28</lastmod>
+         <changefreq>daily</changefreq>
+         <xhtml:link rel="alternate" hreflang="en" href="Noneen/crds/EgressEndpointSlice/"/>
+         <xhtml:link rel="alternate" hreflang="zh" href="Nonezh/crds/EgressEndpointSlice/"/>
+         
+    </url>
+    <url>
+         <loc>Nonecrds/EgressGateway/</loc>
+         <lastmod>2023-06-28</lastmod>
+         <changefreq>daily</changefreq>
+         <xhtml:link rel="alternate" hreflang="en" href="Noneen/crds/EgressGateway/"/>
+         <xhtml:link rel="alternate" hreflang="zh" href="Nonezh/crds/EgressGateway/"/>
+         
+    </url>
+    <url>
+         <loc>Nonecrds/EgressNode/</loc>
+         <lastmod>2023-06-28</lastmod>
+         <changefreq>daily</changefreq>
+         <xhtml:link rel="alternate" hreflang="en" href="Noneen/crds/EgressNode/"/>
+         <xhtml:link rel="alternate" hreflang="zh" href="Nonezh/crds/EgressNode/"/>
+         
+    </url>
+    <url>
+         <loc>Nonecrds/EgressPolicy/</loc>
+         <lastmod>2023-06-28</lastmod>
+         <changefreq>daily</changefreq>
+         <xhtml:link rel="alternate" hreflang="en" href="Noneen/crds/EgressPolicy/"/>
+         <xhtml:link rel="alternate" hreflang="zh" href="Nonezh/crds/EgressPolicy/"/>
+         
+    </url>
+    <url>
+         <loc>Nonedevelop/Contribute/</loc>
+         <lastmod>2023-06-28</lastmod>
+         <changefreq>daily</changefreq>
+         <xhtml:link rel="alternate" hreflang="en" href="Noneen/develop/Contribute/"/>
+         <xhtml:link rel="alternate" hreflang="zh" href="Nonezh/develop/Contribute/"/>
+         
+    </url>
+    <url>
+         <loc>Nonedevelop/Dataflow/</loc>
+         <lastmod>2023-06-28</lastmod>
+         <changefreq>daily</changefreq>
+         <xhtml:link rel="alternate" hreflang="en" href="Noneen/develop/Dataflow/"/>
+         <xhtml:link rel="alternate" hreflang="zh" href="Nonezh/develop/Dataflow/"/>
+         
+    </url>
+    <url>
+         <loc>Nonedevelop/Develop/</loc>
+         <lastmod>2023-06-28</lastmod>
+         <changefreq>daily</changefreq>
+         <xhtml:link rel="alternate" hreflang="en" href="Noneen/develop/Develop/"/>
+         <xhtml:link rel="alternate" hreflang="zh" href="Nonezh/develop/Develop/"/>
+         
+    </url>
+    <url>
+         <loc>Nonedevelop/Release/</loc>
+         <lastmod>2023-06-28</lastmod>
+         <changefreq>daily</changefreq>
+         <xhtml:link rel="alternate" hreflang="en" href="Noneen/develop/Release/"/>
+         <xhtml:link rel="alternate" hreflang="zh" href="Nonezh/develop/Release/"/>
+         
+    </url>
+    <url>
+         <loc>Nonedevelop/Roadmap/</loc>
+         <lastmod>2023-06-28</lastmod>
+         <changefreq>daily</changefreq>
+         <xhtml:link rel="alternate" hreflang="en" href="Noneen/develop/Roadmap/"/>
+         <xhtml:link rel="alternate" hreflang="zh" href="Nonezh/develop/Roadmap/"/>
+         
+    </url>
+    <url>
+         <loc>Noneproposal/01-egress-gateway/EgressGateway/</loc>
+         <lastmod>2023-06-28</lastmod>
+         <changefreq>daily</changefreq>
+         <xhtml:link rel="alternate" hreflang="en" href="Noneen/proposal/01-egress-gateway/EgressGateway/"/>
+         <xhtml:link rel="alternate" hreflang="zh" href="Nonezh/proposal/01-egress-gateway/EgressGateway/"/>
+         
+    </url>
+    <url>
+         <loc>Noneproposal/02-egress-node/EgressNode-zh_CN/</loc>
+         <lastmod>2023-06-28</lastmod>
+         <changefreq>daily</changefreq>
+         <xhtml:link rel="alternate" hreflang="en" href="Noneen/proposal/02-egress-node/EgressNode-zh_CN/"/>
+         <xhtml:link rel="alternate" hreflang="zh" href="Nonezh/proposal/02-egress-node/EgressNode-zh_CN/"/>
+         
+    </url>
+    <url>
+         <loc>Noneproposal/03-egress-ip/README_zh-CN/</loc>
+         <lastmod>2023-06-28</lastmod>
+         <changefreq>daily</changefreq>
+         <xhtml:link rel="alternate" hreflang="en" href="Noneen/proposal/03-egress-ip/README_zh-CN/"/>
+         <xhtml:link rel="alternate" hreflang="zh" href="Nonezh/proposal/03-egress-ip/README_zh-CN/"/>
+         
+    </url>
+    <url>
+         <loc>Noneproposal/04-auto-detect-egress-ignore-cidr/README_zh-CN/</loc>
+         <lastmod>2023-06-28</lastmod>
+         <changefreq>daily</changefreq>
+         <xhtml:link rel="alternate" hreflang="en" href="Noneen/proposal/04-auto-detect-egress-ignore-cidr/README_zh-CN/"/>
+         <xhtml:link rel="alternate" hreflang="zh" href="Nonezh/proposal/04-auto-detect-egress-ignore-cidr/README_zh-CN/"/>
+         
+    </url>
+    <url>
+         <loc>Noneproposal/05-egress-gateway-policy-cluster/README_zh-CN/</loc>
+         <lastmod>2023-06-28</lastmod>
+         <changefreq>daily</changefreq>
+         <xhtml:link rel="alternate" hreflang="en" href="Noneen/proposal/05-egress-gateway-policy-cluster/README_zh-CN/"/>
+         <xhtml:link rel="alternate" hreflang="zh" href="Nonezh/proposal/05-egress-gateway-policy-cluster/README_zh-CN/"/>
+         
+    </url>
+    <url>
+         <loc>Noneusage/Install/</loc>
+         <lastmod>2023-06-28</lastmod>
+         <changefreq>daily</changefreq>
+         <xhtml:link rel="alternate" hreflang="en" href="Noneen/usage/Install/"/>
+         <xhtml:link rel="alternate" hreflang="zh" href="Nonezh/usage/Install/"/>
+         
+    </url>
+    <url>
+         <loc>Noneusage/Uninstall/</loc>
+         <lastmod>2023-06-28</lastmod>
+         <changefreq>daily</changefreq>
+         <xhtml:link rel="alternate" hreflang="en" href="Noneen/usage/Uninstall/"/>
+         <xhtml:link rel="alternate" hreflang="zh" href="Nonezh/usage/Uninstall/"/>
+         
+    </url>
+    <url>
+         <loc>Noneusage/Upgrade/</loc>
+         <lastmod>2023-06-28</lastmod>
+         <changefreq>daily</changefreq>
+         <xhtml:link rel="alternate" hreflang="en" href="Noneen/usage/Upgrade/"/>
+         <xhtml:link rel="alternate" hreflang="zh" href="Nonezh/usage/Upgrade/"/>
+         
+    </url>
 </urlset>
