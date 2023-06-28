@@ -12,8 +12,10 @@
         <link rel="prev" href="../..">
       
       
+        <link rel="next" href="../Upgrade/">
+      
       <link rel="icon" href="../../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.4.3, mkdocs-material-9.1.15">
+      <meta name="generator" content="mkdocs-1.4.3, mkdocs-material-9.1.17">
     
     
       
@@ -65,7 +67,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#install" class="md-skip">
+        <a href="#requirement" class="md-skip">
           Skip to content
         </a>
       
@@ -79,7 +81,7 @@
 
   
 
-<header class="md-header md-header--shadow md-header--lifted" data-md-component="header">
+<header class="md-header md-header--shadow" data-md-component="header">
   <nav class="md-header__inner md-grid" aria-label="Header">
     <a href="../.." title="EgressGateway" class="md-header__button md-logo" aria-label="EgressGateway" data-md-component="logo">
       
@@ -110,6 +112,38 @@
       
     
     
+      <div class="md-header__option">
+        <div class="md-select">
+          
+          <button class="md-header__button md-icon" aria-label="Select language">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m12.87 15.07-2.54-2.51.03-.03A17.52 17.52 0 0 0 14.07 6H17V4h-7V2H8v2H1v2h11.17C11.5 7.92 10.44 9.75 9 11.35 8.07 10.32 7.3 9.19 6.69 8h-2c.73 1.63 1.73 3.17 2.98 4.56l-5.09 5.02L4 19l5-5 3.11 3.11.76-2.04M18.5 10h-2L12 22h2l1.12-3h4.75L21 22h2l-4.5-12m-2.62 7 1.62-4.33L19.12 17h-3.24Z"/></svg>
+          </button>
+          <div class="md-select__inner">
+            <ul class="md-select__list">
+              
+                <li class="md-select__item">
+                  <a href="./" hreflang="en" class="md-select__link">
+                    Default (en)
+                  </a>
+                </li>
+              
+                <li class="md-select__item">
+                  <a href="../../en/usage/Install/" hreflang="en" class="md-select__link">
+                    English
+                  </a>
+                </li>
+              
+                <li class="md-select__item">
+                  <a href="../../zh/usage/Install/" hreflang="zh" class="md-select__link">
+                    中文
+                  </a>
+                </li>
+              
+            </ul>
+          </div>
+        </div>
+      </div>
+    
     
       <label class="md-header__button md-icon" for="__search">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
@@ -125,16 +159,10 @@
       </label>
       <nav class="md-search__options" aria-label="Search">
         
-          <a href="javascript:void(0)" class="md-search__icon md-icon" title="Share" aria-label="Share" data-clipboard data-clipboard-text="" data-md-component="search-share" tabindex="-1">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7 0-.24-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9a3 3 0 0 0-3 3 3 3 0 0 0 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.15c-.05.21-.08.43-.08.66 0 1.61 1.31 2.91 2.92 2.91 1.61 0 2.92-1.3 2.92-2.91A2.92 2.92 0 0 0 18 16.08Z"/></svg>
-          </a>
-        
         <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41Z"/></svg>
         </button>
       </nav>
-      
-        <div class="md-search__suggest" data-md-component="search-suggest"></div>
       
     </form>
     <div class="md-search__output">
@@ -165,52 +193,13 @@
     
   </nav>
   
-    
-      
-<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
-  <div class="md-grid">
-    <ul class="md-tabs__list">
-      
-        
-  
-  
-
-
-  <li class="md-tabs__item">
-    <a href="../.." class="md-tabs__link">
-      Home
-    </a>
-  </li>
-
-      
-        
-  
-  
-    
-  
-
-
-  
-  
-  
-    <li class="md-tabs__item">
-      <a href="./" class="md-tabs__link md-tabs__link--active">
-        Getting started
-      </a>
-    </li>
-  
-
-      
-    </ul>
-  </div>
-</nav>
-    
-  
 </header>
     
     <div class="md-container" data-md-component="container">
       
       
+        
+          
         
       
       <main class="md-main" data-md-component="main">
@@ -223,10 +212,8 @@
                   <div class="md-sidebar__inner">
                     
 
-  
 
-
-<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
     <a href="../.." title="EgressGateway" class="md-nav__button md-logo" aria-label="EgressGateway" data-md-component="logo">
       
@@ -260,7 +247,7 @@
   
     <li class="md-nav__item">
       <a href="../.." class="md-nav__link">
-        Home
+        Overview
       </a>
     </li>
   
@@ -283,10 +270,6 @@
       
       <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" checked>
       
-      
-        
-          
-        
       
       
         <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
@@ -313,8 +296,6 @@
       <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
       
       
-        
-      
       
         <label class="md-nav__link md-nav__link--active" for="__toc">
           Install
@@ -330,8 +311,6 @@
 <nav class="md-nav md-nav--secondary" aria-label="Table of contents">
   
   
-  
-    
   
   
     <label class="md-nav__title" for="__toc">
@@ -361,7 +340,7 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#install_1" class="md-nav__link">
+  <a href="#install" class="md-nav__link">
     Install
   </a>
   
@@ -417,6 +396,371 @@
 
             
           
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../Upgrade/" class="md-nav__link">
+        Upgrade
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../Uninstall/" class="md-nav__link">
+        Uninstall
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+      
+      
+      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+      
+      
+      
+        <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+          Concepts
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+        <label class="md-nav__title" for="__nav_3">
+          <span class="md-nav__icon md-icon"></span>
+          Concepts
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../concepts/Architecture/" class="md-nav__link">
+        Architecture
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../concepts/Datapath/" class="md-nav__link">
+        Datapath
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+      
+      
+      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+      
+      
+      
+        <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+          CRDs
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+        <label class="md-nav__title" for="__nav_4">
+          <span class="md-nav__icon md-icon"></span>
+          CRDs
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../crds/EgressNode/" class="md-nav__link">
+        EgressNode
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../crds/EgressGateway/" class="md-nav__link">
+        EgressGateway
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../crds/EgressPolicy/" class="md-nav__link">
+        EgressPolicy
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../crds/EgressClusterPolicy/" class="md-nav__link">
+        EgressClusterPolicy
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../crds/EgressEndpointSlice/" class="md-nav__link">
+        EgressEndpointSlice
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../crds/EgressClusterEndpointSlice/" class="md-nav__link">
+        EgressClusterEndpointSlice
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../crds/EgressClusterInfo/" class="md-nav__link">
+        EgressClusterInfo
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../Troubleshooting/" class="md-nav__link">
+        Troubleshooting
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+      
+      
+      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" >
+      
+      
+      
+        <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="0">
+          Develop
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+        <label class="md-nav__title" for="__nav_6">
+          <span class="md-nav__icon md-icon"></span>
+          Develop
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../develop/Dataflow/" class="md-nav__link">
+        DataFlow
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../develop/Contribute/" class="md-nav__link">
+        Contribute
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../develop/Release/" class="md-nav__link">
+        Release
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+      
+      
+      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" >
+      
+      
+      
+        <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="0">
+          Community
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
+        <label class="md-nav__title" for="__nav_7">
+          <span class="md-nav__icon md-icon"></span>
+          Community
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../develop/Roadmap/" class="md-nav__link">
+        Roadmap
+      </a>
+    </li>
+  
+
+            
+          
         </ul>
       </nav>
     </li>
@@ -439,8 +783,6 @@
 <nav class="md-nav md-nav--secondary" aria-label="Table of contents">
   
   
-  
-    
   
   
     <label class="md-nav__title" for="__toc">
@@ -470,7 +812,7 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#install_1" class="md-nav__link">
+  <a href="#install" class="md-nav__link">
     Install
   </a>
   
@@ -538,84 +880,99 @@
   
 
 
-<h1 id="install">Install</h1>
+  <h1>Install</h1>
+
 <h2 id="requirement">Requirement</h2>
-<p>Egressgateway currently supports collaboration with Calico CNI and will support collaboration with more CNIs in the future. 
+<p>Egressgateway currently supports collaboration with Calico CNI and will support collaboration with more CNIs in the future.
 Below are the configuration methods for different CNIs:</p>
 <h3 id="calico">Calico</h3>
-<p>Required settings <code>chainInsertMode</code> to <code>Append</code>, for example in the code, 
+<p>Required settings <code>chainInsertMode</code> to <code>Append</code>, for example in the code,
 more reference <a href="https://projectcalico.docs.tigera.io/reference/resources/felixconfig">calico docs</a>:</p>
-<pre><code class="language-yaml">apiVersion: projectcalico.org/v3
-kind: FelixConfiguration
-metadata:
-  name: default
-spec:
-  ipv6Support: false
-  ipipMTU: 1400
-  chainInsertMode: Append # this line
-</code></pre>
-<h2 id="install_1">Install</h2>
+<div class="language-yaml highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nt">apiVersion</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">projectcalico.org/v3</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="nt">kind</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">FelixConfiguration</span>
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="nt">metadata</span><span class="p">:</span>
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="w">  </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">default</span>
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="nt">spec</span><span class="p">:</span>
+</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="w">  </span><span class="nt">ipv6Support</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">false</span>
+</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="w">  </span><span class="nt">ipipMTU</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1400</span>
+</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a><span class="w">  </span><span class="nt">chainInsertMode</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Append</span><span class="w"> </span><span class="c1"># (1)</span>
+</span></code></pre></div>
+<ol>
+<li>add this line</li>
+</ol>
+<h2 id="install">Install</h2>
 <h3 id="add-helm-repository">Add helm repository</h3>
-<pre><code class="language-shell">helm repo add egressgateway https://spidernet-io.github.io/egressgateway/
-helm repo update
-</code></pre>
+<div class="language-shell highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>helm<span class="w"> </span>repo<span class="w"> </span>add<span class="w"> </span>egressgateway<span class="w"> </span>https://spidernet-io.github.io/egressgateway/
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>helm<span class="w"> </span>repo<span class="w"> </span>update
+</span></code></pre></div>
 <h3 id="install-egressgateway">Install egressgateway</h3>
 <p>The following is a common chart setting option:</p>
-<pre><code class="language-yaml">feature:
-  enableIPv4: true
-  enableIPv6: false # Required pod support IPv6 Stack
-  tunnelIpv4Subnet: &quot;192.200.0.1/16&quot; # IPv4 tunnel subnet
-  tunnelIpv6Subnet: &quot;fd01::21/112&quot;   # IPv6 tunnel subnet
-  forwardMethod: &quot;active-active&quot;     # Support active-active or active-passive
-</code></pre>
-<pre><code class="language-shell">helm install egressgateway egressgateway/egressgateway --values values.yaml --wait --debug
-</code></pre>
-<pre><code class="language-shell">kubectl get crd | grep egress
-</code></pre>
+<div class="language-yaml highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="nt">feature</span><span class="p">:</span>
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="w">  </span><span class="nt">enableIPv4</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="w">  </span><span class="nt">enableIPv6</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">false</span><span class="w"> </span><span class="c1"># (1)</span>
+</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="w">  </span><span class="nt">tunnelIpv4Subnet</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;192.200.0.1/16&quot;</span><span class="w"> </span><span class="c1"># (2)</span>
+</span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="w">  </span><span class="nt">tunnelIpv6Subnet</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;fd01::21/112&quot;</span><span class="w">   </span><span class="c1"># (3)</span>
+</span></code></pre></div>
+<ol>
+<li>Required pod support IPv6 Stack</li>
+<li>IPv4 tunnel subnet</li>
+<li>IPv6 tunnel subnet</li>
+</ol>
+<div class="language-shell highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>helm<span class="w"> </span>install<span class="w"> </span>egressgateway<span class="w"> </span>egressgateway/egressgateway<span class="w"> </span>--values<span class="w"> </span>values.yaml<span class="w"> </span>--wait<span class="w"> </span>--debug
+</span></code></pre></div>
+<div class="language-shell highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>kubectl<span class="w"> </span>get<span class="w"> </span>crd<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span>egress
+</span></code></pre></div>
 <h2 id="create-egressgateway">Create EgressGateway</h2>
 <p>Create an EgressGateway CR that can set a node as an egress gateway node through matchLabels.</p>
-<pre><code class="language-shell">apiVersion: egressgateway.spidernet.io/v1
-kind: EgressGateway
-metadata:
-  name: default
-spec:
-  nodeSelector:
-    matchLabels:
-      kubernetes.io/hostname: workstation2 # change me, select a node in your cluster
-</code></pre>
+<div class="language-yaml highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="nt">apiVersion</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">egressgateway.spidernet.io/v1beta1</span>
+</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="nt">kind</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">EgressGateway</span>
+</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="nt">metadata</span><span class="p">:</span>
+</span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="w">  </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">default</span>
+</span><span id="__span-5-5"><a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a><span class="nt">spec</span><span class="p">:</span>
+</span><span id="__span-5-6"><a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a><span class="w">  </span><span class="nt">nodeSelector</span><span class="p">:</span>
+</span><span id="__span-5-7"><a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a><span class="w">    </span><span class="nt">selector</span><span class="p">:</span>
+</span><span id="__span-5-8"><a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a><span class="w">      </span><span class="nt">matchLabels</span><span class="p">:</span>
+</span><span id="__span-5-9"><a id="__codelineno-5-9" name="__codelineno-5-9" href="#__codelineno-5-9"></a><span class="w">        </span><span class="nt">kubernetes.io/hostname</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">workstation2</span><span class="w"> </span><span class="c1"># (1)</span>
+</span></code></pre></div>
+<ol>
+<li>Change me, select a node in your cluster</li>
+</ol>
 <h2 id="create-example-app">Create Example App</h2>
 <p>Create a testing Pod to simulate an application that requires egress.</p>
-<pre><code class="language-shell">apiVersion: v1
-kind: Pod
-metadata:
-  labels:
-    app: mock-app
-  name: mock-app
-  namespace: default
-spec:
-  containers:
-      image: nginx
-      imagePullPolicy: IfNotPresent
-      name: nginx
-      resources: {}
-  dnsPolicy: ClusterFirst
-  enableServiceLinks: true
-  nodeName: workstation1 # change me, select a non-egress gateway node in your cluster
-</code></pre>
+<div class="language-yaml highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="nt">apiVersion</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">v1</span>
+</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="nt">kind</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Pod</span>
+</span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="nt">metadata</span><span class="p">:</span>
+</span><span id="__span-6-4"><a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="w">  </span><span class="nt">labels</span><span class="p">:</span>
+</span><span id="__span-6-5"><a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a><span class="w">    </span><span class="nt">app</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">mock-app</span>
+</span><span id="__span-6-6"><a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a><span class="w">  </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">mock-app</span>
+</span><span id="__span-6-7"><a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a><span class="w">  </span><span class="nt">namespace</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">default</span>
+</span><span id="__span-6-8"><a id="__codelineno-6-8" name="__codelineno-6-8" href="#__codelineno-6-8"></a><span class="nt">spec</span><span class="p">:</span>
+</span><span id="__span-6-9"><a id="__codelineno-6-9" name="__codelineno-6-9" href="#__codelineno-6-9"></a><span class="w">  </span><span class="nt">containers</span><span class="p">:</span>
+</span><span id="__span-6-10"><a id="__codelineno-6-10" name="__codelineno-6-10" href="#__codelineno-6-10"></a><span class="w">   </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">image</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">nginx</span>
+</span><span id="__span-6-11"><a id="__codelineno-6-11" name="__codelineno-6-11" href="#__codelineno-6-11"></a><span class="w">     </span><span class="nt">imagePullPolicy</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">IfNotPresent</span>
+</span><span id="__span-6-12"><a id="__codelineno-6-12" name="__codelineno-6-12" href="#__codelineno-6-12"></a><span class="w">     </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">nginx</span>
+</span><span id="__span-6-13"><a id="__codelineno-6-13" name="__codelineno-6-13" href="#__codelineno-6-13"></a><span class="w">     </span><span class="nt">resources</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{}</span>
+</span><span id="__span-6-14"><a id="__codelineno-6-14" name="__codelineno-6-14" href="#__codelineno-6-14"></a><span class="w">  </span><span class="nt">dnsPolicy</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">ClusterFirst</span>
+</span><span id="__span-6-15"><a id="__codelineno-6-15" name="__codelineno-6-15" href="#__codelineno-6-15"></a><span class="w">  </span><span class="nt">enableServiceLinks</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+</span><span id="__span-6-16"><a id="__codelineno-6-16" name="__codelineno-6-16" href="#__codelineno-6-16"></a><span class="w">  </span><span class="nt">nodeName</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">workstation1</span><span class="w"> </span><span class="c1"># (1)</span>
+</span></code></pre></div>
+<ol>
+<li>Change me, select a non-egress gateway node in your cluster</li>
+</ol>
 <h2 id="create-egressgatewaypolicy">Create EgressGatewayPolicy</h2>
 <p>By creating an EgressGatewayPolicy CR, you can control which Pod accesses which address needs to go through the egress gateway.</p>
-<pre><code class="language-yaml">apiVersion: egressgateway.spidernet.io/v1
-kind: EgressGatewayPolicy
-metadata:
-  name: mock-app
-spec:
-  appliedTo:
-    podSelector:
-      matchLabels:
-        app: mock-app
-  destSubnet:
-    - 10.6.1.92/32
-</code></pre>
+<div class="language-yaml highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="nt">apiVersion</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">egressgateway.spidernet.io/v1beta1</span>
+</span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="nt">kind</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">EgressPolicy</span>
+</span><span id="__span-7-3"><a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a><span class="nt">metadata</span><span class="p">:</span>
+</span><span id="__span-7-4"><a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a><span class="w">  </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">mock-app</span>
+</span><span id="__span-7-5"><a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a><span class="nt">spec</span><span class="p">:</span>
+</span><span id="__span-7-6"><a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a><span class="w">  </span><span class="nt">appliedTo</span><span class="p">:</span>
+</span><span id="__span-7-7"><a id="__codelineno-7-7" name="__codelineno-7-7" href="#__codelineno-7-7"></a><span class="w">    </span><span class="nt">podSelector</span><span class="p">:</span>
+</span><span id="__span-7-8"><a id="__codelineno-7-8" name="__codelineno-7-8" href="#__codelineno-7-8"></a><span class="w">      </span><span class="nt">matchLabels</span><span class="p">:</span>
+</span><span id="__span-7-9"><a id="__codelineno-7-9" name="__codelineno-7-9" href="#__codelineno-7-9"></a><span class="w">        </span><span class="nt">app</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">mock-app</span>
+</span><span id="__span-7-10"><a id="__codelineno-7-10" name="__codelineno-7-10" href="#__codelineno-7-10"></a><span class="w">  </span><span class="nt">destSubnet</span><span class="p">:</span>
+</span><span id="__span-7-11"><a id="__codelineno-7-11" name="__codelineno-7-11" href="#__codelineno-7-11"></a><span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">10.6.1.92/32</span>
+</span></code></pre></div>
 <p>Now traffic from mock-app accessing 10.6.1.92 will be forwarded by the egress gateway.</p>
 
 
@@ -628,11 +985,6 @@ spec:
           
           
         </div>
-        
-          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12Z"/></svg>
-            Back to top
-          </button>
         
       </main>
       
@@ -659,10 +1011,10 @@ spec:
       <div class="md-dialog__inner md-typeset"></div>
     </div>
     
-    <script id="__config" type="application/json">{"base": "../..", "features": ["navigation.instant", "navigation.tracking", "navigation.indexes", "navigation.tabs", "navigation.tabs.sticky", "navigation.top", "search.highlight", "search.suggest", "search.share"], "search": "../../assets/javascripts/workers/search.208ed371.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
+    <script id="__config" type="application/json">{"base": "../..", "features": ["content.code.annotate"], "search": "../../assets/javascripts/workers/search.208ed371.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
     
     
-      <script src="../../assets/javascripts/bundle.b4d07000.min.js"></script>
+      <script src="../../assets/javascripts/bundle.b425cdc4.min.js"></script>
       
     
   </body>
