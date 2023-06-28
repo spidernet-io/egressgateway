@@ -75,6 +75,18 @@ elif [ "$TYPE"x == "detail"x ] ; then
     echo "------- kubectl get events -n ${COMPONENT_NAMESPACE}"
     kubectl get events -n ${COMPONENT_NAMESPACE} --kubeconfig ${E2E_KUBECONFIG}
 
+    echo "=============== event of error pod ============== "
+     ERROR_POD=`kubectl get pod -o wide -A | sed '1 d' | grep -Ev "Running|Completed" | awk '{printf "%s,%s\n",$1,$2}' `
+     if [ -n "$ERROR_POD" ]; then
+           echo "error pod:"
+           echo "${ERROR_POD}"
+           for LINE in ${ERROR_POD}; do
+               NS_NAME=${LINE//,/ }
+               echo "---------------error pod: ${NS_NAME}------------"
+               kubectl describe pod -n ${NS_NAME}
+           done
+     fi
+
     echo ""
     echo "=============== egressgateway-controller describe ============== "
     for POD in $CONTROLLER_POD_LIST ; do
