@@ -3,6 +3,11 @@
 
 package common
 
+import (
+	"log"
+	"os"
+)
+
 // egressgateway
 const (
 	EGRESSGATEWAY_CHAIN         = "EGRESSGATEWAY-MARK-REQUEST"
@@ -30,14 +35,15 @@ const (
 	WEB_CONNECTED = "WEB Client connected!"
 )
 
-// nettools sever env info key
+// env info key
 const (
-	IMAGE           = "IMAGE"
-	NETTOOLS_SERVER = "NETTOOLS_SERVER"
-	MOD             = "MOD"
-	TCP_PORT        = "TCP_PORT"
-	UDP_PORT        = "UDP_PORT"
-	WEB_PORT        = "WEB_PORT"
+	IMAGE            = "IMAGE"
+	NETTOOLS_SERVER  = "NETTOOLS_SERVER"
+	MOD              = "MOD"
+	TCP_PORT         = "TCP_PORT"
+	UDP_PORT         = "UDP_PORT"
+	WEB_PORT         = "WEB_PORT"
+	EGRESS_NAMESPACE = "EGRESS_NAMESPACE"
 )
 
 // kubeadm-config
@@ -50,21 +56,22 @@ const (
 // kube-system
 const kubeSystem = "kube-system"
 
-var NettoolsServer = map[string]string{
-	IMAGE:           "",
-	NETTOOLS_SERVER: "",
-	MOD:             "",
-	TCP_PORT:        "",
-	UDP_PORT:        "",
-	WEB_PORT:        "",
+var Env = map[string]string{
+	IMAGE:            "",
+	NETTOOLS_SERVER:  "",
+	MOD:              "",
+	TCP_PORT:         "",
+	UDP_PORT:         "",
+	WEB_PORT:         "",
+	EGRESS_NAMESPACE: "",
 }
 
-//func init() {
-//	for k := range NettoolsServer {
-//		if env := os.Getenv(k); len(env) != 0 {
-//			NettoolsServer[k] = env
-//		} else {
-//			log.Fatalf("can not found netTools server env: %s\n", k)
-//		}
-//	}
-//}
+func init() {
+	for k := range Env {
+		if env := os.Getenv(k); len(env) != 0 {
+			Env[k] = env
+		} else {
+			log.Fatalf("can not found netTools server env: %s\n", k)
+		}
+	}
+}
