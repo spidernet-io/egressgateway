@@ -332,7 +332,7 @@ func (r *egReconciler) reBuildCache(node egressv1.EgressNode, log *zap.Logger) e
 		}
 	}
 
-	if newNode.Status.Tunnel.IPv4 != "" {
+	if newNode.Status.Tunnel.IPv4 != "" && r.allocatorV4 != nil {
 		log.Sugar().Debugf("rebuild ipv4 cache: %v", newNode.Status.Tunnel.IPv4)
 		ip := net.ParseIP(newNode.Status.Tunnel.IPv4)
 		if ipv4 := ip.To4(); ipv4 != nil {
@@ -350,9 +350,12 @@ func (r *egReconciler) reBuildCache(node egressv1.EgressNode, log *zap.Logger) e
 				})
 			}
 		}
+	} else if r.allocatorV4 == nil && newNode.Status.Tunnel.IPv4 != "" {
+		needUpdate = true
+		newNode.Status.Tunnel.IPv4 = ""
 	}
 
-	if newNode.Status.Tunnel.IPv6 != "" {
+	if newNode.Status.Tunnel.IPv6 != "" && r.allocatorV6 != nil {
 		log.Sugar().Debugf("rebuild ipv6 cache: %v", newNode.Status.Tunnel.IPv6)
 		ip := net.ParseIP(newNode.Status.Tunnel.IPv6)
 		if ipv6 := ip.To16(); ipv6 != nil {
@@ -372,11 +375,14 @@ func (r *egReconciler) reBuildCache(node egressv1.EgressNode, log *zap.Logger) e
 				}
 			}
 		}
+	} else if r.allocatorV6 == nil && newNode.Status.Tunnel.IPv6 != "" {
+		needUpdate = true
+		newNode.Status.Tunnel.IPv6 = ""
 	}
 
 	if needUpdate {
 		log.Debug("try to update egress node")
-		err := r.updateEgressNode(node)
+		err := r.updateEgressNode(*newNode)
 		if err != nil {
 			return fmt.Errorf("rebuild failed to update egress node: %v", err)
 		}
