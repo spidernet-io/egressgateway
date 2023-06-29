@@ -709,7 +709,7 @@ func (r *policeReconciler) reconcilePolicy(ctx context.Context, req reconcile.Re
 	}
 
 	gateway := new(egressv1.EgressGateway)
-	err = r.client.Get(ctx, types.NamespacedName{Namespace: policy.Namespace, Name: policy.Name}, gateway)
+	err = r.client.Get(ctx, types.NamespacedName{Name: policy.Spec.EgressGatewayName}, gateway)
 	if err != nil {
 		if !errors.IsNotFound(err) {
 			return reconcile.Result{Requeue: true}, err
@@ -768,12 +768,12 @@ func (r *policeReconciler) reconcileClusterPolicy(ctx context.Context, req recon
 	}
 
 	gateway := new(egressv1.EgressGateway)
-	err = r.client.Get(ctx, types.NamespacedName{Namespace: policy.Namespace, Name: policy.Name}, gateway)
+	err = r.client.Get(ctx, types.NamespacedName{Name: policy.Spec.EgressGatewayName}, gateway)
 	if err != nil {
 		if !errors.IsNotFound(err) {
 			return reconcile.Result{Requeue: true}, err
 		}
-		return reconcile.Result{Requeue: true}, err
+		return reconcile.Result{Requeue: false}, nil
 	}
 
 	nodeName := ""
