@@ -351,7 +351,7 @@ func (r *policeReconciler) updatePolicyIPSet(policyNs string, policyName string,
 	}
 
 	for set, ips := range toAddList {
-		r.log.Sugar().Debugf("add IPSet entries: %v", ips)
+		r.log.Sugar().Debugf("add ipset entries: %v", ips)
 		ipSet, ok := r.ipsetMap.Load(set)
 		if !ok {
 			continue

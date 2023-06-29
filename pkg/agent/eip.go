@@ -33,7 +33,6 @@ type eip struct {
 
 func (r *eip) Reconcile(ctx context.Context, req reconcile.Request) (reconcile.Result, error) {
 	log := r.log.With(
-		zap.String("namespace", req.NamespacedName.Namespace),
 		zap.String("name", req.NamespacedName.Name),
 		zap.String("kind", "EgressGateway"),
 	)
