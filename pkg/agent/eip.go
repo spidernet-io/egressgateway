@@ -110,6 +110,7 @@ type logWrapper struct {
 func (lw logWrapper) Log(keyVals ...interface{}) error {
 	fields := make([]zap.Field, 0, len(keyVals)/2)
 	var msgValue interface{}
+	var kind string
 	for i := 0; i < len(keyVals); i += 2 {
 		key, ok := keyVals[i].(string)
 		if !ok {
@@ -117,6 +118,8 @@ func (lw logWrapper) Log(keyVals ...interface{}) error {
 		}
 		if key == "msg" {
 			msgValue = keyVals[i+1]
+		} else if key == "level" {
+			kind = fmt.Sprintf("%v", keyVals[i+1])
 		} else {
 			fields = append(fields, zap.Any(key, keyVals[i+1]))
 		}
@@ -126,6 +129,17 @@ func (lw logWrapper) Log(keyVals ...interface{}) error {
 	if msgValue != nil {
 		msg = fmt.Sprintf("%v", msgValue)
 	}
-	lw.log.Error(msg, fields...)
+
+	switch kind {
+	case "debug":
+		lw.log.Debug(msg, fields...)
+	case "warn":
+		lw.log.Warn(msg, fields...)
+	case "error":
+		lw.log.Error(msg, fields...)
+	default:
+		lw.log.Info(msg, fields...)
+	}
+
 	return nil
 }
