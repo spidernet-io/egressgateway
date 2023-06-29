@@ -156,12 +156,6 @@ func (dev *Device) ensureFilter(ipv4, ipv6 *net.IPNet) error {
 			return err
 		}
 	}
-	if ipv6 != nil {
-		err := writeProcSys(fmt.Sprintf("/proc/sys/net/ipv6/conf/%s/rp_filter", name), "2")
-		if err != nil {
-			return err
-		}
-	}
 	return nil
 }
 
