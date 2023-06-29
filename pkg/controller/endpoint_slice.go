@@ -137,12 +137,13 @@ func (r *endpointReconciler) Reconcile(ctx context.Context, req reconcile.Reques
 				if count < len(needToCreateEp) {
 					slice.Endpoints = append(slice.Endpoints, needToCreateEp[:count]...)
 					needToCreateEp = needToCreateEp[count:]
+					slicesToUpdate = append(slicesToUpdate, slice)
 				} else {
 					slice.Endpoints = append(slice.Endpoints, needToCreateEp...)
 					needToCreateEp = make([]egressv1.EgressEndpoint, 0)
+					slicesToUpdate = append(slicesToUpdate, slice)
 					break
 				}
-				slicesToUpdate = append(slicesToUpdate, slice)
 			}
 		}
 	}
