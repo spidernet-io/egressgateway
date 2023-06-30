@@ -68,9 +68,9 @@ func (r *endpointReconciler) Reconcile(ctx context.Context, req reconcile.Reques
 		return reconcile.Result{}, err
 	}
 
-	podMap := make(map[types.NamespacedName]*corev1.Pod)
+	podMap := make(map[types.NamespacedName]corev1.Pod)
 	for _, pod := range pods.Items {
-		podMap[types.NamespacedName{Namespace: pod.Namespace, Name: pod.Name}] = &pod
+		podMap[types.NamespacedName{Namespace: pod.Namespace, Name: pod.Name}] = pod
 	}
 
 	endpointSlices, err := listEndpointSlices(ctx, r.client, policy.Namespace, policy.Name)
@@ -91,7 +91,7 @@ func (r *endpointReconciler) Reconcile(ctx context.Context, req reconcile.Reques
 			ep := epSlice.Endpoints[i]
 			key := types.NamespacedName{Namespace: ep.Namespace, Name: ep.Pod}
 			if pod, ok := podMap[key]; ok {
-				if needUpdateEndpoint(*pod, &ep) {
+				if needUpdateEndpoint(pod, &ep) {
 					// pod changes the IP address
 					// egress ep ip list != pod list
 					needUpdate = true
@@ -267,7 +267,6 @@ func needUpdateEndpoint(pod corev1.Pod, ep *egressv1.EgressEndpoint) bool {
 			expIPv6List = append(expIPv6List, podIP.IP)
 		}
 	}
-
 	sort.Strings(expIPv4List)
 	sort.Strings(expIPv6List)
 
