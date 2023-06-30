@@ -48,7 +48,9 @@ feature:
 
 
 ```shell
-helm install egressgateway egressgateway/egressgateway --values values.yaml --wait --debug
+helm install egressgateway egressgateway/egressgateway \
+  --values values.yaml \
+  --wait --debug
 ```
 
 ```shell
@@ -65,13 +67,17 @@ kind: EgressGateway
 metadata:
   name: default
 spec:
+  ippools:
+    ipv4:
+      - "10.6.1.60-10.6.1.66" # (1)  
   nodeSelector:
     selector:
       matchLabels:
-        kubernetes.io/hostname: workstation2 # (1)
+        kubernetes.io/hostname: workstation2 # (2)
 ```
 
-1. Change me, select a node in your cluster
+1. Egress address pool
+2. Change me, select a node in your cluster
 
 ## Create Example App
 
@@ -108,12 +114,27 @@ kind: EgressPolicy
 metadata:
   name: mock-app
 spec:
+  egressGatewayName: "default" # (1)  
   appliedTo:
     podSelector:
-      matchLabels:
+      matchLabels:             # (2)
         app: mock-app
   destSubnet:
-    - 10.6.1.92/32
+    - 10.6.1.92/32             # (3)
 ```
 
-Now traffic from mock-app accessing 10.6.1.92 will be forwarded by the egress gateway.
+1. By setting this value, select the EgressGateway named `default` created above.
+2. Select Pods that need to perform Egress operations by setting `matchLabels`.
+3. By setting `destSubnet`, only matched Pods will perform Egress operations when accessing a specific subnet.
+
+Now, traffic from mock-app accessing 10.6.1.92 will be forwarded through the egress gateway.
+
+## Test
+
+We can see that the IP that the mock-app sees on the other side when it accesses the external service is the IP address of the EgressGateway.
+
+```shell
+kubectl exec -it mock-app bash
+$ curl 10.6.1.92:8080
+Remote IP: 10.6.1.60
+```
