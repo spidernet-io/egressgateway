@@ -85,7 +85,12 @@ func (r *endpointClusterReconciler) Reconcile(ctx context.Context, req reconcile
 		for i := 0; i < len(epSlice.Endpoints); i++ {
 			ep := epSlice.Endpoints[i]
 			key := types.NamespacedName{Namespace: ep.Namespace, Name: ep.Pod}
-			if _, ok := podMap[key]; ok {
+			if pod, ok := podMap[key]; ok {
+				if needUpdateEndpoint(pod, &ep) {
+					// pod changes the IP address
+					// egress ep ip list != pod list
+					needUpdate = true
+				}
 				existingKeyMap[key] = true
 				epSlice.Endpoints[index] = epSlice.Endpoints[i]
 				index = index + 1
