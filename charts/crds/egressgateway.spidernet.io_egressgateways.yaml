@@ -18,7 +18,16 @@ spec:
     singular: egressgateway
   scope: Cluster
   versions:
-  - name: v1beta1
+  - additionalPrinterColumns:
+    - description: ipv4DefaultEIP
+      jsonPath: .spec.ippools.ipv4DefaultEIP
+      name: ipv4DefaultEIP
+      type: string
+    - description: ipv6DefaultEIP
+      jsonPath: .spec.ippools.ipv6DefaultEIP
+      name: ipv6DefaultEIP
+      type: string
+    name: v1beta1
     schema:
       openAPIV3Schema:
         description: EgressGateway egress gateway

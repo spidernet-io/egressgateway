@@ -19,6 +19,8 @@ type EgressGatewayList struct {
 // EgressGateway egress gateway
 // +kubebuilder:object:root=true
 // +kubebuilder:resource:categories={egressgateway},path="egressgateways",singular="egressgateway",scope="Cluster",shortName={egw}
+// +kubebuilder:printcolumn:JSONPath=".spec.ippools.ipv4DefaultEIP",description="ipv4DefaultEIP",name="ipv4DefaultEIP",type=string
+// +kubebuilder:printcolumn:JSONPath=".spec.ippools.ipv6DefaultEIP",description="ipv6DefaultEIP",name="ipv6DefaultEIP",type=string
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
 type EgressGateway struct {
