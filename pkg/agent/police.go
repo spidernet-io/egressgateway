@@ -1124,7 +1124,7 @@ func enqueueEndpointSlice() handler.MapFunc {
 
 		if namespace == "" {
 			req := types.NamespacedName{
-				Namespace: path.Join("EgressClusterPolicy", namespace),
+				Namespace: "EgressClusterPolicy/",
 				Name:      policyName,
 			}
 			res = append(res, reconcile.Request{NamespacedName: req})

@@ -6,6 +6,7 @@ package utils
 import (
 	"context"
 	"errors"
+	"path"
 	"strings"
 
 	"k8s.io/apimachinery/pkg/types"
@@ -18,10 +19,16 @@ var ErrInvalidRequest = errors.New("error invalid request")
 
 func KindToMapFlat(kind string) handler.MapFunc {
 	return func(ctx context.Context, obj client.Object) []reconcile.Request {
+		ns := obj.GetNamespace()
+		if ns == "" {
+			ns = kind + "/"
+		} else {
+			ns = path.Join(ns, kind)
+		}
 		return []reconcile.Request{
 			{
 				NamespacedName: types.NamespacedName{
-					Namespace: kind + "/" + obj.GetNamespace(),
+					Namespace: ns,
 					Name:      obj.GetName(),
 				},
 			},
