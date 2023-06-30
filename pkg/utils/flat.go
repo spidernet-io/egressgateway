@@ -23,7 +23,7 @@ func KindToMapFlat(kind string) handler.MapFunc {
 		if ns == "" {
 			ns = kind + "/"
 		} else {
-			ns = path.Join(ns, kind)
+			ns = path.Join(kind, ns)
 		}
 		return []reconcile.Request{
 			{
