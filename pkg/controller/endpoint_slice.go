@@ -282,7 +282,7 @@ func needUpdateEndpoint(pod corev1.Pod, ep *egressv1.EgressEndpoint) bool {
 
 	if !sliceEqual(expIPv6List, gotIPv6List) {
 		needUpdate = true
-		ep.IPv6 = expIPv4List
+		ep.IPv6 = expIPv6List
 	}
 
 	return needUpdate
