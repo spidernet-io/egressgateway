@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"net"
 	"reflect"
+	"sort"
 	"time"
 
 	"go.uber.org/zap"
@@ -89,9 +90,14 @@ func (r *endpointReconciler) Reconcile(ctx context.Context, req reconcile.Reques
 		for i := 0; i < len(epSlice.Endpoints); i++ {
 			ep := epSlice.Endpoints[i]
 			key := types.NamespacedName{Namespace: ep.Namespace, Name: ep.Pod}
-			if _, ok := podMap[key]; ok {
+			if pod, ok := podMap[key]; ok {
+				if needUpdateEndpoint(*pod, &ep) {
+					// pod changes the IP address
+					// egress ep ip list != pod list
+					needUpdate = true
+				}
 				existingKeyMap[key] = true
-				epSlice.Endpoints[index] = epSlice.Endpoints[i]
+				epSlice.Endpoints[index] = ep
 				index = index + 1
 			} else {
 				needUpdate = true
@@ -247,6 +253,53 @@ func newEndpoint(pod corev1.Pod) *egressv1.EgressEndpoint {
 		IPv6:      ipv6List,
 		Node:      pod.Spec.NodeName,
 	}
+}
+
+func needUpdateEndpoint(pod corev1.Pod, ep *egressv1.EgressEndpoint) bool {
+	expIPv4List := make([]string, 0)
+	expIPv6List := make([]string, 0)
+
+	for _, podIP := range pod.Status.PodIPs {
+		ip := net.ParseIP(podIP.IP)
+		if ip.To4() != nil {
+			expIPv4List = append(expIPv4List, podIP.IP)
+		} else if ip.To16() != nil {
+			expIPv6List = append(expIPv6List, podIP.IP)
+		}
+	}
+
+	sort.Strings(expIPv4List)
+	sort.Strings(expIPv6List)
+
+	gotIPv4List := ep.IPv4
+	gotIPv6List := ep.IPv6
+
+	needUpdate := false
+	if !sliceEqual(expIPv4List, gotIPv4List) {
+		needUpdate = true
+		ep.IPv4 = expIPv4List
+	}
+
+	if !sliceEqual(expIPv6List, gotIPv6List) {
+		needUpdate = true
+		ep.IPv6 = expIPv4List
+	}
+
+	return needUpdate
+}
+
+func sliceEqual(a, b []string) bool {
+	if len(a) != len(b) {
+		return false
+	}
+
+	for i := 0; i < len(a); i++ {
+		if a[i] != b[i] {
+			return false
+		}
+	}
+
+	return true
 }
 
 func (r *endpointReconciler) initEndpoint() error {
