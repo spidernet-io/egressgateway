@@ -76,13 +76,23 @@ func (egw *EgressGatewayWebhook) EgressGatewayValidate(ctx context.Context, req 
 		if err != nil {
 			return webhook.Denied(fmt.Sprintf("Failed to check IP: %v", err))
 		}
+
+		if len(ipv4s) == 0 {
+			return webhook.Denied("ippools.ipv4 is empty")
+		}
 	}
+
 	if egw.Config.FileConfig.EnableIPv6 {
 		ipv6s, err = utils.ParseIPRanges(constant.IPv6, ipv6Ranges)
 		if err != nil {
 			return webhook.Denied(fmt.Sprintf("Failed to check IP: %v", err))
 		}
+
+		if len(ipv6s) == 0 {
+			return webhook.Denied("ippools.ipv6 is empty")
+		}
 	}
+
 	if egw.Config.FileConfig.EnableIPv4 && egw.Config.FileConfig.EnableIPv6 {
 		if len(ipv4s) != len(ipv6s) {
 			return webhook.Denied("The number of ipv4 and ipv6 is not equal")
