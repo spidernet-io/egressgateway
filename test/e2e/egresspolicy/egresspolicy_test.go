@@ -19,7 +19,7 @@ import (
 )
 
 var _ = Describe("EgressPolicy", func() {
-	Context("Test egressGatewayPolicy", Label("EgressPolicy"), func() {
+	Context("Test egressGatewayPolicy", Label("EgressPolicy", "P00007", "P00008", "P00013", "P00014", "P00019"), func() {
 		var (
 			// gateway
 			egressGatewayName string
