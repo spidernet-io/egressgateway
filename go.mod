@@ -44,7 +44,7 @@ require (
 	k8s.io/code-generator v0.27.3
 	k8s.io/utils v0.0.0-20230313181309-38a27ef9d749
 	modernc.org/memory v1.6.0
-	sigs.k8s.io/cluster-api-provider-azure v1.9.1
+	sigs.k8s.io/cluster-api-provider-azure v1.9.4
 	sigs.k8s.io/controller-runtime v0.15.0
 	sigs.k8s.io/controller-tools v0.11.4
 )
