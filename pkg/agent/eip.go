@@ -6,12 +6,11 @@ package agent
 import (
 	"context"
 	"fmt"
-	"github.com/spidernet-io/egressgateway/pkg/layer2"
-	"k8s.io/apimachinery/pkg/util/sets"
 	"net"
 
-	"go.uber.org/zap"
+	"github.com/go-logr/logr"
 	"k8s.io/apimachinery/pkg/api/errors"
+	"k8s.io/apimachinery/pkg/util/sets"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
@@ -21,23 +20,21 @@ import (
 
 	"github.com/spidernet-io/egressgateway/pkg/config"
 	egressv1 "github.com/spidernet-io/egressgateway/pkg/k8s/apis/egressgateway.spidernet.io/v1beta1"
+	"github.com/spidernet-io/egressgateway/pkg/layer2"
 )
 
 type eip struct {
 	client client.Client
-	log    *zap.Logger
+	log    logr.Logger
 	cfg    *config.Config
 
 	announce *layer2.Announce
 }
 
 func (r *eip) Reconcile(ctx context.Context, req reconcile.Request) (reconcile.Result, error) {
-	log := r.log.With(
-		zap.String("name", req.NamespacedName.Name),
-		zap.String("kind", "EgressGateway"),
-	)
-
+	log := r.log.WithValues("name", req.NamespacedName.Name, "kind", "EgressGateway")
 	log.Info("reconcile")
+
 	deleted := false
 	gateway := new(egressv1.EgressGateway)
 	err := r.client.Get(ctx, req.NamespacedName, gateway)
@@ -75,8 +72,8 @@ func (r *eip) Reconcile(ctx context.Context, req reconcile.Request) (reconcile.R
 }
 
 // newEipCtrl return a new egress ip controller
-func newEipCtrl(mgr manager.Manager, log *zap.Logger, cfg *config.Config) error {
-	lw := logWrapper{log: log.Named("layer2")}
+func newEipCtrl(mgr manager.Manager, log logr.Logger, cfg *config.Config) error {
+	lw := logWrapper{log: log}
 	an, err := layer2.New(lw, nil)
 	if err != nil {
 		return err
@@ -103,11 +100,11 @@ func newEipCtrl(mgr manager.Manager, log *zap.Logger, cfg *config.Config) error 
 }
 
 type logWrapper struct {
-	log *zap.Logger
+	log logr.Logger
 }
 
 func (lw logWrapper) Log(keyVals ...interface{}) error {
-	fields := make([]zap.Field, 0, len(keyVals)/2)
+	fields := make([]interface{}, 0, len(keyVals)/2)
 	var msgValue interface{}
 	var kind string
 	for i := 0; i < len(keyVals); i += 2 {
@@ -120,7 +117,7 @@ func (lw logWrapper) Log(keyVals ...interface{}) error {
 		} else if key == "level" {
 			kind = fmt.Sprintf("%v", keyVals[i+1])
 		} else {
-			fields = append(fields, zap.Any(key, keyVals[i+1]))
+			fields = append(fields, key, keyVals[i+1])
 		}
 	}
 
@@ -131,11 +128,11 @@ func (lw logWrapper) Log(keyVals ...interface{}) error {
 
 	switch kind {
 	case "debug":
-		lw.log.Debug(msg, fields...)
+		lw.log.V(1).Info(msg, fields...)
 	case "warn":
-		lw.log.Warn(msg, fields...)
+		lw.log.Info(msg, fields...)
 	case "error":
-		lw.log.Error(msg, fields...)
+		lw.log.Error(fmt.Errorf(msg), "", fields...)
 	default:
 		lw.log.Info(msg, fields...)
 	}

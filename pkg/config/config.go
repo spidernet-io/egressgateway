@@ -4,18 +4,19 @@
 package config
 
 import (
+	"encoding/json"
 	"fmt"
 	"net"
 	"os"
 
 	"github.com/mitchellh/mapstructure"
 	"github.com/spf13/viper"
-	"go.uber.org/zap"
 	"gopkg.in/yaml.v3"
 	"k8s.io/client-go/rest"
 	ctrl "sigs.k8s.io/controller-runtime"
 
 	"github.com/spidernet-io/egressgateway/pkg/iptables"
+	"github.com/spidernet-io/egressgateway/pkg/logger"
 )
 
 type Config struct {
@@ -25,24 +26,19 @@ type Config struct {
 	// FileConfig from configmap
 	FileConfig FileConfig
 
-	KubeConfig *rest.Config
+	KubeConfig *rest.Config `json:"-"`
 }
 
-func (cfg *Config) PrintPrettyConfig(zap *zap.Logger) {
-	zap.Sugar().Info("env config list:")
-	envKeysMap := &map[string]interface{}{}
-	if err := mapstructure.Decode(cfg.EnvConfig, &envKeysMap); err != nil {
+func (cfg *Config) PrintPrettyConfig() {
+	raw, err := json.Marshal(cfg)
+	if err != nil {
 		panic(err)
 	}
-	for k, v := range *envKeysMap {
-		zap.Sugar().Infof("%s=%v", k, v)
-	}
+	fmt.Println(string(raw))
 }
 
 type EnvConfig struct {
 	NodeName                  string `mapstructure:"NODE_NAME"`
-	LogLevel                  string `mapstructure:"LOG_LEVEL"`
-	KLOGLevel                 int    `mapstructure:"KLOG_LEVEL"`
 	LeaderElection            bool   `mapstructure:"LEADER_ELECTION"`
 	LeaderElectionNamespace   string `mapstructure:"LEADER_ELECTION_NAMESPACE"`
 	LeaderElectionID          string `mapstructure:"LEADER_ELECTION_ID"`
@@ -57,17 +53,18 @@ type EnvConfig struct {
 	GolangMaxProcs            int32  `mapstructure:"GOLANG_MAX_PROCS"`
 	TLSCertDir                string `mapstructure:"TLS_CERT_DIR"`
 	ConfigMapPath             string `mapstructure:"CONFIGMAP_PATH"`
+	Logger                    logger.Config
 }
 
 type FileConfig struct {
-	EnableIPv4                bool     `yaml:"enableIPv4"`
-	EnableIPv6                bool     `yaml:"enableIPv6"`
-	IPTables                  IPTables `yaml:"iptables"`
-	DatapathMode              string   `yaml:"datapathMode"`
-	TunnelIpv4Subnet          string   `yaml:"tunnelIpv4Subnet"`
-	TunnelIpv6Subnet          string   `yaml:"tunnelIpv6Subnet"`
-	TunnelIPv4Net             *net.IPNet
-	TunnelIPv6Net             *net.IPNet
+	EnableIPv4                bool             `yaml:"enableIPv4"`
+	EnableIPv6                bool             `yaml:"enableIPv6"`
+	IPTables                  IPTables         `yaml:"iptables"`
+	DatapathMode              string           `yaml:"datapathMode"`
+	TunnelIpv4Subnet          string           `yaml:"tunnelIpv4Subnet"`
+	TunnelIpv6Subnet          string           `yaml:"tunnelIpv6Subnet"`
+	TunnelIPv4Net             *net.IPNet       `json:"-"`
+	TunnelIPv6Net             *net.IPNet       `json:"-"`
 	TunnelDetectMethod        string           `yaml:"tunnelDetectMethod"`
 	VXLAN                     VXLAN            `yaml:"vxlan"`
 	EgressIgnoreCIDR          EgressIgnoreCIDR `yaml:"egressIgnoreCIDR"`
@@ -123,9 +120,8 @@ func LoadConfig(isAgent bool) (*Config, error) {
 
 	config := &Config{
 		EnvConfig: EnvConfig{
-			KLOGLevel:                 2,
 			LeaderElection:            true,
-			LeaderElectionID:          "spider-egress-gateway",
+			LeaderElectionID:          "egressgateway",
 			LeaderElectionLostRestart: false,
 			HealthProbeBindAddress:    ":8788",
 			MetricsBindAddress:        "0",

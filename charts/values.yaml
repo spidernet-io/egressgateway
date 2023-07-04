@@ -58,6 +58,7 @@ feature:
     custom: []
   ## @param feature.maxNumberEndpointPerSlice max number of endpoints per slice
   maxNumberEndpointPerSlice: 100
+
 ## @section Egressgateway agent parameters
 ##
 agent:
@@ -187,6 +188,12 @@ agent:
   debug:
     ## @param agent.debug.logLevel The log level of egress gateway agent [`debug`, `info`, `warn`, `error`, `fatal`, `panic`]
     logLevel: "info"
+    ## @param agent.debug.logEncoder Set the type of log encoder (`json`, `console`)
+    logEncoder: "json"
+    ## @param agent.debug.logWithCaller Enable or disable logging with caller information (`true`/`false`)
+    logWithCaller: true
+    ## @param agent.debug.logUseDevMode Enable or disable development mode for logging (`true`/`false`)
+    logUseDevMode: true
     ## @param agent.debug.gopsPort The port used by gops tool for process monitoring and performance tuning.
     gopsPort: 5812
 ## @section Egressgateway controller parameters
@@ -329,6 +336,12 @@ controller:
   debug:
     ## @param controller.debug.logLevel The log level of egress gateway controller [`debug`, `info`, `warn`, `error`, `fatal`, `panic`]
     logLevel: "info"
+    ## @param controller.debug.logEncoder Set the type of log encoder (`json`, `console`)
+    logEncoder: "json"
+    ## @param controller.debug.logWithCaller Enable or disable logging with caller information (`true`/`false`)
+    logWithCaller: true
+    ## @param controller.debug.logUseDevMode Enable or disable development mode for logging (`true`/`false`)
+    logUseDevMode: true
     ## @param controller.debug.gopsPort The port used by gops tool for process monitoring and performance tuning.
     gopsPort: 5824
   ## TLS configuration for webhook

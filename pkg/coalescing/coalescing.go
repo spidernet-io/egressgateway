@@ -21,9 +21,9 @@ package coalescing
 
 import (
 	"context"
-	"go.uber.org/zap"
 	"time"
 
+	"github.com/go-logr/logr"
 	"github.com/pkg/errors"
 	"sigs.k8s.io/cluster-api-provider-azure/util/cache/ttllru"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
@@ -49,7 +49,7 @@ type (
 	reconciler struct {
 		upstream reconcile.Reconciler
 		cache    ReconcileCacher
-		log      *zap.Logger
+		log      logr.Logger
 	}
 )
 
@@ -80,7 +80,7 @@ func (cache *ReconcileCache) Reconciled(key string) {
 // NewReconciler returns a reconcile wrapper that will delay new reconcile.Requests
 // after the cache expiry of the request string key.
 // A successful reconciliation is defined as one where no error is returned.
-func NewReconciler(upstream reconcile.Reconciler, cache ReconcileCacher, log *zap.Logger) reconcile.Reconciler {
+func NewReconciler(upstream reconcile.Reconciler, cache ReconcileCacher, log logr.Logger) reconcile.Reconciler {
 	return &reconciler{
 		upstream: upstream,
 		cache:    cache,
@@ -90,10 +90,10 @@ func NewReconciler(upstream reconcile.Reconciler, cache ReconcileCacher, log *za
 
 // Reconcile sends a request to the upstream reconciler if the request is outside the debounce window.
 func (rc *reconciler) Reconcile(ctx context.Context, r reconcile.Request) (reconcile.Result, error) {
-	log := rc.log.With(zap.String("request", r.String()))
+	log := rc.log.WithValues("request", r.String())
 
 	if expiration, ok := rc.cache.ShouldProcess(r.String()); !ok {
-		log.Sugar().Debugf("not processing expriation %v timeUntil %v", expiration, time.Until(expiration))
+		log.V(4).Info("not processing", "expiration", expiration, "timeUntil", time.Until(expiration))
 		var requeueAfter = time.Until(expiration)
 		if requeueAfter < 1*time.Second {
 			requeueAfter = 1 * time.Second
@@ -101,14 +101,14 @@ func (rc *reconciler) Reconcile(ctx context.Context, r reconcile.Request) (recon
 		return reconcile.Result{RequeueAfter: requeueAfter}, nil
 	}
 
-	log.Debug("processing")
+	log.V(4).Info("processing")
 	result, err := rc.upstream.Reconcile(ctx, r)
 	if err != nil {
-		log.Debug("not successful")
+		log.V(4).Info("not successful")
 		return result, err
 	}
 
-	log.Debug("successful")
+	log.V(4).Info("successful")
 	rc.cache.Reconciled(r.String())
 	return result, nil
 }

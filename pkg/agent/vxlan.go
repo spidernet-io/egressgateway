@@ -6,12 +6,13 @@ package agent
 import (
 	"context"
 	"fmt"
-	"github.com/vishvananda/netlink"
+
 	"net"
 	"strings"
 	"time"
 
-	"go.uber.org/zap"
+	"github.com/go-logr/logr"
+	"github.com/vishvananda/netlink"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -30,7 +31,7 @@ import (
 
 type vxlanReconciler struct {
 	client client.Client
-	log    *zap.Logger
+	log    logr.Logger
 	cfg    *config.Config
 
 	peerMap *utils.SyncMap[string, vxlan.Peer]
@@ -51,13 +52,9 @@ type VTEP struct {
 func (r *vxlanReconciler) Reconcile(ctx context.Context, req reconcile.Request) (reconcile.Result, error) {
 	kind, newReq, err := utils.ParseKindWithReq(req)
 	if err != nil {
-		r.log.Sugar().Infof("parse req(%v) with error: %v", req, err)
 		return reconcile.Result{}, err
 	}
-	log := r.log.With(
-		zap.String("namespacedName", newReq.NamespacedName.String()),
-		zap.String("kind", kind),
-	)
+	log := r.log.WithValues("name", newReq.Name, "kind", kind)
 	log.Info("reconciling")
 	switch kind {
 	case "EgressNode":
@@ -68,7 +65,7 @@ func (r *vxlanReconciler) Reconcile(ctx context.Context, req reconcile.Request) 
 }
 
 // reconcileEgressNode
-func (r *vxlanReconciler) reconcileEgressNode(ctx context.Context, req reconcile.Request, log *zap.Logger) (reconcile.Result, error) {
+func (r *vxlanReconciler) reconcileEgressNode(ctx context.Context, req reconcile.Request, log logr.Logger) (reconcile.Result, error) {
 	node := new(egressv1.EgressNode)
 	deleted := false
 	err := r.client.Get(ctx, req.NamespacedName, node)
@@ -89,7 +86,7 @@ func (r *vxlanReconciler) reconcileEgressNode(ctx context.Context, req reconcile
 			r.peerMap.Delete(req.Name)
 			err := r.ensureRoute()
 			if err != nil {
-				log.Info("delete egress node, ensure route with error", zap.Error(err))
+				log.Error(err, "delete egress node, ensure route with error")
 			}
 		}
 		return reconcile.Result{}, nil
@@ -104,14 +101,14 @@ func (r *vxlanReconciler) reconcileEgressNode(ctx context.Context, req reconcile
 			ip = node.Status.Tunnel.Parent.IPv6
 		}
 		if ip == "" {
-			log.Sugar().Infof("peer %v, parent ip not ready, skip", node.Name)
+			log.Info("parent ip not ready, skip", "peer", node.Name)
 			return reconcile.Result{}, nil
 		}
 
 		parentIP := net.ParseIP(ip)
 		mac, err := net.ParseMAC(node.Status.Tunnel.MAC)
 		if err != nil {
-			log.Info("mac addr not ready, skip", zap.String("mac", node.Status.Tunnel.MAC))
+			log.Info("mac addr not ready, skip", "mac", node.Status.Tunnel.MAC)
 			return reconcile.Result{}, nil
 		}
 
@@ -134,12 +131,12 @@ func (r *vxlanReconciler) reconcileEgressNode(ctx context.Context, req reconcile
 		r.peerMap.Store(node.Name, peer)
 		err = r.ensureRoute()
 		if err != nil {
-			log.Info("add egress node, ensure route with error", zap.Error(err))
+			log.Error(err, "add egress node, ensure route with error")
 		}
 
 		err = r.ruleRoute.Ensure(r.cfg.FileConfig.VXLAN.Name, peer.IPv4, peer.IPv6, peer.Mark, peer.Mark)
 		if err != nil {
-			r.log.Sugar().Errorf("ensure vxlan link with error: %v", err)
+			r.log.Error(err, "ensure vxlan link")
 		}
 		return reconcile.Result{}, nil
 	}
@@ -233,12 +230,12 @@ func (r *vxlanReconciler) updateEgressNodeStatus(node *egressv1.EgressNode, vers
 
 	if needUpdate {
 		r.log.Info("update node status",
-			zap.String("phase", string(node.Status.Phase)),
-			zap.String("tunnelIPv4", node.Status.Tunnel.IPv4),
-			zap.String("tunnelIPv6", node.Status.Tunnel.IPv6),
-			zap.String("parentName", node.Status.Tunnel.Parent.Name),
-			zap.String("parentIPv4", node.Status.Tunnel.Parent.IPv4),
-			zap.String("parentIPv6", node.Status.Tunnel.Parent.IPv6),
+			"phase", node.Status.Phase,
+			"tunnelIPv4", node.Status.Tunnel.IPv4,
+			"tunnelIPv6", node.Status.Tunnel.IPv6,
+			"parentName", node.Status.Tunnel.Parent.Name,
+			"parentIPv4", node.Status.Tunnel.Parent.IPv4,
+			"parentIPv6", node.Status.Tunnel.Parent.IPv6,
 		)
 		ctx := context.Background()
 		err = r.client.Status().Update(ctx, node)
@@ -306,7 +303,7 @@ func (r *vxlanReconciler) keepVXLAN() {
 	for {
 		vtep, ok := r.peerMap.Load(r.cfg.EnvConfig.NodeName)
 		if !ok {
-			r.log.Sugar().Debugf("vtep not ready")
+			r.log.V(1).Info("vtep not ready")
 			time.Sleep(time.Second)
 			continue
 		}
@@ -333,30 +330,30 @@ func (r *vxlanReconciler) keepVXLAN() {
 
 		err := r.updateEgressNodeStatus(nil, r.version())
 		if err != nil {
-			r.log.Sugar().Errorf("update EgressNode status with error: %v", err)
+			r.log.Error(err, "update EgressNode status")
 			time.Sleep(time.Second)
 			continue
 		}
 
 		err = r.vxlan.EnsureLink(name, vni, port, mac, 0, ipv4, ipv6, disableChecksumOffload)
 		if err != nil {
-			r.log.Sugar().Errorf("ensure vxlan link with error: %v", err)
+			r.log.Error(err, "ensure vxlan link")
 			reduce = false
 			time.Sleep(time.Second)
 			continue
 		}
 
-		r.log.Sugar().Debugf("link ensure has completed")
+		r.log.V(1).Info("link ensure has completed")
 
 		err = r.ensureRoute()
 		if err != nil {
-			r.log.Sugar().Errorf("ensure route with error: %v", err)
+			r.log.Error(err, "ensure route")
 			reduce = false
 			time.Sleep(time.Second)
 			continue
 		}
 
-		r.log.Sugar().Debugf("route ensure has completed")
+		r.log.V(1).Info("route ensure has completed")
 
 		markMap := make(map[int]struct{})
 		r.peerMap.Range(func(key string, val vxlan.Peer) bool {
@@ -365,21 +362,21 @@ func (r *vxlanReconciler) keepVXLAN() {
 			}
 			err = r.ruleRoute.Ensure(r.cfg.FileConfig.VXLAN.Name, val.IPv4, val.IPv6, val.Mark, val.Mark)
 			if err != nil {
-				r.log.Sugar().Errorf("ensure vxlan link with error: %v", err)
+				r.log.Error(err, "ensure vxlan link with error")
 				reduce = false
 			}
 			return true
 		})
 		err = r.ruleRoute.PurgeStaleRules(markMap, r.cfg.FileConfig.Mark)
 		if err != nil {
-			r.log.Sugar().Errorf("purge stale rules error: %v", err)
+			r.log.Error(err, "purge stale rules error")
 			reduce = false
 		}
 
-		r.log.Sugar().Debugf("route rule ensure has completed")
+		r.log.V(1).Info("route rule ensure has completed")
 
 		if !reduce {
-			r.log.Sugar().Info("vxlan and route has completed")
+			r.log.Info("vxlan and route has completed")
 			reduce = true
 		}
 
@@ -411,7 +408,7 @@ func (r *vxlanReconciler) ensureRoute() error {
 		if _, ok := expected[item.HardwareAddr.String()]; !ok {
 			err := r.vxlan.Del(item)
 			if err != nil {
-				r.log.Sugar().Warnf("del existing neigh with error: %v, %v", item, err)
+				r.log.Error(err, "delete link layer neighbor", "item", item.String())
 			}
 		}
 	}
@@ -419,14 +416,14 @@ func (r *vxlanReconciler) ensureRoute() error {
 	for _, peer := range peerMap {
 		err := r.vxlan.Add(peer)
 		if err != nil {
-			r.log.Sugar().Errorf("add peer route with error: %v, %v", peer, err)
+			r.log.Error(err, "add peer route", "peer", peer)
 		}
 	}
 
 	return nil
 }
 
-func newEgressNodeController(mgr manager.Manager, cfg *config.Config, log *zap.Logger) error {
+func newEgressNodeController(mgr manager.Manager, cfg *config.Config, log logr.Logger) error {
 	ruleRoute := route.NewRuleRoute(log)
 
 	r := &vxlanReconciler{

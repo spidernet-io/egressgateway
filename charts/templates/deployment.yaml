@@ -121,8 +121,16 @@ spec:
           {{- toYaml . | trim | nindent 12 }}
           {{- end }}
           env:
+            - name: LEADER_ELECTION
+              value: "true"
             - name: LOG_LEVEL
-              value: {{ .Values.controller.debug.logLevel | quote }}
+              value: {{ .Values.agent.debug.logLevel | quote }}
+            - name: LOG_USE_DEV_MODE
+              value: {{ .Values.agent.debug.logUseDevMode | quote }}
+            - name: LOG_WITH_CALLER
+              value: {{ .Values.agent.debug.logWithCaller | quote }}
+            - name: LOG_ENCODER
+              value: {{ .Values.agent.debug.logEncoder | quote }}
             {{ if .Values.controller.prometheus.enabled }}
             - name: METRICS_BIND_ADDRESS
               value: :{{ .Values.controller.prometheus.port }}

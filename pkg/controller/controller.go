@@ -7,8 +7,6 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/go-logr/logr"
-	"go.uber.org/zap"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/healthz"
@@ -20,6 +18,7 @@ import (
 	"github.com/spidernet-io/egressgateway/pkg/controller/webhook"
 	"github.com/spidernet-io/egressgateway/pkg/egressgateway"
 	"github.com/spidernet-io/egressgateway/pkg/logger"
+	"github.com/spidernet-io/egressgateway/pkg/profiling"
 	"github.com/spidernet-io/egressgateway/pkg/schema"
 	"github.com/spidernet-io/egressgateway/pkg/types"
 )
@@ -29,11 +28,12 @@ type Controller struct {
 	manager manager.Manager
 }
 
-func New(cfg *config.Config, log *zap.Logger) (types.Service, error) {
+func New(cfg *config.Config) (types.Service, error) {
+	log := logger.NewLogger(cfg.EnvConfig.Logger)
 	mgrOpts := manager.Options{
 		Scheme:                  schema.GetScheme(),
-		Logger:                  logr.New(logger.NewLogSink(log, cfg.KLOGLevel)),
-		LeaderElection:          false,
+		Logger:                  log,
+		LeaderElection:          cfg.LeaderElection,
 		HealthProbeBindAddress:  cfg.HealthProbeBindAddress,
 		LeaderElectionID:        cfg.LeaderElectionID,
 		LeaderElectionNamespace: cfg.LeaderElectionNamespace,
@@ -63,6 +63,15 @@ func New(cfg *config.Config, log *zap.Logger) (types.Service, error) {
 	}
 	mgr.GetWebhookServer().Register("/validate", webhook.ValidateHook(mgr.GetClient(), cfg))
 	mgr.GetWebhookServer().Register("/mutate", webhook.MutateHook(mgr.GetClient(), cfg))
+
+	err = mgr.Add(&profiling.GoPS{Port: cfg.GopsPort, Log: log})
+	if err != nil {
+		return nil, err
+	}
+	err = mgr.Add(&profiling.Pyroscope{Addr: cfg.PyroscopeServerAddr, HostName: cfg.PodName, Log: log})
+	if err != nil {
+		return nil, err
+	}
 
 	metrics.RegisterMetricCollectors()
 

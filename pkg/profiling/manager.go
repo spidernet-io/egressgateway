@@ -4,48 +4,53 @@
 package profiling
 
 import (
+	"context"
 	"fmt"
-	"github.com/google/gops/agent"
-	"github.com/pyroscope-io/client/pyroscope"
-	"go.uber.org/zap"
 	"os"
 	"path/filepath"
+
+	"github.com/go-logr/logr"
+	"github.com/google/gops/agent"
+	"github.com/pyroscope-io/client/pyroscope"
 )
 
-type Manager interface {
-	RunGoPS(port int)
-	RunPyroscope(serverAddress string, localHostName string)
+type GoPS struct {
+	Port int
+	Log  logr.Logger
 }
 
-type debugManager struct {
-	logger *zap.Logger
-}
-
-var _ Manager = (*debugManager)(nil)
-
-func (s *debugManager) RunGoPS(listerPort int) {
-	address := fmt.Sprintf("127.0.0.1:%d", listerPort)
+func (gops *GoPS) Start(ctx context.Context) error {
+	if gops.Port == 0 {
+		return nil
+	}
+	address := fmt.Sprintf(":%d", gops.Port)
 	op := agent.Options{
 		ShutdownCleanup: true,
 		Addr:            address,
 	}
 	if err := agent.Listen(op); err != nil {
-		s.logger.Sugar().Fatalf("gops failed to listen on port %s, reason: %v", address, err)
+		return fmt.Errorf("gops failed to listen on Port %s, reason: %v", address, err)
 	}
-	s.logger.Sugar().Infof("gops is listening on %s ", address)
+	gops.Log.Info("gops is started", "addr", address)
+	return nil
 }
 
-func (s *debugManager) RunPyroscope(serverAddress string, localHostName string) {
-	// push mode, push to pyroscope server
-	s.logger.Sugar().Infof("%v pyroscope works in push mode, server %s ", localHostName, serverAddress)
+type Pyroscope struct {
+	Addr     string
+	HostName string
+	Log      logr.Logger
+}
 
-	_, e := pyroscope.Start(pyroscope.Config{
+func (p *Pyroscope) Start(ctx context.Context) error {
+	if p.Addr == "" {
+		return nil
+	}
+
+	_, err := pyroscope.Start(pyroscope.Config{
 		ApplicationName: filepath.Base(os.Args[0]),
-		ServerAddress:   serverAddress,
-		// too much log
-		// Logger:          pyroscope.StandardLogger,
-		Logger: nil,
-		Tags:   map[string]string{"node": localHostName},
+		ServerAddress:   p.Addr,
+		Logger:          nil,
+		Tags:            map[string]string{"node": p.HostName},
 		ProfileTypes: []pyroscope.ProfileType{
 			pyroscope.ProfileCPU,
 			pyroscope.ProfileAllocObjects,
@@ -54,13 +59,9 @@ func (s *debugManager) RunPyroscope(serverAddress string, localHostName string) 
 			pyroscope.ProfileInuseSpace,
 		},
 	})
-	if e != nil {
-		s.logger.Sugar().Fatalf("failed to setup pyroscope, reason: %v", e)
+	if err != nil {
+		return fmt.Errorf("failed to setup pyroscope: %v", err)
 	}
-}
-
-func New(logger *zap.Logger) Manager {
-	return &debugManager{
-		logger: logger,
-	}
+	p.Log.Info("pyroscope started")
+	return nil
 }

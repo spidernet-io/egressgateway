@@ -7,7 +7,7 @@ import (
 	"context"
 	"fmt"
 
-	"go.uber.org/zap"
+	"github.com/go-logr/logr"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
@@ -24,19 +24,18 @@ import (
 
 type egcpReconciler struct {
 	client client.Client
-	log    *zap.Logger
+	log    logr.Logger
 	config *config.Config
 }
 
 func (r *egcpReconciler) Reconcile(ctx context.Context, req reconcile.Request) (reconcile.Result, error) {
 	kind, newReq, err := utils.ParseKindWithReq(req)
 	if err != nil {
-		r.log.Sugar().Errorf("parse req(%v) with error: %v", req, err)
 		return reconcile.Result{}, err
 	}
 
-	log := r.log.With(zap.String("name", newReq.Name), zap.String("kind", kind))
-	log.Info("egressclusterpolicy controller: reconciling")
+	log := r.log.WithValues("name", newReq.Name, "kind", kind)
+	log.Info("reconciling")
 	switch kind {
 	case "EgressGateway":
 		return r.reconcileEG(ctx, newReq, log)
@@ -48,7 +47,7 @@ func (r *egcpReconciler) Reconcile(ctx context.Context, req reconcile.Request) (
 // reconcileEN reconcile egressgateway
 // goal:
 // - update egressclusterpolicy
-func (r *egcpReconciler) reconcileEG(ctx context.Context, req reconcile.Request, log *zap.Logger) (reconcile.Result, error) {
+func (r *egcpReconciler) reconcileEG(ctx context.Context, req reconcile.Request, log logr.Logger) (reconcile.Result, error) {
 	deleted := false
 	egw := new(egressv1.EgressGateway)
 	err := r.client.Get(ctx, req.NamespacedName, egw)
@@ -66,7 +65,7 @@ func (r *egcpReconciler) reconcileEG(ctx context.Context, req reconcile.Request,
 
 	egcpList := &egressv1.EgressClusterPolicyList{}
 	if err := r.client.List(ctx, egcpList); err != nil {
-		r.log.Sugar().Errorf("egcp->controller, event: eg(%v): Failed to get EgressClusterPolicyList\n", egw.Name)
+		log.Error(err, "failed to list")
 		return reconcile.Result{Requeue: true}, err
 	}
 
@@ -88,10 +87,10 @@ func (r *egcpReconciler) reconcileEG(ctx context.Context, req reconcile.Request,
 			}
 		}
 
-		r.log.Sugar().Debugf("update egressclusterpolicy status\n%v", newEGCP.Status)
+		log.V(1).Info("update status", "status", newEGCP.Status)
 		err = r.client.Status().Update(ctx, newEGCP)
 		if err != nil {
-			r.log.Sugar().Errorf("update egressclusterpolicy status\n%v", newEGCP.Status)
+			log.Error(err, "update status", "status", newEGCP.Status)
 			return reconcile.Result{Requeue: true}, err
 		}
 	}
@@ -99,21 +98,14 @@ func (r *egcpReconciler) reconcileEG(ctx context.Context, req reconcile.Request,
 	return reconcile.Result{Requeue: false}, nil
 }
 
-func newEgressClusterPolicyController(mgr manager.Manager, log *zap.Logger, cfg *config.Config) error {
-	if log == nil {
-		return fmt.Errorf("log can not be nil")
-	}
+func newEgressClusterPolicyController(mgr manager.Manager, log logr.Logger, cfg *config.Config) error {
 	if cfg == nil {
 		return fmt.Errorf("cfg can not be nil")
 	}
 
-	r := &egcpReconciler{
-		client: mgr.GetClient(),
-		log:    log,
-		config: cfg,
-	}
+	log.Info("new egressclusterpolicy controller")
 
-	log.Sugar().Infof("new egressclusterpolicy controller")
+	r := &egcpReconciler{client: mgr.GetClient(), log: log, config: cfg}
 	c, err := controller.New("egressclusterpolicy", mgr, controller.Options{Reconciler: r})
 	if err != nil {
 		return err

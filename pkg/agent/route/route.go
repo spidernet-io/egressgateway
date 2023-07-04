@@ -6,20 +6,18 @@ package route
 import (
 	"net"
 
+	"github.com/go-logr/logr"
 	"github.com/vishvananda/netlink"
-	"go.uber.org/zap"
 
 	"github.com/spidernet-io/egressgateway/pkg/markallocator"
 )
 
-func NewRuleRoute(log *zap.Logger) *RuleRoute {
-	return &RuleRoute{
-		log: log,
-	}
+func NewRuleRoute(log logr.Logger) *RuleRoute {
+	return &RuleRoute{log: log}
 }
 
 type RuleRoute struct {
-	log *zap.Logger
+	log logr.Logger
 }
 
 func (r *RuleRoute) PurgeStaleRules(marks map[int]struct{}, baseMark string) error {
@@ -67,15 +65,18 @@ func (r *RuleRoute) Ensure(linkName string, ipv4, ipv6 *net.IP, table int, mark 
 	if mark == 0 {
 		return nil
 	}
+
+	log := r.log.WithValues("linkName", linkName, "table", table, "mark", mark)
+
 	if ipv4 != nil {
-		err := r.ensureRule(netlink.FAMILY_V4, table, mark)
+		err := r.ensureRule(netlink.FAMILY_V4, table, mark, log)
 		if err != nil {
 			return err
 		}
 	}
 
 	if ipv6 != nil {
-		err := r.ensureRule(netlink.FAMILY_V6, table, mark)
+		err := r.ensureRule(netlink.FAMILY_V6, table, mark, log)
 		if err != nil {
 			return err
 		}
@@ -85,22 +86,24 @@ func (r *RuleRoute) Ensure(linkName string, ipv4, ipv6 *net.IP, table int, mark 
 	if err != nil {
 		return err
 	}
-	r.log.Sugar().Debugf("get link %s", linkName)
 
-	r.log.Debug("ensure route v4")
-	err = r.ensureRoute(link, ipv4, netlink.FAMILY_V4, table)
+	log.V(1).Info("get link")
+
+	err = r.ensureRoute(link, ipv4, netlink.FAMILY_V4, table, log)
 	if err != nil {
 		return err
 	}
-	r.log.Debug("ensure route v6")
-	err = r.ensureRoute(link, ipv6, netlink.FAMILY_V6, table)
+	err = r.ensureRoute(link, ipv6, netlink.FAMILY_V6, table, log)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func (r *RuleRoute) ensureRoute(link netlink.Link, ip *net.IP, family int, table int) error {
+func (r *RuleRoute) ensureRoute(link netlink.Link, ip *net.IP, family int, table int, log logr.Logger) error {
+	log = log.WithValues("family", family, "ip", ip)
+	log.V(1).Info("ensure route")
+
 	routeFilter := &netlink.Route{Table: table}
 	routes, err := netlink.RouteListFiltered(family, routeFilter, netlink.RT_FILTER_TABLE)
 	if err != nil {
@@ -111,7 +114,7 @@ func (r *RuleRoute) ensureRoute(link netlink.Link, ip *net.IP, family int, table
 	for _, route := range routes {
 		if route.Table == table {
 			if ip == nil || route.Gw.String() != ip.String() {
-				r.log.Sugar().Infof("delete route: %s, exp ip %v", route.String(), ip)
+				log.Info("delete route", "route", route.String())
 				err := netlink.RouteDel(&route)
 				if err != nil {
 					return err
@@ -137,7 +140,10 @@ func (r *RuleRoute) ensureRoute(link netlink.Link, ip *net.IP, family int, table
 	return nil
 }
 
-func (r *RuleRoute) ensureRule(family int, table int, mark int) error {
+func (r *RuleRoute) ensureRule(family int, table int, mark int, log logr.Logger) error {
+	log = log.WithValues("family", family)
+	log.V(1).Info("ensure rule")
+
 	t := netlink.NewRule()
 	t.Mark = mark
 	t.Family = family
@@ -145,7 +151,7 @@ func (r *RuleRoute) ensureRule(family int, table int, mark int) error {
 	if err != nil {
 		return err
 	}
-	r.log.Sugar().Debugf("number of rule: %d", len(rules))
+	r.log.V(1).Info("list rule", "count", len(rules))
 
 	found := false
 	for _, rule := range rules {
@@ -171,13 +177,13 @@ func (r *RuleRoute) ensureRule(family int, table int, mark int) error {
 	}
 
 	if !found {
-		r.log.Sugar().Debugf("not found match rule, add it")
+		r.log.V(1).Info("rule not match, try add it")
 		rule := netlink.NewRule()
 		rule.Table = table
 		rule.Mark = mark
 		rule.Family = family
 
-		r.log.Sugar().Debugf("add rule: %v", rule.String())
+		r.log.V(1).Info("add rule", "rule", rule.String())
 		err := netlink.RuleAdd(rule)
 		if err != nil {
 			return err

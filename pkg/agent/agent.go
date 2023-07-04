@@ -8,8 +8,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/go-logr/logr"
-	"go.uber.org/zap"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/healthz"
@@ -18,6 +16,7 @@ import (
 	"github.com/spidernet-io/egressgateway/pkg/agent/metrics"
 	"github.com/spidernet-io/egressgateway/pkg/config"
 	"github.com/spidernet-io/egressgateway/pkg/logger"
+	"github.com/spidernet-io/egressgateway/pkg/profiling"
 	"github.com/spidernet-io/egressgateway/pkg/schema"
 	"github.com/spidernet-io/egressgateway/pkg/types"
 )
@@ -27,11 +26,12 @@ type Agent struct {
 	manager manager.Manager
 }
 
-func New(cfg *config.Config, log *zap.Logger) (types.Service, error) {
+func New(cfg *config.Config) (types.Service, error) {
 	syncPeriod := time.Second * 15
+	log := logger.NewLogger(cfg.EnvConfig.Logger)
 	mgrOpts := manager.Options{
 		Scheme:                 schema.GetScheme(),
-		Logger:                 logr.New(logger.NewLogSink(log, cfg.KLOGLevel)),
+		Logger:                 log,
 		HealthProbeBindAddress: cfg.HealthProbeBindAddress,
 		SyncPeriod:             &syncPeriod,
 	}
@@ -57,6 +57,15 @@ func New(cfg *config.Config, log *zap.Logger) (types.Service, error) {
 		return nil, fmt.Errorf("failed to AddReadyzCheck: %w", err)
 	}
 
+	err = mgr.Add(&profiling.GoPS{Port: cfg.GopsPort, Log: log})
+	if err != nil {
+		return nil, err
+	}
+	err = mgr.Add(&profiling.Pyroscope{Addr: cfg.PyroscopeServerAddr, HostName: cfg.NodeName, Log: log})
+	if err != nil {
+		return nil, err
+	}
+
 	metrics.RegisterMetricCollectors()
 
 	err = newEgressNodeController(mgr, cfg, log)
@@ -74,10 +83,7 @@ func New(cfg *config.Config, log *zap.Logger) (types.Service, error) {
 		return nil, fmt.Errorf("failed to eip controller: %w", err)
 	}
 
-	return &Agent{
-		client:  mgr.GetClient(),
-		manager: mgr,
-	}, err
+	return &Agent{client: mgr.GetClient(), manager: mgr}, err
 }
 
 func (c *Agent) Start(ctx context.Context) error {
