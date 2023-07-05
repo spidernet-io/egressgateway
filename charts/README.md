@@ -94,6 +94,9 @@ helm install egressgateway egressgateway/egressgateway --namespace kube-system
 | `agent.prometheus.grafanaDashboard.annotations`      | The additional annotations of egressgateway agent grafanaDashboard                                              | `{}`                               |
 | `agent.prometheus.grafanaDashboard.labels`           | The additional label of egressgateway agent grafanaDashboard                                                    | `{}`                               |
 | `agent.debug.logLevel`                               | The log level of egress gateway agent [`debug`, `info`, `warn`, `error`, `fatal`, `panic`]                      | `info`                             |
+| `agent.debug.logEncoder`                             | Set the type of log encoder (`json`, `console`)                                                                 | `json`                             |
+| `agent.debug.logWithCaller`                          | Enable or disable logging with caller information (`true`/`false`)                                              | `true`                             |
+| `agent.debug.logUseDevMode`                          | Enable or disable development mode for logging (`true`/`false`)                                                 | `true`                             |
 | `agent.debug.gopsPort`                               | The port used by gops tool for process monitoring and performance tuning.                                       | `5812`                             |
 
 ### Egressgateway controller parameters
@@ -152,6 +155,9 @@ helm install egressgateway egressgateway/egressgateway --namespace kube-system
 | `controller.prometheus.grafanaDashboard.annotations`      | The additional annotations of egressgatewayController grafanaDashboard                                                               | `{}`                                    |
 | `controller.prometheus.grafanaDashboard.labels`           | The additional label of egressgatewayController grafanaDashboard                                                                     | `{}`                                    |
 | `controller.debug.logLevel`                               | The log level of egress gateway controller [`debug`, `info`, `warn`, `error`, `fatal`, `panic`]                                      | `info`                                  |
+| `controller.debug.logEncoder`                             | Set the type of log encoder (`json`, `console`)                                                                                      | `json`                                  |
+| `controller.debug.logWithCaller`                          | Enable or disable logging with caller information (`true`/`false`)                                                                   | `true`                                  |
+| `controller.debug.logUseDevMode`                          | Enable or disable development mode for logging (`true`/`false`)                                                                      | `true`                                  |
 | `controller.debug.gopsPort`                               | The port used by gops tool for process monitoring and performance tuning.                                                            | `5824`                                  |
 | `controller.tls.method`                                   | the method for generating TLS certificates. [`provided`, `certmanager`, `auto`]                                                      | `auto`                                  |
 | `controller.tls.secretName`                               | The secret name for storing TLS certificates                                                                                         | `egressgateway-controller-server-certs` |
@@ -166,4 +172,3 @@ helm install egressgateway egressgateway/egressgateway --namespace kube-system
 | `controller.tls.auto.certExpiration`                      | Server cert expiration for auto method                                                                                               | `73000`                                 |
 | `controller.tls.auto.extraIpAddresses`                    | Extra IP addresses of server certificate for auto method                                                                             | `[]`                                    |
 | `controller.tls.auto.extraDnsNames`                       | Extra DNS names of server cert for auto method                                                                                       | `[]`                                    |
-

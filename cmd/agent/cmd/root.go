@@ -6,18 +6,12 @@ package cmd
 import (
 	"context"
 	"fmt"
+	"github.com/spf13/cobra"
+	"github.com/spidernet-io/egressgateway/pkg/agent"
+	"github.com/spidernet-io/egressgateway/pkg/config"
 	"os"
 	"os/signal"
 	"path/filepath"
-	"runtime/debug"
-
-	"github.com/spf13/cobra"
-	"go.uber.org/zap"
-
-	"github.com/spidernet-io/egressgateway/pkg/agent"
-	"github.com/spidernet-io/egressgateway/pkg/config"
-	"github.com/spidernet-io/egressgateway/pkg/logger"
-	"github.com/spidernet-io/egressgateway/pkg/profiling"
 )
 
 var binName = filepath.Base(os.Args[0])
@@ -36,18 +30,16 @@ var rootCmd = &cobra.Command{
 			os.Exit(1)
 		}
 
-		log := logger.NewStdoutLogger(cfg.LogLevel)
-		cfg.PrintPrettyConfig(log.Named("config"))
+		cfg.PrintPrettyConfig()
 
 		defer func() {
 			if e := recover(); nil != e {
-				log.Sugar().Errorf("expected panic: %v", e)
-				debug.PrintStack()
+				fmt.Println(e)
 				os.Exit(1)
 			}
 		}()
 
-		err = run(ctx, log, cfg)
+		err = run(ctx, cfg)
 		if err != nil {
 			fmt.Println(err)
 			os.Exit(1)
@@ -55,10 +47,8 @@ var rootCmd = &cobra.Command{
 	},
 }
 
-func run(ctx context.Context, log *zap.Logger, config *config.Config) error {
-	setupUtility(log.Named("debug"), config)
-
-	svc, err := agent.New(config, log)
+func run(ctx context.Context, config *config.Config) error {
+	svc, err := agent.New(config)
 	if err != nil {
 		return err
 	}
@@ -67,17 +57,6 @@ func run(ctx context.Context, log *zap.Logger, config *config.Config) error {
 		return err
 	}
 	return nil
-}
-
-func setupUtility(log *zap.Logger, config *config.Config) {
-	d := profiling.New(log)
-	if config.GopsPort != 0 {
-		d.RunGoPS(config.GopsPort)
-	}
-
-	if config.PyroscopeServerAddr != "" {
-		d.RunPyroscope(config.PyroscopeServerAddr, config.PodName)
-	}
 }
 
 // Execute adds all child commands to the root command sets flags appropriately.

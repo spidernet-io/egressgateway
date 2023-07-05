@@ -5,13 +5,12 @@ package egressgateway
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"math/rand"
 	"net"
 	"time"
 
-	"go.uber.org/zap"
+	"github.com/go-logr/logr"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -30,14 +29,9 @@ import (
 	"github.com/spidernet-io/egressgateway/pkg/utils"
 )
 
-const (
-	indexEgressNodeEgressGateway = "egressNodeEgressGatewayIndex"
-	indexNodeEgressGateway       = "nodeEgressGatewayIndex"
-)
-
 type egnReconciler struct {
 	client client.Client
-	log    *zap.Logger
+	log    logr.Logger
 	config *config.Config
 }
 
@@ -54,14 +48,11 @@ type policyInfo struct {
 func (r egnReconciler) Reconcile(ctx context.Context, req reconcile.Request) (reconcile.Result, error) {
 	kind, newReq, err := utils.ParseKindWithReq(req)
 	if err != nil {
-		r.log.Sugar().Infof("parse req(%v) with error: %v", req, err)
 		return reconcile.Result{}, err
 	}
-	log := r.log.With(
-		zap.String("namespacedName", newReq.NamespacedName.String()),
-		zap.String("kind", kind),
-	)
-	log.Info("reconciling")
+
+	log := r.log.WithValues("kind", kind)
+
 	switch kind {
 	case "EgressGateway":
 		return r.reconcileEG(ctx, newReq, log)
@@ -79,7 +70,7 @@ func (r egnReconciler) Reconcile(ctx context.Context, req reconcile.Request) (re
 }
 
 // reconcileNode reconcile node
-func (r egnReconciler) reconcileNode(ctx context.Context, req reconcile.Request, log *zap.Logger) (reconcile.Result, error) {
+func (r egnReconciler) reconcileNode(ctx context.Context, req reconcile.Request, log logr.Logger) (reconcile.Result, error) {
 	deleted := false
 	node := new(corev1.Node)
 	err := r.client.Get(ctx, req.NamespacedName, node)
@@ -119,11 +110,10 @@ func (r egnReconciler) reconcileNode(ctx context.Context, req reconcile.Request,
 			_, isExist := GetPoliciesByNode(node.Name, eg)
 			if !isExist {
 				eg.Status.NodeList = append(eg.Status.NodeList, egress.EgressIPStatus{Name: node.Name})
-
-				r.log.Sugar().Debugf("update egress gateway status\n%s", mustMarshalJson(eg.Status))
+				r.log.V(1).Info("update egress gateway status", "status", eg.Status)
 				err := r.client.Status().Update(ctx, &eg)
 				if err != nil {
-					r.log.Sugar().Errorf("update egress gateway status\n%s", mustMarshalJson(eg.Status))
+					r.log.Error(err, "update egress gateway status", "status", eg.Status)
 					return reconcile.Result{Requeue: true}, nil
 				}
 			}
@@ -143,9 +133,9 @@ func (r egnReconciler) reconcileNode(ctx context.Context, req reconcile.Request,
 }
 
 // reconcileEG reconcile egress gateway
-func (r egnReconciler) reconcileEG(ctx context.Context, req reconcile.Request, log *zap.Logger) (reconcile.Result, error) {
+func (r egnReconciler) reconcileEG(ctx context.Context, req reconcile.Request, log logr.Logger) (reconcile.Result, error) {
 	deleted := false
-	isUpdete := false
+	isUpdate := false
 	eg := &egress.EgressGateway{}
 	err := r.client.Get(ctx, req.NamespacedName, eg)
 	if err != nil {
@@ -178,7 +168,10 @@ func (r egnReconciler) reconcileEG(ctx context.Context, req reconcile.Request, l
 	if err != nil {
 		return reconcile.Result{}, err
 	}
-	log.Sugar().Debugf("number of selected nodes: %d", len(newNodeList.Items))
+
+	log.Info("obtained nodes",
+		"numberOfNodes", len(newNodeList.Items),
+		"selector", eg.Spec.NodeSelector.Selector.String())
 
 	// Get the node you want to delete
 	delNodeMap := make(map[string]egress.EgressIPStatus)
@@ -206,10 +199,11 @@ func (r egnReconciler) reconcileEG(ctx context.Context, req reconcile.Request, l
 	}
 
 	if len(eg.Status.NodeList) != len(newNodeList.Items) {
-		isUpdete = true
+		isUpdate = true
 	}
 
-	log.Sugar().Infof("delete a gateway nodes: %d", delNodeMap)
+	log.Info("deleted gateway nodes", "delNodeMap", delNodeMap)
+
 	if len(delNodeMap) != 0 {
 		// Select a gateway node for the policy again
 		var reSetPolicies []egress.Policy
@@ -220,27 +214,29 @@ func (r egnReconciler) reconcileEG(ctx context.Context, req reconcile.Request, l
 		}
 
 		for _, policy := range reSetPolicies {
-			err = r.reAllocatorPolicy(ctx, policy, eg, perNodeMap)
-			if err != nil {
-				log.Sugar().Errorf("reallocator Failed to reassign a gateway node for EgressPolicy %v: %v", policy, err)
+			if err = r.reAllocatorPolicy(ctx, policy, eg, perNodeMap); err != nil {
+				log.Error(err, "failed to reallocate a gateway node for EgressPolicy",
+					"policy", policy,
+					"egressGateway", eg.Name,
+					"namespace", eg.Namespace)
 				return reconcile.Result{Requeue: true}, err
 			}
 		}
 
-		isUpdete = true
+		isUpdate = true
 	}
 
-	if isUpdete {
+	if isUpdate {
 		var perNodeList []egress.EgressIPStatus
 		for _, node := range perNodeMap {
 			perNodeList = append(perNodeList, node)
 		}
 		eg.Status.NodeList = perNodeList
 
-		log.Sugar().Debugf("update egress gateway status\n%s", mustMarshalJson(eg.Status))
+		log.V(1).Info("update egress gateway status", "status", eg.Status)
 		err = r.client.Status().Update(ctx, eg)
 		if err != nil {
-			log.Sugar().Errorf("update egress gateway status\n%s", mustMarshalJson(eg.Status))
+			log.Error(err, "update egress gateway status", "status", eg.Status)
 			return reconcile.Result{Requeue: true}, err
 		}
 	}
@@ -249,7 +245,7 @@ func (r egnReconciler) reconcileEG(ctx context.Context, req reconcile.Request, l
 }
 
 // reconcileEG reconcile egress node
-func (r egnReconciler) reconcileEN(ctx context.Context, req reconcile.Request, log *zap.Logger) (reconcile.Result, error) {
+func (r egnReconciler) reconcileEN(ctx context.Context, req reconcile.Request, log logr.Logger) (reconcile.Result, error) {
 	deleted := false
 	en := new(egress.EgressNode)
 	en.Name = req.Name
@@ -286,7 +282,7 @@ func (r egnReconciler) reconcileEN(ctx context.Context, req reconcile.Request, l
 				for _, policy := range policies {
 					err = r.reAllocatorPolicy(ctx, policy, &eg, perNodeMap)
 					if err != nil {
-						log.Sugar().Errorf("reallocator Failed to reassign a gateway node for EgressPolicy %v: %v", policy, err)
+						log.Error(err, "failed to reassign a gateway node for EgressPolicy", "policy", policy)
 						return reconcile.Result{Requeue: true}, err
 					}
 				}
@@ -299,10 +295,10 @@ func (r egnReconciler) reconcileEN(ctx context.Context, req reconcile.Request, l
 				perNodeList = append(perNodeList, egress.EgressIPStatus{Name: en.Name})
 				eg.Status.NodeList = perNodeList
 
-				log.Sugar().Debugf("update egress gateway status\n%s", mustMarshalJson(eg.Status))
+				log.V(1).Info("update egress gateway status", "status", eg.Status)
 				err = r.client.Status().Update(ctx, &eg)
 				if err != nil {
-					log.Sugar().Errorf("update egress gateway status\n%s", mustMarshalJson(eg.Status))
+					log.Error(err, "update egress gateway status", "status", eg.Status)
 					return reconcile.Result{Requeue: true}, err
 				}
 			}
@@ -313,10 +309,17 @@ func (r egnReconciler) reconcileEN(ctx context.Context, req reconcile.Request, l
 	return reconcile.Result{}, nil
 }
 
-// reconcileEN reconcile egresspolicy and egressclusterpolicy
-func (r egnReconciler) reconcileEGP(ctx context.Context, req reconcile.Request, log *zap.Logger) (reconcile.Result, error) {
+// reconcileEN reconcile EgressPolicy and EgressClusterPolicy
+func (r egnReconciler) reconcileEGP(ctx context.Context, req reconcile.Request, log logr.Logger) (reconcile.Result, error) {
+	if req.Namespace == "" {
+		log = log.WithValues("name", req.Name)
+	} else {
+		log = log.WithValues("name", req.Name, "namespace", req.NamespacedName)
+	}
+	log.Info("reconciling")
+
 	deleted := false
-	isUpdete := false
+	isUpdate := false
 	pi := policyInfo{}
 
 	if len(req.Namespace) == 0 {
@@ -324,12 +327,11 @@ func (r egnReconciler) reconcileEGP(ctx context.Context, req reconcile.Request, 
 		err := r.client.Get(ctx, req.NamespacedName, egcp)
 		if err != nil {
 			if !errors.IsNotFound(err) {
-				log.Sugar().Errorf("get EgressPolicy %v err:%v", req.NamespacedName, err)
+				log.Error(err, "retrieves an obj from the k8s")
 				return reconcile.Result{}, err
 			}
 			deleted = true
 		}
-
 		deleted = deleted || !egcp.GetDeletionTimestamp().IsZero()
 		if !deleted {
 			pi.policy = egress.Policy{Name: req.Name}
@@ -343,7 +345,7 @@ func (r egnReconciler) reconcileEGP(ctx context.Context, req reconcile.Request, 
 		err := r.client.Get(ctx, req.NamespacedName, egp)
 		if err != nil {
 			if !errors.IsNotFound(err) {
-				log.Sugar().Errorf("get EgressPolicy %v err:%v", req.NamespacedName, err)
+				log.Error(err, "retrieves an obj from the k8s")
 				return reconcile.Result{}, err
 			}
 			deleted = true
@@ -368,15 +370,15 @@ func (r egnReconciler) reconcileEGP(ctx context.Context, req reconcile.Request, 
 		for _, egw := range egwList.Items {
 			_, isExist := GetEIPStatusByPolicy(policy, egw)
 			if isExist {
-				log.Sugar().Infof("delete policy %v from eg %v", policy, egw.Name)
+				log.Info("delete policy", "policy", policy, "egw", egw.Name)
 				// Delete the policy from the EgressGateway. If the referenced EIP is not used by any other policy,
 				// the system reclaims the EIP.
 				DeletePolicyFromEG(policy, &egw)
 
-				log.Sugar().Debugf("update egress gateway status\n%s", mustMarshalJson(egw.Status))
+				log.V(1).Info("update egress gateway status", "status", egw.Status)
 				err := r.client.Status().Update(ctx, &egw)
 				if err != nil {
-					log.Sugar().Errorf("update egress gateway status\n%s", mustMarshalJson(egw.Status))
+					log.Error(err, "update egress gateway status", "status", egw.Status)
 					return reconcile.Result{Requeue: true}, err
 				}
 				return reconcile.Result{}, nil
@@ -392,7 +394,7 @@ func (r egnReconciler) reconcileEGP(ctx context.Context, req reconcile.Request, 
 		if errors.IsNotFound(err) {
 			return reconcile.Result{}, err
 		}
-		log.Sugar().Errorf("get EgressGateway err:%v", err)
+		log.Error(err, "get EgressGateway")
 		return reconcile.Result{Requeue: true}, err
 	}
 
@@ -406,7 +408,7 @@ func (r egnReconciler) reconcileEGP(ctx context.Context, req reconcile.Request, 
 
 		err := r.reAllocatorPolicy(ctx, policy, eg, perNodeMap)
 		if err != nil {
-			r.log.Sugar().Errorf("reallocator Failed to reassign a gateway node for EgressPolicy %v: %v", policy, err)
+			r.log.Error(err, "reallocator Failed to reassign a gateway node for EgressPolicy %v: %v", policy, err)
 			return reconcile.Result{Requeue: true}, err
 		}
 
@@ -416,7 +418,7 @@ func (r egnReconciler) reconcileEGP(ctx context.Context, req reconcile.Request, 
 		}
 		eg.Status.NodeList = perNodeList
 
-		isUpdete = true
+		isUpdate = true
 	} else {
 		// Check whether the EIP is correct
 		for i, eip := range eipStatus.Eips {
@@ -443,7 +445,11 @@ func (r egnReconciler) reconcileEGP(ctx context.Context, req reconcile.Request, 
 
 						err := r.reAllocatorPolicy(ctx, policy, eg, perNodeMap)
 						if err != nil {
-							r.log.Sugar().Errorf("reallocator Failed to reassign a gateway node for EgressPolicy %v: %v", policy, err)
+							log.Error(err, "failed to reassign a gateway node for EgressPolicy",
+								"policy", policy,
+								"egressGateway", eg.Name,
+								"namespace", eg.Namespace)
+
 							return reconcile.Result{Requeue: true}, err
 						}
 
@@ -454,7 +460,7 @@ func (r egnReconciler) reconcileEGP(ctx context.Context, req reconcile.Request, 
 						eg.Status.NodeList = perNodeList
 					}
 
-					isUpdete = true
+					isUpdate = true
 					goto update
 				}
 			}
@@ -463,11 +469,11 @@ func (r egnReconciler) reconcileEGP(ctx context.Context, req reconcile.Request, 
 	}
 
 update:
-	if isUpdete {
-		r.log.Sugar().Debugf("update egress gateway status\n%s", mustMarshalJson(eg.Status))
+	if isUpdate {
+		r.log.V(1).Info("update egress gateway status", "status", eg.Status)
 		err = r.client.Status().Update(ctx, eg)
 		if err != nil {
-			r.log.Sugar().Errorf("update egress gateway status\n%s", mustMarshalJson(eg.Status))
+			r.log.Error(err, "update egress gateway status", "status", eg.Status)
 			return reconcile.Result{Requeue: true}, err
 		}
 	}
@@ -507,7 +513,7 @@ func (r egnReconciler) deleteNodeFromEG(ctx context.Context, nodeName string, eg
 		for _, policy := range policies {
 			err := r.reAllocatorPolicy(ctx, policy, &eg, perNodeMap)
 			if err != nil {
-				r.log.Sugar().Errorf("reallocator Failed to reassign a gateway node for EgressPolicy %v: %v", policy, err)
+				r.log.Error(err, "failed to reassign a gateway node for EgressPolicy", "policy", policy)
 				return err
 			}
 		}
@@ -518,10 +524,10 @@ func (r egnReconciler) deleteNodeFromEG(ctx context.Context, nodeName string, eg
 		}
 
 		eg.Status.NodeList = perNodeList
-		r.log.Sugar().Debugf("update egress gateway status\n%s", mustMarshalJson(eg.Status))
+		r.log.V(1).Info("update egress gateway status", "status", eg.Status)
 		err := r.client.Status().Update(ctx, &eg)
 		if err != nil {
-			r.log.Sugar().Errorf("update egress gateway status\n%s", mustMarshalJson(eg.Status))
+			r.log.Error(err, "update egress gateway status", "status", eg.Status)
 			return err
 		}
 	}
@@ -751,10 +757,7 @@ func (r egnReconciler) allocatorEIP(selEipLolicy string, nodeName string, pi pol
 	return perIpv4, perIpv6, nil
 }
 
-func NewEgressGatewayController(mgr manager.Manager, log *zap.Logger, cfg *config.Config) error {
-	if log == nil {
-		return fmt.Errorf("log can not be nil")
-	}
+func NewEgressGatewayController(mgr manager.Manager, log logr.Logger, cfg *config.Config) error {
 	if cfg == nil {
 		return fmt.Errorf("cfg can not be nil")
 	}
@@ -854,14 +857,6 @@ func setEipStatus(ipv4, ipv6 string, nodeName string, policy egress.Policy, node
 	}
 
 	return nil
-}
-
-func mustMarshalJson(obj interface{}) string {
-	raw, err := json.Marshal(obj)
-	if err != nil {
-		return ""
-	}
-	return string(raw)
 }
 
 func GetPoliciesByNode(nodeName string, eg egress.EgressGateway) ([]egress.Policy, bool) {

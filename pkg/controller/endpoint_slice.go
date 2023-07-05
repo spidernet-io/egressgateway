@@ -11,7 +11,7 @@ import (
 	"sort"
 	"time"
 
-	"go.uber.org/zap"
+	"github.com/go-logr/logr"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/validation"
@@ -35,16 +35,14 @@ import (
 
 type endpointReconciler struct {
 	client client.Client
-	log    *zap.Logger
+	log    logr.Logger
 	config *config.Config
 }
 
 func (r *endpointReconciler) Reconcile(ctx context.Context, req reconcile.Request) (reconcile.Result, error) {
-	log := r.log.With(
-		zap.String("namespace", req.NamespacedName.Namespace),
-		zap.String("name", req.NamespacedName.Name),
-		zap.String("kind", "EgressPolicy"),
-	)
+	log := r.log.WithValues("namespace", req.NamespacedName.Namespace,
+		"name", req.NamespacedName.Name,
+		"kind", "EgressPolicy")
 
 	log.Info("reconcile")
 	deleted := false
@@ -336,13 +334,13 @@ func listEndpointSlices(ctx context.Context, cli client.Client, namespace, polic
 	return slices, err
 }
 
-func newEgressEndpointSliceController(mgr manager.Manager, log *zap.Logger, cfg *config.Config) error {
+func newEgressEndpointSliceController(mgr manager.Manager, log logr.Logger, cfg *config.Config) error {
 	r := &endpointReconciler{
 		client: mgr.GetClient(),
 		log:    log,
 		config: cfg,
 	}
-	log.Sugar().Infof("new endpoint controller")
+	log.Info("new endpoint controller")
 
 	cache, err := coalescing.NewRequestCache(time.Second)
 	if err != nil {

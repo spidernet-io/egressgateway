@@ -6,7 +6,6 @@ package controller
 import (
 	"context"
 	"net"
-	"os"
 	"testing"
 
 	"github.com/cilium/ipam/service/ipallocator"
@@ -32,8 +31,6 @@ type TestNodeReq struct {
 }
 
 func TestEgressNodeCtrlForEgressNode(t *testing.T) {
-	log := logger.NewStdoutLogger(os.Getenv("LOG_LEVEL"))
-
 	cfg := &config.Config{
 		EnvConfig:  config.EnvConfig{},
 		FileConfig: config.FileConfig{EnableIPv4: true, EnableIPv6: false},
@@ -68,7 +65,7 @@ func TestEgressNodeCtrlForEgressNode(t *testing.T) {
 
 	reconciler := egReconciler{
 		client:      builder.Build(),
-		log:         log,
+		log:         logger.NewLogger(cfg.EnvConfig.Logger),
 		config:      cfg,
 		mark:        mark,
 		allocatorV4: allocatorV4,
@@ -121,7 +118,6 @@ func TestEgressNodeCtrlForEgressNode(t *testing.T) {
 }
 
 func TestEgressNodeCtrlForNode(t *testing.T) {
-	log := logger.NewStdoutLogger(os.Getenv("LOG_LEVEL"))
 	cfg := &config.Config{}
 	node := &corev1.Node{ObjectMeta: v1.ObjectMeta{Name: "node1"}}
 	initialObjects := []client.Object{node}
@@ -142,7 +138,7 @@ func TestEgressNodeCtrlForNode(t *testing.T) {
 
 	reconciler := egReconciler{
 		client:      builder.Build(),
-		log:         log,
+		log:         logger.NewLogger(cfg.EnvConfig.Logger),
 		config:      cfg,
 		mark:        mark,
 		allocatorV4: allocatorV4,

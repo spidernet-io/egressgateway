@@ -9,7 +9,7 @@ import (
 	"reflect"
 	"time"
 
-	"go.uber.org/zap"
+	"github.com/go-logr/logr"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -32,14 +32,14 @@ import (
 
 type endpointClusterReconciler struct {
 	client client.Client
-	log    *zap.Logger
+	log    logr.Logger
 	config *config.Config
 }
 
 func (r *endpointClusterReconciler) Reconcile(ctx context.Context, req reconcile.Request) (reconcile.Result, error) {
-	log := r.log.With(
-		zap.String("name", req.NamespacedName.Name),
-		zap.String("kind", "EgressClusterEndpointSlice"),
+	log := r.log.WithValues(
+		"name", req.NamespacedName.Name,
+		"kind", "EgressClusterEndpointSlice",
 	)
 
 	log.Info("reconcile")
@@ -287,7 +287,7 @@ func listClusterEndpointSlices(ctx context.Context, cli client.Client, policyNam
 	return slices, err
 }
 
-func newEgressClusterEpSliceController(mgr manager.Manager, log *zap.Logger, cfg *config.Config) error {
+func newEgressClusterEpSliceController(mgr manager.Manager, log logr.Logger, cfg *config.Config) error {
 	r := &endpointClusterReconciler{
 		client: mgr.GetClient(),
 		log:    log,
@@ -295,7 +295,7 @@ func newEgressClusterEpSliceController(mgr manager.Manager, log *zap.Logger, cfg
 	}
 
 	name := "cluster-endpoint"
-	log.Sugar().Infof("new %v controller", name)
+	log.Info("new egress cluster endpoint slice controller")
 
 	cache, err := coalescing.NewRequestCache(time.Second)
 	if err != nil {

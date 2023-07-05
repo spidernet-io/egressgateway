@@ -4,53 +4,34 @@
 package logger
 
 import (
-	"fmt"
-	"os"
-	"strings"
-
+	"github.com/go-logr/logr"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
+	czap "sigs.k8s.io/controller-runtime/pkg/log/zap"
 )
 
-func NewStdoutLogger(loglevel string) *zap.Logger {
+type Config struct {
+	UseDevMode bool          `mapstructure:"LOG_USE_DEV_MODE"`
+	Level      zapcore.Level `mapstructure:"LOG_LEVEL"`
+	WithCaller bool          `mapstructure:"LOG_WITH_CALLER"`
+	Encoder    string        `mapstructure:"LOG_ENCODER"`
+}
 
-	// log level
-	l := zapcore.InfoLevel
-	switch strings.ToLower(loglevel) {
-	case "debug":
-		l = zapcore.DebugLevel
-	case "info":
-		l = zapcore.InfoLevel
-	case "warn":
-		l = zapcore.WarnLevel
-	case "error":
-		l = zapcore.ErrorLevel
-	case "fatal":
-		l = zapcore.FatalLevel
-	case "panic":
-		l = zapcore.PanicLevel
-	case "":
-		l = zapcore.InfoLevel
-	default:
-		panic(fmt.Sprintf("unknown log level %s", loglevel))
-	}
-
-	encoderConfig := zap.NewProductionEncoderConfig()
-	encoderConfig.EncodeTime = nil
-	encoderConfig.EncodeCaller = nil
-	encoderConfig.EncodeLevel = nil
-	encoderConfig.EncodeTime = zapcore.ISO8601TimeEncoder
-	encoderConfig.EncodeCaller = zapcore.ShortCallerEncoder
-	encoderConfig.EncodeLevel = zapcore.CapitalLevelEncoder
-
-	m := zapcore.NewCore(
-		zapcore.NewJSONEncoder(encoderConfig),
-		zapcore.AddSync(os.Stdout),
-		zap.NewAtomicLevelAt(l),
+func NewLogger(cfg Config) logr.Logger {
+	var opts []czap.Opts
+	opts = append(opts,
+		czap.UseDevMode(cfg.UseDevMode),
+		czap.Level(cfg.Level),
+		czap.RawZapOpts(zap.WithCaller(true)),
 	)
-	// configures the Logger to annotate each message with the filename, line number, and function name of zap's caller
-	t := zap.AddCaller()
-	logger := zap.New(m, t)
-
-	return logger
+	if cfg.Encoder == "console" {
+		opts = append(opts, czap.ConsoleEncoder())
+	} else {
+		opts = append(opts, czap.JSONEncoder(
+			func(config *zapcore.EncoderConfig) {
+				config.EncodeTime = zapcore.ISO8601TimeEncoder
+				config.EncodeDuration = zapcore.StringDurationEncoder
+			}))
+	}
+	return czap.New(opts...)
 }

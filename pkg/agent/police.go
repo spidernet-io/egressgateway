@@ -14,7 +14,7 @@ import (
 	"sync"
 	"time"
 
-	"go.uber.org/zap"
+	"github.com/go-logr/logr"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
@@ -42,7 +42,7 @@ const (
 
 type policeReconciler struct {
 	client   client.Client
-	log      *zap.Logger
+	log      logr.Logger
 	cfg      *config.Config
 	ipsetMap *utils.SyncMap[string, *ipset.IPSet]
 	ipset    ipset.Interface
@@ -58,33 +58,27 @@ type policeReconciler struct {
 
 func (r *policeReconciler) Reconcile(ctx context.Context, req reconcile.Request) (reconcile.Result, error) {
 	r.doOnce.Do(func() {
-		r.log.Sugar().Info("first reconcile of policy controller, init apply policy")
+		r.log.Info("starting first reconciliation of policy controller")
 	redo:
 		err := r.initApplyPolicy()
 		if err != nil {
-			r.log.Sugar().Error("first reconcile of policy controller, init apply policy, with error:", err)
+			r.log.Error(err, "init policy")
 			goto redo
 		}
 	})
 	kind, newReq, err := utils.ParseKindWithReq(req)
 	if err != nil {
-		r.log.Sugar().Infof("parse req(%v) with error: %v", req, err)
 		return reconcile.Result{}, err
 	}
-	log := r.log.With(
-		zap.String("kind", kind),
-	)
+	log := r.log.WithValues("kind", kind)
 	var res reconcile.Result
 	switch kind {
 	case "EgressGateway":
 		res, err = r.reconcileGateway(ctx, newReq, log)
-		return res, err
 	case "EgressClusterPolicy":
 		res, err = r.reconcileClusterPolicy(ctx, newReq, log)
-		return res, err
 	case "EgressPolicy":
 		res, err = r.reconcilePolicy(ctx, newReq, log)
-		return res, err
 	case "EgressClusterInfo":
 		res, err = r.reconcileClusterInfo(ctx, newReq, log)
 	default:
@@ -196,7 +190,7 @@ func (r *policeReconciler) initApplyPolicy() error {
 			node := new(egressv1.EgressNode)
 			err := r.client.Get(context.Background(), types.NamespacedName{Name: val.NodeName}, node)
 			if err != nil {
-				r.log.Warn("failed to get eip node information of policy, skip building rule of policy")
+				r.log.Error(err, "failed to get egress node, skip building rule of policy")
 				continue
 			}
 			policyName := policy.Name
@@ -315,7 +309,7 @@ func (r *policeReconciler) updatePolicyIPSet(policyNs string, policyName string,
 	setNames := buildIPSetNamesByPolicy(policyNs, policyName, r.cfg.FileConfig.EnableIPv4, r.cfg.FileConfig.EnableIPv6)
 
 	err = setNames.Map(func(set SetName) error {
-		r.log.Debug("check ipset", zap.String("ipset", set.Name))
+		r.log.V(1).Info("check ipset", "ipset", set.Name)
 		return r.createIPSet(r.log, set)
 	})
 	if err != nil {
@@ -351,7 +345,7 @@ func (r *policeReconciler) updatePolicyIPSet(policyNs string, policyName string,
 	}
 
 	for set, ips := range toAddList {
-		r.log.Sugar().Debugf("add ipset entries: %v", ips)
+		r.log.V(1).Info("add ipset entries", "entries", ips)
 		ipSet, ok := r.ipsetMap.Load(set)
 		if !ok {
 			continue
@@ -510,7 +504,10 @@ func buildNatStaticRule(base uint32) map[string][]iptables.Rule {
 	return res
 }
 
-func (r *policeReconciler) reconcileClusterInfo(ctx context.Context, req reconcile.Request, log *zap.Logger) (reconcile.Result, error) {
+func (r *policeReconciler) reconcileClusterInfo(ctx context.Context, req reconcile.Request, log logr.Logger) (reconcile.Result, error) {
+	log = log.WithValues("name", req.NamespacedName.Name)
+	log.Info("reconciling")
+
 	info := new(egressv1.EgressClusterInfo)
 	deleted := false
 	err := r.client.Get(ctx, req.NamespacedName, info)
@@ -645,7 +642,8 @@ func (r *policeReconciler) reconcileClusterInfo(ctx context.Context, req reconci
 // reconcileGateway reconcile egress gateway
 // - add/update/delete egress gateway
 //   - iptables/ipset
-func (r *policeReconciler) reconcileGateway(ctx context.Context, req reconcile.Request, log *zap.Logger) (reconcile.Result, error) {
+func (r *policeReconciler) reconcileGateway(ctx context.Context, req reconcile.Request, log logr.Logger) (reconcile.Result, error) {
+	log.Info("reconciling")
 	err := r.initApplyPolicy()
 	if err != nil {
 		return reconcile.Result{Requeue: true}, err
@@ -685,7 +683,10 @@ func buildMangleStaticRule(base uint32) map[string][]iptables.Rule {
 // reconcilePolicy reconcile egress policy
 // watch update/delete events
 // - ipset
-func (r *policeReconciler) reconcilePolicy(ctx context.Context, req reconcile.Request, log *zap.Logger) (reconcile.Result, error) {
+func (r *policeReconciler) reconcilePolicy(ctx context.Context, req reconcile.Request, log logr.Logger) (reconcile.Result, error) {
+	log = log.WithValues("name", req.NamespacedName.Name, "namespace", req.NamespacedName.Namespace)
+	log.Info("reconciling")
+
 	policy := new(egressv1.EgressPolicy)
 	deleted := false
 	err := r.client.Get(ctx, req.NamespacedName, policy)
@@ -744,7 +745,10 @@ func (r *policeReconciler) reconcilePolicy(ctx context.Context, req reconcile.Re
 // reconcileClusterPolicy reconcile egress cluster policy
 // watch update/delete events
 // - ipset
-func (r *policeReconciler) reconcileClusterPolicy(ctx context.Context, req reconcile.Request, log *zap.Logger) (reconcile.Result, error) {
+func (r *policeReconciler) reconcileClusterPolicy(ctx context.Context, req reconcile.Request, log logr.Logger) (reconcile.Result, error) {
+	log = log.WithValues("name", req.NamespacedName.Name)
+	log.Info("reconciling")
+
 	policy := new(egressv1.EgressClusterPolicy)
 	deleted := false
 	err := r.client.Get(ctx, req.NamespacedName, policy)
@@ -870,18 +874,18 @@ func (r *policeReconciler) getDstCIDR(list []string) ([]string, []string, error)
 	return ipv4List, ipv6List, nil
 }
 
-func (r *policeReconciler) removeIPSet(log *zap.Logger, name string) {
+func (r *policeReconciler) removeIPSet(log logr.Logger, name string) {
 	_, ok := r.ipsetMap.Load(name)
 	if ok {
 		err := r.ipset.DestroySet(name)
 		if err != nil {
-			log.Warn("failed to delete ipset", zap.String("ipset", name), zap.Error(err))
+			log.Info("failed to delete ipset", "ipset", name, "warn", err)
 		}
 		r.ipsetMap.Delete(name)
 	}
 }
 
-func (r *policeReconciler) createIPSet(log *zap.Logger, set SetName) error {
+func (r *policeReconciler) createIPSet(log logr.Logger, set SetName) error {
 	_, exits := r.ipsetMap.Load(set.Name)
 	if !exits {
 		if set.Stack == IPv4 && !r.cfg.FileConfig.EnableIPv4 {
@@ -891,7 +895,7 @@ func (r *policeReconciler) createIPSet(log *zap.Logger, set SetName) error {
 			return nil
 		}
 
-		log.Sugar().Debug("add src ipset")
+		log.V(1).Info("add src ipset")
 		ipSet := &ipset.IPSet{
 			Name:       set.Name,
 			SetType:    ipset.HashNet,
@@ -900,7 +904,7 @@ func (r *policeReconciler) createIPSet(log *zap.Logger, set SetName) error {
 		}
 		err := r.ipset.CreateSet(ipSet, true)
 		if err != nil {
-			log.Sugar().Errorf("add src ipset with error: %v", err)
+			log.Error(err, "add src ipset with error", err)
 			return err
 		}
 		r.ipsetMap.Store(set.Name, ipSet)
@@ -908,7 +912,7 @@ func (r *policeReconciler) createIPSet(log *zap.Logger, set SetName) error {
 	return nil
 }
 
-func newPolicyController(mgr manager.Manager, log *zap.Logger, cfg *config.Config) error {
+func newPolicyController(mgr manager.Manager, log logr.Logger, cfg *config.Config) error {
 	iptablesCfg := cfg.FileConfig.IPTables
 	opt := iptables.Options{
 		HistoricChainPrefixes:    []string{"egw"},

@@ -50,7 +50,7 @@ func TestReconcilerEgressNode(t *testing.T) {
 	})
 
 	for name, c := range cases {
-		log := logger.NewStdoutLogger("error")
+		log := logger.NewLogger(logger.Config{Level: 1})
 
 		t.Run(name, func(t *testing.T) {
 			builder := fake.NewClientBuilder()

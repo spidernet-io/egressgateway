@@ -36,7 +36,6 @@ type TestEgressGatewayPolicyReq struct {
 }
 
 func TestReconcilerEgressEndpointSlice(t *testing.T) {
-	log := logger.NewStdoutLogger("error")
 	cases := map[string]TestCaseEPS{
 		"caseAddEgressGatewayPolicy": caseAddPolicy(),
 		"caseUpdatePod":              caseUpdatePod(),
@@ -51,7 +50,7 @@ func TestReconcilerEgressEndpointSlice(t *testing.T) {
 			cli := builder.Build()
 			reconciler := endpointReconciler{
 				client: cli,
-				log:    log,
+				log:    logger.NewLogger(c.config.EnvConfig.Logger),
 				config: c.config,
 			}
 

@@ -9,7 +9,8 @@ import (
 	"strings"
 	"sync"
 
-	"go.uber.org/zap"
+	"github.com/go-logr/logr"
+	calicov1 "github.com/tigera/operator/pkg/apis/crd.projectcalico.org/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/types"
@@ -20,8 +21,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 	"sigs.k8s.io/controller-runtime/pkg/source"
 
-	calicov1 "github.com/tigera/operator/pkg/apis/crd.projectcalico.org/v1"
-
 	"github.com/spidernet-io/egressgateway/pkg/config"
 	egressv1beta1 "github.com/spidernet-io/egressgateway/pkg/k8s/apis/egressgateway.spidernet.io/v1beta1"
 	"github.com/spidernet-io/egressgateway/pkg/utils"
@@ -30,7 +29,7 @@ import (
 type eciReconciler struct {
 	eci               *egressv1beta1.EgressClusterInfo
 	client            client.Client
-	log               *zap.Logger
+	log               logr.Logger
 	config            *config.Config
 	doOnce            sync.Once
 	nodeIPv4Map       map[string]string
@@ -52,25 +51,20 @@ var kubeControllerManagerPodLabel = map[string]string{"component": "kube-control
 func (r *eciReconciler) Reconcile(ctx context.Context, req reconcile.Request) (reconcile.Result, error) {
 	kind, newReq, err := utils.ParseKindWithReq(req)
 	if err != nil {
-		r.log.Sugar().Infof("parse req(%v) with error: %v", req, err)
 		return reconcile.Result{}, err
 	}
-	log := r.log.With(
-		zap.String("namespacedName", newReq.NamespacedName.String()),
-		zap.String("kind", kind),
-	)
+	log := r.log.WithValues("kind", kind)
 
 	r.doOnce.Do(func() {
-		r.log.Sugar().Info("first reconcile of egressClusterInfo controller, init egressClusterInfo")
+		r.log.Info("first reconcile of egressClusterInfo controller, init egressClusterInfo")
 	redo:
 		err := r.initEgressClusterInfo(ctx)
 		if err != nil {
-			r.log.Sugar().Errorf("first reconcile of egressClusterInfo controller, init egressClusterInfo, with error: %v", err)
+			r.log.Error(err, "first reconcile of egressClusterInfo controller, init egressClusterInfo")
 			goto redo
 		}
 	})
 
-	log.Info("reconciling")
 	switch kind {
 	case "Node":
 		return r.reconcileNode(ctx, newReq, log)
@@ -82,7 +76,10 @@ func (r *eciReconciler) Reconcile(ctx context.Context, req reconcile.Request) (r
 }
 
 // reconcileCalicoIPPool reconcile calico IPPool
-func (r *eciReconciler) reconcileCalicoIPPool(ctx context.Context, req reconcile.Request, log *zap.Logger) (reconcile.Result, error) {
+func (r *eciReconciler) reconcileCalicoIPPool(ctx context.Context, req reconcile.Request, log logr.Logger) (reconcile.Result, error) {
+	log = log.WithValues("name", req.NamespacedName, "namespace", req.Namespace)
+	log.Info("reconciling")
+
 	// eci
 	err := r.getEgressClusterInfo(ctx)
 	if err != nil {
@@ -94,7 +91,7 @@ func (r *eciReconciler) reconcileCalicoIPPool(ctx context.Context, req reconcile
 	err = r.client.Get(ctx, req.NamespacedName, ippool)
 	if err != nil {
 		if !errors.IsNotFound(err) {
-			log.Sugar().Errorf("Failed to Get ippool, other err: %v", err)
+			log.V(2).Error(err, "failed to get calico ippool")
 			return reconcile.Result{Requeue: true}, err
 		}
 		deleted = true
@@ -103,21 +100,22 @@ func (r *eciReconciler) reconcileCalicoIPPool(ctx context.Context, req reconcile
 
 	// delete event
 	if deleted {
-		log.Sugar().Infof("reconcileCalicoIPPool: Delete %s event", req.Name)
+		log.Info("delete event",
+			"calicoV4IPPoolMap", r.calicoV4IPPoolMap,
+			"calicoV6IPPoolMap", r.calicoV6IPPoolMap)
 		// check calicoV4IPPoolMap and calicoV6IPPoolMap
-		log.Sugar().Debugf("reconcileCalicoIPPool: r.calicoV4IPPoolMap: %v; r.calicoV6IPPoolMap: %v", r.calicoV4IPPoolMap, r.calicoV6IPPoolMap)
 		cidr, v4ok := r.calicoV4IPPoolMap[req.Name]
 		if v4ok {
 			// need to delete cidr from calicoV4IPPoolMap
-			log.Sugar().Debugf("reconcileCalicoIPPool: calicoV4IPPoolMap delete %s", req.Name)
+			log.V(1).Info("remove IPPool from calicoV4IPPoolMap")
 			delete(r.calicoV4IPPoolMap, req.Name)
 			// update eci status
 			cidrs := r.getCalicoV4IPPoolsCidrs()
 			r.eci.Status.EgressIgnoreCIDR.PodCIDR.IPv4 = cidrs
-			log.Sugar().Debugf("reconcileCalicoIPPool: eci.Status.EgressIgnoreCIDR.PodCIDR.IPv4: %v", cidrs)
+			log.V(1).Info("update EgressClusterInfo", "context", cidrs)
 			err := r.updateEgressClusterInfo(ctx)
 			if err != nil {
-				log.Sugar().Debugf("Failed to updateEgressClusterInfo, err: %v", err)
+				log.Error(err, "failed to update EgressClusterInfo")
 				r.calicoV4IPPoolMap[req.Name] = cidr
 				return reconcile.Result{Requeue: true}, err
 			}
@@ -126,12 +124,12 @@ func (r *eciReconciler) reconcileCalicoIPPool(ctx context.Context, req reconcile
 		cidr, v6ok := r.calicoV6IPPoolMap[req.Name]
 		if v6ok {
 			// need to delete cidr from calicoV6IPPoolMap
-			log.Sugar().Debugf("reconcileCalicoIPPool: calicoV6IPPoolMap delete %s", req.Name)
+			log.V(1).Info("remove IPPool from calicoV6IPPoolMap")
 			delete(r.calicoV6IPPoolMap, req.Name)
 			// update eci status
 			cidrs := r.getCalicoV6IPPoolsCidrs()
 			r.eci.Status.EgressIgnoreCIDR.PodCIDR.IPv6 = cidrs
-			log.Sugar().Debugf("reconcileCalicoIPPool: eci.Status.EgressIgnoreCIDR.PodCIDR.IPv6: %v", cidrs)
+			log.V(1).Info("update egress cluster info", "context", r.eci)
 			err := r.updateEgressClusterInfo(ctx)
 			if err != nil {
 				r.calicoV6IPPoolMap[req.Name] = cidr
@@ -143,7 +141,7 @@ func (r *eciReconciler) reconcileCalicoIPPool(ctx context.Context, req reconcile
 	}
 
 	// not delete event
-	log.Sugar().Infof("reconcileCalicoIPPool: Update %s event", req.Name)
+	log.Info("update event")
 
 	// check if cidr about ippools changed
 	isv4Cidr, err := utils.IsIPv4Cidr(ippool.Spec.CIDR)
@@ -229,7 +227,10 @@ func (r *eciReconciler) reconcileCalicoIPPool(ctx context.Context, req reconcile
 }
 
 // reconcileNode reconcile node
-func (r *eciReconciler) reconcileNode(ctx context.Context, req reconcile.Request, log *zap.Logger) (reconcile.Result, error) {
+func (r *eciReconciler) reconcileNode(ctx context.Context, req reconcile.Request, log logr.Logger) (reconcile.Result, error) {
+	log = log.WithValues("name", req.Name)
+	log.Info("reconciling")
+
 	// eci
 	err := r.getEgressClusterInfo(ctx)
 	if err != nil {
@@ -249,10 +250,10 @@ func (r *eciReconciler) reconcileNode(ctx context.Context, req reconcile.Request
 
 	// delete event
 	if deleted {
-		log.Sugar().Infof("reconcileNode: Delete %s event", req.Name)
+		log.Info("delete event")
 		// check map
-		nodeipv4, v4Ok := r.nodeIPv4Map[req.Name]
-		nodeipv6, v6Ok := r.nodeIPv6Map[req.Name]
+		nodeIPv4, v4Ok := r.nodeIPv4Map[req.Name]
+		nodeIPv6, v6Ok := r.nodeIPv6Map[req.Name]
 		if v4Ok {
 			// update map
 			delete(r.nodeIPv4Map, req.Name)
@@ -270,22 +271,22 @@ func (r *eciReconciler) reconcileNode(ctx context.Context, req reconcile.Request
 		if v4Ok && v6Ok {
 			err := r.updateEgressClusterInfo(ctx)
 			if err != nil {
-				r.nodeIPv4Map[req.Name] = nodeipv4
-				r.nodeIPv6Map[req.Name] = nodeipv6
+				r.nodeIPv4Map[req.Name] = nodeIPv4
+				r.nodeIPv6Map[req.Name] = nodeIPv6
 				return reconcile.Result{Requeue: true}, err
 			}
 		}
 		if v4Ok && !v6Ok {
 			err := r.updateEgressClusterInfo(ctx)
 			if err != nil {
-				r.nodeIPv4Map[req.Name] = nodeipv4
+				r.nodeIPv4Map[req.Name] = nodeIPv4
 				return reconcile.Result{Requeue: true}, err
 			}
 		}
 		if !v4Ok && v6Ok {
 			err := r.updateEgressClusterInfo(ctx)
 			if err != nil {
-				r.nodeIPv6Map[req.Name] = nodeipv6
+				r.nodeIPv6Map[req.Name] = nodeIPv6
 				return reconcile.Result{Requeue: true}, err
 			}
 		}
@@ -293,7 +294,7 @@ func (r *eciReconciler) reconcileNode(ctx context.Context, req reconcile.Request
 	}
 
 	// not delete event
-	log.Sugar().Infof("reconcileNode: Update %s event", req.Name)
+	log.Info("update event")
 
 	// get nodeIP, check if its changed
 	nodeIPv4, nodeIPv6 := utils.GetNodeIP(node)
@@ -334,10 +335,7 @@ func (r *eciReconciler) reconcileNode(ctx context.Context, req reconcile.Request
 	return reconcile.Result{}, nil
 }
 
-func newEgressClusterInfoController(mgr manager.Manager, log *zap.Logger, cfg *config.Config) error {
-	if log == nil {
-		return fmt.Errorf("log can not be nil")
-	}
+func newEgressClusterInfoController(mgr manager.Manager, log logr.Logger, cfg *config.Config) error {
 	if cfg == nil {
 		return fmt.Errorf("cfg can not be nil")
 	}
@@ -354,7 +352,7 @@ func newEgressClusterInfoController(mgr manager.Manager, log *zap.Logger, cfg *c
 		calicoV6IPPoolMap: make(map[string]string),
 	}
 
-	log.Sugar().Infof("new egressClusterInfo controller")
+	log.Info("new egressClusterInfo controller")
 	c, err := controller.New("egressClusterInfo", mgr,
 		controller.Options{Reconciler: r})
 	if err != nil {
@@ -364,7 +362,7 @@ func newEgressClusterInfoController(mgr manager.Manager, log *zap.Logger, cfg *c
 	podCidr, _, ignoreNodeIP := r.getEgressIgnoreCIDRConfig()
 
 	if ignoreNodeIP {
-		log.Sugar().Infof("egressClusterInfo controller watch Node")
+		log.Info("egressClusterInfo controller watch Node")
 		if err := watchSource(c, source.Kind(mgr.GetCache(), &corev1.Node{}), "Node"); err != nil {
 			return err
 		}
@@ -372,7 +370,7 @@ func newEgressClusterInfoController(mgr manager.Manager, log *zap.Logger, cfg *c
 
 	switch podCidr {
 	case calico:
-		log.Sugar().Infof("egressClusterInfo controller watch calico")
+		log.Info("egressClusterInfo controller watch calico")
 		if err := watchSource(c, source.Kind(mgr.GetCache(), &calicov1.IPPool{}), "IPPool"); err != nil {
 			return err
 		}
@@ -384,8 +382,7 @@ func newEgressClusterInfoController(mgr manager.Manager, log *zap.Logger, cfg *c
 
 // initEgressClusterInfo create EgressClusterInfo cr if it's not exists
 func (r *eciReconciler) initEgressClusterInfo(ctx context.Context) error {
-	r.log.Sugar().Infof("Start initEgressClusterInfo")
-	r.log.Sugar().Infof("Init egressClusterInfo %v", defaultEgressClusterInfoName)
+	r.log.Info("start init EgressClusterInfo", "name", defaultEgressClusterInfoName)
 	err := r.getOrCreateEgressClusterInfo(ctx)
 	if err != nil {
 		return err
@@ -422,8 +419,7 @@ func (r *eciReconciler) initEgressClusterInfo(ctx context.Context) error {
 		r.eci.Status.EgressIgnoreCIDR.PodCIDR.IPv6 = ipv6Range
 	}
 
-	r.log.Sugar().Debugf("EgressCluterInfo: %v", r.eci)
-	r.log.Sugar().Infof("Update EgressClusterInfo: %v", r.eci.Name)
+	r.log.V(1).Info("update EgressClusterInfo", "context", r.eci)
 	err = r.updateEgressClusterInfo(ctx)
 	if err != nil {
 		return err
@@ -447,7 +443,7 @@ func (r *eciReconciler) getOrCreateEgressClusterInfo(ctx context.Context) error 
 		}
 		// not found
 		r.eci.Name = defaultEgressClusterInfoName
-		r.log.Sugar().Infof("create EgressClusterInfo: %v", r.eci.Name)
+		r.log.Info("create EgressClusterInfo")
 		err := r.client.Create(ctx, r.eci)
 		if err != nil {
 			return err
