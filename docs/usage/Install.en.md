@@ -104,9 +104,9 @@ spec:
 
 1. Change me, select a non-egress gateway node in your cluster
 
-## Create EgressGatewayPolicy
+## Create EgressPolicy
 
-By creating an EgressGatewayPolicy CR, you can control which Pod accesses which address needs to go through the egress gateway.
+By creating an EgressPolicy CR, you can control which Pod accesses which address needs to go through the egress gateway.
 
 ```yaml
 apiVersion: egressgateway.spidernet.io/v1beta1

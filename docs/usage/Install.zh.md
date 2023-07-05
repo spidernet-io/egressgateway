@@ -101,9 +101,9 @@ spec:
 
 1. 更改 `nodeName` 的值，选择一个非出口网关的节点。
 
-## 创建 EgressGatewayPolicy CR 对象
+## 创建 EgressPolicy CR 对象
 
-通过创建 EgressGatewayPolicy CR，您可以控制哪些 Pod 在访问特定地址时需要经过出口网关。
+通过创建 EgressPolicy CR，您可以控制哪些 Pod 在访问特定地址时需要经过出口网关。
 
 ```yaml
 apiVersion: egressgateway.spidernet.io/v1beta1
