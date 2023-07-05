@@ -1,12 +1,12 @@
-# How To Contribute
+# How to contribute
 
 First of all, thank you for your interest in contributing to our project! We appreciate all the help and support from the community. This document outlines the process for contributing to our Kubernetes operator project. Please read through the guidelines carefully before submitting any changes.
 
-## Code of Conduct
+## Code of conduct
 
 To ensure a positive and supportive environment for all contributors, please adhere to our Code of Conduct. By participating in this project, you agree to abide by its terms.
 
-## Getting Started
+## Getting started
 
 Fork the Repository: To contribute, start by forking the repository to your own GitHub account. This will create a copy of the project that you can modify as needed.
 
@@ -21,7 +21,7 @@ Create a Branch: Before starting to work on your changes, create a new branch fo
 ```shell
 git checkout -b your-new-branch-name
 ```
-## Making Changes
+## Making changes
 
 Update Your Fork: Before making any changes, make sure your fork is up to date with the upstream repository.
 
@@ -46,7 +46,7 @@ Push Your Changes: After committing your changes, push them to your fork on GitH
 git push origin your-new-branch-name
 ```
 
-## Submitting a Pull Request
+## Submitting a pull request
 
 Create a Pull Request: Once your changes are pushed, create a pull request from your fork to the upstream repository. Make sure the base branch is set to main and the head branch is your feature or bugfix branch.
 
