@@ -333,8 +333,8 @@ func (r egnReconciler) reconcileEGP(ctx context.Context, req reconcile.Request, 
 			deleted = true
 		}
 		deleted = deleted || !egcp.GetDeletionTimestamp().IsZero()
+		pi.policy = egress.Policy{Name: req.Name}
 		if !deleted {
-			pi.policy = egress.Policy{Name: req.Name}
 			pi.ipv4 = egcp.Spec.EgressIP.IPv4
 			pi.ipv6 = egcp.Spec.EgressIP.IPv6
 			pi.isUseNodeIP = egcp.Spec.EgressIP.UseNodeIP
@@ -350,10 +350,9 @@ func (r egnReconciler) reconcileEGP(ctx context.Context, req reconcile.Request, 
 			}
 			deleted = true
 		}
-
 		deleted = deleted || !egp.GetDeletionTimestamp().IsZero()
+		pi.policy = egress.Policy{Name: req.Name, Namespace: req.Namespace}
 		if !deleted {
-			pi.policy = egress.Policy{Name: req.Name, Namespace: req.Namespace}
 			pi.ipv4 = egp.Spec.EgressIP.IPv4
 			pi.ipv6 = egp.Spec.EgressIP.IPv6
 			pi.isUseNodeIP = egp.Spec.EgressIP.UseNodeIP
@@ -364,7 +363,7 @@ func (r egnReconciler) reconcileEGP(ctx context.Context, req reconcile.Request, 
 	policy := pi.policy
 	if deleted {
 		egwList := &egress.EgressGatewayList{}
-		if err := r.client.List(context.Background(), egwList); err != nil {
+		if err := r.client.List(ctx, egwList); err != nil {
 			return reconcile.Result{Requeue: true}, nil
 		}
 		for _, egw := range egwList.Items {
