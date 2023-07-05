@@ -430,19 +430,3 @@ build_doc:
 	@ [ -f "$(PROJECT_DOC_DIR)/$(OUTPUT_TAR)" ] || { echo "failed to build site to $(PROJECT_DOC_DIR)/$(OUTPUT_TAR) " ; exit 1 ; }
 	@ mv $(PROJECT_DOC_DIR)/$(OUTPUT_TAR) $(DOC_OUTPUT)/$(OUTPUT_TAR)
 	@ echo "succeeded to build site to $(DOC_OUTPUT)/$(OUTPUT_TAR) "
-
-
-
-# ==============================
-
-.PHONY: validate_openapi_sdk
-validate_openapi_sdk:
-	tools/golang/goSwagger.sh validate $(OPENAPI_SDK_DIR)
-
-
-.PHONY: update_openapi_sdk
-update_openapi_sdk:
-	tools/golang/goSwagger.sh clean $(OPENAPI_SDK_DIR)
-	tools/golang/goSwagger.sh generate $(OPENAPI_SDK_DIR)
-
-
