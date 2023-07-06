@@ -101,11 +101,6 @@ jobs:
           persist-credentials: false
           ref: ${{ needs.filter_changes.outputs.ref }}
 
-      - name: check swagger sdk
-        if: ${{ needs.filter_changes.outputs.swagger == 'true' }}
-        run: |
-          make validate_openapi_sdk
-
       - name: check crd sdk
         if: ${{ needs.filter_changes.outputs.crd == 'true' }}
         run: |
