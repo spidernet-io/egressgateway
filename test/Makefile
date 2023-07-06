@@ -180,11 +180,11 @@ deploy_project:
     	if [ -n "$(PYROSCOPE_LOCAL_PORT)" ] ; then \
 			echo "add env" ; \
 			ServerAddress=$$(docker network inspect kind -f {{\(index\ $$.IPAM.Config\ 0\).Gateway}}) ; \
-			HELM_OPTION+=" --set egressgatewayAgent.extraEnv[0].name=ENV_PYROSCOPE_PUSH_SERVER_ADDRESS  --set egressgatewayAgent.extraEnv[0].value=http://$${ServerAddress}:$(PYROSCOPE_LOCAL_PORT) " ; \
-			HELM_OPTION+=" --set egressgatewayController.extraEnv[0].name=ENV_PYROSCOPE_PUSH_SERVER_ADDRESS  --set egressgatewayController.extraEnv[0].value=http://$${ServerAddress}:$(PYROSCOPE_LOCAL_PORT) " ; \
+			HELM_OPTION+=" --set agent.debug.pyroscopeServerAddr=http://$${ServerAddress}:$(PYROSCOPE_LOCAL_PORT) " ; \
+			HELM_OPTION+=" --set controller.debug.pyroscopeServerAddr=http://$${ServerAddress}:$(PYROSCOPE_LOCAL_PORT) " ; \
 		fi ; \
-		HELM_OPTION+=" --set egressgatewayAgent.prometheus.enabled=true --set egressgatewayController.prometheus.enabled=true  " ; \
-		HELM_OPTION+=" --set egressgatewayAgent.debug.logLevel=debug --set egressgatewayController.debug.logLevel=debug " ; \
+		HELM_OPTION+=" --set agent.prometheus.enabled=true --set controller.prometheus.enabled=true  " ; \
+		HELM_OPTION+=" --set agent.debug.logLevel=debug --set controller.debug.logLevel=debug " ; \
 		if [ "$(E2E_IP_FAMILY)" == "dual" ] ; then HELM_OPTION+=" --set feature.enableIPv4=true --set feature.enableIPv6=true" ; fi ; \
 		if [ "$(E2E_IP_FAMILY)" == "ipv4" ] ; then HELM_OPTION+=" --set feature.enableIPv4=true --set feature.enableIPv6=false" ; fi ; \
 		if [ "$(E2E_IP_FAMILY)" == "ipv6" ] ; then HELM_OPTION+=" --set feature.enableIPv4=false --set feature.enableIPv6=true" ; fi ; \

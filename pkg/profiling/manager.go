@@ -35,28 +35,30 @@ func (gops *GoPS) Start(ctx context.Context) error {
 	return nil
 }
 
+func (gops *GoPS) NeedLeaderElection() bool { return false }
+
 type Pyroscope struct {
-	Addr     string
-	HostName string
-	Log      logr.Logger
+	Addr string
+	Name string
+	Log  logr.Logger
 }
 
 func (p *Pyroscope) Start(ctx context.Context) error {
 	if p.Addr == "" {
 		return nil
 	}
-
 	_, err := pyroscope.Start(pyroscope.Config{
 		ApplicationName: filepath.Base(os.Args[0]),
 		ServerAddress:   p.Addr,
 		Logger:          nil,
-		Tags:            map[string]string{"node": p.HostName},
+		Tags:            map[string]string{"node": p.Name},
 		ProfileTypes: []pyroscope.ProfileType{
 			pyroscope.ProfileCPU,
 			pyroscope.ProfileAllocObjects,
 			pyroscope.ProfileAllocSpace,
 			pyroscope.ProfileInuseObjects,
 			pyroscope.ProfileInuseSpace,
+			pyroscope.ProfileGoroutines,
 		},
 	})
 	if err != nil {
@@ -65,3 +67,5 @@ func (p *Pyroscope) Start(ctx context.Context) error {
 	p.Log.Info("pyroscope started")
 	return nil
 }
+
+func (p *Pyroscope) NeedLeaderElection() bool { return false }

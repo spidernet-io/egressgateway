@@ -61,7 +61,7 @@ func New(cfg *config.Config) (types.Service, error) {
 	if err != nil {
 		return nil, err
 	}
-	err = mgr.Add(&profiling.Pyroscope{Addr: cfg.PyroscopeServerAddr, HostName: cfg.NodeName, Log: log})
+	err = mgr.Add(&profiling.Pyroscope{Addr: cfg.PyroscopeServerAddr, Name: cfg.PodName, Log: log})
 	if err != nil {
 		return nil, err
 	}

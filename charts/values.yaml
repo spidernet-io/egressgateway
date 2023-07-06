@@ -196,6 +196,8 @@ agent:
     logUseDevMode: true
     ## @param agent.debug.gopsPort The port used by gops tool for process monitoring and performance tuning.
     gopsPort: 5812
+    ## @param agent.debug.pyroscopeServerAddr The address of the Pyroscope server.
+    pyroscopeServerAddr: ""
 ## @section Egressgateway controller parameters
 ##
 controller:
@@ -344,6 +346,8 @@ controller:
     logUseDevMode: true
     ## @param controller.debug.gopsPort The port used by gops tool for process monitoring and performance tuning.
     gopsPort: 5824
+    ## @param controller.debug.pyroscopeServerAddr The address of the Pyroscope server.
+    pyroscopeServerAddr: ""
   ## TLS configuration for webhook
   tls:
     ## @param controller.tls.method the method for generating TLS certificates. [`provided`, `certmanager`, `auto`]
