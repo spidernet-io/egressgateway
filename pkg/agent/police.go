@@ -252,6 +252,29 @@ func (r *policeReconciler) initApplyPolicy() error {
 		}
 	}
 
+	setList, err := r.ipset.ListSets()
+	if err != nil {
+		r.log.Error(err, "list ipset")
+		return err
+	}
+
+	for _, name := range setList {
+		if !strings.HasPrefix(name, "egress-") {
+			continue
+		}
+
+		if name == EgressClusterCIDRIPv6 || name == EgressClusterCIDRIPv4 {
+			continue
+		}
+
+		if _, ok := r.ipsetMap.Load(name); !ok {
+			err = r.ipset.DestroySet(name)
+			if err != nil {
+				r.log.Error(err, "clean ipset", "ipset", name)
+			}
+		}
+	}
+
 	return nil
 }
 
