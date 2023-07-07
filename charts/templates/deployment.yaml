@@ -137,6 +137,8 @@ spec:
             {{ end }}
             - name: GOPS_PORT
               value: {{ .Values.controller.debug.gopsPort | quote }}
+            - name: PYROSCOPE_SERVER_ADDR
+              value: {{ .Values.controller.debug.pyroscopeServerAddr | quote }}
             - name: WEBHOOK_PORT
               value: {{ .Values.controller.webhookPort | quote }}
             - name: HEALTH_PROBE_BIND_ADDRESS

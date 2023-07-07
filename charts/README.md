@@ -98,6 +98,7 @@ helm install egressgateway egressgateway/egressgateway --namespace kube-system
 | `agent.debug.logWithCaller`                          | Enable or disable logging with caller information (`true`/`false`)                                              | `true`                             |
 | `agent.debug.logUseDevMode`                          | Enable or disable development mode for logging (`true`/`false`)                                                 | `true`                             |
 | `agent.debug.gopsPort`                               | The port used by gops tool for process monitoring and performance tuning.                                       | `5812`                             |
+| `agent.debug.pyroscopeServerAddr`                    | The address of the Pyroscope server.                                                                            | `""`                               |
 
 ### Egressgateway controller parameters
 
@@ -159,6 +160,7 @@ helm install egressgateway egressgateway/egressgateway --namespace kube-system
 | `controller.debug.logWithCaller`                          | Enable or disable logging with caller information (`true`/`false`)                                                                   | `true`                                  |
 | `controller.debug.logUseDevMode`                          | Enable or disable development mode for logging (`true`/`false`)                                                                      | `true`                                  |
 | `controller.debug.gopsPort`                               | The port used by gops tool for process monitoring and performance tuning.                                                            | `5824`                                  |
+| `controller.debug.pyroscopeServerAddr`                    | The address of the Pyroscope server.                                                                                                 | `""`                                    |
 | `controller.tls.method`                                   | the method for generating TLS certificates. [`provided`, `certmanager`, `auto`]                                                      | `auto`                                  |
 | `controller.tls.secretName`                               | The secret name for storing TLS certificates                                                                                         | `egressgateway-controller-server-certs` |
 | `controller.tls.certmanager.certValidityDuration`         | Generated certificates validity duration in days for 'certmanager' method                                                            | `365`                                   |
