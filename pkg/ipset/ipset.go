@@ -297,8 +297,8 @@ func (runner *runner) createSet(set *IPSet, ignoreExistErr bool) error {
 		args = append(args, "-exist")
 	}
 
-	if _, err := runner.exec.Command(IPSetCmd, args...).CombinedOutput(); err != nil {
-		return fmt.Errorf("error creating ipset %s, error: %v", set.Name, err)
+	if out, err := runner.exec.Command(IPSetCmd, args...).CombinedOutput(); err != nil {
+		return fmt.Errorf("error creating ipset %s, error: %v, out: %s", set.Name, err, string(out))
 	}
 	return nil
 }
