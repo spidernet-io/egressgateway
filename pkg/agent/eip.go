@@ -54,18 +54,15 @@ func (r *eip) Reconcile(ctx context.Context, req reconcile.Request) (reconcile.R
 	ips := gateway.Status.GetNodeIPs(r.cfg.NodeName)
 	for _, status := range ips {
 		ip := net.ParseIP(status.IPv4)
-		if ip.To4() == nil {
-			continue
+		if ip.To4() != nil {
+			adv := layer2.NewIPAdvertisement(ip, true, sets.Set[string]{})
+			r.announce.SetBalancer(gateway.Name, adv)
 		}
-		adv := layer2.NewIPAdvertisement(ip, true, sets.Set[string]{})
-		r.announce.SetBalancer(gateway.Name, adv)
-
 		ip = net.ParseIP(status.IPv6)
-		if ip.To16() == nil {
-			continue
+		if ip.To16() != nil {
+			adv := layer2.NewIPAdvertisement(ip, true, sets.Set[string]{})
+			r.announce.SetBalancer(gateway.Name, adv)
 		}
-		adv = layer2.NewIPAdvertisement(ip, true, sets.Set[string]{})
-		r.announce.SetBalancer(gateway.Name, adv)
 	}
 
 	return reconcile.Result{}, nil

@@ -7,14 +7,15 @@ import (
 	"github.com/go-logr/logr"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
+	"sigs.k8s.io/controller-runtime/pkg/log"
 	czap "sigs.k8s.io/controller-runtime/pkg/log/zap"
 )
 
 type Config struct {
-	UseDevMode bool          `mapstructure:"LOG_USE_DEV_MODE"`
-	Level      zapcore.Level `mapstructure:"LOG_LEVEL"`
-	WithCaller bool          `mapstructure:"LOG_WITH_CALLER"`
-	Encoder    string        `mapstructure:"LOG_ENCODER"`
+	UseDevMode bool
+	Level      zapcore.Level
+	WithCaller bool
+	Encoder    string
 }
 
 func NewLogger(cfg Config) logr.Logger {
@@ -22,7 +23,7 @@ func NewLogger(cfg Config) logr.Logger {
 	opts = append(opts,
 		czap.UseDevMode(cfg.UseDevMode),
 		czap.Level(cfg.Level),
-		czap.RawZapOpts(zap.WithCaller(true)),
+		czap.RawZapOpts(zap.WithCaller(cfg.WithCaller)),
 	)
 	if cfg.Encoder == "console" {
 		opts = append(opts, czap.ConsoleEncoder())
@@ -33,5 +34,7 @@ func NewLogger(cfg Config) logr.Logger {
 				config.EncodeDuration = zapcore.StringDurationEncoder
 			}))
 	}
-	return czap.New(opts...)
+	logger := czap.New(opts...)
+	log.SetLogger(logger)
+	return logger
 }

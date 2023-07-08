@@ -8,9 +8,12 @@ import (
 	"fmt"
 	"net"
 	"os"
+	"strconv"
 
 	"github.com/mitchellh/mapstructure"
 	"github.com/spf13/viper"
+	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
 	"gopkg.in/yaml.v3"
 	"k8s.io/client-go/rest"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -38,22 +41,26 @@ func (cfg *Config) PrintPrettyConfig() {
 }
 
 type EnvConfig struct {
-	NodeName                  string `mapstructure:"NODE_NAME"`
-	LeaderElection            bool   `mapstructure:"LEADER_ELECTION"`
-	LeaderElectionNamespace   string `mapstructure:"LEADER_ELECTION_NAMESPACE"`
-	LeaderElectionID          string `mapstructure:"LEADER_ELECTION_ID"`
-	LeaderElectionLostRestart bool   `mapstructure:"LEADER_ELECTION_LOST_RESTART"`
-	MetricsBindAddress        string `mapstructure:"METRICS_BIND_ADDRESS"`
-	HealthProbeBindAddress    string `mapstructure:"HEALTH_PROBE_BIND_ADDRESS"`
-	GopsPort                  int    `mapstructure:"GOPS_PORT"`
-	WebhookPort               int    `mapstructure:"WEBHOOK_PORT"`
-	PyroscopeServerAddr       string `mapstructure:"PYROSCOPE_SERVER_ADDR"`
-	PodName                   string `mapstructure:"POD_NAME"`
-	PodNamespace              string `mapstructure:"POD_NAMESPACE"`
-	GolangMaxProcs            int32  `mapstructure:"GOLANG_MAX_PROCS"`
-	TLSCertDir                string `mapstructure:"TLS_CERT_DIR"`
-	ConfigMapPath             string `mapstructure:"CONFIGMAP_PATH"`
-	Logger                    logger.Config
+	NodeName                  string        `mapstructure:"NODE_NAME"`
+	LeaderElection            bool          `mapstructure:"LEADER_ELECTION"`
+	LeaderElectionNamespace   string        `mapstructure:"LEADER_ELECTION_NAMESPACE"`
+	LeaderElectionID          string        `mapstructure:"LEADER_ELECTION_ID"`
+	LeaderElectionLostRestart bool          `mapstructure:"LEADER_ELECTION_LOST_RESTART"`
+	MetricsBindAddress        string        `mapstructure:"METRICS_BIND_ADDRESS"`
+	HealthProbeBindAddress    string        `mapstructure:"HEALTH_PROBE_BIND_ADDRESS"`
+	GopsPort                  int           `mapstructure:"GOPS_PORT"`
+	WebhookPort               int           `mapstructure:"WEBHOOK_PORT"`
+	PyroscopeServerAddr       string        `mapstructure:"PYROSCOPE_SERVER_ADDR"`
+	PodName                   string        `mapstructure:"POD_NAME"`
+	PodNamespace              string        `mapstructure:"POD_NAMESPACE"`
+	GolangMaxProcs            int32         `mapstructure:"GOLANG_MAX_PROCS"`
+	TLSCertDir                string        `mapstructure:"TLS_CERT_DIR"`
+	ConfigMapPath             string        `mapstructure:"CONFIGMAP_PATH"`
+	UseDevMode                bool          `mapstructure:"LOG_USE_DEV_MODE"`
+	Level                     string        `mapstructure:"LOG_LEVEL"`
+	WithCaller                bool          `mapstructure:"LOG_WITH_CALLER"`
+	Encoder                   string        `mapstructure:"LOG_ENCODER"`
+	Logger                    logger.Config `json:"-"`
 }
 
 type FileConfig struct {
@@ -195,6 +202,26 @@ func LoadConfig(isAgent bool) (*Config, error) {
 
 	if config.FileConfig.IPTables.BackendMode == "auto" {
 		config.FileConfig.IPTables.BackendMode = ver.BackendMode
+	}
+
+	config.Logger = logger.Config{
+		UseDevMode: config.UseDevMode,
+		WithCaller: config.WithCaller,
+		Encoder:    config.Encoder,
+	}
+	level, err := strconv.ParseInt(config.Level, 10, 8)
+	if err != nil {
+		level, err := zap.ParseAtomicLevel(config.Level)
+		if err != nil {
+			return config, err
+		}
+		config.Logger.Level = level.Level()
+	} else {
+		// compatible with zap, the minimum is the maximum log level
+		if level > 0 {
+			level = 0 - level
+		}
+		config.Logger.Level = zapcore.Level(level)
 	}
 
 	// load kube config
