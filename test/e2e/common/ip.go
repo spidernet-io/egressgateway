@@ -6,9 +6,15 @@ package common
 import (
 	"context"
 	"fmt"
+	"math/big"
+	"net"
 	"os/exec"
+	"strings"
 	"time"
 
+	"github.com/spidernet-io/egressgateway/pkg/constant"
+	"github.com/spidernet-io/egressgateway/pkg/utils"
+	e "github.com/spidernet-io/egressgateway/test/e2e/err"
 	"github.com/spidernet-io/egressgateway/test/e2e/tools"
 )
 
@@ -72,15 +78,105 @@ func GetHostIPV6Net(duration time.Duration) ([]byte, error) {
 	return exec.CommandContext(ctx, "sh", "-c", a).Output()
 }
 
-func RandomIPPoolV4Cidr() string {
+func RandomIPPoolV4Cidr(prefix string) string {
+	n1 := tools.GenerateRandomNumber(255)
+	n2 := tools.GenerateRandomNumber(255)
+	return fmt.Sprintf("10.%s.%s.0/%s", n1, n2, prefix)
+}
+
+func RandomIPPoolV6Cidr(prefix string) string {
+	n1 := tools.GenerateString(4, true)
+	n2 := tools.GenerateString(4, true)
+	return fmt.Sprintf("fddd:%s:%s::0/%s", n1, n2, prefix)
+}
+
+func RandomIPV4() string {
 	n1 := tools.GenerateRandomNumber(200)
 	n2 := tools.GenerateRandomNumber(255)
 	n3 := tools.GenerateRandomNumber(255)
-	return fmt.Sprintf("%s.%s.%s.0/24", n1, n2, n3)
+	return fmt.Sprintf("10.%s.%s.%s", n1, n2, n3)
 }
 
-func RandomIPPoolV6Cidr() string {
+func RandomIPV6() string {
 	n1 := tools.GenerateString(4, true)
 	n2 := tools.GenerateString(4, true)
-	return fmt.Sprintf("%s:%s::0/112", n1, n2)
+	return fmt.Sprintf("fddd:%s::%s", n1, n2)
+}
+
+func RandomIPPoolV4Range(start, end string) string {
+	n1 := tools.GenerateRandomNumber(255)
+	n2 := tools.GenerateRandomNumber(255)
+	return fmt.Sprintf("10.%s.%s.%s-10.%s.%s.%s", n1, n2, start, n1, n2, end)
+}
+
+func RandomIPPoolV6Range(start, end string) string {
+	n1 := tools.GenerateString(4, true)
+	n2 := tools.GenerateString(4, true)
+	return fmt.Sprintf("fddd:%s:%s::%s-fddd:%s:%s::%s", n1, n2, start, n1, n2, end)
+}
+
+// CheckIPinCidr check if "cidr" contains "ip"
+func CheckIPinCidr(ip, cidr string) (bool, error) {
+	IPip := net.ParseIP(ip)
+	if IPip == nil {
+		return false, e.IPVERSION_ERR
+	}
+	IPip2, IPnet, err := net.ParseCIDR(cidr)
+	if err != nil {
+		return false, err
+	}
+	if IPip2.String() == strings.Split(IPnet.String(), "/")[0] {
+		return true, nil
+	}
+	return IPnet.Contains(IPip), nil
+}
+
+// CheckIPIncluded check if "ips" contains "ip", the "ips" can contains 3 formats: single IP, IP range, IP cidr, like ["172.30.0.2", "172.30.0.3-172.30.0-5", 172.30.1.0/24]
+func CheckIPIncluded(version constant.IPVersion, ip string, ips []string) (bool, error) {
+	for _, item := range ips {
+		_, _, err := net.ParseCIDR(item)
+		if err != nil {
+			// item is not cidr
+			include, err := utils.IsIPIncludedRange(version, ip, []string{item})
+			if err != nil {
+				return false, err
+			}
+			if include {
+				return true, nil
+			}
+		}
+		// item is cidr
+		include, err := CheckIPinCidr(ip, item)
+		if err != nil {
+			return false, err
+		}
+		if include {
+			return true, nil
+		}
+	}
+	return false, nil
+}
+
+// IpToInt converts net.IP to big.Int.
+func IpToInt(ip net.IP) *big.Int {
+	if v := ip.To4(); v != nil {
+		return big.NewInt(0).SetBytes(v)
+	}
+	return big.NewInt(0).SetBytes(ip.To16())
+}
+
+// IntToIP converts big.Int to net.IP.
+func IntToIP(i *big.Int) net.IP {
+	return net.IP(i.Bytes()).To16()
+}
+
+// AddIP returns the xth IP starting from "ip"
+func AddIP(ip string, x int64) (string, error) {
+	netIp := net.ParseIP(ip)
+	if netIp == nil {
+		return "", ERR_IP_FORMAT
+	}
+	intIp := IpToInt(netIp)
+	intIp.Add(intIp, big.NewInt(x))
+	return IntToIP(intIp).String(), nil
 }

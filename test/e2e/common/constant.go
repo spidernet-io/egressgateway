@@ -12,7 +12,9 @@ import (
 const (
 	EGRESSGATEWAY_CHAIN         = "EGRESSGATEWAY-MARK-REQUEST"
 	EGRESS_VXLAN_INTERFACE_NAME = "egress.vxlan"
-	EGRESSAGEWAY_NAME           = "default"
+
+	RANDOM            = "Random"
+	AVERAGE_SELECTION = "AverageSelection"
 )
 
 // egressgateway configmap
@@ -24,8 +26,6 @@ const (
 
 // test
 const (
-	POD_NAMESPACE = "default"
-
 	WEBSOCKET = " WebSocket Server Say hello!"
 	UDP       = "UDP Server Say hello!"
 	TCP       = "TCP Server Say hello!"
@@ -53,8 +53,11 @@ const (
 	serviceSubnet        = "serviceSubnet"
 )
 
-// kube-system
-const kubeSystem = "kube-system"
+// namespace
+const (
+	kubeSystem = "kube-system"
+	NSDefault  = "default"
+)
 
 var Env = map[string]string{
 	IMAGE:            "",
