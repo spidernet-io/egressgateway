@@ -7,17 +7,17 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// EgressNodeList egress node list
+// EgressTunnelList egress node list
 // +kubebuilder:object:root=true
-type EgressNodeList struct {
+type EgressTunnelList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata"`
 
-	Items []EgressNode `json:"items"`
+	Items []EgressTunnel `json:"items"`
 }
 
-// EgressNode represents an egress node
-// +kubebuilder:resource:categories={egressnode},path="egressnodes",singular="egressnode",scope="Cluster",shortName={egn}
+// EgressTunnel represents an egress tunnel
+// +kubebuilder:resource:categories={egressnode},path="egresstunnels",singular="egresstunnel",scope="Cluster",shortName={egt}
 // +kubebuilder:printcolumn:JSONPath=".status.tunnel.mac",description="tunnelMac",name="tunnelMac",type=string
 // +kubebuilder:printcolumn:JSONPath=".status.tunnel.ipv4",description="tunnelIPv4",name="tunnelIPv4",type=string
 // +kubebuilder:printcolumn:JSONPath=".status.tunnel.ipv6",description="tunnelIPv6",name="tunnelIPv6",type=string
@@ -25,7 +25,7 @@ type EgressNodeList struct {
 // +kubebuilder:printcolumn:JSONPath=".status.phase",description="phase",name="phase",type=string
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
-type EgressNode struct {
+type EgressTunnel struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata"`
 
@@ -78,5 +78,5 @@ const (
 )
 
 func init() {
-	SchemeBuilder.Register(&EgressNode{}, &EgressNodeList{})
+	SchemeBuilder.Register(&EgressTunnel{}, &EgressTunnelList{})
 }

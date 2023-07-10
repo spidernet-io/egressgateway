@@ -38,7 +38,7 @@ func TestEgressNodeCtrlForEgressNode(t *testing.T) {
 
 	initialObjects := []client.Object{
 		&corev1.Node{ObjectMeta: v1.ObjectMeta{Name: "node1"}},
-		&egressv1.EgressNode{
+		&egressv1.EgressTunnel{
 			ObjectMeta: v1.ObjectMeta{Name: "node1"},
 			Status:     egressv1.EgressNodeStatus{},
 		},
@@ -74,7 +74,7 @@ func TestEgressNodeCtrlForEgressNode(t *testing.T) {
 
 	reqs := []TestNodeReq{
 		{
-			nn:         types.NamespacedName{Namespace: "EgressNode/", Name: "node1"},
+			nn:         types.NamespacedName{Namespace: "EgressTunnel/", Name: "node1"},
 			expErr:     false,
 			expRequeue: false,
 		},
@@ -88,7 +88,7 @@ func TestEgressNodeCtrlForEgressNode(t *testing.T) {
 		assert.Equal(t, req.expRequeue, res.Requeue)
 	}
 
-	egressNode := &egressv1.EgressNode{}
+	egressNode := &egressv1.EgressTunnel{}
 
 	err = reconciler.client.Get(ctx, types.NamespacedName{Name: "node1"}, egressNode)
 	if err != nil {
@@ -161,7 +161,7 @@ func TestEgressNodeCtrlForNode(t *testing.T) {
 		assert.Equal(t, req.expRequeue, res.Requeue)
 	}
 
-	egressNode := &egressv1.EgressNode{}
+	egressNode := &egressv1.EgressTunnel{}
 	err = reconciler.client.Get(ctx, types.NamespacedName{Name: "node1"}, egressNode)
 	if err != nil {
 		t.Fatal(err)

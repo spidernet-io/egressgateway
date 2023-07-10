@@ -100,7 +100,7 @@ func caseAddEgressNode() TestCaseVXLAN {
 
 	return TestCaseVXLAN{
 		initialObjects: []client.Object{
-			&egressv1.EgressNode{
+			&egressv1.EgressTunnel{
 				ObjectMeta: metav1.ObjectMeta{Name: "workstation1"},
 				Spec:       egressv1.EgressNodeSpec{},
 				Status:     egressv1.EgressNodeStatus{},
@@ -109,7 +109,7 @@ func caseAddEgressNode() TestCaseVXLAN {
 		reqs: []TestReqVXLAN{
 			{
 				nn: types.NamespacedName{
-					Namespace: "EgressNode/",
+					Namespace: "EgressTunnel/",
 					Name:      "workstation1",
 				},
 				expErr:     false,

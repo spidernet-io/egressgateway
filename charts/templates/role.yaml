@@ -56,8 +56,8 @@ rules:
   - egressclusterpolicies
   - egressendpointslices
   - egressgateways
-  - egressnodes
   - egresspolicies
+  - egresstunnels
   verbs:
   - create
   - delete
@@ -72,8 +72,8 @@ rules:
   - egressclusterinfos/status
   - egressclusterpolicies/status
   - egressgateways/status
-  - egressnodes/status
   - egresspolicies/status
+  - egresstunnels/status
   verbs:
   - get
   - patch

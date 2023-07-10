@@ -187,7 +187,7 @@ func (r *policeReconciler) initApplyPolicy() error {
 	for _, table := range r.mangleTables {
 		rules := make([]iptables.Rule, 0)
 		for policy, val := range unSnatPolicies {
-			node := new(egressv1.EgressNode)
+			node := new(egressv1.EgressTunnel)
 			err := r.client.Get(context.Background(), types.NamespacedName{Name: val.NodeName}, node)
 			if err != nil {
 				r.log.Error(err, "failed to get egress node, skip building rule of policy")

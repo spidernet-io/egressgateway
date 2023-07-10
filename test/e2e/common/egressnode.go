@@ -16,15 +16,15 @@ import (
 	"github.com/spidernet-io/egressgateway/test/e2e/tools"
 )
 
-func GetEgressNode(f *framework.Framework, name string, egressNode *egressv1.EgressNode) error {
+func GetEgressNode(f *framework.Framework, name string, egressNode *egressv1.EgressTunnel) error {
 	key := client.ObjectKey{
 		Name: name,
 	}
 	return f.GetResource(key, egressNode)
 }
 
-func ListEgressNodes(f *framework.Framework, opt ...client.ListOption) (*egressv1.EgressNodeList, error) {
-	egressNodeList := &egressv1.EgressNodeList{}
+func ListEgressNodes(f *framework.Framework, opt ...client.ListOption) (*egressv1.EgressTunnelList, error) {
+	egressNodeList := &egressv1.EgressTunnelList{}
 	e := f.ListResource(egressNodeList, opt...)
 	if e != nil {
 		return nil, e
@@ -56,7 +56,7 @@ func CheckEgressNodeStatus(f *framework.Framework, nodes []string, opt ...client
 	Expect(e).NotTo(HaveOccurred())
 
 	for _, node := range nodes {
-		egressNodeObj := &egressv1.EgressNode{}
+		egressNodeObj := &egressv1.EgressTunnel{}
 		e = GetEgressNode(f, node, egressNodeObj)
 		Expect(e).NotTo(HaveOccurred())
 		GinkgoWriter.Printf("egressNodeObj: %v\n", egressNodeObj)

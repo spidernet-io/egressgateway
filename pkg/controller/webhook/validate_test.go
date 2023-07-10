@@ -184,12 +184,12 @@ func TestValidateEgressNode(t *testing.T) {
 	ctx := context.Background()
 
 	cases := map[string]struct {
-		newResource   *egressv1.EgressNode
+		newResource   *egressv1.EgressTunnel
 		expAllow      bool
 		expErrMessage string
 	}{
 		"all valid": {
-			newResource: &egressv1.EgressNode{
+			newResource: &egressv1.EgressTunnel{
 				ObjectMeta: metav1.ObjectMeta{
 					Name: "node1",
 				},
@@ -207,7 +207,7 @@ func TestValidateEgressNode(t *testing.T) {
 				AdmissionRequest: admissionv1.AdmissionRequest{
 					Name: c.newResource.Name,
 					Kind: metav1.GroupVersionKind{
-						Kind: "EgressNode",
+						Kind: "EgressTunnel",
 					},
 					Operation: admissionv1.Create,
 					Object: runtime.RawExtension{
