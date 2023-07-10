@@ -4,18 +4,18 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: (unknown)
-  name: egressnodes.egressgateway.spidernet.io
+  name: egresstunnels.egressgateway.spidernet.io
 spec:
   group: egressgateway.spidernet.io
   names:
     categories:
     - egressnode
-    kind: EgressNode
-    listKind: EgressNodeList
-    plural: egressnodes
+    kind: EgressTunnel
+    listKind: EgressTunnelList
+    plural: egresstunnels
     shortNames:
-    - egn
-    singular: egressnode
+    - egt
+    singular: egresstunnel
   scope: Cluster
   versions:
   - additionalPrinterColumns:
@@ -42,7 +42,7 @@ spec:
     name: v1beta1
     schema:
       openAPIV3Schema:
-        description: EgressNode represents an egress node
+        description: EgressTunnel represents an egress tunnel
         properties:
           apiVersion:
             description: 'APIVersion defines the versioned schema of this representation

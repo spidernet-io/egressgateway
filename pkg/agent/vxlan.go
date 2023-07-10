@@ -57,7 +57,7 @@ func (r *vxlanReconciler) Reconcile(ctx context.Context, req reconcile.Request) 
 	log := r.log.WithValues("name", newReq.Name, "kind", kind)
 	log.Info("reconciling")
 	switch kind {
-	case "EgressNode":
+	case "EgressTunnel":
 		return r.reconcileEgressNode(ctx, newReq, log)
 	default:
 		return reconcile.Result{}, nil
@@ -66,7 +66,7 @@ func (r *vxlanReconciler) Reconcile(ctx context.Context, req reconcile.Request) 
 
 // reconcileEgressNode
 func (r *vxlanReconciler) reconcileEgressNode(ctx context.Context, req reconcile.Request, log logr.Logger) (reconcile.Result, error) {
-	node := new(egressv1.EgressNode)
+	node := new(egressv1.EgressTunnel)
 	deleted := false
 	err := r.client.Get(ctx, req.NamespacedName, node)
 	if err != nil {
@@ -149,7 +149,7 @@ func (r *vxlanReconciler) reconcileEgressNode(ctx context.Context, req reconcile
 	return reconcile.Result{}, nil
 }
 
-func (r *vxlanReconciler) ensureEgressNodeStatus(node *egressv1.EgressNode) error {
+func (r *vxlanReconciler) ensureEgressNodeStatus(node *egressv1.EgressTunnel) error {
 	needUpdate := false
 
 	if r.version() == 4 && node.Status.Tunnel.Parent.IPv4 == "" {
@@ -174,14 +174,14 @@ func (r *vxlanReconciler) ensureEgressNodeStatus(node *egressv1.EgressNode) erro
 	return nil
 }
 
-func (r *vxlanReconciler) updateEgressNodeStatus(node *egressv1.EgressNode, version int) error {
+func (r *vxlanReconciler) updateEgressNodeStatus(node *egressv1.EgressTunnel, version int) error {
 	parent, err := r.getParent(version)
 	if err != nil {
 		return err
 	}
 
 	if node == nil {
-		node = new(egressv1.EgressNode)
+		node = new(egressv1.EgressTunnel)
 		ctx := context.Background()
 		err = r.client.Get(ctx, types.NamespacedName{Name: r.cfg.NodeName}, node)
 		if err != nil {
@@ -330,7 +330,7 @@ func (r *vxlanReconciler) keepVXLAN() {
 
 		err := r.updateEgressNodeStatus(nil, r.version())
 		if err != nil {
-			r.log.Error(err, "update EgressNode status")
+			r.log.Error(err, "update EgressTunnel status")
 			time.Sleep(time.Second)
 			continue
 		}
@@ -453,9 +453,9 @@ func newEgressNodeController(mgr manager.Manager, cfg *config.Config, log logr.L
 		return err
 	}
 
-	if err := c.Watch(source.Kind(mgr.GetCache(), &egressv1.EgressNode{}),
-		handler.EnqueueRequestsFromMapFunc(utils.KindToMapFlat("EgressNode"))); err != nil {
-		return fmt.Errorf("failed to watch EgressNode: %w", err)
+	if err := c.Watch(source.Kind(mgr.GetCache(), &egressv1.EgressTunnel{}),
+		handler.EnqueueRequestsFromMapFunc(utils.KindToMapFlat("EgressTunnel"))); err != nil {
+		return fmt.Errorf("failed to watch EgressTunnel: %w", err)
 	}
 
 	go r.keepVXLAN()

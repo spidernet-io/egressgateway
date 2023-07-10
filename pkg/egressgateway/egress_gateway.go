@@ -62,7 +62,7 @@ func (r egnReconciler) Reconcile(ctx context.Context, req reconcile.Request) (re
 		return r.reconcileEGP(ctx, newReq, log)
 	case "Node":
 		return r.reconcileNode(ctx, newReq, log)
-	case "EgressNode":
+	case "EgressTunnel":
 		return r.reconcileEN(ctx, newReq, log)
 	default:
 		return reconcile.Result{}, nil
@@ -87,7 +87,7 @@ func (r egnReconciler) reconcileNode(ctx context.Context, req reconcile.Request,
 		return reconcile.Result{Requeue: true}, nil
 	}
 
-	// Node NoReady event, complete in reconcile EgressNode event
+	// Node NoReady event, complete in reconcile EgressTunnel event
 	if deleted {
 		r.log.Info("request item is deleted")
 		err := r.deleteNodeFromEGs(ctx, req.Name, egList)
@@ -247,7 +247,7 @@ func (r egnReconciler) reconcileEG(ctx context.Context, req reconcile.Request, l
 // reconcileEG reconcile egress node
 func (r egnReconciler) reconcileEN(ctx context.Context, req reconcile.Request, log logr.Logger) (reconcile.Result, error) {
 	deleted := false
-	en := new(egress.EgressNode)
+	en := new(egress.EgressTunnel)
 	en.Name = req.Name
 	err := r.client.Get(ctx, req.NamespacedName, en)
 	if err != nil {
@@ -792,9 +792,9 @@ func NewEgressGatewayController(mgr manager.Manager, log logr.Logger, cfg *confi
 		return fmt.Errorf("failed to watch EgressClusterPolicy: %w", err)
 	}
 
-	if err = c.Watch(source.Kind(mgr.GetCache(), &egress.EgressNode{}),
-		handler.EnqueueRequestsFromMapFunc(utils.KindToMapFlat("EgressNode"))); err != nil {
-		return fmt.Errorf("failed to watch EgressNode: %w", err)
+	if err = c.Watch(source.Kind(mgr.GetCache(), &egress.EgressTunnel{}),
+		handler.EnqueueRequestsFromMapFunc(utils.KindToMapFlat("EgressTunnel"))); err != nil {
+		return fmt.Errorf("failed to watch EgressTunnel: %w", err)
 	}
 
 	return nil
