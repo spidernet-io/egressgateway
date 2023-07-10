@@ -38,7 +38,6 @@ webhooks:
         resources:
         - egressgateways
         - egressgatewaypolicies
-        - egressclusterinfos
       - apiGroups:
           - egressgateway.spidernet.io
         apiVersions:
@@ -50,6 +49,13 @@ webhooks:
         resources:
         - egressgateways
         - egresspolicies
+      - apiGroups:
+          - egressgateway.spidernet.io
+        apiVersions:
+          - v1beta1
+        operations:
+          - DELETE
+        resources:
         - egressclusterinfos
     sideEffects: None
 ---
