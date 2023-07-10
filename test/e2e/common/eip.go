@@ -139,7 +139,7 @@ func GetClientPodLog(f *framework.Framework, pod *corev1.Pod, serverIP string, c
 	}
 }
 
-func CheckEipInClientPod(f *framework.Framework, pod *corev1.Pod, eIP, serverIP string, expect bool, retry, logDuration time.Duration) error {
+func CheckEipInClientPod(f *framework.Framework, pod *corev1.Pod, eIP, serverIP string, expect bool, retry int, logDuration time.Duration) error {
 	timeout := logDuration * time.Duration(retry+2)
 	connectionTimeout := logDuration * time.Duration(retry+1)
 	ctx, cancel := context.WithTimeout(context.TODO(), timeout)
@@ -182,7 +182,7 @@ func CheckEipInClientPod(f *framework.Framework, pod *corev1.Pod, eIP, serverIP 
 					return nil
 				}
 			}
-			time.Sleep(time.Second)
+			time.Sleep(time.Millisecond * 100)
 		}
 	}
 }

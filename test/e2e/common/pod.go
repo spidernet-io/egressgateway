@@ -118,3 +118,48 @@ func DeleteDSIfExists(f *framework.Framework, dsName, namespace string, timeout 
 	defer cancel()
 	return f.WaitPodListDeleted(namespace, ds.Spec.Selector.MatchLabels, ctx)
 }
+
+func GetDSRunningPodList(f *framework.Framework, ds *appsv1.DaemonSet) (*corev1.PodList, error) {
+	list, err := f.GetDaemonSetPodList(ds)
+	if err != nil {
+		return nil, err
+	}
+	runList := new(corev1.PodList)
+	for _, item := range list.Items {
+		if item.Status.Phase == corev1.PodRunning {
+			runList.Items = append(runList.Items, item)
+		}
+	}
+	return runList, nil
+}
+
+func GetPodListByNodeAndLabel(f *framework.Framework, nodeName string, label map[string]string) (*corev1.PodList, error) {
+	podList := new(corev1.PodList)
+	ops := []client.ListOption{
+		client.MatchingFields(map[string]string{"spec.nodeName": nodeName}),
+		client.MatchingLabels(label),
+	}
+	err := f.ListResource(podList, ops...)
+	if err != nil {
+		return nil, err
+	}
+	return podList, nil
+}
+
+func ListNodesPod(f *framework.Framework, label map[string]string, nodes []string) (*corev1.PodList, error) {
+	podList := new(corev1.PodList)
+	for _, node := range nodes {
+		list, err := GetPodListByNodeAndLabel(f, node, label)
+		if err != nil {
+			return nil, err
+		}
+		podList.Items = append(podList.Items, list.Items...)
+	}
+	return podList, nil
+}
+
+func WaitAllPodsRunning(f *framework.Framework, timeout time.Duration) error {
+	ctx, cancel := context.WithTimeout(context.TODO(), timeout)
+	defer cancel()
+	return f.WaitAllPodUntilRunning(ctx)
+}

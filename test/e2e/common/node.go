@@ -4,10 +4,17 @@
 package common
 
 import (
+	"context"
+	"fmt"
+	"time"
+
+	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-	"github.com/spidernet-io/e2eframework/framework"
+
 	corev1 "k8s.io/api/core/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+
+	"github.com/spidernet-io/e2eframework/framework"
 
 	"github.com/spidernet-io/egressgateway/pkg/utils"
 	"github.com/spidernet-io/egressgateway/test/e2e/tools"
@@ -103,4 +110,63 @@ func GetAllNodesIP(f *framework.Framework) (nodesIPv4, nodesIPv6 []string) {
 		nodesIPv6 = append(nodesIPv6, ip)
 	}
 	return
+}
+
+func PowerOffNodeUntilNotReady(f *framework.Framework, nodeName string, timeout time.Duration) error {
+	c := fmt.Sprintf("docker stop %s", nodeName)
+	out, err := tools.ExecCommand(c, timeout)
+	GinkgoWriter.Printf("out: %s\n", out)
+	Expect(err).NotTo(HaveOccurred())
+
+	ctx, cancel := context.WithTimeout(context.TODO(), timeout)
+	defer cancel()
+	for {
+		select {
+		case <-ctx.Done():
+			return ERR_TIMEOUT
+		default:
+			node, err := f.GetNode(nodeName)
+			Expect(err).NotTo(HaveOccurred())
+			down := f.CheckNodeStatus(node, false)
+			if down {
+				return nil
+			}
+			time.Sleep(time.Second)
+		}
+	}
+}
+
+func PowerOnNodeUntilReady(f *framework.Framework, nodeName string, timeout time.Duration) error {
+	c := fmt.Sprintf("docker start %s", nodeName)
+	_, err := tools.ExecCommand(c, timeout)
+	Expect(err).NotTo(HaveOccurred())
+
+	ctx, cancel := context.WithTimeout(context.TODO(), timeout)
+	defer cancel()
+	for {
+		select {
+		case <-ctx.Done():
+			return ERR_TIMEOUT
+		default:
+			node, err := f.GetNode(nodeName)
+			Expect(err).NotTo(HaveOccurred())
+			up := f.CheckNodeStatus(node, true)
+			if up {
+				return nil
+			}
+			time.Sleep(time.Second)
+		}
+	}
+}
+
+func PowerOnNodesUntilClusterReady(f *framework.Framework, nodes []string, timeout time.Duration) error {
+	for _, node := range nodes {
+		err := PowerOnNodeUntilReady(f, node, timeout)
+		if err != nil {
+			return err
+		}
+	}
+	ctx, cancel := context.WithTimeout(context.TODO(), timeout)
+	defer cancel()
+	return f.WaitAllPodUntilRunning(ctx)
 }
