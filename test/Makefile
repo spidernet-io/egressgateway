@@ -101,13 +101,19 @@ load_nettool_image: IMAGE_NAME := $(REGISTER)/$(GIT_REPO)-nettools
 load_nettool_image: IMAGE_TAG := $(GIT_COMMIT_VERSION)
 load_nettool_image: KIND_CLUSTER_NAME ?= $(E2E_KIND_CLUSTER_NAME)
 load_nettool_image:
-	make -C $(ROOT_DIR)	build_local_nettools_image ; \
-	IMAGE=`docker image ls | grep $(IMAGE_NAME) | grep $(IMAGE_TAG)` ; \
-	[ -z $${IMAGE} ] && { echo "failed to find nettool image"; exit 1; } ; \
-	IMG=`echo $${IMAGE} | awk '{{printf("%s:%s\n",$$1,$$2)}}'`; \
-	LOAD_IMG=$(IMAGE_NAME):$(NET_TOOLS_IMAGE_TAG) ; \
-	docker image tag $${IMG} $${LOAD_IMG}; \
-	kind load docker-image $${LOAD_IMG}  --name $(KIND_CLUSTER_NAME) || { echo "failed to load nettool image"; exit 1; }
+	make -C $(ROOT_DIR)	build_local_nettools_image
+	@echo "loading nettool image..."
+	IMAGE="$$(docker image ls $(IMAGE_NAME):$(IMAGE_TAG) -q)" ; \
+	echo "$${IMAGE}" ; \
+	if [ -z "$${IMAGE}" ]; then \
+	    echo "failed to find nettool image" ; \
+            exit 1 ; \
+	else \
+	    LOAD_IMG="$(IMAGE_NAME):$(NET_TOOLS_IMAGE_TAG)" ; \
+        	docker image tag "$${IMAGE}" "$${LOAD_IMG}" ; \
+        	kind load docker-image "$${LOAD_IMG}" --name "$(KIND_CLUSTER_NAME)" || \
+        	{ echo "failed to load nettool image"; exit 1; } ; \
+	fi
 
 # check nettools server is ok
 .PHONY: check_netttool_server
