@@ -46,16 +46,13 @@ feature:
     id: 100
     ## @param feature.vxlan.disableChecksumOffload Disable checksum offload
     disableChecksumOffload: true
-  egressIgnoreCIDR:
-    autoDetect:
-      ## @param feature.egressIgnoreCIDR.autoDetect.podCIDR cni cluster used
-      podCIDR: "calico"
-      ## @param feature.egressIgnoreCIDR.autoDetect.clusterIP if ignore service ip
-      clusterIP: true
-      ## @param feature.egressIgnoreCIDR.autoDetect.nodeIP if ignore node ip
-      nodeIP: true
-    ## @param feature.egressIgnoreCIDR.custom CIDRs provided manually
-    custom: []
+  autoDetect:
+    ## @param feature.autoDetect.podCIDR cni cluster used
+    podCIDR: "calico"
+    ## @param feature.autoDetect.clusterCIDR if ignore service ip
+    clusterCIDR: true
+    ## @param feature.autoDetect.nodeIP if ignore node ip
+    nodeIP: true
   ## @param feature.maxNumberEndpointPerSlice max number of endpoints per slice
   maxNumberEndpointPerSlice: 100
 

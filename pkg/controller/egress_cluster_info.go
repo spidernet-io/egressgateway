@@ -77,7 +77,7 @@ func (r *eciReconciler) Reconcile(ctx context.Context, req reconcile.Request) (r
 
 // reconcileCalicoIPPool reconcile calico IPPool
 func (r *eciReconciler) reconcileCalicoIPPool(ctx context.Context, req reconcile.Request, log logr.Logger) (reconcile.Result, error) {
-	log = log.WithValues("name", req.NamespacedName, "namespace", req.Namespace)
+	log = log.WithValues("name", req.Name, "namespace", req.Namespace)
 	log.Info("reconciling")
 
 	// eci
@@ -110,10 +110,9 @@ func (r *eciReconciler) reconcileCalicoIPPool(ctx context.Context, req reconcile
 			log.V(1).Info("remove IPPool from calicoV4IPPoolMap")
 			delete(r.calicoV4IPPoolMap, req.Name)
 			// update eci status
-			cidrs := r.getCalicoV4IPPoolsCidrs()
-			r.eci.Status.EgressIgnoreCIDR.PodCIDR.IPv4 = cidrs
-			log.V(1).Info("update EgressClusterInfo", "context", cidrs)
-			err := r.updateEgressClusterInfo(ctx)
+			cidrs := r.getCalicoV4IPPoolsCIDRs()
+			r.eci.Status.AutoDetectInternalCIDR.PodCIDR.IPv4 = cidrs
+			err := r.updateEgressClusterInfo(ctx, log)
 			if err != nil {
 				log.Error(err, "failed to update EgressClusterInfo")
 				r.calicoV4IPPoolMap[req.Name] = cidr
@@ -127,10 +126,9 @@ func (r *eciReconciler) reconcileCalicoIPPool(ctx context.Context, req reconcile
 			log.V(1).Info("remove IPPool from calicoV6IPPoolMap")
 			delete(r.calicoV6IPPoolMap, req.Name)
 			// update eci status
-			cidrs := r.getCalicoV6IPPoolsCidrs()
-			r.eci.Status.EgressIgnoreCIDR.PodCIDR.IPv6 = cidrs
-			log.V(1).Info("update egress cluster info", "context", r.eci)
-			err := r.updateEgressClusterInfo(ctx)
+			cidrs := r.getCalicoV6IPPoolsCIDRs()
+			r.eci.Status.AutoDetectInternalCIDR.PodCIDR.IPv6 = cidrs
+			err := r.updateEgressClusterInfo(ctx, log)
 			if err != nil {
 				r.calicoV6IPPoolMap[req.Name] = cidr
 				return reconcile.Result{Requeue: true}, err
@@ -159,8 +157,8 @@ func (r *eciReconciler) reconcileCalicoIPPool(ctx context.Context, req reconcile
 		if isv6Cidr {
 			// update calicoV4IPPoolMap
 			delete(r.calicoV4IPPoolMap, req.Name)
-			r.eci.Status.EgressIgnoreCIDR.PodCIDR.IPv4 = r.getCalicoV4IPPoolsCidrs()
-			err := r.updateEgressClusterInfo(ctx)
+			r.eci.Status.AutoDetectInternalCIDR.PodCIDR.IPv4 = r.getCalicoV4IPPoolsCIDRs()
+			err := r.updateEgressClusterInfo(ctx, log)
 			if err != nil {
 				r.calicoV4IPPoolMap[req.Name] = cidr
 				return reconcile.Result{Requeue: true}, err
@@ -168,8 +166,8 @@ func (r *eciReconciler) reconcileCalicoIPPool(ctx context.Context, req reconcile
 		} else if ippool.Spec.CIDR != cidr {
 			// need to update calicoV4IPPoolMap
 			r.calicoV4IPPoolMap[req.Name] = ippool.Spec.CIDR
-			r.eci.Status.EgressIgnoreCIDR.PodCIDR.IPv4 = r.getCalicoV4IPPoolsCidrs()
-			err := r.updateEgressClusterInfo(ctx)
+			r.eci.Status.AutoDetectInternalCIDR.PodCIDR.IPv4 = r.getCalicoV4IPPoolsCIDRs()
+			err := r.updateEgressClusterInfo(ctx, log)
 			if err != nil {
 				r.calicoV4IPPoolMap[req.Name] = cidr
 				return reconcile.Result{Requeue: true}, err
@@ -179,8 +177,8 @@ func (r *eciReconciler) reconcileCalicoIPPool(ctx context.Context, req reconcile
 		if isv4Cidr {
 			// need to update calicoV4IPPoolMap
 			r.calicoV4IPPoolMap[req.Name] = ippool.Spec.CIDR
-			r.eci.Status.EgressIgnoreCIDR.PodCIDR.IPv4 = r.getCalicoV4IPPoolsCidrs()
-			err := r.updateEgressClusterInfo(ctx)
+			r.eci.Status.AutoDetectInternalCIDR.PodCIDR.IPv4 = r.getCalicoV4IPPoolsCIDRs()
+			err := r.updateEgressClusterInfo(ctx, log)
 			if err != nil {
 				delete(r.calicoV4IPPoolMap, req.Name)
 				return reconcile.Result{Requeue: true}, err
@@ -194,8 +192,8 @@ func (r *eciReconciler) reconcileCalicoIPPool(ctx context.Context, req reconcile
 		if isv4Cidr {
 			// update calicoV6IPPoolMap
 			delete(r.calicoV6IPPoolMap, req.Name)
-			r.eci.Status.EgressIgnoreCIDR.PodCIDR.IPv6 = r.getCalicoV6IPPoolsCidrs()
-			err := r.updateEgressClusterInfo(ctx)
+			r.eci.Status.AutoDetectInternalCIDR.PodCIDR.IPv6 = r.getCalicoV6IPPoolsCIDRs()
+			err := r.updateEgressClusterInfo(ctx, log)
 			if err != nil {
 				r.calicoV6IPPoolMap[req.Name] = cidr
 				return reconcile.Result{Requeue: true}, err
@@ -203,8 +201,8 @@ func (r *eciReconciler) reconcileCalicoIPPool(ctx context.Context, req reconcile
 		} else if ippool.Spec.CIDR != cidr {
 			// need to update calicoV6IPPoolMap
 			r.calicoV6IPPoolMap[req.Name] = ippool.Spec.CIDR
-			r.eci.Status.EgressIgnoreCIDR.PodCIDR.IPv6 = r.getCalicoV6IPPoolsCidrs()
-			err := r.updateEgressClusterInfo(ctx)
+			r.eci.Status.AutoDetectInternalCIDR.PodCIDR.IPv6 = r.getCalicoV6IPPoolsCIDRs()
+			err := r.updateEgressClusterInfo(ctx, log)
 			if err != nil {
 				r.calicoV6IPPoolMap[req.Name] = cidr
 				return reconcile.Result{Requeue: true}, err
@@ -214,8 +212,8 @@ func (r *eciReconciler) reconcileCalicoIPPool(ctx context.Context, req reconcile
 		if isv6Cidr {
 			// need to update calicoV6IPPoolMap
 			r.calicoV6IPPoolMap[req.Name] = ippool.Spec.CIDR
-			r.eci.Status.EgressIgnoreCIDR.PodCIDR.IPv6 = r.getCalicoV6IPPoolsCidrs()
-			err := r.updateEgressClusterInfo(ctx)
+			r.eci.Status.AutoDetectInternalCIDR.PodCIDR.IPv6 = r.getCalicoV6IPPoolsCIDRs()
+			err := r.updateEgressClusterInfo(ctx, log)
 			if err != nil {
 				delete(r.calicoV6IPPoolMap, req.Name)
 				return reconcile.Result{Requeue: true}, err
@@ -258,18 +256,18 @@ func (r *eciReconciler) reconcileNode(ctx context.Context, req reconcile.Request
 			// update map
 			delete(r.nodeIPv4Map, req.Name)
 			// update eci
-			r.eci.Status.EgressIgnoreCIDR.NodeIP.IPv4 = r.getNodesIPv4()
+			r.eci.Status.AutoDetectInternalCIDR.NodeIP.IPv4 = r.getNodesIPv4()
 		}
 		if v6Ok {
 			// update map
 			delete(r.nodeIPv6Map, req.Name)
 			// update eci
-			r.eci.Status.EgressIgnoreCIDR.NodeIP.IPv6 = r.getNodesIPv6()
+			r.eci.Status.AutoDetectInternalCIDR.NodeIP.IPv6 = r.getNodesIPv6()
 		}
 
 		// eci need to update
 		if v4Ok && v6Ok {
-			err := r.updateEgressClusterInfo(ctx)
+			err := r.updateEgressClusterInfo(ctx, log)
 			if err != nil {
 				r.nodeIPv4Map[req.Name] = nodeIPv4
 				r.nodeIPv6Map[req.Name] = nodeIPv6
@@ -277,14 +275,14 @@ func (r *eciReconciler) reconcileNode(ctx context.Context, req reconcile.Request
 			}
 		}
 		if v4Ok && !v6Ok {
-			err := r.updateEgressClusterInfo(ctx)
+			err := r.updateEgressClusterInfo(ctx, log)
 			if err != nil {
 				r.nodeIPv4Map[req.Name] = nodeIPv4
 				return reconcile.Result{Requeue: true}, err
 			}
 		}
 		if !v4Ok && v6Ok {
-			err := r.updateEgressClusterInfo(ctx)
+			err := r.updateEgressClusterInfo(ctx, log)
 			if err != nil {
 				r.nodeIPv6Map[req.Name] = nodeIPv6
 				return reconcile.Result{Requeue: true}, err
@@ -309,7 +307,7 @@ func (r *eciReconciler) reconcileNode(ctx context.Context, req reconcile.Request
 		r.nodeIPv4Map[req.Name] = nodeIPv4
 
 		// need to update node ip from eci status
-		r.eci.Status.EgressIgnoreCIDR.NodeIP.IPv4 = r.getNodesIPv4()
+		r.eci.Status.AutoDetectInternalCIDR.NodeIP.IPv4 = r.getNodesIPv4()
 
 	}
 
@@ -319,11 +317,11 @@ func (r *eciReconciler) reconcileNode(ctx context.Context, req reconcile.Request
 		r.nodeIPv6Map[req.Name] = nodeIPv6
 
 		// need to update node ip from eci status
-		r.eci.Status.EgressIgnoreCIDR.NodeIP.IPv6 = r.getNodesIPv6()
+		r.eci.Status.AutoDetectInternalCIDR.NodeIP.IPv6 = r.getNodesIPv6()
 	}
 
 	if needUpdateECI {
-		err = r.updateEgressClusterInfo(ctx)
+		err = r.updateEgressClusterInfo(ctx, log)
 		if err != nil {
 			delete(r.nodeIPv4Map, req.Name)
 			delete(r.nodeIPv6Map, req.Name)
@@ -405,8 +403,8 @@ func (r *eciReconciler) initEgressClusterInfo(ctx context.Context) error {
 		if err != nil {
 			return err
 		}
-		r.eci.Status.EgressIgnoreCIDR.ClusterIP.IPv4 = ipv4Range
-		r.eci.Status.EgressIgnoreCIDR.ClusterIP.IPv6 = ipv6Range
+		r.eci.Status.AutoDetectInternalCIDR.ClusterCIDR.IPv4 = ipv4Range
+		r.eci.Status.AutoDetectInternalCIDR.ClusterCIDR.IPv6 = ipv6Range
 	}
 
 	if ignorePod == k8s || ignorePod == "" {
@@ -415,12 +413,11 @@ func (r *eciReconciler) initEgressClusterInfo(ctx context.Context) error {
 		if err != nil {
 			return err
 		}
-		r.eci.Status.EgressIgnoreCIDR.PodCIDR.IPv4 = ipv4Range
-		r.eci.Status.EgressIgnoreCIDR.PodCIDR.IPv6 = ipv6Range
+		r.eci.Status.AutoDetectInternalCIDR.PodCIDR.IPv4 = ipv4Range
+		r.eci.Status.AutoDetectInternalCIDR.PodCIDR.IPv6 = ipv6Range
 	}
 
-	r.log.V(1).Info("update EgressClusterInfo", "context", r.eci)
-	err = r.updateEgressClusterInfo(ctx)
+	err = r.updateEgressClusterInfo(ctx, r.log)
 	if err != nil {
 		return err
 	}
@@ -448,12 +445,13 @@ func (r *eciReconciler) getOrCreateEgressClusterInfo(ctx context.Context) error 
 		if err != nil {
 			return err
 		}
+		return r.getEgressClusterInfo(ctx)
 	}
 	return nil
 }
 
-// getCalicoV4IPPoolsCidrs get calico all ipv4 ippools cidrs from calicoV4IPPoolMap
-func (r *eciReconciler) getCalicoV4IPPoolsCidrs() []string {
+// getCalicoV4IPPoolsCIDRs get calico all ipv4 ippools cidrs from calicoV4IPPoolMap
+func (r *eciReconciler) getCalicoV4IPPoolsCIDRs() []string {
 	cidrs := make([]string, 0)
 	for _, cidr := range r.calicoV4IPPoolMap {
 		cidrs = append(cidrs, cidr)
@@ -461,8 +459,8 @@ func (r *eciReconciler) getCalicoV4IPPoolsCidrs() []string {
 	return cidrs
 }
 
-// getCalicoV6IPPoolsCidrs get calico all ipv6 ippools cidrs from calicoV6IPPoolMap
-func (r *eciReconciler) getCalicoV6IPPoolsCidrs() []string {
+// getCalicoV6IPPoolsCIDRs get calico all ipv6 ippools cidrs from calicoV6IPPoolMap
+func (r *eciReconciler) getCalicoV6IPPoolsCIDRs() []string {
 	cidrs := make([]string, 0)
 	for _, cidr := range r.calicoV6IPPoolMap {
 		cidrs = append(cidrs, cidr)
@@ -494,13 +492,14 @@ func (r *eciReconciler) getEgressClusterInfo(ctx context.Context) error {
 }
 
 // updateEgressClusterInfo update EgressClusterInfo cr
-func (r *eciReconciler) updateEgressClusterInfo(ctx context.Context) error {
+func (r *eciReconciler) updateEgressClusterInfo(ctx context.Context, log logr.Logger) error {
+	log.V(1).Info("update egress cluster info", "context", r.eci)
 	return r.client.Status().Update(ctx, r.eci)
 }
 
-// getEgressIgnoreCIDRConfig get config about EgressIgnoreCIDR from egressgateway configmap
+// getEgressIgnoreCIDRConfig get config about AutoDetectInternalCIDR from egressgateway configmap
 func (r *eciReconciler) getEgressIgnoreCIDRConfig() (string, bool, bool) {
-	i := r.config.FileConfig.EgressIgnoreCIDR
+	i := r.config.FileConfig.AutoDetect
 	return i.PodCIDR, i.ClusterIP, i.NodeIP
 }
 
@@ -529,7 +528,7 @@ func getCidr(pod *corev1.Pod, param string) (ipv4Range, ipv6Range []string, err 
 		}
 	}
 	if len(ipRange) == 0 {
-		return nil, nil, fmt.Errorf("failed to found %s\n", param)
+		return nil, nil, fmt.Errorf("failed to found %s", param)
 	}
 	// get cidr
 	ipRanges := strings.Split(ipRange, ",")

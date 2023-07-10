@@ -36,12 +36,24 @@ spec:
           metadata:
             type: object
           spec:
+            properties:
+              customInternalCIDR:
+                properties:
+                  ipv4:
+                    items:
+                      type: string
+                    type: array
+                  ipv6:
+                    items:
+                      type: string
+                    type: array
+                type: object
             type: object
           status:
             properties:
-              egressIgnoreCIDR:
+              autoDetectInternalCIDR:
                 properties:
-                  clusterIP:
+                  clusterCIDR:
                     properties:
                       ipv4:
                         items:

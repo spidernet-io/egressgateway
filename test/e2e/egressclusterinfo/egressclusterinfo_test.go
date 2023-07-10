@@ -45,7 +45,7 @@ var _ = Describe("Egressclusterinfo", Label("Egressclusterinfo"), func() {
 		GinkgoWriter.Printf("get EgressClusterInfo %s\n", egressClusterInfoName)
 		Expect(common.GetEgressClusterInfo(f, egressClusterInfoName, eci)).NotTo(HaveOccurred())
 
-		// check EgressIgnoreCIDR Fields
+		// check AutoDetectInternalCIDR Fields
 		checkEgressIgnoreCIDRFields(eci)
 
 		// delete EgressClusterInfo
@@ -65,7 +65,7 @@ var _ = Describe("Egressclusterinfo", Label("Egressclusterinfo"), func() {
 })
 
 func checkEgressIgnoreCIDRFields(eci *egressv1beta1.EgressClusterInfo) {
-	GinkgoWriter.Println("check EgressIgnoreCIDR Fields")
+	GinkgoWriter.Println("check AutoDetectInternalCIDR Fields")
 	var (
 		eciNodesIPv4   = make([]string, 0)
 		eciNodesIPv6   = make([]string, 0)
@@ -74,22 +74,22 @@ func checkEgressIgnoreCIDRFields(eci *egressv1beta1.EgressClusterInfo) {
 		eciPodCidrIPv4 = make([]string, 0)
 		eciPodCidrIPv6 = make([]string, 0)
 	)
-	if ipv4 := eci.Status.EgressIgnoreCIDR.NodeIP.IPv4; ipv4 != nil {
+	if ipv4 := eci.Status.AutoDetectInternalCIDR.NodeIP.IPv4; ipv4 != nil {
 		eciNodesIPv4 = ipv4
 	}
-	if ipv6 := eci.Status.EgressIgnoreCIDR.NodeIP.IPv6; ipv6 != nil {
+	if ipv6 := eci.Status.AutoDetectInternalCIDR.NodeIP.IPv6; ipv6 != nil {
 		eciNodesIPv6 = ipv6
 	}
-	if ipv4 := eci.Status.EgressIgnoreCIDR.ClusterIP.IPv4; ipv4 != nil {
+	if ipv4 := eci.Status.AutoDetectInternalCIDR.ClusterCIDR.IPv4; ipv4 != nil {
 		eciClusterIPv4 = ipv4
 	}
-	if ipv6 := eci.Status.EgressIgnoreCIDR.ClusterIP.IPv6; ipv6 != nil {
+	if ipv6 := eci.Status.AutoDetectInternalCIDR.ClusterCIDR.IPv6; ipv6 != nil {
 		eciClusterIPv6 = ipv6
 	}
-	if ipv4 := eci.Status.EgressIgnoreCIDR.PodCIDR.IPv4; ipv4 != nil {
+	if ipv4 := eci.Status.AutoDetectInternalCIDR.PodCIDR.IPv4; ipv4 != nil {
 		eciPodCidrIPv4 = ipv4
 	}
-	if ipv6 := eci.Status.EgressIgnoreCIDR.PodCIDR.IPv6; ipv6 != nil {
+	if ipv6 := eci.Status.AutoDetectInternalCIDR.PodCIDR.IPv6; ipv6 != nil {
 		eciPodCidrIPv6 = ipv6
 	}
 	if ignoreNodeIP {
@@ -158,7 +158,7 @@ func createOrUpdateCalicoIPPoolAndCheck(f *framework.Framework, poolNamePre, cid
 	Expect(err).NotTo(HaveOccurred())
 	Expect(eci).NotTo(BeNil())
 
-	// check EgressIgnoreCIDR Fields
+	// check AutoDetectInternalCIDR Fields
 	checkEgressIgnoreCIDRFields(eci)
 
 	// update calicoIPPool
@@ -189,7 +189,7 @@ func createOrUpdateCalicoIPPoolAndCheck(f *framework.Framework, poolNamePre, cid
 	Expect(err).NotTo(HaveOccurred())
 	Expect(eci).NotTo(BeNil())
 
-	// check EgressIgnoreCIDR Fields
+	// check AutoDetectInternalCIDR Fields
 	checkEgressIgnoreCIDRFields(eci)
 
 	// DeleteCalicoIPPool

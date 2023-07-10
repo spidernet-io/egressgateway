@@ -560,8 +560,8 @@ func (r *policeReconciler) reconcileClusterInfo(ctx context.Context, req reconci
 		}
 	}
 
-	addIP(info.Status.EgressIgnoreCIDR.NodeIP.IPv4...)
-	addIP(info.Status.EgressIgnoreCIDR.NodeIP.IPv6...)
+	addIP(info.Status.AutoDetectInternalCIDR.NodeIP.IPv4...)
+	addIP(info.Status.AutoDetectInternalCIDR.NodeIP.IPv6...)
 
 	addCIDR := func(items ...string) {
 		for _, item := range items {
@@ -577,13 +577,14 @@ func (r *policeReconciler) reconcileClusterInfo(ctx context.Context, req reconci
 		}
 	}
 
-	addCIDR(info.Status.EgressIgnoreCIDR.PodCIDR.IPv4...)
-	addCIDR(info.Status.EgressIgnoreCIDR.PodCIDR.IPv6...)
+	addCIDR(info.Status.AutoDetectInternalCIDR.PodCIDR.IPv4...)
+	addCIDR(info.Status.AutoDetectInternalCIDR.PodCIDR.IPv6...)
 
-	addCIDR(info.Status.EgressIgnoreCIDR.ClusterIP.IPv4...)
-	addCIDR(info.Status.EgressIgnoreCIDR.ClusterIP.IPv6...)
+	addCIDR(info.Status.AutoDetectInternalCIDR.ClusterCIDR.IPv4...)
+	addCIDR(info.Status.AutoDetectInternalCIDR.ClusterCIDR.IPv6...)
 
-	addCIDR(r.cfg.FileConfig.EgressIgnoreCIDR.Custom...)
+	addCIDR(info.Spec.CustomInternalCIDR.IPv4...)
+	addCIDR(info.Spec.CustomInternalCIDR.IPv6...)
 
 	process := func(gotList []string, expList []string, toAdd, toDel func(item string) error) error {
 		got := sets.NewString(gotList...)

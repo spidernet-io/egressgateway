@@ -44,7 +44,7 @@ func WaitEgressClusterInfoPodCidrUpdated(f *framework.Framework, oldEci *egressv
 				return nil, err
 			}
 
-			if newPodCidrV4 := eci.Status.EgressIgnoreCIDR.PodCIDR.IPv4; newPodCidrV4 != nil {
+			if newPodCidrV4 := eci.Status.AutoDetectInternalCIDR.PodCIDR.IPv4; newPodCidrV4 != nil {
 				v4ok, err = utils.IsSameIPCidrs(podV4Cidr, newPodCidrV4)
 				if err != nil {
 					return nil, err
@@ -54,7 +54,7 @@ func WaitEgressClusterInfoPodCidrUpdated(f *framework.Framework, oldEci *egressv
 					v4ok = true
 				}
 			}
-			if newPodCidrV6 := eci.Status.EgressIgnoreCIDR.PodCIDR.IPv6; newPodCidrV6 != nil {
+			if newPodCidrV6 := eci.Status.AutoDetectInternalCIDR.PodCIDR.IPv6; newPodCidrV6 != nil {
 				v6ok, err = utils.IsSameIPCidrs(podV6Cidr, newPodCidrV6)
 				if err != nil {
 					return nil, err

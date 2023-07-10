@@ -29,18 +29,21 @@ type EgressClusterInfo struct {
 	Status EgressClusterStatus `json:"status,omitempty"`
 }
 
-type EgressClusterStatusSpec struct{}
+type EgressClusterStatusSpec struct {
+	// +kubebuilder:validation:Optional
+	CustomInternalCIDR IPListPair `json:"customInternalCIDR,omitempty"`
+}
 
 type EgressClusterStatus struct {
 	// +kubebuilder:validation:Optional
-	EgressIgnoreCIDR EgressIgnoreCIDR `json:"egressIgnoreCIDR,omitempty"`
+	AutoDetectInternalCIDR AutoDetectInternalCIDR `json:"autoDetectInternalCIDR,omitempty"`
 }
 
-type EgressIgnoreCIDR struct {
+type AutoDetectInternalCIDR struct {
 	// +kubebuilder:validation:Optional
 	NodeIP IPListPair `json:"nodeIP,omitempty"`
 	// +kubebuilder:validation:Optional
-	ClusterIP IPListPair `json:"clusterIP,omitempty"`
+	ClusterCIDR IPListPair `json:"clusterCIDR,omitempty"`
 	// +kubebuilder:validation:Optional
 	PodCIDR IPListPair `json:"podCIDR,omitempty"`
 }
