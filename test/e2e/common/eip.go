@@ -42,50 +42,59 @@ RETRY:
 
 	var udpOk, tcpOk, webSocketOk bool
 	for {
-		tmp := make([]byte, 1024)
-		_, err = r.Read(tmp)
-		if err == io.EOF {
-			return ERR_CHECK_EIP
-		}
-		if err != nil {
-			return err
-		}
-		out := string(tmp)
-		GinkgoWriter.Println(out)
+		select {
+		case <-ctx.Done():
+			err = cmd.Process.Kill()
+			if err != nil {
+				return err
+			}
+			return ERR_TIMEOUT
+		default:
+			tmp := make([]byte, 1024)
+			_, err = r.Read(tmp)
+			if err == io.EOF {
+				return ERR_CHECK_EIP
+			}
+			if err != nil {
+				return err
+			}
+			out := string(tmp)
+			GinkgoWriter.Println(out)
 
-		if strings.Contains(out, resetByPeer) {
-			if retryNum < retry {
-				retryNum++
-				goto RETRY
+			if strings.Contains(out, resetByPeer) {
+				if retryNum < retry {
+					retryNum++
+					goto RETRY
+				}
 			}
-		}
-		if expect {
-			if strings.Contains(out, WEBSOCKET) && strings.Contains(out, eIP) {
-				webSocketOk = true
+			if expect {
+				if strings.Contains(out, WEBSOCKET) && strings.Contains(out, eIP) {
+					webSocketOk = true
+				}
+				if strings.Contains(out, UDP) && strings.Contains(out, eIP) {
+					udpOk = true
+				}
+				if strings.Contains(out, TCP) && strings.Contains(out, eIP) {
+					tcpOk = true
+				}
+				if udpOk && tcpOk && webSocketOk {
+					return nil
+				}
+			} else {
+				if strings.Contains(out, WEBSOCKET) && !strings.Contains(out, eIP) {
+					webSocketOk = true
+				}
+				if strings.Contains(out, UDP) && !strings.Contains(out, eIP) {
+					udpOk = true
+				}
+				if strings.Contains(out, TCP) && !strings.Contains(out, eIP) {
+					tcpOk = true
+				}
+				if udpOk && tcpOk && webSocketOk {
+					return nil
+				}
 			}
-			if strings.Contains(out, UDP) && strings.Contains(out, eIP) {
-				udpOk = true
-			}
-			if strings.Contains(out, TCP) && strings.Contains(out, eIP) {
-				tcpOk = true
-			}
-			if udpOk && tcpOk && webSocketOk {
-				break
-			}
-		} else {
-			if strings.Contains(out, WEBSOCKET) && !strings.Contains(out, eIP) {
-				webSocketOk = true
-			}
-			if strings.Contains(out, UDP) && !strings.Contains(out, eIP) {
-				udpOk = true
-			}
-			if strings.Contains(out, TCP) && !strings.Contains(out, eIP) {
-				tcpOk = true
-			}
-			if udpOk && tcpOk && webSocketOk {
-				break
-			}
+			time.Sleep(time.Second)
 		}
 	}
-	return nil
 }
