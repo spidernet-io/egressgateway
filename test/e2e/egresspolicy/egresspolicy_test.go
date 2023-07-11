@@ -215,11 +215,11 @@ func checkEip(podList *corev1.PodList, v4Eip, v6Eip string, expect bool, timeout
 		GinkgoWriter.Printf("checking in %dth pod: %s\n", i, pod.Name)
 		if v4Enabled {
 			Expect(v4Eip).NotTo(BeEmpty())
-			Expect(common.CheckEIPinClientPod(f, &pod, v4Eip, serverIPv4, expect, timeout)).NotTo(HaveOccurred())
+			Expect(common.CheckEIPinClientPod(f, &pod, v4Eip, serverIPv4, expect, 3, timeout)).NotTo(HaveOccurred())
 		}
 		if v6Enabled {
 			Expect(v6Eip).NotTo(BeEmpty())
-			Expect(common.CheckEIPinClientPod(f, &pod, v6Eip, serverIPv6, expect, timeout)).NotTo(HaveOccurred())
+			Expect(common.CheckEIPinClientPod(f, &pod, v6Eip, serverIPv6, expect, 3, timeout)).NotTo(HaveOccurred())
 		}
 	}
 }

@@ -22,10 +22,13 @@ func generateCmd(f *framework.Framework, pod *corev1.Pod, serverIP string, ctx c
 	return exec.CommandContext(ctx, "sh", "-c", args)
 }
 
-func CheckEIPinClientPod(f *framework.Framework, pod *corev1.Pod, eIP, serverIP string, expect bool, timeout time.Duration) error {
+func CheckEIPinClientPod(f *framework.Framework, pod *corev1.Pod, eIP, serverIP string, expect bool, retry int, timeout time.Duration) error {
 	ctx, cancel := context.WithTimeout(context.TODO(), timeout)
 	defer cancel()
 
+	retryNum := 0
+
+RETRY:
 	cmd := generateCmd(f, pod, serverIP, ctx)
 	r, err := cmd.StdoutPipe()
 	if err != nil {
@@ -49,6 +52,13 @@ func CheckEIPinClientPod(f *framework.Framework, pod *corev1.Pod, eIP, serverIP 
 		}
 		out := string(tmp)
 		GinkgoWriter.Println(out)
+
+		if strings.Contains(out, resetByPeer) {
+			if retryNum < retry {
+				retryNum++
+				goto RETRY
+			}
+		}
 		if expect {
 			if strings.Contains(out, WEBSOCKET) && strings.Contains(out, eIP) {
 				webSocketOk = true

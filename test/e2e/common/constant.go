@@ -30,6 +30,8 @@ const (
 	UDP       = "UDP Server Say hello!"
 	TCP       = "TCP Server Say hello!"
 
+	resetByPeer = "connection reset by peer"
+
 	UDP_CONNECTED = "UDP Client connected!"
 	TCP_CONNECTED = "TCP Client connected!"
 	WEB_CONNECTED = "WEB Client connected!"
