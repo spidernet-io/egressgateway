@@ -4,18 +4,18 @@
 package egressclusterinfo_test
 
 import (
-	"github.com/spidernet-io/egressgateway/test/e2e/common"
-	calicov1 "github.com/tigera/operator/pkg/apis/crd.projectcalico.org/v1"
 	"testing"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 
 	"github.com/spidernet-io/e2eframework/framework"
+	calicov1 "github.com/tigera/operator/pkg/apis/crd.projectcalico.org/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	egressgatewayv1beta1 "github.com/spidernet-io/egressgateway/pkg/k8s/apis/egressgateway.spidernet.io/v1beta1"
+	egressgatewayv1beta1 "github.com/spidernet-io/egressgateway/pkg/k8s/apis/v1beta1"
+	"github.com/spidernet-io/egressgateway/test/e2e/common"
 )
 
 func TestEgressclusterinfo(t *testing.T) {

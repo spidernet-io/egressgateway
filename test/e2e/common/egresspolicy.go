@@ -11,21 +11,21 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/spidernet-io/e2eframework/framework"
-	egressv1beta1 "github.com/spidernet-io/egressgateway/pkg/k8s/apis/egressgateway.spidernet.io/v1beta1"
+	"github.com/spidernet-io/egressgateway/pkg/k8s/apis/v1beta1"
 	"github.com/spidernet-io/egressgateway/test/e2e/err"
 	"k8s.io/apimachinery/pkg/api/errors"
 )
 
-func GenerateEgressPolicyYaml(policyName, gatewayName, namespace string, egressIP egressv1beta1.EgressIP, labels map[string]string, podSubnet, dest []string) *egressv1beta1.EgressPolicy {
-	return &egressv1beta1.EgressPolicy{
+func GenerateEgressPolicyYaml(policyName, gatewayName, namespace string, egressIP v1beta1.EgressIP, labels map[string]string, podSubnet, dest []string) *v1beta1.EgressPolicy {
+	return &v1beta1.EgressPolicy{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      policyName,
 			Namespace: namespace,
 		},
-		Spec: egressv1beta1.EgressPolicySpec{
+		Spec: v1beta1.EgressPolicySpec{
 			EgressGatewayName: gatewayName,
 			EgressIP:          egressIP,
-			AppliedTo: egressv1beta1.AppliedTo{
+			AppliedTo: v1beta1.AppliedTo{
 				PodSelector: &metav1.LabelSelector{
 					MatchLabels: labels,
 				},
@@ -36,15 +36,15 @@ func GenerateEgressPolicyYaml(policyName, gatewayName, namespace string, egressI
 	}
 }
 
-func GenerateEgressClusterPolicyYaml(policyName, gatewayName string, egressIP egressv1beta1.EgressIP, labels map[string]string, podSubnet, dest []string) *egressv1beta1.EgressClusterPolicy {
-	return &egressv1beta1.EgressClusterPolicy{
+func GenerateEgressClusterPolicyYaml(policyName, gatewayName string, egressIP v1beta1.EgressIP, labels map[string]string, podSubnet, dest []string) *v1beta1.EgressClusterPolicy {
+	return &v1beta1.EgressClusterPolicy{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: policyName,
 		},
-		Spec: egressv1beta1.EgressClusterPolicySpec{
+		Spec: v1beta1.EgressClusterPolicySpec{
 			EgressGatewayName: gatewayName,
 			EgressIP:          egressIP,
-			AppliedTo: egressv1beta1.ClusterAppliedTo{
+			AppliedTo: v1beta1.ClusterAppliedTo{
 				PodSelector: &metav1.LabelSelector{
 					MatchLabels: labels,
 				},
@@ -107,7 +107,7 @@ func DeleteEgressPolicyUntilFinish(f *framework.Framework, name, namespace strin
 	}
 }
 
-func EditEgressPolicy(f *framework.Framework, policy *egressv1beta1.EgressPolicy, labels map[string]string, dst []string, opts ...client.UpdateOption) error {
+func EditEgressPolicy(f *framework.Framework, policy *v1beta1.EgressPolicy, labels map[string]string, dst []string, opts ...client.UpdateOption) error {
 	if dst != nil {
 		policy.Spec.DestSubnet = dst
 	}
@@ -122,7 +122,7 @@ func EditEgressPolicy(f *framework.Framework, policy *egressv1beta1.EgressPolicy
 	return f.UpdateResource(policy, opts...)
 }
 
-func EditEgressClusterPolicy(f *framework.Framework, policy *egressv1beta1.EgressClusterPolicy, labels map[string]string, dst []string, opts ...client.UpdateOption) error {
+func EditEgressClusterPolicy(f *framework.Framework, policy *v1beta1.EgressClusterPolicy, labels map[string]string, dst []string, opts ...client.UpdateOption) error {
 	if dst != nil {
 		policy.Spec.DestSubnet = dst
 	}
@@ -139,7 +139,7 @@ func EditEgressClusterPolicy(f *framework.Framework, policy *egressv1beta1.Egres
 }
 
 func WaitEgressPolicyEipUpdated(f *framework.Framework, name, namespace, expectV4Eip, expectV6Eip string, enableV4, enableV6 bool, timeout time.Duration) (v4Eip, v6Eip string, e error) {
-	policy := new(egressv1beta1.EgressPolicy)
+	policy := new(v1beta1.EgressPolicy)
 	ctx, cancel := context.WithTimeout(context.TODO(), timeout)
 	defer cancel()
 	for {
@@ -186,7 +186,7 @@ func WaitEgressPolicyEipUpdated(f *framework.Framework, name, namespace, expectV
 }
 
 func WaitEgressClusterPolicyEipUpdated(f *framework.Framework, name, expectV4Eip, expectV6Eip string, enableV4, enableV6 bool, timeout time.Duration) (v4Eip, v6Eip string, e error) {
-	policy := new(egressv1beta1.EgressClusterPolicy)
+	policy := new(v1beta1.EgressClusterPolicy)
 	ctx, cancel := context.WithTimeout(context.TODO(), timeout)
 	defer cancel()
 	for {

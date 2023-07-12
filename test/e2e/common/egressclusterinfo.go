@@ -15,7 +15,7 @@ import (
 	"time"
 
 	"github.com/spidernet-io/e2eframework/framework"
-	egressv1beta1 "github.com/spidernet-io/egressgateway/pkg/k8s/apis/egressgateway.spidernet.io/v1beta1"
+	egressv1beta1 "github.com/spidernet-io/egressgateway/pkg/k8s/apis/v1beta1"
 )
 
 const egciName = "default"

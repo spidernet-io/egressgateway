@@ -18,7 +18,7 @@ import (
 
 	"github.com/spidernet-io/egressgateway/pkg/config"
 	"github.com/spidernet-io/egressgateway/pkg/egressgateway"
-	egressv1 "github.com/spidernet-io/egressgateway/pkg/k8s/apis/egressgateway.spidernet.io/v1beta1"
+	"github.com/spidernet-io/egressgateway/pkg/k8s/apis/v1beta1"
 	"github.com/spidernet-io/egressgateway/pkg/utils"
 )
 
@@ -49,7 +49,7 @@ func (r *egpReconciler) Reconcile(ctx context.Context, req reconcile.Request) (r
 // - update egresspolicy
 func (r *egpReconciler) reconcileEG(ctx context.Context, req reconcile.Request, log logr.Logger) (reconcile.Result, error) {
 	deleted := false
-	egw := new(egressv1.EgressGateway)
+	egw := new(v1beta1.EgressGateway)
 	err := r.client.Get(ctx, req.NamespacedName, egw)
 	if err != nil {
 		if !errors.IsNotFound(err) {
@@ -63,14 +63,14 @@ func (r *egpReconciler) reconcileEG(ctx context.Context, req reconcile.Request, 
 		return reconcile.Result{Requeue: false}, nil
 	}
 
-	egpList := &egressv1.EgressPolicyList{}
+	egpList := &v1beta1.EgressPolicyList{}
 	if err := r.client.List(ctx, egpList); err != nil {
 		log.Error(err, "failed to list")
 		return reconcile.Result{Requeue: true}, err
 	}
 
 	for _, item := range egpList.Items {
-		policy := egressv1.Policy{Name: item.Name, Namespace: item.Namespace}
+		policy := v1beta1.Policy{Name: item.Name, Namespace: item.Namespace}
 		eipStatus, isExist := egressgateway.GetEIPStatusByPolicy(policy, *egw)
 		if !isExist {
 			continue
@@ -115,7 +115,7 @@ func newEgressPolicyController(mgr manager.Manager, log logr.Logger, cfg *config
 		return err
 	}
 
-	if err := c.Watch(source.Kind(mgr.GetCache(), &egressv1.EgressGateway{}),
+	if err := c.Watch(source.Kind(mgr.GetCache(), &v1beta1.EgressGateway{}),
 		handler.EnqueueRequestsFromMapFunc(utils.KindToMapFlat("EgressGateway"))); err != nil {
 		return fmt.Errorf("failed to watch EgressGateway: %w", err)
 	}
