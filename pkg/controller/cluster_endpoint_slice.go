@@ -38,7 +38,7 @@ type endpointClusterReconciler struct {
 
 func (r *endpointClusterReconciler) Reconcile(ctx context.Context, req reconcile.Request) (reconcile.Result, error) {
 	log := r.log.WithValues(
-		"name", req.NamespacedName.Name,
+		"name", req.Name,
 		"kind", "EgressClusterEndpointSlice",
 	)
 

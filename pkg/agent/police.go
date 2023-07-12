@@ -528,7 +528,7 @@ func buildNatStaticRule(base uint32) map[string][]iptables.Rule {
 }
 
 func (r *policeReconciler) reconcileClusterInfo(ctx context.Context, req reconcile.Request, log logr.Logger) (reconcile.Result, error) {
-	log = log.WithValues("name", req.NamespacedName.Name)
+	log = log.WithValues("name", req.Name)
 	log.Info("reconciling")
 
 	info := new(egressv1.EgressClusterInfo)
@@ -707,7 +707,7 @@ func buildMangleStaticRule(base uint32) map[string][]iptables.Rule {
 // watch update/delete events
 // - ipset
 func (r *policeReconciler) reconcilePolicy(ctx context.Context, req reconcile.Request, log logr.Logger) (reconcile.Result, error) {
-	log = log.WithValues("name", req.NamespacedName.Name, "namespace", req.NamespacedName.Namespace)
+	log = log.WithValues("name", req.Name, "namespace", req.Namespace)
 	log.Info("reconciling")
 
 	policy := new(egressv1.EgressPolicy)
@@ -769,7 +769,7 @@ func (r *policeReconciler) reconcilePolicy(ctx context.Context, req reconcile.Re
 // watch update/delete events
 // - ipset
 func (r *policeReconciler) reconcileClusterPolicy(ctx context.Context, req reconcile.Request, log logr.Logger) (reconcile.Result, error) {
-	log = log.WithValues("name", req.NamespacedName.Name)
+	log = log.WithValues("name", req.Name)
 	log.Info("reconciling")
 
 	policy := new(egressv1.EgressClusterPolicy)

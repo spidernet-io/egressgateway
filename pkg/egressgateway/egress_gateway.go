@@ -314,7 +314,7 @@ func (r egnReconciler) reconcileEGP(ctx context.Context, req reconcile.Request, 
 	if req.Namespace == "" {
 		log = log.WithValues("name", req.Name)
 	} else {
-		log = log.WithValues("name", req.Name, "namespace", req.NamespacedName)
+		log = log.WithValues("name", req.Name, "namespace", req.Namespace)
 	}
 	log.Info("reconciling")
 
