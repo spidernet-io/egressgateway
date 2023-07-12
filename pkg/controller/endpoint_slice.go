@@ -40,8 +40,8 @@ type endpointReconciler struct {
 }
 
 func (r *endpointReconciler) Reconcile(ctx context.Context, req reconcile.Request) (reconcile.Result, error) {
-	log := r.log.WithValues("namespace", req.NamespacedName.Namespace,
-		"name", req.NamespacedName.Name,
+	log := r.log.WithValues("namespace", req.Namespace,
+		"name", req.Name,
 		"kind", "EgressPolicy")
 
 	log.Info("reconcile")

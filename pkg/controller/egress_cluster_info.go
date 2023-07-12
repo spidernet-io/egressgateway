@@ -77,7 +77,7 @@ func (r *eciReconciler) Reconcile(ctx context.Context, req reconcile.Request) (r
 
 // reconcileCalicoIPPool reconcile calico IPPool
 func (r *eciReconciler) reconcileCalicoIPPool(ctx context.Context, req reconcile.Request, log logr.Logger) (reconcile.Result, error) {
-	log = log.WithValues("name", req.NamespacedName, "namespace", req.Namespace)
+	log = log.WithValues("name", req.Name, "namespace", req.Namespace)
 	log.Info("reconciling")
 
 	// eci

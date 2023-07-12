@@ -32,7 +32,7 @@ type eip struct {
 }
 
 func (r *eip) Reconcile(ctx context.Context, req reconcile.Request) (reconcile.Result, error) {
-	log := r.log.WithValues("name", req.NamespacedName.Name, "kind", "EgressGateway")
+	log := r.log.WithValues("name", req.Name, "kind", "EgressGateway")
 	log.Info("reconcile")
 
 	deleted := false
