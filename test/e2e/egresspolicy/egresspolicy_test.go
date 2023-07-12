@@ -176,10 +176,12 @@ var _ = Describe("EgressPolicy", func() {
 			if isGlobal {
 				GinkgoWriter.Printf("Delete policy: %s\n", egressPolicyName)
 				Expect(common.DeleteEgressPolicy(f, egressClusterPolicy)).NotTo(HaveOccurred())
+				time.Sleep(time.Second * 2)
 				checkEip(podBList, v4Eip, v6Eip, false, time.Second*20)
 			} else {
 				GinkgoWriter.Printf("Delete policy: %s\n", egressPolicyName)
 				Expect(common.DeleteEgressPolicy(f, egressPolicy)).NotTo(HaveOccurred())
+				time.Sleep(time.Second * 2)
 				checkEip(podBList, v4Eip, v6Eip, false, time.Second*20)
 			}
 		},
