@@ -380,7 +380,7 @@ func newEgressClusterInfoController(mgr manager.Manager, log logr.Logger, cfg *c
 	return nil
 }
 
-// initEgressClusterInfo create EgressClusterInfo cr if it's not exists
+// initEgressClusterInfo create EgressClusterInfo cr when first reconcile
 func (r *eciReconciler) initEgressClusterInfo(ctx context.Context) error {
 	r.log.Info("start init EgressClusterInfo", "name", defaultEgressClusterInfoName)
 	err := r.getOrCreateEgressClusterInfo(ctx)
@@ -438,16 +438,22 @@ func watchSource(c controller.Controller, source source.Source, kind string) err
 func (r *eciReconciler) getOrCreateEgressClusterInfo(ctx context.Context) error {
 	err := r.getEgressClusterInfo(ctx)
 	if err != nil {
-		if !errors.IsNotFound(err) {
-			return err
-		}
-		// not found
-		r.eci.Name = defaultEgressClusterInfoName
-		r.log.Info("create EgressClusterInfo")
-		err := r.client.Create(ctx, r.eci)
+		err = r.createEgressClusterInfo(ctx)
 		if err != nil {
 			return err
 		}
+	}
+	r.eci.Status = egressv1beta1.EgressClusterStatus{}
+	return nil
+}
+
+// createEgressClusterInfo create EgressClusterInfo
+func (r *eciReconciler) createEgressClusterInfo(ctx context.Context) error {
+	r.eci.Name = defaultEgressClusterInfoName
+	r.log.Info("create EgressClusterInfo")
+	err := r.client.Create(ctx, r.eci)
+	if err != nil {
+		return err
 	}
 	return nil
 }
@@ -495,7 +501,19 @@ func (r *eciReconciler) getEgressClusterInfo(ctx context.Context) error {
 
 // updateEgressClusterInfo update EgressClusterInfo cr
 func (r *eciReconciler) updateEgressClusterInfo(ctx context.Context) error {
-	return r.client.Status().Update(ctx, r.eci)
+	eci := new(egressv1beta1.EgressClusterInfo)
+	err := r.client.Get(ctx, types.NamespacedName{Name: defaultEgressClusterInfoName}, eci)
+	if err != nil {
+		return err
+	}
+	r.eci.ResourceVersion = eci.ResourceVersion
+	patch := client.MergeFrom(eci.DeepCopy())
+	data, err := patch.Data(r.eci.DeepCopy())
+	if err != nil {
+		return err
+	}
+	r.log.V(1).Info("update", "patch.Data", string(data))
+	return r.client.Status().Patch(ctx, r.eci, patch)
 }
 
 // getEgressIgnoreCIDRConfig get config about EgressIgnoreCIDR from egressgateway configmap
@@ -529,7 +547,7 @@ func getCidr(pod *corev1.Pod, param string) (ipv4Range, ipv6Range []string, err 
 		}
 	}
 	if len(ipRange) == 0 {
-		return nil, nil, fmt.Errorf("failed to found %s\n", param)
+		return nil, nil, fmt.Errorf("failed to found %s", param)
 	}
 	// get cidr
 	ipRanges := strings.Split(ipRange, ",")
