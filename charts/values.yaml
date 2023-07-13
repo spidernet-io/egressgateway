@@ -25,7 +25,7 @@ feature:
   ## @param feature.enableIPv4 Enable IPv4
   enableIPv4: true
   ## @param feature.enableIPv6 Enable IPv6
-  enableIPv6: false
+  enableIPv6: true
   ## @param feature.datapathMode iptables mode, [`iptables`, `ebpf`]
   datapathMode: "iptables"
   ## @param feature.tunnelIpv4Subnet Tunnel IPv4 subnet
