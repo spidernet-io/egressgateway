@@ -207,6 +207,8 @@ deploy_project:
 install_example_app: KIND_KUBECONFIG ?= $(E2E_KIND_KUBECONFIG_PATH)
 install_example_app: KIND_CLUSTER_NAME ?= $(E2E_KIND_CLUSTER_NAME)
 install_example_app:
+	@echo "---------- debug local file: /etc/bash.bashrc"
+	@cat /etc/bash.bashrc
 	@echo "---------- install example app"
 	kubectl --kubeconfig=$(KIND_KUBECONFIG) apply -f yaml/testpod.yaml
 	@ if ! kubectl rollout status  deployment/test --kubeconfig $(KIND_KUBECONFIG) -w --timeout=120s ; then \
