@@ -407,7 +407,7 @@ func (r egnReconciler) reconcileEGP(ctx context.Context, req reconcile.Request, 
 
 		err := r.reAllocatorPolicy(ctx, policy, eg, perNodeMap)
 		if err != nil {
-			r.log.Error(err, "reallocator Failed to reassign a gateway node for EgressPolicy %v: %v", policy, err)
+			r.log.Error(err, "reallocator Failed to reassign a gateway node for EgressPolicy", "policy", policy)
 			return reconcile.Result{Requeue: true}, err
 		}
 
