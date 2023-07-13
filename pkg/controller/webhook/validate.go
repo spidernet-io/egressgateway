@@ -74,6 +74,34 @@ func ValidateHook(client client.Client, cfg *config.Config) *webhook.Admission {
 					return webhook.Denied("podSelector and podSubnet cannot be used together")
 				}
 
+				if req.Operation == v1.Update {
+					oldEgp := new(egressv1.EgressPolicy)
+					err := json.Unmarshal(req.OldObject.Raw, oldEgp)
+					if err != nil {
+						return webhook.Denied(fmt.Sprintf("json unmarshal EgressPolicy with error: %v", err))
+					}
+
+					if policy.Spec.EgressGatewayName != oldEgp.Spec.EgressGatewayName {
+						return webhook.Denied("the bound EgressGateway cannot be modified")
+					}
+
+					if policy.Spec.EgressIP.UseNodeIP != oldEgp.Spec.EgressIP.UseNodeIP {
+						return webhook.Denied("the UseNodeIP field cannot be modified")
+					}
+
+					if policy.Spec.EgressIP.IPv4 != oldEgp.Spec.EgressIP.IPv4 {
+						return webhook.Denied("the EgressIP.IPv4 field cannot be modified")
+					}
+
+					if policy.Spec.EgressIP.IPv6 != oldEgp.Spec.EgressIP.IPv6 {
+						return webhook.Denied("the EgressIP.IPv6 field cannot be modified")
+					}
+
+					if policy.Spec.EgressIP.AllocatorPolicy != oldEgp.Spec.EgressIP.AllocatorPolicy {
+						return webhook.Denied("the EgressIP.AllocatorPolicy field cannot be modified")
+					}
+				}
+
 				return validateSubnet(policy.Spec.DestSubnet)
 			}
 
