@@ -211,6 +211,7 @@ func updatePolicy(policyName string, obj client.Object, label map[string]string,
 }
 
 func checkEip(podList *corev1.PodList, v4Eip, v6Eip string, expect bool, timeout time.Duration) {
+	time.Sleep(time.Second * 2)
 	for i, pod := range podList.Items {
 		GinkgoWriter.Printf("checking in %dth pod: %s\n", i, pod.Name)
 		if v4Enabled {
