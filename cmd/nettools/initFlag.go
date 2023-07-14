@@ -15,6 +15,7 @@ const (
 
 type Config struct {
 	Addr, Proto, TcpPort, UdpPort, WebPort *string
+	Timeout                                *int
 }
 
 func ParseFlag() Config {
@@ -24,6 +25,7 @@ func ParseFlag() Config {
 		TcpPort: flag.String("tcpPort", "8080", "tcp listen port"),
 		UdpPort: flag.String("udpPort", "8081", "udp listen port"),
 		WebPort: flag.String("webPort", "8082", "webSocket listen port"),
+		Timeout: flag.Int("timeout", 10, "command execution seconds time"),
 	}
 
 	flag.Parse()

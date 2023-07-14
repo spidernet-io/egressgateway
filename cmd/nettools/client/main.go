@@ -24,27 +24,32 @@ func main() {
 	if *config.Addr == "" {
 		log.Fatalln("err: server addr no provide")
 	}
-	protocol := strings.ToLower(*config.Proto)
-	switch protocol {
-	case utils.PROTOCOL_TCP:
-		wg.Add(1)
-		go tcpClient(config)
-	case utils.PROTOCOL_UDP:
-		wg.Add(1)
-		go udpClient(config)
-	case utils.PROTOCOL_WEB:
-		wg.Add(1)
-		go webClient(config)
-	case utils.PROTOCOL_ALL:
-		wg.Add(3)
-		go tcpClient(config)
-		go udpClient(config)
-		go webClient(config)
-	default:
-		log.Fatalf("protocol: %s don't support, available protocols: tcp,udp,web,all", *config.Proto)
-	}
 
-	wg.Wait()
+	go func() {
+		protocol := strings.ToLower(*config.Proto)
+		switch protocol {
+		case utils.PROTOCOL_TCP:
+			wg.Add(1)
+			go tcpClient(config)
+		case utils.PROTOCOL_UDP:
+			wg.Add(1)
+			go udpClient(config)
+		case utils.PROTOCOL_WEB:
+			wg.Add(1)
+			go webClient(config)
+		case utils.PROTOCOL_ALL:
+			wg.Add(3)
+			go tcpClient(config)
+			go udpClient(config)
+			go webClient(config)
+		default:
+			log.Fatalf("protocol: %s don't support, available protocols: tcp,udp,web,all", *config.Proto)
+		}
+
+		wg.Wait()
+	}()
+
+	time.Sleep(time.Second * time.Duration(*config.Timeout))
 }
 
 func tcpClient(config utils.Config) {
