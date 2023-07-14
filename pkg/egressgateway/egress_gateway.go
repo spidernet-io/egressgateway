@@ -702,8 +702,8 @@ func (r egnReconciler) allocatorEIP(selEipLolicy string, nodeName string, pi pol
 	}
 
 	if r.config.FileConfig.EnableIPv6 {
-		if len(perIpv4) != 0 && len(GetEipByIP(perIpv4, eg).IPv6) != 0 {
-			return perIpv4, GetEipByIP(perIpv4, eg).IPv6, nil
+		if len(perIpv4) != 0 && len(GetEipByIPV4(perIpv4, eg).IPv6) != 0 {
+			return perIpv4, GetEipByIPV4(perIpv4, eg).IPv6, nil
 		}
 
 		var useIpv6s []net.IP
@@ -800,11 +800,24 @@ func NewEgressGatewayController(mgr manager.Manager, log logr.Logger, cfg *confi
 	return nil
 }
 
-func GetEipByIP(ipv4 string, eg egress.EgressGateway) egress.Eips {
+func GetEipByIPV4(ipv4 string, eg egress.EgressGateway) egress.Eips {
 	var eipInfo egress.Eips
 	for _, node := range eg.Status.NodeList {
 		for _, eip := range node.Eips {
 			if eip.IPv4 == ipv4 {
+				eipInfo = eip
+			}
+		}
+	}
+
+	return eipInfo
+}
+
+func GetEipByIPV6(ipv6 string, eg egress.EgressGateway) egress.Eips {
+	var eipInfo egress.Eips
+	for _, node := range eg.Status.NodeList {
+		for _, eip := range node.Eips {
+			if eip.IPv6 == ipv6 {
 				eipInfo = eip
 			}
 		}
