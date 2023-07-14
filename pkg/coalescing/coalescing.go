@@ -17,6 +17,8 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
+// Based on https://github.com/kubernetes-sigs/cluster-api-provider-azure/blob/63d494619b37f454f3517483e7fc896a0fa603a6/pkg/coalescing/reconciler.go
+
 package coalescing
 
 import (
