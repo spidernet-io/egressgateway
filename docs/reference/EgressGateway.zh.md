@@ -1,4 +1,4 @@
-The EgressGateway CRD is used to select a group of nodes as the Egress nodes of the cluster and configure the Egress IP pool for this group of nodes. The Egress IP can float within this range. Cluster scope resource.
+EgressGateway CRD 用于选择一组节点作为集群的 Egress 节点，并为该节点组配置 Egress IP 池。Egress IP 可在此组节点内浮动。集群级资源。
 
 ```yaml
 apiVersion: egressgateway.spidernet.io/v1beta1
@@ -32,20 +32,21 @@ status:
               namespace: "default"  # 17
 ```
 
-1. Set the range of egress IP pool that EgressGateway can use;
-2. Egress IPv4 pool, supporting three methods: single IP `10.6.0.1`, range `10.6.0.1-10.6.0.10`, and CIDR `10.6.0.1/26`;
-3. Egress IPv6 pool, if dual-stack requirements are enabled, the number of IPv4 and IPv6 must be consistent, and the format is the same as IPv4;
-4. The default IPv4 EIP to use. If the EgressPolicy does not specify EIP and the EIP assignment policy is `default`, the EIP assigned to this EgressPolicy will be `ipv4DefaultEIP`;
-5. The default IPv6 EIP to use, the rules are the same as `ipv6DefaultEIP`;
-6. Set the matching conditions and policy for egress nodes;
-7. Select a group of nodes as egress gateway nodes through Selector, and egress IP can float within this range;
-8. The policy for EgressGateway to select Egress nodes, currently only supports average selection;
-9. The egress nodes selected by node selector, as well as the effective egress IP on the node, and the EgressPolicy that uses this egress IP;
-10. The name of the Egress node;
-11. The status of the Egress node;
-12. The effective EIP information on this gateway node;
-13. Egress IPv4, if EgressPolicy and EgressClusterPolicy use node IP, this field is empty;
-14. Egress IPv6, in the dual-stack situation, IPv4 and IPv6 are one-to-one corresponding;
-15. Which policies are using the effective Egress IP on this node;
-16. Name of the Policy using the Egress IP;
-17. Namespace of the Policy using the Egress IP.
+1. 设置 EgressGateway 可使用的 Egress IP 池的范围；
+2. Egress IPv4 池，支持三种方法：单个 IP `10.6.0.1`、范围 `10.6.0.1-10.6.0.10` 和 CIDR `10.6.0.1/26`；
+3. Egress IPv6 池，如果启用了双栈要求，则 IPv4 和 IPv6 的数量必须一致，格式与 IPv4 相同；
+4. 要使用的默认 IPv4 EIP。如果 EgressPolicy 没有指定 EIP，且 EIP 分配策略为 `default`，则分配给该 EgressPolicy 的 EIP 将是 `ipv4DefaultEIP`；
+5. 要使用的默认 IPv6 EIP，规则与 `ipv6DefaultEIP` 相同；
+6. 设置 Egress 节点的匹配条件和策略；
+7. 通过 Selector 选择一组节点作为 Egress 节点，Egress IP 可在此范围内浮动；
+8. EgressGateway 选择 Egress 节点的策略，目前仅支持平均选择；
+9. 节点选择器选择的 Egress 节点，以及节点上有效的 Egress IP，以及使用该 Egress IP 的 EgressPolicy；
+10. Egress 节点的名称；
+11. Egress 节点的状态；
+12. 此 Egress 节点上有效的 EIP 信息；
+13. Egress IPv4，如果 EgressPolicy 和 EgressClusterPolicy 使用节点 IP，则此字段为空；
+14. Egress IPv6，在双栈情况下，IPv4 和 IPv6 一一对应；
+15. 哪些策略使用此节点上的有效 Egress IP；
+16. 使用 Egress IP 的策略名称；
+17. 使用 Egress IP 的策略的命名空间。
+
