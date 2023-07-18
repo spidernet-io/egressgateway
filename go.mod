@@ -39,7 +39,7 @@ require (
 	modernc.org/memory v1.6.0
 	sigs.k8s.io/cluster-api-provider-azure v1.10.0
 	sigs.k8s.io/controller-runtime v0.15.0
-	sigs.k8s.io/controller-tools v0.11.4
+	sigs.k8s.io/controller-tools v0.12.1
 )
 
 require (
