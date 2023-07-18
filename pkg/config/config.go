@@ -8,7 +8,9 @@ import (
 	"fmt"
 	"net"
 	"os"
+	"regexp"
 	"strconv"
+	"strings"
 
 	"github.com/mitchellh/mapstructure"
 	"github.com/spf13/viper"
@@ -64,19 +66,21 @@ type EnvConfig struct {
 }
 
 type FileConfig struct {
-	EnableIPv4                bool             `yaml:"enableIPv4"`
-	EnableIPv6                bool             `yaml:"enableIPv6"`
-	IPTables                  IPTables         `yaml:"iptables"`
-	DatapathMode              string           `yaml:"datapathMode"`
-	TunnelIpv4Subnet          string           `yaml:"tunnelIpv4Subnet"`
-	TunnelIpv6Subnet          string           `yaml:"tunnelIpv6Subnet"`
-	TunnelIPv4Net             *net.IPNet       `json:"-"`
-	TunnelIPv6Net             *net.IPNet       `json:"-"`
-	TunnelDetectMethod        string           `yaml:"tunnelDetectMethod"`
-	VXLAN                     VXLAN            `yaml:"vxlan"`
-	EgressIgnoreCIDR          EgressIgnoreCIDR `yaml:"egressIgnoreCIDR"`
-	MaxNumberEndpointPerSlice int              `yaml:"maxNumberEndpointPerSlice"`
-	Mark                      string           `yaml:"mark"`
+	EnableIPv4                   bool             `yaml:"enableIPv4"`
+	EnableIPv6                   bool             `yaml:"enableIPv6"`
+	IPTables                     IPTables         `yaml:"iptables"`
+	DatapathMode                 string           `yaml:"datapathMode"`
+	TunnelIpv4Subnet             string           `yaml:"tunnelIpv4Subnet"`
+	TunnelIpv6Subnet             string           `yaml:"tunnelIpv6Subnet"`
+	TunnelIPv4Net                *net.IPNet       `json:"-"`
+	TunnelIPv6Net                *net.IPNet       `json:"-"`
+	TunnelDetectMethod           string           `yaml:"tunnelDetectMethod"`
+	VXLAN                        VXLAN            `yaml:"vxlan"`
+	EgressIgnoreCIDR             EgressIgnoreCIDR `yaml:"egressIgnoreCIDR"`
+	MaxNumberEndpointPerSlice    int              `yaml:"maxNumberEndpointPerSlice"`
+	Mark                         string           `yaml:"mark"`
+	AnnouncedInterfacesToExclude []string         `yaml:"announcedInterfacesToExclude"`
+	AnnounceExcludeRegexp        *regexp.Regexp   `json:"-"`
 }
 
 const TunnelInterfaceDefaultRoute = "defaultRouteInterface"
@@ -222,6 +226,15 @@ func LoadConfig(isAgent bool) (*Config, error) {
 			level = 0 - level
 		}
 		config.Logger.Level = zapcore.Level(level)
+	}
+
+	list := config.FileConfig.AnnouncedInterfacesToExclude
+	if len(list) > 0 {
+		reg, err := regexp.Compile("(" + strings.Join(list, ")|(") + ")")
+		if err != nil {
+			return nil, err
+		}
+		config.FileConfig.AnnounceExcludeRegexp = reg
 	}
 
 	// load kube config

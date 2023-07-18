@@ -71,7 +71,7 @@ func (r *eip) Reconcile(ctx context.Context, req reconcile.Request) (reconcile.R
 // newEipCtrl return a new egress ip controller
 func newEipCtrl(mgr manager.Manager, log logr.Logger, cfg *config.Config) error {
 	lw := logWrapper{log: log}
-	an, err := layer2.New(lw, nil)
+	an, err := layer2.New(lw, cfg.FileConfig.AnnounceExcludeRegexp)
 	if err != nil {
 		return err
 	}
