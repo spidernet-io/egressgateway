@@ -4,9 +4,10 @@
 package egresspolicy_test
 
 import (
-	"github.com/spidernet-io/egressgateway/test/e2e/tools"
 	"testing"
 	"time"
+
+	"github.com/spidernet-io/egressgateway/test/e2e/tools"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -34,8 +35,9 @@ var (
 	nodes                []string
 	nodeObjs             []*v1.Node
 
-	serverIPv4, serverIPv6 string
-	dst                    []string
+	serverIPv4A, serverIPv6A string
+	serverIPv4B, serverIPv6B string
+	dst                      []string
 
 	delOpts client.DeleteOption
 )
@@ -69,26 +71,40 @@ var _ = BeforeSuite(func() {
 	// net-tool server
 	dst = make([]string, 0)
 	if v4Enabled {
-		serverIpv4b, err := tools.GetContainerIPV4(common.Env[common.NETTOOLS_SERVER], time.Second*10)
+		serverIpv4a, err := tools.GetContainerIPV4(common.Env[common.NETTOOLS_SERVER_A], time.Second*10)
 		Expect(err).NotTo(HaveOccurred())
-		serverIPv4 = string(serverIpv4b)
-		GinkgoWriter.Printf("serverIPv4: %v\n", serverIPv4)
-		Expect(serverIPv4).NotTo(BeEmpty())
+		serverIPv4A = string(serverIpv4a)
+		GinkgoWriter.Printf("serverIPv4a: %v\n", serverIPv4A)
+		Expect(serverIPv4A).NotTo(BeEmpty())
 
-		dst = append(dst, serverIPv4+"/8")
+		dst = append(dst, serverIPv4A+"/8")
 		GinkgoWriter.Printf("dst: %v\n", dst)
+
+		serverIpv4b, err := tools.GetContainerIPV4(common.Env[common.NETTOOLS_SERVER_B], time.Second*10)
+		Expect(err).NotTo(HaveOccurred())
+		serverIPv4B = string(serverIpv4b)
+		GinkgoWriter.Printf("serverIPv4b: %v\n", serverIPv4B)
+		Expect(serverIPv4B).NotTo(BeEmpty())
 	}
 
 	if v6Enabled {
-		serverIpv6b, err := tools.GetContainerIPV6(common.Env[common.NETTOOLS_SERVER], time.Second*10)
+		serverIpv6a, err := tools.GetContainerIPV6(common.Env[common.NETTOOLS_SERVER_A], time.Second*10)
 		Expect(err).NotTo(HaveOccurred())
-		serverIPv6 = string(serverIpv6b)
-		Expect(serverIPv6).NotTo(BeEmpty())
+		serverIPv6A = string(serverIpv6a)
+		Expect(serverIPv6A).NotTo(BeEmpty())
 
-		dst = append(dst, serverIPv6+"/64")
+		serverIpv6b, err := tools.GetContainerIPV6(common.Env[common.NETTOOLS_SERVER_B], time.Second*10)
+		Expect(err).NotTo(HaveOccurred())
+		serverIPv6B = string(serverIpv6b)
+		Expect(serverIPv6B).NotTo(BeEmpty())
+
+		dst = append(dst, serverIPv6A+"/64")
 		GinkgoWriter.Printf("dst: %v\n", dst)
 
-		serverIPv6 = "[" + serverIPv6 + "]"
-		GinkgoWriter.Printf("serverIPv6: %v\n", serverIPv6)
+		serverIPv6A = "[" + serverIPv6A + "]"
+		GinkgoWriter.Printf("serverIPv6a: %v\n", serverIPv6A)
+
+		serverIPv6B = "[" + serverIPv6B + "]"
+		GinkgoWriter.Printf("serverIPv6b: %v\n", serverIPv6B)
 	}
 })

@@ -126,7 +126,7 @@ var _ = Describe("EgressPolicy", func() {
 
 			// check eip in podA
 			GinkgoWriter.Printf("Check export ip in dsA: %s pods\n", dsNameA)
-			checkEip(podAList, v4Eip, v6Eip, true)
+			checkEip(podAList, v4Eip, v6Eip, true, time.Second*5)
 
 			// update policy matched podA to match podB
 			By("case P00014: update policy matched podA to match podB")
@@ -140,11 +140,11 @@ var _ = Describe("EgressPolicy", func() {
 
 			// check eip in podB, we expect pods export ip is eip
 			GinkgoWriter.Printf("Check export ip in dsB: %s pods\n", dsNameB)
-			checkEip(podBList, v4Eip, v6Eip, true)
+			checkEip(podBList, v4Eip, v6Eip, true, time.Second*5)
 
 			// check eip in podA, we expect pods export ip is not eip
 			GinkgoWriter.Printf("Check export ip in dsA: %s pods\n", dsNameA)
-			checkEip(podAList, v4Eip, v6Eip, false)
+			checkEip(podAList, v4Eip, v6Eip, false, time.Second*5)
 
 			By("case P00013: update policy to unmatched `DestSubnet`")
 			// update policy `DestSubnet`, set it does not match with external ip
@@ -158,7 +158,7 @@ var _ = Describe("EgressPolicy", func() {
 
 			// check eip in podB, we expect pods export ip is not eip
 			GinkgoWriter.Printf("Check export ip in dsB: %s pods\n", dsNameB)
-			checkEip(podBList, v4Eip, v6Eip, false)
+			checkEip(podBList, v4Eip, v6Eip, false, time.Second*5)
 
 			// update policy `DestSubnet`, set it match with external ip
 			if isGlobal {
@@ -169,18 +169,18 @@ var _ = Describe("EgressPolicy", func() {
 
 			// check eip in podB, we expect pods export ip is eip
 			GinkgoWriter.Printf("Check export ip in dsB: %s pods\n", dsNameB)
-			checkEip(podBList, v4Eip, v6Eip, true)
+			checkEip(podBList, v4Eip, v6Eip, true, time.Second*5)
 
 			// delete policy
 			By("case P00019: delete policy, we expect pod's export ip is not eip")
 			if isGlobal {
 				GinkgoWriter.Printf("Delete policy: %s\n", egressPolicyName)
 				Expect(common.DeleteEgressPolicy(f, egressClusterPolicy)).NotTo(HaveOccurred())
-				checkEip(podBList, v4Eip, v6Eip, false)
+				checkEip(podBList, v4Eip, v6Eip, false, time.Second*5)
 			} else {
 				GinkgoWriter.Printf("Delete policy: %s\n", egressPolicyName)
 				Expect(common.DeleteEgressPolicy(f, egressPolicy)).NotTo(HaveOccurred())
-				checkEip(podBList, v4Eip, v6Eip, false)
+				checkEip(podBList, v4Eip, v6Eip, false, time.Second*5)
 			}
 		},
 			Entry("When global-level", true, func() error {
@@ -210,17 +210,17 @@ func updatePolicy(policyName string, obj client.Object, label map[string]string,
 	}
 }
 
-func checkEip(podList *corev1.PodList, v4Eip, v6Eip string, expect bool) {
+func checkEip(podList *corev1.PodList, v4Eip, v6Eip string, expect bool, timeout time.Duration) {
 	time.Sleep(time.Second * 2)
 	for i, pod := range podList.Items {
 		GinkgoWriter.Printf("checking in %dth pod: %s\n", i, pod.Name)
 		if v4Enabled {
 			Expect(v4Eip).NotTo(BeEmpty())
-			Expect(common.CheckEipInClientPod(f, &pod, v4Eip, serverIPv4, expect, 3, time.Second*5)).NotTo(HaveOccurred())
+			Expect(common.CheckEipInClientPod(f, &pod, v4Eip, serverIPv4A, expect, 3, timeout)).NotTo(HaveOccurred())
 		}
 		if v6Enabled {
 			Expect(v6Eip).NotTo(BeEmpty())
-			Expect(common.CheckEipInClientPod(f, &pod, v6Eip, serverIPv6, expect, 3, time.Second*5)).NotTo(HaveOccurred())
+			Expect(common.CheckEipInClientPod(f, &pod, v6Eip, serverIPv6A, expect, 3, timeout)).NotTo(HaveOccurred())
 		}
 	}
 }
