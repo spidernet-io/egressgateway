@@ -6,6 +6,19 @@ package common
 import (
 	"log"
 	"os"
+
+	corev1 "k8s.io/api/core/v1"
+)
+
+// kwok
+const (
+	KwokTaintKey    = "kwok.x-k8s.io/node"
+	KwokTaintEffect = "NoSchedule"
+)
+
+var (
+	KwokNodeLabel = map[string]string{"type": "kwok"}
+	KwokNodeTaint = corev1.Taint{Effect: KwokTaintEffect, Key: KwokTaintKey}
 )
 
 // egressgateway
