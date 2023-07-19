@@ -258,13 +258,13 @@ func (r *eciReconciler) reconcileNode(ctx context.Context, req reconcile.Request
 			// update map
 			delete(r.nodeIPv4Map, req.Name)
 			// update eci
-			r.eci.Status.EgressIgnoreCIDR.NodeIP.IPv4 = r.getNodesIPv4()
+			r.eci.Status.EgressIgnoreCIDR.NodeIP.IPv4 = r.getNodesIPs(r.nodeIPv4Map)
 		}
 		if v6Ok {
 			// update map
 			delete(r.nodeIPv6Map, req.Name)
 			// update eci
-			r.eci.Status.EgressIgnoreCIDR.NodeIP.IPv6 = r.getNodesIPv6()
+			r.eci.Status.EgressIgnoreCIDR.NodeIP.IPv6 = r.getNodesIPs(r.nodeIPv6Map)
 		}
 
 		// eci need to update
@@ -309,7 +309,7 @@ func (r *eciReconciler) reconcileNode(ctx context.Context, req reconcile.Request
 		r.nodeIPv4Map[req.Name] = nodeIPv4
 
 		// need to update node ip from eci status
-		r.eci.Status.EgressIgnoreCIDR.NodeIP.IPv4 = r.getNodesIPv4()
+		r.eci.Status.EgressIgnoreCIDR.NodeIP.IPv4 = r.getNodesIPs(r.nodeIPv4Map)
 
 	}
 
@@ -319,7 +319,7 @@ func (r *eciReconciler) reconcileNode(ctx context.Context, req reconcile.Request
 		r.nodeIPv6Map[req.Name] = nodeIPv6
 
 		// need to update node ip from eci status
-		r.eci.Status.EgressIgnoreCIDR.NodeIP.IPv6 = r.getNodesIPv6()
+		r.eci.Status.EgressIgnoreCIDR.NodeIP.IPv6 = r.getNodesIPs(r.nodeIPv6Map)
 	}
 
 	if needUpdateECI {
@@ -476,20 +476,15 @@ func (r *eciReconciler) getCalicoV6IPPoolsCidrs() []string {
 	return cidrs
 }
 
-// getNodesIPv4 get all node ipv4 from nodeIPv4Map
-func (r *eciReconciler) getNodesIPv4() []string {
+// getNodesIPs get all node IP from nodeMap
+func (r *eciReconciler) getNodesIPs(nodeMap map[string]string) []string {
 	nodeIPs := make([]string, 0)
-	for _, v := range r.nodeIPv4Map {
-		nodeIPs = append(nodeIPs, v)
+	nodeIPMap := make(map[string]struct{})
+	for _, v := range nodeMap {
+		nodeIPMap[v] = struct{}{}
 	}
-	return nodeIPs
-}
-
-// getNodesIPv6 get all node ipv6 from nodeIPv6Map
-func (r *eciReconciler) getNodesIPv6() []string {
-	nodeIPs := make([]string, 0)
-	for _, v := range r.nodeIPv6Map {
-		nodeIPs = append(nodeIPs, v)
+	for ip := range nodeIPMap {
+		nodeIPs = append(nodeIPs, ip)
 	}
 	return nodeIPs
 }
