@@ -83,19 +83,24 @@ func UnLabelNodes(f *framework.Framework, nodes []string, labels map[string]stri
 }
 
 func GetAllNodesIP(f *framework.Framework) (nodesIPv4, nodesIPv6 []string) {
+	nodeList, err := f.GetNodeList()
+	Expect(err).NotTo(HaveOccurred())
 	nodesIPv4, nodesIPv6 = make([]string, 0), make([]string, 0)
-	allNodes := f.Info.KindNodeList
-	for _, node := range allNodes {
-		getNode, err := f.GetNode(node)
-		Expect(err).NotTo(HaveOccurred())
-		ipv4, ipv6 := utils.GetNodeIP(getNode)
+	nodeIPv4Map, nodeIPv6Map := make(map[string]struct{}), make(map[string]struct{})
+	for _, node := range nodeList.Items {
+		ipv4, ipv6 := utils.GetNodeIP(&node)
 		if len(ipv4) != 0 {
-			nodesIPv4 = append(nodesIPv4, ipv4)
-
+			nodeIPv4Map[ipv4] = struct{}{}
 		}
 		if len(ipv6) != 0 {
-			nodesIPv6 = append(nodesIPv6, ipv6)
+			nodeIPv6Map[ipv6] = struct{}{}
 		}
+	}
+	for ip := range nodeIPv4Map {
+		nodesIPv4 = append(nodesIPv4, ip)
+	}
+	for ip := range nodeIPv6Map {
+		nodesIPv6 = append(nodesIPv6, ip)
 	}
 	return
 }
