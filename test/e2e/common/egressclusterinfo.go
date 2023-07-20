@@ -6,6 +6,8 @@ package common
 import (
 	"context"
 
+	. "github.com/onsi/ginkgo/v2"
+
 	"github.com/spidernet-io/egressgateway/pkg/utils"
 	e "github.com/spidernet-io/egressgateway/test/e2e/err"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -45,6 +47,7 @@ func WaitEgressClusterInfoPodCidrUpdated(f *framework.Framework, oldEci *egressv
 			}
 
 			if newPodCidrV4 := eci.Status.EgressIgnoreCIDR.PodCIDR.IPv4; newPodCidrV4 != nil {
+				GinkgoWriter.Printf("podV4Cidr: %v, eciPodV4Cidr: %v\n", podV4Cidr, newPodCidrV4)
 				v4ok, err = utils.IsSameIPCidrs(podV4Cidr, newPodCidrV4)
 				if err != nil {
 					return nil, err
@@ -55,6 +58,7 @@ func WaitEgressClusterInfoPodCidrUpdated(f *framework.Framework, oldEci *egressv
 				}
 			}
 			if newPodCidrV6 := eci.Status.EgressIgnoreCIDR.PodCIDR.IPv6; newPodCidrV6 != nil {
+				GinkgoWriter.Printf("podV6Cidr: %v, eciPodV6Cidr: %v\n", podV6Cidr, newPodCidrV6)
 				v6ok, err = utils.IsSameIPCidrs(podV6Cidr, newPodCidrV6)
 				if err != nil {
 					return nil, err
