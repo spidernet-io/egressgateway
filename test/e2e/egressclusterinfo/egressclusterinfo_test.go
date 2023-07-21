@@ -14,7 +14,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	egressv1beta1 "github.com/spidernet-io/egressgateway/pkg/k8s/apis/egressgateway.spidernet.io/v1beta1"
-	"github.com/spidernet-io/egressgateway/pkg/utils"
 	"github.com/spidernet-io/egressgateway/test/e2e/common"
 )
 
@@ -41,106 +40,31 @@ var _ = Describe("Egressclusterinfo", Label("Egressclusterinfo"), func() {
 	})
 
 	It("get and delete EgressClusterInfo", Serial, Label("I00001", "I00003"), func() {
+		// get and check EgressClusterInfo
+		GinkgoWriter.Printf("get and check EgressClusterInfo %s\n", egressClusterInfoName)
+		common.CheckEgressIgnoreCIDRFields(f, time.Second*20)
+
 		// get EgressClusterInfo
-		GinkgoWriter.Printf("get EgressClusterInfo %s\n", egressClusterInfoName)
 		Expect(common.GetEgressClusterInfo(f, egressClusterInfoName, eci)).NotTo(HaveOccurred())
 
-		// check EgressIgnoreCIDR Fields
-		checkEgressIgnoreCIDRFields(eci)
-
 		// delete EgressClusterInfo
+		GinkgoWriter.Printf("delete EgressClusterInfo, we expect it will be failed")
 		Expect(f.DeleteResource(eci)).To(HaveOccurred())
 	})
 
 	It("create or update calico ippool", Serial, Label("I00002"), func() {
 		// CalicoIPPoolV6
 		if enableV6 {
-			createOrUpdateCalicoIPPoolAndCheck(f, "test-v6-", "112", &calicoIPPools, common.RandomIPPoolV6Cidr, eci)
+			createOrUpdateCalicoIPPoolAndCheck(f, "test-v6-", "112", &calicoIPPools, common.RandomIPPoolV6Cidr)
 		}
 		// CalicoIPPoolV4
 		if enableV4 {
-			createOrUpdateCalicoIPPoolAndCheck(f, "test-v4-", "24", &calicoIPPools, common.RandomIPPoolV4Cidr, eci)
+			createOrUpdateCalicoIPPoolAndCheck(f, "test-v4-", "24", &calicoIPPools, common.RandomIPPoolV4Cidr)
 		}
 	})
 })
 
-func checkEgressIgnoreCIDRFields(eci *egressv1beta1.EgressClusterInfo) {
-	GinkgoWriter.Println("check EgressIgnoreCIDR Fields")
-	var (
-		eciNodesIPv4   = make([]string, 0)
-		eciNodesIPv6   = make([]string, 0)
-		eciClusterIPv4 = make([]string, 0)
-		eciClusterIPv6 = make([]string, 0)
-		eciPodCidrIPv4 = make([]string, 0)
-		eciPodCidrIPv6 = make([]string, 0)
-	)
-	if ipv4 := eci.Status.EgressIgnoreCIDR.NodeIP.IPv4; ipv4 != nil {
-		eciNodesIPv4 = ipv4
-	}
-	if ipv6 := eci.Status.EgressIgnoreCIDR.NodeIP.IPv6; ipv6 != nil {
-		eciNodesIPv6 = ipv6
-	}
-	if ipv4 := eci.Status.EgressIgnoreCIDR.ClusterIP.IPv4; ipv4 != nil {
-		eciClusterIPv4 = ipv4
-	}
-	if ipv6 := eci.Status.EgressIgnoreCIDR.ClusterIP.IPv6; ipv6 != nil {
-		eciClusterIPv6 = ipv6
-	}
-	if ipv4 := eci.Status.EgressIgnoreCIDR.PodCIDR.IPv4; ipv4 != nil {
-		eciPodCidrIPv4 = ipv4
-	}
-	if ipv6 := eci.Status.EgressIgnoreCIDR.PodCIDR.IPv6; ipv6 != nil {
-		eciPodCidrIPv6 = ipv6
-	}
-	if ignoreNodeIP {
-		// get allNodes ip and check
-		nodesIPv4, nodesIPv6 := common.GetAllNodesIP(f)
-
-		ok, err := utils.IsSameIPs(eciNodesIPv4, nodesIPv4)
-		GinkgoWriter.Printf("eciNodesIPv4: %v, nodesIPv4: %v\n", eciNodesIPv4, nodesIPv4)
-		Expect(err).NotTo(HaveOccurred())
-		Expect(ok).To(BeTrue())
-		ok, err = utils.IsSameIPs(eciNodesIPv6, nodesIPv6)
-		GinkgoWriter.Printf("eciNodesIPv6: %v, nodesIPv6: %v\n", eciNodesIPv6, nodesIPv6)
-		Expect(err).NotTo(HaveOccurred())
-		Expect(ok).To(BeTrue())
-	}
-
-	if ignoreClusterIP {
-		// get service subnet and check
-		serviceIpv4s, serviceIpv6s := common.GetClusterIpCidr(f)
-
-		ok, err := utils.IsSameIPCidrs(eciClusterIPv4, serviceIpv4s)
-		GinkgoWriter.Printf("eciClusterIPv4: %v, serviceIpv4s: %v\n", eciClusterIPv4, serviceIpv4s)
-		Expect(err).NotTo(HaveOccurred())
-		Expect(ok).To(BeTrue())
-		ok, err = utils.IsSameIPCidrs(eciClusterIPv6, serviceIpv6s)
-		GinkgoWriter.Printf("eciClusterIPv6: %v, serviceIpv6s: %v\n", eciClusterIPv6, serviceIpv6s)
-		Expect(err).NotTo(HaveOccurred())
-		Expect(ok).To(BeTrue())
-	}
-
-	switch podCidr {
-	case common.CALICO:
-		// get calico ippool cidr and check
-		v4Cidrs, v6Cidrs := common.GetCalicoIPPoolsCidr(f)
-
-		ok, err := utils.IsSameIPCidrs(eciPodCidrIPv4, v4Cidrs)
-		GinkgoWriter.Printf("eciPodCidrIPv4: %v, v4Cidrs: %v\n", eciPodCidrIPv4, v4Cidrs)
-		Expect(err).NotTo(HaveOccurred())
-		Expect(ok).To(BeTrue())
-		ok, err = utils.IsSameIPCidrs(eciPodCidrIPv6, v6Cidrs)
-		GinkgoWriter.Printf("eciPodCidrIPv6: %v, v6Cidrs: %v\n", eciPodCidrIPv6, v6Cidrs)
-		Expect(err).NotTo(HaveOccurred())
-		Expect(ok).To(BeTrue())
-	}
-}
-
-func createOrUpdateCalicoIPPoolAndCheck(f *framework.Framework, poolNamePre, cidrPrefix string, calicoIPPools *[]string, generateRandomCidr func(_ string) string, eci *egressv1beta1.EgressClusterInfo) {
-	// get EgressClusterInfo
-	GinkgoWriter.Printf("get EgressClusterInfo %s\n", egressClusterInfoName)
-	Expect(common.GetEgressClusterInfo(f, egressClusterInfoName, eci)).NotTo(HaveOccurred())
-
+func createOrUpdateCalicoIPPoolAndCheck(f *framework.Framework, poolNamePre, cidrPrefix string, calicoIPPools *[]string, generateRandomCidr func(_ string) string) {
 	// CreateCalicoIPPool
 	GinkgoWriter.Println("create calico ippool")
 	ipPool := common.CreateCalicoIPPool(f, poolNamePre, cidrPrefix, generateRandomCidr)
@@ -154,12 +78,12 @@ func createOrUpdateCalicoIPPoolAndCheck(f *framework.Framework, poolNamePre, cid
 
 	// WaitEgressClusterInfoPodCidrUpdated
 	GinkgoWriter.Println("WaitEgressClusterInfoPodCidrUpdated after calicoIPPool created")
-	eci, err = common.WaitEgressClusterInfoPodCidrUpdated(f, eci, common.CALICO, time.Second*30)
+	eci, err := common.WaitEgressClusterInfoPodCidrUpdated(f, common.CALICO, time.Second*30)
 	Expect(err).NotTo(HaveOccurred())
 	Expect(eci).NotTo(BeNil())
 
 	// check EgressIgnoreCIDR Fields
-	checkEgressIgnoreCIDRFields(eci)
+	common.CheckEgressIgnoreCIDRFields(f, time.Second*20)
 
 	// update calicoIPPool
 	var updatedPool *calicov1.IPPool
@@ -185,12 +109,12 @@ func createOrUpdateCalicoIPPoolAndCheck(f *framework.Framework, poolNamePre, cid
 
 	// WaitEgressClusterInfoPodCidrUpdated
 	GinkgoWriter.Println("WaitEgressClusterInfoPodCidrUpdated after calicoIPPool updated")
-	eci, err = common.WaitEgressClusterInfoPodCidrUpdated(f, eci, common.CALICO, time.Second*30)
+	eci, err = common.WaitEgressClusterInfoPodCidrUpdated(f, common.CALICO, time.Second*30)
 	Expect(err).NotTo(HaveOccurred())
 	Expect(eci).NotTo(BeNil())
 
 	// check EgressIgnoreCIDR Fields
-	checkEgressIgnoreCIDRFields(eci)
+	common.CheckEgressIgnoreCIDRFields(f, time.Second*20)
 
 	// DeleteCalicoIPPool
 	GinkgoWriter.Printf("delete calico ippool %s\n", ipPool.Name)
@@ -202,5 +126,6 @@ func createOrUpdateCalicoIPPoolAndCheck(f *framework.Framework, poolNamePre, cid
 
 	// WaitEgressClusterInfoPodCidrUpdated
 	GinkgoWriter.Printf("wait egressClusterInfo updated after calico ippool '%s' deleted, prevent affecting other cases\n", ipPool.Name)
-	_, err = common.WaitEgressClusterInfoPodCidrUpdated(f, eci, common.CALICO, time.Second*5)
+	_, err = common.WaitEgressClusterInfoPodCidrUpdated(f, common.CALICO, time.Second*5)
+	Expect(err).NotTo(HaveOccurred())
 }
