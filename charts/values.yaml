@@ -58,6 +58,10 @@ feature:
     custom: []
   ## @param feature.maxNumberEndpointPerSlice max number of endpoints per slice
   maxNumberEndpointPerSlice: 100
+  ## @param feature.announcedInterfacesToExclude The list of network interface excluded for announcing Egress IP.
+  announcedInterfacesToExclude:
+    - "^cali.*"
+    - "br-*"
 
 ## @section Egressgateway agent parameters
 ##

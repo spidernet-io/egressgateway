@@ -41,6 +41,7 @@ helm install egressgateway egressgateway/egressgateway --namespace kube-system
 | `feature.egressIgnoreCIDR.autoDetect.nodeIP`    | if ignore node ip                                                                                                          | `true`                  |
 | `feature.egressIgnoreCIDR.custom`               | CIDRs provided manually                                                                                                    | `[]`                    |
 | `feature.maxNumberEndpointPerSlice`             | max number of endpoints per slice                                                                                          | `100`                   |
+| `feature.announcedInterfacesToExclude`          | The list of network interface excluded for announcing Egress IP.                                                           | `["^cali.*","br-*"]`    |
 
 ### Egressgateway agent parameters
 

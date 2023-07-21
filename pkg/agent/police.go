@@ -119,6 +119,11 @@ func (r *policeReconciler) initApplyPolicy() error {
 		return nil
 	}
 
+	err = r.ensureClusterInfoIPSet()
+	if err != nil {
+		return fmt.Errorf("ensure cluster info ipset with error: %v", err)
+	}
+
 	unSnatPolicies := make(map[egressv1.Policy]*PolicyCommon)
 	snatPolicies := make(map[egressv1.Policy]*PolicyCommon)
 	for _, item := range gateways.Items {
@@ -612,22 +617,9 @@ func (r *policeReconciler) reconcileClusterInfo(ctx context.Context, req reconci
 		return nil
 	}
 
-	err = r.ipset.CreateSet(&ipset.IPSet{
-		Name:       EgressClusterCIDRIPv4,
-		SetType:    ipset.HashNet,
-		HashFamily: "inet",
-	}, true)
+	err = r.ensureClusterInfoIPSet()
 	if err != nil {
-		return reconcile.Result{}, err
-	}
-
-	err = r.ipset.CreateSet(&ipset.IPSet{
-		Name:       EgressClusterCIDRIPv6,
-		SetType:    ipset.HashNet,
-		HashFamily: "inet6",
-	}, true)
-	if err != nil {
-		return reconcile.Result{}, err
+		return reconcile.Result{}, fmt.Errorf("ensure cluster info ipset with error: %v", err)
 	}
 
 	gotIPv4, err := r.ipset.ListEntries(EgressClusterCIDRIPv4)
@@ -660,6 +652,24 @@ func (r *policeReconciler) reconcileClusterInfo(ctx context.Context, req reconci
 	}
 
 	return reconcile.Result{}, nil
+}
+
+func (r *policeReconciler) ensureClusterInfoIPSet() error {
+	if err := r.ipset.CreateSet(&ipset.IPSet{
+		Name:       EgressClusterCIDRIPv4,
+		SetType:    ipset.HashNet,
+		HashFamily: "inet",
+	}, true); err != nil {
+		return err
+	}
+	if err := r.ipset.CreateSet(&ipset.IPSet{
+		Name:       EgressClusterCIDRIPv6,
+		SetType:    ipset.HashNet,
+		HashFamily: "inet6",
+	}, true); err != nil {
+		return err
+	}
+	return nil
 }
 
 // reconcileGateway reconcile egress gateway
