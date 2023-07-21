@@ -588,11 +588,7 @@ func (t *Table) getHashesAndRulesFromDataplane() (hashes map[string][]string, ru
 		hashes, rules, err := t.attemptToGetHashesAndRulesFromDataplane()
 		if err != nil {
 			countNumSaveErrors.Inc()
-			var stderr string
-			if ee, ok := err.(*exec.ExitError); ok {
-				stderr = string(ee.Stderr)
-			}
-			t.logCxt.WithValues("stderr", stderr).Info("%s command failed", t.iptablesSaveCmd)
+			t.logCxt.Error(err, "failed to run command", "command", t.iptablesSaveCmd)
 			if retries > 0 {
 				retries--
 				t.timeSleep(retryDelay)
