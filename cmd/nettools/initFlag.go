@@ -29,7 +29,6 @@ func ParseFlag() Config {
 	}
 
 	flag.Parse()
-	flag.Usage()
 
 	return config
 }
