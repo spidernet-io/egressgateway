@@ -48,6 +48,10 @@ func DeleteEgressGateway(f *framework.Framework, gateway *egressv1beta1.EgressGa
 	return f.DeleteResource(gateway, opts...)
 }
 
+func UpdateEgressGateway(f *framework.Framework, gateway *egressv1beta1.EgressGateway, opts ...client.UpdateOption) error {
+	return f.UpdateResource(gateway, opts...)
+}
+
 // DeleteEgressGatewayIfExists delete egressGateway if its exists
 func DeleteEgressGatewayIfExists(f *framework.Framework, name string, duration time.Duration) error {
 	gateway := new(egressv1beta1.EgressGateway)
