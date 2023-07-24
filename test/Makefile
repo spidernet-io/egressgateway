@@ -6,6 +6,7 @@ init_kind_env:
 	make init_one_kind -e KIND_CONFIG_PATH=./kindconfig/global-kind.yaml -e KIND_CLUSTER_NAME=$(E2E_KIND_CLUSTER_NAME) -e KIND_KUBECONFIG=$(E2E_KIND_KUBECONFIG_PATH)
 	make install_proscope
 	make install_calico
+	make install_kwok
 	make run_nettool_server
 
 
@@ -86,6 +87,14 @@ install_calico:
 	export E2E_IP_FAMILY=$(E2E_IP_FAMILY); \
 	export E2E_KIND_KUBECONFIG_PATH=$(E2E_KIND_KUBECONFIG_PATH); \
 	bash ./scripts/installCalico.sh
+
+# install kwok
+.PHONY: install_kwok
+install_kwok:
+	echo "install kwok"
+	export INSTALL_TIME_OUT=$(INSTALL_TIME_OUT); \
+	export E2E_KIND_KUBECONFIG_PATH=$(E2E_KIND_KUBECONFIG_PATH); \
+	bash ./scripts/installKwok.sh
 
 
 # run_nettool_server
