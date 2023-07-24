@@ -6,8 +6,10 @@ package controller
 import (
 	"context"
 	"fmt"
+	"reflect"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/go-logr/logr"
 	calicov1 "github.com/tigera/operator/pkg/apis/crd.projectcalico.org/v1"
@@ -32,6 +34,7 @@ type eciReconciler struct {
 	log               logr.Logger
 	config            *config.Config
 	doOnce            sync.Once
+	eciLock           sync.Mutex
 	nodeIPv4Map       map[string]string
 	nodeIPv6Map       map[string]string
 	calicoV4IPPoolMap map[string]string
@@ -496,6 +499,9 @@ func (r *eciReconciler) getEgressClusterInfo(ctx context.Context) error {
 
 // updateEgressClusterInfo update EgressClusterInfo cr
 func (r *eciReconciler) updateEgressClusterInfo(ctx context.Context) error {
+	r.eciLock.Lock()
+	defer r.eciLock.Unlock()
+
 	eci := new(egressv1beta1.EgressClusterInfo)
 	err := r.client.Get(ctx, types.NamespacedName{Name: defaultEgressClusterInfoName}, eci)
 	if err != nil {
@@ -508,7 +514,29 @@ func (r *eciReconciler) updateEgressClusterInfo(ctx context.Context) error {
 		return err
 	}
 	r.log.V(1).Info("update", "patch.Data", string(data))
-	return r.client.Status().Patch(ctx, r.eci, patch)
+	err = r.client.Status().Patch(ctx, r.eci, patch)
+	if err != nil {
+		return err
+	}
+	ctx, cancel := context.WithTimeout(context.TODO(), time.Second*3)
+	defer cancel()
+	for {
+		select {
+		case <-ctx.Done():
+			return fmt.Errorf("timeout to wait egci update")
+		default:
+			err = r.client.Get(ctx, types.NamespacedName{Name: defaultEgressClusterInfoName}, eci)
+			if err != nil {
+				return err
+			}
+			r.log.V(1).Info("status", "eci.Status", eci.Status)
+			r.log.V(1).Info("status", "r.eci.Status", r.eci.Status)
+			if reflect.DeepEqual(eci.Status, r.eci.Status) {
+				return nil
+			}
+			time.Sleep(time.Millisecond * 100)
+		}
+	}
 }
 
 // getEgressIgnoreCIDRConfig get config about EgressIgnoreCIDR from egressgateway configmap
