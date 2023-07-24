@@ -13,7 +13,7 @@ import (
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	egressgatewayv1beta1 "github.com/spidernet-io/egressgateway/pkg/k8s/apis/egressgateway.spidernet.io/v1beta1"
+	"github.com/spidernet-io/egressgateway/pkg/k8s/apis/v1beta1"
 	"github.com/spidernet-io/egressgateway/test/e2e/common"
 	"github.com/spidernet-io/egressgateway/test/e2e/tools"
 )
@@ -23,14 +23,14 @@ var _ = Describe("EgressPolicy", func() {
 		var (
 			// gateway
 			egressGatewayName string
-			IPPools           egressgatewayv1beta1.Ippools
-			nodeSelector      egressgatewayv1beta1.NodeSelector
+			IPPools           v1beta1.Ippools
+			nodeSelector      v1beta1.NodeSelector
 
 			// policy
 			egressPolicyName    string
-			emptyEgressIP       egressgatewayv1beta1.EgressIP
-			egressPolicy        *egressgatewayv1beta1.EgressPolicy
-			egressClusterPolicy *egressgatewayv1beta1.EgressClusterPolicy
+			emptyEgressIP       v1beta1.EgressIP
+			egressPolicy        *v1beta1.EgressPolicy
+			egressClusterPolicy *v1beta1.EgressClusterPolicy
 
 			unmatchedIPv4, unmatchedIPv6 string
 			unmatchedDesSubnet           []string
@@ -45,7 +45,7 @@ var _ = Describe("EgressPolicy", func() {
 			// gateway
 			egressGatewayName = tools.GenerateRandomName("eg")
 			IPPools = common.GenerateRangeEgressGatewayIPPools(f, 3)
-			nodeSelector = egressgatewayv1beta1.NodeSelector{Selector: &v1.LabelSelector{MatchLabels: nodeObjs[0].Labels}}
+			nodeSelector = v1beta1.NodeSelector{Selector: &v1.LabelSelector{MatchLabels: nodeObjs[0].Labels}}
 
 			GinkgoWriter.Printf("Create egressGateway: %s\n", egressGatewayName)
 			egressGatewayYaml := common.GenerateEgressGatewayYaml(egressGatewayName, IPPools, nodeSelector)
@@ -71,9 +71,9 @@ var _ = Describe("EgressPolicy", func() {
 
 			// policy
 			egressPolicyName = tools.GenerateRandomName("policy")
-			emptyEgressIP = egressgatewayv1beta1.EgressIP{}
-			egressPolicy = new(egressgatewayv1beta1.EgressPolicy)
-			egressClusterPolicy = new(egressgatewayv1beta1.EgressClusterPolicy)
+			emptyEgressIP = v1beta1.EgressIP{}
+			egressPolicy = new(v1beta1.EgressPolicy)
+			egressClusterPolicy = new(v1beta1.EgressClusterPolicy)
 
 			if v4Enabled {
 				unmatchedIPv4 = common.RandomIPPoolV4Cidr("32")
@@ -200,11 +200,11 @@ func updatePolicy(policyName string, obj client.Object, label map[string]string,
 	// Get policy
 	Expect(common.GetEgressPolicy(f, policyName, common.NSDefault, obj)).NotTo(HaveOccurred())
 	// Edit policy
-	p, pOk := obj.(*egressgatewayv1beta1.EgressPolicy)
+	p, pOk := obj.(*v1beta1.EgressPolicy)
 	if pOk {
 		Expect(common.EditEgressPolicy(f, p, label, dst)).NotTo(HaveOccurred())
 	}
-	cp, cpOk := obj.(*egressgatewayv1beta1.EgressClusterPolicy)
+	cp, cpOk := obj.(*v1beta1.EgressClusterPolicy)
 	if cpOk {
 		Expect(common.EditEgressClusterPolicy(f, cp, label, dst)).NotTo(HaveOccurred())
 	}

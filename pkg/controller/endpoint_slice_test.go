@@ -18,7 +18,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
 	"github.com/spidernet-io/egressgateway/pkg/config"
-	egressv1 "github.com/spidernet-io/egressgateway/pkg/k8s/apis/egressgateway.spidernet.io/v1beta1"
+	"github.com/spidernet-io/egressgateway/pkg/k8s/apis/v1beta1"
 	"github.com/spidernet-io/egressgateway/pkg/logger"
 	"github.com/spidernet-io/egressgateway/pkg/schema"
 )
@@ -65,7 +65,7 @@ func TestReconcilerEgressEndpointSlice(t *testing.T) {
 				assert.Equal(t, req.expRequeue, res.Requeue)
 
 				ctx := context.Background()
-				policy := new(egressv1.EgressPolicy)
+				policy := new(v1beta1.EgressPolicy)
 				err = cli.Get(ctx, req.nn, policy)
 				if err != nil {
 					t.Fatal(err)
@@ -90,7 +90,7 @@ func TestReconcilerEgressEndpointSlice(t *testing.T) {
 	}
 }
 
-func checkPolicyIPsInEpSlice(pods *corev1.PodList, eps *egressv1.EgressEndpointSliceList) error {
+func checkPolicyIPsInEpSlice(pods *corev1.PodList, eps *v1beta1.EgressEndpointSliceList) error {
 	if pods == nil || eps == nil {
 		return nil
 	}
@@ -148,15 +148,15 @@ func compareMaps(podMap, epMap map[string]struct{}) error {
 func caseAddPolicy() TestCaseEPS {
 	labels := map[string]string{"app": "nginx1"}
 	initialObjects := []client.Object{
-		&egressv1.EgressPolicy{
+		&v1beta1.EgressPolicy{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      "policy1",
 				Namespace: "default",
 			},
-			Spec: egressv1.EgressPolicySpec{
+			Spec: v1beta1.EgressPolicySpec{
 				EgressGatewayName: "",
-				EgressIP:          egressv1.EgressIP{},
-				AppliedTo: egressv1.AppliedTo{
+				EgressIP:          v1beta1.EgressIP{},
+				AppliedTo: v1beta1.AppliedTo{
 					PodSelector: &metav1.LabelSelector{MatchLabels: labels},
 				},
 				DestSubnet: nil,
@@ -229,29 +229,29 @@ func caseAddPolicy() TestCaseEPS {
 func caseUpdatePod() TestCaseEPS {
 	labels := map[string]string{"app": "nginx1"}
 	initialObjects := []client.Object{
-		&egressv1.EgressPolicy{
+		&v1beta1.EgressPolicy{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      "policy1",
 				Namespace: "default",
 			},
-			Spec: egressv1.EgressPolicySpec{
+			Spec: v1beta1.EgressPolicySpec{
 				EgressGatewayName: "",
-				EgressIP:          egressv1.EgressIP{},
-				AppliedTo: egressv1.AppliedTo{
+				EgressIP:          v1beta1.EgressIP{},
+				AppliedTo: v1beta1.AppliedTo{
 					PodSelector: &metav1.LabelSelector{MatchLabels: labels},
 				},
 				DestSubnet: nil,
 			},
 		},
-		&egressv1.EgressEndpointSlice{
+		&v1beta1.EgressEndpointSlice{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      "s1",
 				Namespace: "default",
 				Labels: map[string]string{
-					egressv1.LabelPolicyName: "policy1",
+					v1beta1.LabelPolicyName: "policy1",
 				},
 			},
-			Endpoints: []egressv1.EgressEndpoint{
+			Endpoints: []v1beta1.EgressEndpoint{
 				{
 					Namespace: "default",
 					Pod:       "pod1",
@@ -344,29 +344,29 @@ func caseUpdatePod() TestCaseEPS {
 func caseDeletePod() TestCaseEPS {
 	labels := map[string]string{"app": "nginx1"}
 	initialObjects := []client.Object{
-		&egressv1.EgressPolicy{
+		&v1beta1.EgressPolicy{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      "policy1",
 				Namespace: "default",
 			},
-			Spec: egressv1.EgressPolicySpec{
+			Spec: v1beta1.EgressPolicySpec{
 				EgressGatewayName: "",
-				EgressIP:          egressv1.EgressIP{},
-				AppliedTo: egressv1.AppliedTo{
+				EgressIP:          v1beta1.EgressIP{},
+				AppliedTo: v1beta1.AppliedTo{
 					PodSelector: &metav1.LabelSelector{MatchLabels: labels},
 				},
 				DestSubnet: nil,
 			},
 		},
-		&egressv1.EgressEndpointSlice{
+		&v1beta1.EgressEndpointSlice{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      "s1",
 				Namespace: "default",
 				Labels: map[string]string{
-					egressv1.LabelPolicyName: "policy1",
+					v1beta1.LabelPolicyName: "policy1",
 				},
 			},
-			Endpoints: []egressv1.EgressEndpoint{
+			Endpoints: []v1beta1.EgressEndpoint{
 				{
 					Namespace: "default",
 					Pod:       "pod1",
@@ -389,15 +389,15 @@ func caseDeletePod() TestCaseEPS {
 				},
 			},
 		},
-		&egressv1.EgressEndpointSlice{
+		&v1beta1.EgressEndpointSlice{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      "s2",
 				Namespace: "default",
 				Labels: map[string]string{
-					egressv1.LabelPolicyName: "policy1",
+					v1beta1.LabelPolicyName: "policy1",
 				},
 			},
-			Endpoints: []egressv1.EgressEndpoint{
+			Endpoints: []v1beta1.EgressEndpoint{
 				{
 					Namespace: "default",
 					Pod:       "pod3",

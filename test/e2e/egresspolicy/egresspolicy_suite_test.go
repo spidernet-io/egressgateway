@@ -4,7 +4,6 @@
 package egresspolicy_test
 
 import (
-	"github.com/spidernet-io/egressgateway/test/e2e/tools"
 	"testing"
 	"time"
 
@@ -16,8 +15,9 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/spidernet-io/e2eframework/framework"
-	egressgatewayv1beta1 "github.com/spidernet-io/egressgateway/pkg/k8s/apis/egressgateway.spidernet.io/v1beta1"
+	egressgatewayv1beta1 "github.com/spidernet-io/egressgateway/pkg/k8s/apis/v1beta1"
 	"github.com/spidernet-io/egressgateway/test/e2e/common"
+	"github.com/spidernet-io/egressgateway/test/e2e/tools"
 )
 
 func TestEgresspolicy(t *testing.T) {

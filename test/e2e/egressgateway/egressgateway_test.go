@@ -4,15 +4,16 @@
 package egressgateway_test
 
 import (
-	"github.com/spidernet-io/egressgateway/test/e2e/tools"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"time"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 
-	egressv1beta1 "github.com/spidernet-io/egressgateway/pkg/k8s/apis/egressgateway.spidernet.io/v1beta1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
+	egressv1beta1 "github.com/spidernet-io/egressgateway/pkg/k8s/apis/v1beta1"
 	"github.com/spidernet-io/egressgateway/test/e2e/common"
+	"github.com/spidernet-io/egressgateway/test/e2e/tools"
 )
 
 var _ = Describe("egressGateway", Label("egressGateway"), func() {
