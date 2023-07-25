@@ -74,6 +74,11 @@ const (
 	NSDefault  = "default"
 )
 
+// node
+var (
+	ControlPlaneLabel = map[string]string{"node-role.kubernetes.io/control-plane=": ""}
+)
+
 var Env = map[string]string{
 	IMAGE:            "",
 	NETTOOLS_SERVER:  "",

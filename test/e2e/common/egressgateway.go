@@ -19,7 +19,6 @@ import (
 	"github.com/spidernet-io/e2eframework/framework"
 	egressv1beta1 "github.com/spidernet-io/egressgateway/pkg/k8s/apis/v1beta1"
 	"github.com/spidernet-io/egressgateway/test/e2e/err"
-	"github.com/spidernet-io/egressgateway/test/e2e/tools"
 )
 
 func GenerateEgressGatewayYaml(name string, ipPools egressv1beta1.Ippools, nodeSelector egressv1beta1.NodeSelector) *egressv1beta1.EgressGateway {
@@ -86,35 +85,94 @@ func DeleteEgressGatewayUntilFinish(f *framework.Framework, gateway *egressv1bet
 	}
 }
 
-func WaitEgressGatewayUpdatedStatus(f *framework.Framework, name string, expectNodes []string, duration time.Duration) (gateway *egressv1beta1.EgressGateway, e error) {
+// WaitEgressGatewayDefaultEIPUpdated after create gateway use empty `DefaultEIP`
+func WaitEgressGatewayDefaultEIPUpdated(f *framework.Framework, name string, v4Enabled, v6Enabled bool, duration time.Duration) (v4DefaultEip, v6DefaultEip string, e error) {
 	ctx, cancel := context.WithTimeout(context.TODO(), duration)
 	defer cancel()
-	gateway = new(egressv1beta1.EgressGateway)
-	var nodes []string
+	gateway := new(egressv1beta1.EgressGateway)
 	for {
 		select {
 		case <-ctx.Done():
-			return nil, err.TIME_OUT
+			return "", "", err.TIME_OUT
 		default:
 			e = GetEgressGateway(f, name, gateway)
-			// gateway
-			GinkgoWriter.Printf("gateway: %v\n", gateway)
 			if e != nil {
-				return nil, e
+				return "", "", e
 			}
-			// expectNodes
-			GinkgoWriter.Printf("expectNodes: %v\n", expectNodes)
+			v4DefaultEip = gateway.Spec.Ippools.Ipv4DefaultEIP
+			if v4Enabled && v4DefaultEip == "" {
+				time.Sleep(time.Second)
+				break
+			}
+			v6DefaultEip = gateway.Spec.Ippools.Ipv6DefaultEIP
+			if v6Enabled && v6DefaultEip == "" {
+				time.Sleep(time.Second)
+				break
+			}
+			return
+		}
+	}
+}
+
+// WaitEgressGatewayStatusUpdated after policy using the gateway created, wait the status about policy updated
+func WaitEgressGatewayStatusUpdated(f *framework.Framework, policy *egressv1beta1.EgressPolicy, timeout time.Duration) (nodeName string, v4Eip, v6Eip string, e error) {
+	ctx, cancel := context.WithTimeout(context.TODO(), timeout)
+	defer cancel()
+
+	gatewayName := policy.Spec.EgressGatewayName
+	gateway := new(egressv1beta1.EgressGateway)
+	for {
+		select {
+		case <-ctx.Done():
+			return "", "", "", err.TIME_OUT
+		default:
+			e = GetEgressGateway(f, gatewayName, gateway)
+			if e != nil {
+				return "", "", "", e
+			}
+			status := gateway.Status
+			for _, node := range status.NodeList {
+				for _, eip := range node.Eips {
+					for _, p := range eip.Policies {
+						if p.Name == policy.Name && eip.IPv4 == policy.Status.Eip.Ipv4 && eip.IPv6 == policy.Status.Eip.Ipv6 {
+							return node.Name, eip.IPv4, eip.IPv6, nil
+						}
+					}
+				}
+			}
+			time.Sleep(time.Second)
+		}
+	}
+}
+
+// WaitEipToExpectNode wait for `EIP` to take effect on the specified node
+func WaitEipToExpectNode(f *framework.Framework, expectNodeName string, policy *egressv1beta1.EgressPolicy, timeout time.Duration) error {
+	ctx, cancel := context.WithTimeout(context.TODO(), timeout)
+	defer cancel()
+
+	gatewayName := policy.Spec.EgressGatewayName
+	gateway := new(egressv1beta1.EgressGateway)
+	for {
+		select {
+		case <-ctx.Done():
+			return err.TIME_OUT
+		default:
+			e := GetEgressGateway(f, gatewayName, gateway)
+			if e != nil {
+				return e
+			}
 			for _, node := range gateway.Status.NodeList {
-				GinkgoWriter.Printf("node: %v\n", node.Name)
-			}
-			if len(gateway.Status.NodeList) == len(expectNodes) {
-				nodes = []string{}
-				for _, node := range gateway.Status.NodeList {
-					nodes = append(nodes, node.Name)
+				if node.Name == expectNodeName {
+					for _, eip := range node.Eips {
+						GinkgoWriter.Printf("debug: eip: %v\n", eip)
+						for _, p := range eip.Policies {
+							if p.Name == policy.Name && eip.IPv4 == policy.Status.Eip.Ipv4 && eip.IPv6 == policy.Status.Eip.Ipv6 {
+								return nil
+							}
+						}
+					}
 				}
-				if tools.IsSameSlice(nodes, expectNodes) {
-					return gateway, nil
-				}
+
 			}
 			time.Sleep(time.Second)
 		}

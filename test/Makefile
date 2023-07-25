@@ -200,6 +200,8 @@ deploy_project:
 		fi ; \
 		HELM_OPTION+=" --set agent.prometheus.enabled=true --set controller.prometheus.enabled=true  " ; \
 		HELM_OPTION+=" --set agent.debug.logLevel=debug --set controller.debug.logLevel=debug " ; \
+		HELM_OPTION+=" --set controller.affinity.nodeAffinity.requiredDuringSchedulingIgnoredDuringExecution.nodeSelectorTerms[0].matchExpressions[0].key=node-role.kubernetes.io/control-plane  " ; \
+		HELM_OPTION+=" --set controller.affinity.nodeAffinity.requiredDuringSchedulingIgnoredDuringExecution.nodeSelectorTerms[0].matchExpressions[0].operator=Exists  " ; \
 		if [ "$(E2E_IP_FAMILY)" == "dual" ] ; then HELM_OPTION+=" --set feature.enableIPv4=true --set feature.enableIPv6=true" ; fi ; \
 		if [ "$(E2E_IP_FAMILY)" == "ipv4" ] ; then HELM_OPTION+=" --set feature.enableIPv4=true --set feature.enableIPv6=false" ; fi ; \
 		if [ "$(E2E_IP_FAMILY)" == "ipv6" ] ; then HELM_OPTION+=" --set feature.enableIPv4=false --set feature.enableIPv6=true" ; fi ; \
