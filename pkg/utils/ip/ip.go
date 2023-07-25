@@ -199,7 +199,7 @@ func IsIPv4Cidr(cidr string) (bool, error) {
 	}
 	verified := ipnet.IP.To4() != nil && ipnet.Mask != nil && len(ipnet.Mask) == net.IPv4len
 	if !verified {
-		return false, fmt.Errorf("%s is invalid IPv4 CIDR", cidr)
+		return false, nil
 	}
 	return true, nil
 }
@@ -211,7 +211,7 @@ func IsIPv6Cidr(cidr string) (bool, error) {
 	}
 	verified := ipnet.IP.To16() != nil && ipnet.Mask != nil && len(ipnet.Mask) == net.IPv6len
 	if !verified {
-		return false, fmt.Errorf("%s is invalid IPv6 CIDR", cidr)
+		return false, nil
 	}
 	return true, nil
 }

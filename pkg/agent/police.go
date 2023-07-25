@@ -555,8 +555,16 @@ func (r *policeReconciler) reconcileClusterInfo(ctx context.Context, req reconci
 		}
 	}
 
-	addIP(info.Status.EgressIgnoreCIDR.NodeIP.IPv4...)
-	addIP(info.Status.EgressIgnoreCIDR.NodeIP.IPv6...)
+	nodesIPv4 := make([]string, 0)
+	for _, pair := range info.Status.NodeIP {
+		nodesIPv4 = append(nodesIPv4, pair.IPv4...)
+	}
+	nodesIPv6 := make([]string, 0)
+	for _, pair := range info.Status.NodeIP {
+		nodesIPv6 = append(nodesIPv6, pair.IPv6...)
+	}
+	addIP(nodesIPv4...)
+	addIP(nodesIPv6...)
 
 	addCIDR := func(items ...string) {
 		for _, item := range items {
@@ -572,13 +580,24 @@ func (r *policeReconciler) reconcileClusterInfo(ctx context.Context, req reconci
 		}
 	}
 
-	addCIDR(info.Status.EgressIgnoreCIDR.PodCIDR.IPv4...)
-	addCIDR(info.Status.EgressIgnoreCIDR.PodCIDR.IPv6...)
+	v4PodCidrs := make([]string, 0)
+	for _, pair := range info.Status.PodCIDR {
+		v4PodCidrs = append(v4PodCidrs, pair.IPv4...)
+	}
+	v6PodCidrs := make([]string, 0)
+	for _, pair := range info.Status.PodCIDR {
+		v6PodCidrs = append(v6PodCidrs, pair.IPv6...)
+	}
 
-	addCIDR(info.Status.EgressIgnoreCIDR.ClusterIP.IPv4...)
-	addCIDR(info.Status.EgressIgnoreCIDR.ClusterIP.IPv6...)
+	addCIDR(v4PodCidrs...)
+	addCIDR(v6PodCidrs...)
 
-	addCIDR(r.cfg.FileConfig.EgressIgnoreCIDR.Custom...)
+	if info.Status.ClusterIP != nil {
+		addCIDR(info.Status.ClusterIP.IPv4...)
+		addCIDR(info.Status.ClusterIP.IPv6...)
+	}
+
+	addCIDR(info.Status.ExtraCidr...)
 
 	process := func(gotList []string, expList []string, toAdd, toDel func(item string) error) error {
 		got := sets.NewString(gotList...)

@@ -1,0 +1,10 @@
+apiVersion: egressgateway.spidernet.io/v1beta1
+kind: EgressClusterInfo
+metadata:
+  name: default
+spec:
+  autoDetect:
+    clusterIP: {{ .Values.feature.clusterCIDR.autoDetect.clusterIP }}
+    podCidrMode: {{ .Values.feature.clusterCIDR.autoDetect.podCidrMode }}
+    nodeIP: {{ .Values.feature.clusterCIDR.autoDetect.nodeIP }}
+  extraCidr: {{ .Values.feature.clusterCIDR.extraCidr }}

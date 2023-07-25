@@ -14,6 +14,7 @@ import (
 	runtimeWebhook "sigs.k8s.io/controller-runtime/pkg/webhook"
 
 	"github.com/spidernet-io/egressgateway/pkg/config"
+	"github.com/spidernet-io/egressgateway/pkg/controller/egress_cluster_info"
 	"github.com/spidernet-io/egressgateway/pkg/controller/metrics"
 	"github.com/spidernet-io/egressgateway/pkg/controller/webhook"
 	"github.com/spidernet-io/egressgateway/pkg/egressgateway"
@@ -94,7 +95,7 @@ func New(cfg *config.Config) (types.Service, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to create egress node controller: %w", err)
 	}
-	err = newEgressClusterInfoController(mgr, log, cfg)
+	err = egressclusterinfo.NewEgressClusterInfoController(mgr, log)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create egress cluster info controller: %w", err)
 	}

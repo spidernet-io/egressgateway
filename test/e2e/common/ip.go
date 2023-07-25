@@ -158,6 +158,26 @@ func CheckIPIncluded(version constant.IPVersion, ip string, ips []string) (bool,
 	return false, nil
 }
 
+// CheckIPSlice check if slice is valid ip format, it supports 3 formats: single IP, IP range, IP cidr, like ["172.30.0.2", "172.30.0.3-172.30.0-5", 172.30.1.0/24]
+func CheckIPSlice(ipSlice []string) error {
+	for _, s := range ipSlice {
+		i := 0
+		_, _, err := net.ParseCIDR(s)
+		if err != nil {
+			if iputil.IsIPv4IPRange(s) {
+				i++
+			}
+			if iputil.IsIPv6IPRange(s) {
+				i++
+			}
+			if i == 0 {
+				return ERR_IP_FORMAT
+			}
+		}
+	}
+	return nil
+}
+
 // IpToInt converts net.IP to big.Int.
 func IpToInt(ip net.IP) *big.Int {
 	if v := ip.To4(); v != nil {

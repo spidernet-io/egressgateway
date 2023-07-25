@@ -4,33 +4,58 @@ EgressClusterInfo CRD 为了简化 Egress 策略的配置，引入 Egress Ignore
 apiVersion: egressgateway.spidernet.io/v1beta1
 kind: EgressClusterInfo
 metadata:
-  name: "default"    # 1
-spec: {}
+  name: default  # 1
+spec:
+  autoDetect:
+    clusterIP: true # 2
+    nodeIP: true # 3
+    podCidrMode: auto # 4
+  extraCidr: # 5
+  - 10.10.10.1
 status:
-  egressIgnoreCIDR:  # 2
-    clusterIP:       # 3
+  clusterIP: # 6
+    ipv4:
+    - 172.41.0.0/16
+    ipv6:
+    - fd41::/108
+  extraCidr: # 7
+  - 10.10.10.1
+  nodeIP: # 8
+    egressgateway-control-plane:
       ipv4:
-      - "172.41.0.0/16"
+      - 172.18.0.3
       ipv6:
-      - "fd41::/108"
-    nodeIP:
+      - fc00:f853:ccd:e793::3
+    egressgateway-worker:
       ipv4:
-      - "172.18.0.3"
-      - "172.18.0.4"
-      - "172.18.0.2"
+      - 172.18.0.2
       ipv6:
-      - "fc00:f853:ccd:e793::3"
-      - "fc00:f853:ccd:e793::4"
-      - "fc00:f853:ccd:e793::2"
-    podCIDR:
+      - fc00:f853:ccd:e793::2
+    egressgateway-worker2:
       ipv4:
-      - "172.40.0.0/16"
+      - 172.18.0.4
       ipv6:
-      - "fd40::/48"
+      - fc00:f853:ccd:e793::4
+  podCIDR: # 9
+    default-ipv4-ippool:
+      ipv4:
+      - 172.40.0.0/16
+    default-ipv6-ippool:
+      ipv6:
+      - fd40::/48
+    test-ippool:
+      ipv4:
+      - 177.70.0.0/16
+  podCidrMode: calico # 10
 ```
 
-1. 名称默认为 `default`，由系统维护，只能创建一个，不可被修改。
-2. `egressIgnoreCIDR` 定义 EgressGateway 要忽略的 CIDR。
-3. `clusterIP` 集群默认的 service-cluster-ip-range。是否开启，由 EgressGateway 配置文件默认的 `egressIgnoreCIDR.autoDetect.clusterIP` 指定。
-4. `nodeIP` 集群节点的 IP（只取 Node yaml `status.address` 中的 IP，多卡情况下，其他网卡 IP 被视作集群外 IP 处理）集合。是否开启，由 EgressGateway 配置文件默认的 `egressIgnoreCIDR.autoDetect.nodeIP` 指定。
-5. `podCIDR` 集群的 CNI 使用的 CIDR。由 egressgateway 配置文件默认的 `egressIgnoreCIDR.autoDetect.podCIDR` 指定。
+1. 名称为 `default`，由系统维护只能创建一个;
+2. `clusterIP`，如果设置为 `true`，`Service CIDR` 会自动检测
+3. `nodeIP`，如果设置为 `true`，会自动检测 `nodeIP` 相关变化，并动态更新到 `EgressClusterInfo` 的 `status.nodeIP` 中
+4. `podCidrMode`，目前支持 `k8s`、 `calico`、`auto`、 `""`，表示要自动检测对应的 podCidr，默认为 `auto`，如果为 `auto` 表示自动检测集群使用的 cni， 如果检测不到，则使用 集群的 podCidr。如果为 `""` 表示不检测
+5. `extraCidr`，可手动填写要忽略掉的 `IP` 集合
+6. `status.clusterIP`，如果 `spec.autoDetect.clusterIP` 为 `true`，则自动检测集群 `Service CIDR`，并更新到此处
+7. `status.extraCidr`，对应 `spec.extraCidr` 
+8. `status.nodeIP`，如果 `spec.autoDetect.nodeIP` 为 `true`，则自动检测集群 `nodeIP`，并更新到此处
+9. `status.podCIDR`，对应 `spec.autoDetect.podCidrMode`，进行相关 `podCidr` 的更新
+10. `status.podCidrMode`，对应 `spec.autoDetect.podCidrMode` 为 `auto` 的场景

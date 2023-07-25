@@ -46,16 +46,16 @@ feature:
     id: 100
     ## @param feature.vxlan.disableChecksumOffload Disable checksum offload
     disableChecksumOffload: true
-  egressIgnoreCIDR:
+  clusterCIDR:
     autoDetect:
-      ## @param feature.egressIgnoreCIDR.autoDetect.podCIDR cni cluster used
-      podCIDR: "calico"
-      ## @param feature.egressIgnoreCIDR.autoDetect.clusterIP if ignore service ip
+      ## @param feature.clusterCIDR.autoDetect.podCidrMode cni cluster used, it can be specified as `k8s`, `calico`, `auto` or `""`. The default value is `auto`.
+      podCidrMode: "auto"
+      ## @param feature.clusterCIDR.autoDetect.clusterIP if ignore service ip
       clusterIP: true
-      ## @param feature.egressIgnoreCIDR.autoDetect.nodeIP if ignore node ip
+      ## @param feature.clusterCIDR.autoDetect.nodeIP if ignore node ip
       nodeIP: true
-    ## @param feature.egressIgnoreCIDR.custom CIDRs provided manually
-    custom: []
+    ## @param feature.clusterCIDR.extraCidr CIDRs provided manually
+    extraCidr: []
   ## @param feature.maxNumberEndpointPerSlice max number of endpoints per slice
   maxNumberEndpointPerSlice: 100
   ## @param feature.announcedInterfacesToExclude The list of network interface excluded for announcing Egress IP.
