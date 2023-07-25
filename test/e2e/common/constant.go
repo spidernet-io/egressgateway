@@ -52,13 +52,14 @@ const (
 
 // env info key
 const (
-	IMAGE            = "IMAGE"
-	NETTOOLS_SERVER  = "NETTOOLS_SERVER"
-	MOD              = "MOD"
-	TCP_PORT         = "TCP_PORT"
-	UDP_PORT         = "UDP_PORT"
-	WEB_PORT         = "WEB_PORT"
-	EGRESS_NAMESPACE = "EGRESS_NAMESPACE"
+	IMAGE             = "IMAGE"
+	NETTOOLS_SERVER_A = "NETTOOLS_SERVER_A"
+	NETTOOLS_SERVER_B = "NETTOOLS_SERVER_B"
+	MOD               = "MOD"
+	TCP_PORT          = "TCP_PORT"
+	UDP_PORT          = "UDP_PORT"
+	WEB_PORT          = "WEB_PORT"
+	EGRESS_NAMESPACE  = "EGRESS_NAMESPACE"
 )
 
 // kubeadm-config
@@ -80,13 +81,14 @@ var (
 )
 
 var Env = map[string]string{
-	IMAGE:            "",
-	NETTOOLS_SERVER:  "",
-	MOD:              "",
-	TCP_PORT:         "",
-	UDP_PORT:         "",
-	WEB_PORT:         "",
-	EGRESS_NAMESPACE: "",
+	IMAGE:             "",
+	NETTOOLS_SERVER_A: "",
+	NETTOOLS_SERVER_B: "",
+	MOD:               "",
+	TCP_PORT:          "",
+	UDP_PORT:          "",
+	WEB_PORT:          "",
+	EGRESS_NAMESPACE:  "",
 }
 
 func init() {

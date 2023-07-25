@@ -100,8 +100,12 @@ install_kwok:
 # run_nettool_server
 .PHONY: run_nettool_server
 run_nettool_server: load_nettool_image
+	echo "delete nettool server container"
+	-@ { docker rm --name $(NETTOOLS_SERVER_A) }
+	-@ { docker rm --name $(NETTOOLS_SERVER_B) }
 	echo "run nettool server container"
-	{ docker run -itd --name $(NETTOOLS_SERVER)  --network kind $(NETTOOLS_IMAGE) $(NETTOOLS_SERVER) -protocol $(MOD) -tcpPort $(TCP_PORT) --udpPort $(UDP_PORT) -webPort $(WEB_PORT) & } || { echo "failed to run nettools server"; exit 1; }
+	{ docker run -itd --name $(NETTOOLS_SERVER_A)  --network kind $(NETTOOLS_IMAGE) $(NETTOOLS_SERVER_BIN) -protocol $(MOD) -tcpPort $(TCP_PORT) --udpPort $(UDP_PORT) -webPort $(WEB_PORT) & } || { echo "failed to run nettools server a"; exit 1; }; \
+	{ docker run -itd --name $(NETTOOLS_SERVER_B)  --network kind $(NETTOOLS_IMAGE) $(NETTOOLS_SERVER_BIN) -protocol $(MOD) -tcpPort $(TCP_PORT) --udpPort $(UDP_PORT) -webPort $(WEB_PORT) & } || { echo "failed to run nettools server b"; exit 1; }; \
 	make check_netttool_server
 
 # kind load nettool image
@@ -132,7 +136,8 @@ check_netttool_server:
 	export TCP_PORT=$(TCP_PORT); \
 	export UDP_PORT=$(UDP_PORT); \
 	export WEB_PORT=$(WEB_PORT); \
-	export NETTOOLS_SERVER=$(NETTOOLS_SERVER); \
+	export NETTOOLS_SERVER_A=$(NETTOOLS_SERVER_A); \
+	export NETTOOLS_SERVER_B=$(NETTOOLS_SERVER_B); \
 	export CLIENT=$(NETTOOLS_CLIENT_BIN); \
 	export E2E_IP_FAMILY=$(E2E_IP_FAMILY); \
 	bash ./scripts/check-nettools-server.sh
@@ -260,7 +265,8 @@ e2e_test:
 		export E2E_CLUSTER_NAME=$(KIND_CLUSTER_NAME) ; \
 		echo "nettools server info"; \
 		export IMAGE=$(NETTOOLS_IMAGE); \
-		export NETTOOLS_SERVER=$(NETTOOLS_SERVER); \
+		export NETTOOLS_SERVER_A=$(NETTOOLS_SERVER_A); \
+		export NETTOOLS_SERVER_B=$(NETTOOLS_SERVER_B); \
 		export MOD=$(MOD); \
 		export TCP_PORT=$(TCP_PORT); \
 		export UDP_PORT=$(UDP_PORT); \
