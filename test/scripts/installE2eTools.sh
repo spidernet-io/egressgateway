@@ -65,6 +65,24 @@ else
     echo "pass   'docker' installed:  $(docker -v) "
 fi
 
+# config docker
+#mkdir /etc/docker
+#
+#echo '{"exec-opts": ["native.cgroupdriver=systemd"]}' > /etc/docker/daemon.json
+#
+#systemctl enable docker
+#systemctl daemon-reload
+#systemctl restart docker || exit 1
+#
+#docker info
+sudo usermod -a -G docker root
+cat /etc/docker/daemon.json
+sudo echo '{ "exec-opts": ["native.cgroupdriver=systemd"], "cgroup-parent": "/actions_job" }' > /etc/docker/daemon.json || exit 1
+sudo systemctl enable docker
+sudo systemctl daemon-reload
+sudo systemctl restart docker || exit 1
+sudo docker info
+
 # ====modify==== add more e2e binray
 
 
