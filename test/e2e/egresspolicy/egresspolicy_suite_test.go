@@ -7,8 +7,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/spidernet-io/egressgateway/test/e2e/tools"
-
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 
