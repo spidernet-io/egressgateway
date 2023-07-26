@@ -15,7 +15,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/spidernet-io/e2eframework/framework"
-	egressgatewayv1beta1 "github.com/spidernet-io/egressgateway/pkg/k8s/apis/egressgateway.spidernet.io/v1beta1"
+	egressgatewayv1beta1 "github.com/spidernet-io/egressgateway/pkg/k8s/apis/v1beta1"
 	"github.com/spidernet-io/egressgateway/test/e2e/common"
 	"github.com/spidernet-io/egressgateway/test/e2e/tools"
 )
@@ -79,7 +79,7 @@ var _ = BeforeSuite(func() {
 	// net-tool server
 	dst = make([]string, 0)
 	if v4Enabled {
-		serverIpv4b, err := tools.GetContainerIPV4(common.Env[common.NETTOOLS_SERVER], time.Second*10)
+		serverIpv4b, err := tools.GetContainerIPV4(common.Env[common.NETTOOLS_SERVER_A], time.Second*10)
 		Expect(err).NotTo(HaveOccurred())
 		serverIPv4 = string(serverIpv4b)
 		GinkgoWriter.Printf("serverIPv4: %v\n", serverIPv4)
@@ -90,7 +90,7 @@ var _ = BeforeSuite(func() {
 	}
 
 	if v6Enabled {
-		serverIpv6b, err := tools.GetContainerIPV6(common.Env[common.NETTOOLS_SERVER], time.Second*10)
+		serverIpv6b, err := tools.GetContainerIPV6(common.Env[common.NETTOOLS_SERVER_A], time.Second*10)
 		Expect(err).NotTo(HaveOccurred())
 		serverIPv6 = string(serverIpv6b)
 		Expect(serverIPv6).NotTo(BeEmpty())
