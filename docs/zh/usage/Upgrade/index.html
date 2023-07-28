@@ -15,7 +15,7 @@
         <link rel="next" href="../Uninstall/">
       
       <link rel="icon" href="../../../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.4.3, mkdocs-material-9.1.17">
+      <meta name="generator" content="mkdocs-1.5.0, mkdocs-material-9.1.21">
     
     
       
@@ -23,7 +23,7 @@
       
     
     
-      <link rel="stylesheet" href="../../../assets/stylesheets/main.26e3688c.min.css">
+      <link rel="stylesheet" href="../../../assets/stylesheets/main.eebd395e.min.css">
       
         
         <link rel="stylesheet" href="../../../assets/stylesheets/palette.ecc896b0.min.css">
@@ -65,6 +65,11 @@
     <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
     <label class="md-overlay" for="__drawer"></label>
     <div data-md-component="skip">
+      
+        
+        <a href="#_1" class="md-skip">
+          跳转至
+        </a>
       
     </div>
     <div data-md-component="announce">
@@ -306,9 +311,52 @@
       
       
       
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          Upgrade
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
       <a href="./" class="md-nav__link md-nav__link--active">
         Upgrade
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="目录">
+  
+  
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      目录
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#_1" class="md-nav__link">
+    基本命令格式
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_2" class="md-nav__link">
+    版本升级
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_3" class="md-nav__link">
+    配置升级
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
       
     </li>
   
@@ -433,7 +481,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../crds/EgressNode/" class="md-nav__link">
+      <a href="../../../crds/EgressNode.md" class="md-nav__link">
         EgressNode
       </a>
     </li>
@@ -447,7 +495,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../crds/EgressGateway/" class="md-nav__link">
+      <a href="../../../crds/EgressGateway.md" class="md-nav__link">
         EgressGateway
       </a>
     </li>
@@ -461,7 +509,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../crds/EgressPolicy/" class="md-nav__link">
+      <a href="../../../crds/EgressPolicy.md" class="md-nav__link">
         EgressPolicy
       </a>
     </li>
@@ -475,7 +523,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../crds/EgressClusterPolicy/" class="md-nav__link">
+      <a href="../../../crds/EgressClusterPolicy.md" class="md-nav__link">
         EgressClusterPolicy
       </a>
     </li>
@@ -489,7 +537,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../crds/EgressEndpointSlice/" class="md-nav__link">
+      <a href="../../../crds/EgressEndpointSlice.md" class="md-nav__link">
         EgressEndpointSlice
       </a>
     </li>
@@ -503,7 +551,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../crds/EgressClusterEndpointSlice/" class="md-nav__link">
+      <a href="../../../crds/EgressClusterEndpointSlice.md" class="md-nav__link">
         EgressClusterEndpointSlice
       </a>
     </li>
@@ -517,7 +565,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../crds/EgressClusterInfo/" class="md-nav__link">
+      <a href="../../../crds/EgressClusterInfo.md" class="md-nav__link">
         EgressClusterInfo
       </a>
     </li>
@@ -690,6 +738,35 @@
   
   
   
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      目录
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#_1" class="md-nav__link">
+    基本命令格式
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_2" class="md-nav__link">
+    版本升级
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_3" class="md-nav__link">
+    配置升级
+  </a>
+  
+</li>
+      
+    </ul>
+  
 </nav>
                   </div>
                 </div>
@@ -711,7 +788,51 @@
 
   <h1>Upgrade</h1>
 
-
+<p>本文档将指导你如何使用 <code>helm upgrade</code> 命令完成 EgressGateway 的升级。</p>
+<h3 id="_1">基本命令格式</h3>
+<div class="language-shell highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>helm<span class="w"> </span>upgrade<span class="w"> </span><span class="o">[</span>RELEASE<span class="o">]</span><span class="w"> </span><span class="o">[</span>CHART<span class="o">]</span><span class="w"> </span><span class="o">[</span>flags<span class="o">]</span>
+</span></code></pre></div>
+<p>其中，<code>[RELEASE]</code> 代表安装时设置的应用名称，<code>[CHART]</code> 指的是图表，而 <code>[flags]</code> 可以指定额外的参数。如需了解更多有关 <code>helm upgrade</code> 的参数，请参阅 <a href="https://helm.sh/docs/helm/helm_upgrade/">helm upgrade</a> 页面。</p>
+<h3 id="_2">版本升级</h3>
+<p>按照以下步骤执行版本升级：</p>
+<ol>
+<li>
+<p>在升级之前执行以下命令以将本地 Chart 升级至最新版本：</p>
+<div class="language-shell highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>helm<span class="w"> </span>repo<span class="w"> </span>update
+</span></code></pre></div>
+</li>
+<li>
+<p>查看最新的版本：</p>
+<div class="language-shell highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>helm<span class="w"> </span>search<span class="w"> </span>repo<span class="w"> </span>egressgateway
+</span></code></pre></div>
+</li>
+<li>
+<p>执行升级命令：</p>
+<div class="language-shell highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>helm<span class="w"> </span>upgrade<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="w">  </span>egress<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="w">  </span>egressgateway/egressgateway<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="w">  </span>--reuse-values<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a><span class="w">  </span>--version<span class="w"> </span><span class="o">[</span>version<span class="o">]</span>
+</span></code></pre></div>
+</li>
+</ol>
+<p>将 <code>[version]</code> 替换为你希望更新的版本。</p>
+<h3 id="_3">配置升级</h3>
+<p>按照以下步骤执行配置升级：</p>
+<ol>
+<li>
+<p>查看可用的 values 参数，请访问 <a href="https://github.com/spidernet-io/egressgateway/tree/main/charts">values</a> 说明文档。</p>
+</li>
+<li>
+<p>使用 <code>--set</code> flags 更新配置。以下示例展示了如何将 egress agent 日志等级更改为 debug 级别。通过 <code>--reuse-values</code> 参数，你可以在升级时重用上一个 release 的值并合并来自命令行的任何覆盖。</p>
+<div class="language-shell highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>helm<span class="w"> </span>upgrade<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="w">  </span>egress<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="w">  </span>egressgateway/egressgateway<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="w">  </span>--set<span class="w"> </span>agent.debug.logLevel<span class="o">=</span>debug<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-4-5"><a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a><span class="w">  </span>--reuse-values
+</span></code></pre></div>
+</li>
+</ol>
 
 
 
@@ -749,10 +870,10 @@
       <div class="md-dialog__inner md-typeset"></div>
     </div>
     
-    <script id="__config" type="application/json">{"base": "../../..", "features": ["content.code.annotate"], "search": "../../../assets/javascripts/workers/search.208ed371.min.js", "translations": {"clipboard.copied": "\u5df2\u590d\u5236", "clipboard.copy": "\u590d\u5236", "search.result.more.one": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.more.other": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 # \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.none": "\u6ca1\u6709\u627e\u5230\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.one": "\u627e\u5230 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.other": "# \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.placeholder": "\u952e\u5165\u4ee5\u5f00\u59cb\u641c\u7d22", "search.result.term.missing": "\u7f3a\u5c11", "select.version": "\u9009\u62e9\u5f53\u524d\u7248\u672c"}}</script>
+    <script id="__config" type="application/json">{"base": "../../..", "features": ["content.code.annotate"], "search": "../../../assets/javascripts/workers/search.74e28a9f.min.js", "translations": {"clipboard.copied": "\u5df2\u590d\u5236", "clipboard.copy": "\u590d\u5236", "search.result.more.one": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.more.other": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 # \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.none": "\u6ca1\u6709\u627e\u5230\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.one": "\u627e\u5230 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.other": "# \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.placeholder": "\u952e\u5165\u4ee5\u5f00\u59cb\u641c\u7d22", "search.result.term.missing": "\u7f3a\u5c11", "select.version": "\u9009\u62e9\u5f53\u524d\u7248\u672c"}}</script>
     
     
-      <script src="../../../assets/javascripts/bundle.b425cdc4.min.js"></script>
+      <script src="../../../assets/javascripts/bundle.220ee61c.min.js"></script>
       
     
   </body>

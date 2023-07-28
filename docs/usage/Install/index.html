@@ -15,7 +15,7 @@
         <link rel="next" href="../Upgrade/">
       
       <link rel="icon" href="../../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.4.3, mkdocs-material-9.1.17">
+      <meta name="generator" content="mkdocs-1.5.0, mkdocs-material-9.1.21">
     
     
       
@@ -23,7 +23,7 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/main.26e3688c.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.eebd395e.min.css">
       
         
         <link rel="stylesheet" href="../../assets/stylesheets/palette.ecc896b0.min.css">
@@ -381,8 +381,15 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#create-egressgatewaypolicy" class="md-nav__link">
-    Create EgressGatewayPolicy
+  <a href="#create-egresspolicy" class="md-nav__link">
+    Create EgressPolicy
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#test" class="md-nav__link">
+    Test
   </a>
   
 </li>
@@ -528,7 +535,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../crds/EgressNode/" class="md-nav__link">
+      <a href="../../crds/EgressNode.md" class="md-nav__link">
         EgressNode
       </a>
     </li>
@@ -542,7 +549,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../crds/EgressGateway/" class="md-nav__link">
+      <a href="../../crds/EgressGateway.md" class="md-nav__link">
         EgressGateway
       </a>
     </li>
@@ -556,7 +563,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../crds/EgressPolicy/" class="md-nav__link">
+      <a href="../../crds/EgressPolicy.md" class="md-nav__link">
         EgressPolicy
       </a>
     </li>
@@ -570,7 +577,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../crds/EgressClusterPolicy/" class="md-nav__link">
+      <a href="../../crds/EgressClusterPolicy.md" class="md-nav__link">
         EgressClusterPolicy
       </a>
     </li>
@@ -584,7 +591,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../crds/EgressEndpointSlice/" class="md-nav__link">
+      <a href="../../crds/EgressEndpointSlice.md" class="md-nav__link">
         EgressEndpointSlice
       </a>
     </li>
@@ -598,7 +605,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../crds/EgressClusterEndpointSlice/" class="md-nav__link">
+      <a href="../../crds/EgressClusterEndpointSlice.md" class="md-nav__link">
         EgressClusterEndpointSlice
       </a>
     </li>
@@ -612,7 +619,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../crds/EgressClusterInfo/" class="md-nav__link">
+      <a href="../../crds/EgressClusterInfo.md" class="md-nav__link">
         EgressClusterInfo
       </a>
     </li>
@@ -853,8 +860,15 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#create-egressgatewaypolicy" class="md-nav__link">
-    Create EgressGatewayPolicy
+  <a href="#create-egresspolicy" class="md-nav__link">
+    Create EgressPolicy
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#test" class="md-nav__link">
+    Test
   </a>
   
 </li>
@@ -918,7 +932,9 @@ more reference <a href="https://projectcalico.docs.tigera.io/reference/resources
 <li>IPv4 tunnel subnet</li>
 <li>IPv6 tunnel subnet</li>
 </ol>
-<div class="language-shell highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>helm<span class="w"> </span>install<span class="w"> </span>egressgateway<span class="w"> </span>egressgateway/egressgateway<span class="w"> </span>--values<span class="w"> </span>values.yaml<span class="w"> </span>--wait<span class="w"> </span>--debug
+<div class="language-shell highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>helm<span class="w"> </span>install<span class="w"> </span>egressgateway<span class="w"> </span>egressgateway/egressgateway<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="w">  </span>--values<span class="w"> </span>values.yaml<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="w">  </span>--wait<span class="w"> </span>--debug
 </span></code></pre></div>
 <div class="language-shell highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>kubectl<span class="w"> </span>get<span class="w"> </span>crd<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span>egress
 </span></code></pre></div>
@@ -929,12 +945,16 @@ more reference <a href="https://projectcalico.docs.tigera.io/reference/resources
 </span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="nt">metadata</span><span class="p">:</span>
 </span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="w">  </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">default</span>
 </span><span id="__span-5-5"><a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a><span class="nt">spec</span><span class="p">:</span>
-</span><span id="__span-5-6"><a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a><span class="w">  </span><span class="nt">nodeSelector</span><span class="p">:</span>
-</span><span id="__span-5-7"><a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a><span class="w">    </span><span class="nt">selector</span><span class="p">:</span>
-</span><span id="__span-5-8"><a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a><span class="w">      </span><span class="nt">matchLabels</span><span class="p">:</span>
-</span><span id="__span-5-9"><a id="__codelineno-5-9" name="__codelineno-5-9" href="#__codelineno-5-9"></a><span class="w">        </span><span class="nt">kubernetes.io/hostname</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">workstation2</span><span class="w"> </span><span class="c1"># (1)</span>
+</span><span id="__span-5-6"><a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a><span class="w">  </span><span class="nt">ippools</span><span class="p">:</span>
+</span><span id="__span-5-7"><a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a><span class="w">    </span><span class="nt">ipv4</span><span class="p">:</span>
+</span><span id="__span-5-8"><a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a><span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">&quot;10.6.1.60-10.6.1.66&quot;</span><span class="w"> </span><span class="c1"># (1)  </span>
+</span><span id="__span-5-9"><a id="__codelineno-5-9" name="__codelineno-5-9" href="#__codelineno-5-9"></a><span class="w">  </span><span class="nt">nodeSelector</span><span class="p">:</span>
+</span><span id="__span-5-10"><a id="__codelineno-5-10" name="__codelineno-5-10" href="#__codelineno-5-10"></a><span class="w">    </span><span class="nt">selector</span><span class="p">:</span>
+</span><span id="__span-5-11"><a id="__codelineno-5-11" name="__codelineno-5-11" href="#__codelineno-5-11"></a><span class="w">      </span><span class="nt">matchLabels</span><span class="p">:</span>
+</span><span id="__span-5-12"><a id="__codelineno-5-12" name="__codelineno-5-12" href="#__codelineno-5-12"></a><span class="w">        </span><span class="nt">kubernetes.io/hostname</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">workstation2</span><span class="w"> </span><span class="c1"># (2)</span>
 </span></code></pre></div>
 <ol>
+<li>Egress address pool</li>
 <li>Change me, select a node in your cluster</li>
 </ol>
 <h2 id="create-example-app">Create Example App</h2>
@@ -959,21 +979,33 @@ more reference <a href="https://projectcalico.docs.tigera.io/reference/resources
 <ol>
 <li>Change me, select a non-egress gateway node in your cluster</li>
 </ol>
-<h2 id="create-egressgatewaypolicy">Create EgressGatewayPolicy</h2>
-<p>By creating an EgressGatewayPolicy CR, you can control which Pod accesses which address needs to go through the egress gateway.</p>
+<h2 id="create-egresspolicy">Create EgressPolicy</h2>
+<p>By creating an EgressPolicy CR, you can control which Pod accesses which address needs to go through the egress gateway.</p>
 <div class="language-yaml highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="nt">apiVersion</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">egressgateway.spidernet.io/v1beta1</span>
 </span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="nt">kind</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">EgressPolicy</span>
 </span><span id="__span-7-3"><a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a><span class="nt">metadata</span><span class="p">:</span>
 </span><span id="__span-7-4"><a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a><span class="w">  </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">mock-app</span>
 </span><span id="__span-7-5"><a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a><span class="nt">spec</span><span class="p">:</span>
-</span><span id="__span-7-6"><a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a><span class="w">  </span><span class="nt">appliedTo</span><span class="p">:</span>
-</span><span id="__span-7-7"><a id="__codelineno-7-7" name="__codelineno-7-7" href="#__codelineno-7-7"></a><span class="w">    </span><span class="nt">podSelector</span><span class="p">:</span>
-</span><span id="__span-7-8"><a id="__codelineno-7-8" name="__codelineno-7-8" href="#__codelineno-7-8"></a><span class="w">      </span><span class="nt">matchLabels</span><span class="p">:</span>
-</span><span id="__span-7-9"><a id="__codelineno-7-9" name="__codelineno-7-9" href="#__codelineno-7-9"></a><span class="w">        </span><span class="nt">app</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">mock-app</span>
-</span><span id="__span-7-10"><a id="__codelineno-7-10" name="__codelineno-7-10" href="#__codelineno-7-10"></a><span class="w">  </span><span class="nt">destSubnet</span><span class="p">:</span>
-</span><span id="__span-7-11"><a id="__codelineno-7-11" name="__codelineno-7-11" href="#__codelineno-7-11"></a><span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">10.6.1.92/32</span>
+</span><span id="__span-7-6"><a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a><span class="w">  </span><span class="nt">egressGatewayName</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;default&quot;</span><span class="w"> </span><span class="c1"># (1)  </span>
+</span><span id="__span-7-7"><a id="__codelineno-7-7" name="__codelineno-7-7" href="#__codelineno-7-7"></a><span class="w">  </span><span class="nt">appliedTo</span><span class="p">:</span>
+</span><span id="__span-7-8"><a id="__codelineno-7-8" name="__codelineno-7-8" href="#__codelineno-7-8"></a><span class="w">    </span><span class="nt">podSelector</span><span class="p">:</span>
+</span><span id="__span-7-9"><a id="__codelineno-7-9" name="__codelineno-7-9" href="#__codelineno-7-9"></a><span class="w">      </span><span class="nt">matchLabels</span><span class="p">:</span><span class="w">             </span><span class="c1"># (2)</span>
+</span><span id="__span-7-10"><a id="__codelineno-7-10" name="__codelineno-7-10" href="#__codelineno-7-10"></a><span class="w">        </span><span class="nt">app</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">mock-app</span>
+</span><span id="__span-7-11"><a id="__codelineno-7-11" name="__codelineno-7-11" href="#__codelineno-7-11"></a><span class="w">  </span><span class="nt">destSubnet</span><span class="p">:</span>
+</span><span id="__span-7-12"><a id="__codelineno-7-12" name="__codelineno-7-12" href="#__codelineno-7-12"></a><span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">10.6.1.92/32</span><span class="w">             </span><span class="c1"># (3)</span>
 </span></code></pre></div>
-<p>Now traffic from mock-app accessing 10.6.1.92 will be forwarded by the egress gateway.</p>
+<ol>
+<li>By setting this value, select the EgressGateway named <code>default</code> created above.</li>
+<li>Select Pods that need to perform Egress operations by setting <code>matchLabels</code>.</li>
+<li>By setting <code>destSubnet</code>, only matched Pods will perform Egress operations when accessing a specific subnet.</li>
+</ol>
+<p>Now, traffic from mock-app accessing 10.6.1.92 will be forwarded through the egress gateway.</p>
+<h2 id="test">Test</h2>
+<p>We can see that the IP that the mock-app sees on the other side when it accesses the external service is the IP address of the EgressGateway.</p>
+<div class="language-shell highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>kubectl<span class="w"> </span><span class="nb">exec</span><span class="w"> </span>-it<span class="w"> </span>mock-app<span class="w"> </span>bash
+</span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a>$<span class="w"> </span>curl<span class="w"> </span><span class="m">10</span>.6.1.92:8080
+</span><span id="__span-8-3"><a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a>Remote<span class="w"> </span>IP:<span class="w"> </span><span class="m">10</span>.6.1.60
+</span></code></pre></div>
 
 
 
@@ -1011,10 +1043,10 @@ more reference <a href="https://projectcalico.docs.tigera.io/reference/resources
       <div class="md-dialog__inner md-typeset"></div>
     </div>
     
-    <script id="__config" type="application/json">{"base": "../..", "features": ["content.code.annotate"], "search": "../../assets/javascripts/workers/search.208ed371.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
+    <script id="__config" type="application/json">{"base": "../..", "features": ["content.code.annotate"], "search": "../../assets/javascripts/workers/search.74e28a9f.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
     
     
-      <script src="../../assets/javascripts/bundle.b425cdc4.min.js"></script>
+      <script src="../../assets/javascripts/bundle.220ee61c.min.js"></script>
       
     
   </body>

@@ -15,7 +15,7 @@
         <link rel="next" href="../../concepts/Architecture/">
       
       <link rel="icon" href="../../../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.4.3, mkdocs-material-9.1.17">
+      <meta name="generator" content="mkdocs-1.5.0, mkdocs-material-9.1.21">
     
     
       
@@ -23,7 +23,7 @@
       
     
     
-      <link rel="stylesheet" href="../../../assets/stylesheets/main.26e3688c.min.css">
+      <link rel="stylesheet" href="../../../assets/stylesheets/main.eebd395e.min.css">
       
         
         <link rel="stylesheet" href="../../../assets/stylesheets/palette.ecc896b0.min.css">
@@ -433,7 +433,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../crds/EgressNode/" class="md-nav__link">
+      <a href="../../../crds/EgressNode.md" class="md-nav__link">
         EgressNode
       </a>
     </li>
@@ -447,7 +447,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../crds/EgressGateway/" class="md-nav__link">
+      <a href="../../../crds/EgressGateway.md" class="md-nav__link">
         EgressGateway
       </a>
     </li>
@@ -461,7 +461,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../crds/EgressPolicy/" class="md-nav__link">
+      <a href="../../../crds/EgressPolicy.md" class="md-nav__link">
         EgressPolicy
       </a>
     </li>
@@ -475,7 +475,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../crds/EgressClusterPolicy/" class="md-nav__link">
+      <a href="../../../crds/EgressClusterPolicy.md" class="md-nav__link">
         EgressClusterPolicy
       </a>
     </li>
@@ -489,7 +489,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../crds/EgressEndpointSlice/" class="md-nav__link">
+      <a href="../../../crds/EgressEndpointSlice.md" class="md-nav__link">
         EgressEndpointSlice
       </a>
     </li>
@@ -503,7 +503,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../crds/EgressClusterEndpointSlice/" class="md-nav__link">
+      <a href="../../../crds/EgressClusterEndpointSlice.md" class="md-nav__link">
         EgressClusterEndpointSlice
       </a>
     </li>
@@ -517,7 +517,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../crds/EgressClusterInfo/" class="md-nav__link">
+      <a href="../../../crds/EgressClusterInfo.md" class="md-nav__link">
         EgressClusterInfo
       </a>
     </li>
@@ -711,7 +711,68 @@
 
   <h1>Uninstall</h1>
 
-
+<p>To ensure that the running applications are not affected before uninstalling EgressGateway, it is recommended to perform the following steps:</p>
+<ol>
+<li>
+<p>Check if the number of resources related to EgressGateway is 0. Run the following commands:</p>
+<div class="language-shell highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>kubectl<span class="w"> </span>get<span class="w"> </span>egressclusterpolicies.egressgateway.spidernet.io<span class="w"> </span>-o<span class="w"> </span>name<span class="w"> </span><span class="p">|</span><span class="w"> </span>wc<span class="w"> </span>-l
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>kubectl<span class="w"> </span>get<span class="w"> </span>egresspolicies.egressgateway.spidernet.io<span class="w"> </span>-o<span class="w"> </span>name<span class="w"> </span><span class="p">|</span><span class="w"> </span>wc<span class="w"> </span>-l
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>kubectl<span class="w"> </span>get<span class="w"> </span>egressgateways.egressgateway.spidernet.io<span class="w"> </span>-o<span class="w"> </span>name<span class="w"> </span><span class="p">|</span><span class="w"> </span>wc<span class="w"> </span>-l
+</span></code></pre></div>
+</li>
+</ol>
+<p>These commands will output the number of EgressGateway-related EgressClusterPolicy, EgressPolicy, and EgressGateway resources. If the output result is 0, it means there are no resources associated with EgressGateway. If the output result is not 0, further processing is needed to ensure that the uninstall operation does not affect the ongoing business applications.</p>
+<p>If the output is not 0, you should continue with the following commands. Otherwise, skip to step 2.</p>
+<div class="language-shell highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>kubectl<span class="w"> </span>get<span class="w"> </span>egressclusterpolicies.egressgateway.spidernet.io
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>kubectl<span class="w"> </span>get<span class="w"> </span>egresspolicies.egressgateway.spidernet.io<span class="w"> </span>-o<span class="w"> </span>wide
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>kubectl<span class="w"> </span>get<span class="w"> </span>egressgateways.egressgateway.spidernet.io
+</span></code></pre></div>
+<p>For example, if you find there are still resources of EgressPolicies not deleted, you should check the resource details:</p>
+<div class="language-shell highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>kubectl<span class="w"> </span>get<span class="w"> </span>egresspolicies<span class="w"> </span>&lt;resource-name&gt;<span class="w"> </span>--namespace<span class="w"> </span>&lt;resource-namespace&gt;<span class="w"> </span>-o<span class="w"> </span>yaml
+</span></code></pre></div>
+<div class="language-yaml highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="nt">apiVersion</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">egressgateway.spidernet.io/v1beta1</span>
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="nt">kind</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">EgressPolicy</span>
+</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="nt">metadata</span><span class="p">:</span>
+</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="w">  </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">ns-policy</span>
+</span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a><span class="w">  </span><span class="nt">namespace</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">default</span>
+</span><span id="__span-3-6"><a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a><span class="nt">spec</span><span class="p">:</span>
+</span><span id="__span-3-7"><a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a><span class="w">  </span><span class="nt">appliedTo</span><span class="p">:</span>
+</span><span id="__span-3-8"><a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a><span class="w">    </span><span class="nt">podSelector</span><span class="p">:</span>
+</span><span id="__span-3-9"><a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a><span class="w">      </span><span class="nt">matchLabels</span><span class="p">:</span>
+</span><span id="__span-3-10"><a id="__codelineno-3-10" name="__codelineno-3-10" href="#__codelineno-3-10"></a><span class="w">        </span><span class="nt">app</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">mock-app</span>
+</span><span id="__span-3-11"><a id="__codelineno-3-11" name="__codelineno-3-11" href="#__codelineno-3-11"></a><span class="w">  </span><span class="nt">egressGatewayName</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">egressgateway</span>
+</span><span id="__span-3-12"><a id="__codelineno-3-12" name="__codelineno-3-12" href="#__codelineno-3-12"></a><span class="nt">status</span><span class="p">:</span>
+</span><span id="__span-3-13"><a id="__codelineno-3-13" name="__codelineno-3-13" href="#__codelineno-3-13"></a><span class="w">  </span><span class="nt">eip</span><span class="p">:</span>
+</span><span id="__span-3-14"><a id="__codelineno-3-14" name="__codelineno-3-14" href="#__codelineno-3-14"></a><span class="w">    </span><span class="nt">ipv4</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">10.6.1.55</span>
+</span><span id="__span-3-15"><a id="__codelineno-3-15" name="__codelineno-3-15" href="#__codelineno-3-15"></a><span class="w">    </span><span class="nt">ipv6</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">fd00::55</span>
+</span><span id="__span-3-16"><a id="__codelineno-3-16" name="__codelineno-3-16" href="#__codelineno-3-16"></a><span class="w">  </span><span class="nt">node</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">workstation2</span>
+</span></code></pre></div>
+<p>Ensure that deleting will not affect business applications by searching for <code>appliedTo.podSelector</code>, then execute the following command to delete:</p>
+<div class="language-shell highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>kubectl<span class="w"> </span>delete<span class="w"> </span>egresspolicies<span class="w"> </span>&lt;resource-name&gt;<span class="w"> </span>--namespace<span class="w"> </span>&lt;resource-namespace&gt;
+</span></code></pre></div>
+<ol>
+<li>
+<p>Query the EgressGateway installed in the current cluster. Run the following command:</p>
+<div class="language-shell highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>helm<span class="w"> </span>ls<span class="w"> </span>-A<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span>-i<span class="w"> </span>egress
+</span></code></pre></div>
+</li>
+</ol>
+<p>This will output the name, namespace, version, and other information of the EgressGateway installed in the current cluster.</p>
+<ol>
+<li>
+<p>Uninstall EgressGateway. If you are sure you want to uninstall EgressGateway, you can run the following command:</p>
+<div class="language-shell highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>helm<span class="w"> </span>uninstall<span class="w"> </span>&lt;egressgateway-name&gt;<span class="w"> </span>--namespace<span class="w"> </span>&lt;egressgateway-namespace&gt;
+</span></code></pre></div>
+</li>
+</ol>
+<p>Replace <code>&lt;egressgateway-name&gt;</code> with the name of the EgressGateway you want to uninstall, and replace <code>&lt;egressgateway-namespace&gt;</code> with the namespace where EgressGateway is located.</p>
+<p>It is worth noting that before uninstalling EgressGateway, it is recommended to back up related data and ensure that the uninstall operation does not affect the ongoing business applications.</p>
+<ol>
+<li>During the uninstallation process, sometimes the EgressNodes CRD of EgressGateway may remain in a waiting state for deletion. If you encounter this situation, you can try using the following command to resolve the issue:</li>
+</ol>
+<div class="language-shell highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>kubectl<span class="w"> </span>patch<span class="w"> </span>crd<span class="w"> </span>egressnodes.egressgateway.spidernet.io<span class="w"> </span>-p<span class="w"> </span><span class="s1">&#39;{&quot;metadata&quot;:{&quot;finalizers&quot;: []}}&#39;</span><span class="w"> </span>--type<span class="o">=</span>merge
+</span></code></pre></div>
+<p>This command removes the finalizer in the EgressGateway CRD, allowing Kubernetes to delete it. This issue is caused by the controller-manager, and we are monitoring the Kubernetes team's progress on fixing it.</p>
 
 
 
@@ -749,10 +810,10 @@
       <div class="md-dialog__inner md-typeset"></div>
     </div>
     
-    <script id="__config" type="application/json">{"base": "../../..", "features": ["content.code.annotate"], "search": "../../../assets/javascripts/workers/search.208ed371.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
+    <script id="__config" type="application/json">{"base": "../../..", "features": ["content.code.annotate"], "search": "../../../assets/javascripts/workers/search.74e28a9f.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
     
     
-      <script src="../../../assets/javascripts/bundle.b425cdc4.min.js"></script>
+      <script src="../../../assets/javascripts/bundle.220ee61c.min.js"></script>
       
     
   </body>

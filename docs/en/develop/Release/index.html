@@ -15,7 +15,7 @@
         <link rel="next" href="../Roadmap/">
       
       <link rel="icon" href="../../../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.4.3, mkdocs-material-9.1.17">
+      <meta name="generator" content="mkdocs-1.5.0, mkdocs-material-9.1.21">
     
     
       
@@ -23,7 +23,7 @@
       
     
     
-      <link rel="stylesheet" href="../../../assets/stylesheets/main.26e3688c.min.css">
+      <link rel="stylesheet" href="../../../assets/stylesheets/main.eebd395e.min.css">
       
         
         <link rel="stylesheet" href="../../../assets/stylesheets/palette.ecc896b0.min.css">
@@ -67,7 +67,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#workflow-for-release" class="md-skip">
+        <a href="#release-workflow" class="md-skip">
           Skip to content
         </a>
       
@@ -428,7 +428,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../crds/EgressNode/" class="md-nav__link">
+      <a href="../../../crds/EgressNode.md" class="md-nav__link">
         EgressNode
       </a>
     </li>
@@ -442,7 +442,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../crds/EgressGateway/" class="md-nav__link">
+      <a href="../../../crds/EgressGateway.md" class="md-nav__link">
         EgressGateway
       </a>
     </li>
@@ -456,7 +456,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../crds/EgressPolicy/" class="md-nav__link">
+      <a href="../../../crds/EgressPolicy.md" class="md-nav__link">
         EgressPolicy
       </a>
     </li>
@@ -470,7 +470,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../crds/EgressClusterPolicy/" class="md-nav__link">
+      <a href="../../../crds/EgressClusterPolicy.md" class="md-nav__link">
         EgressClusterPolicy
       </a>
     </li>
@@ -484,7 +484,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../crds/EgressEndpointSlice/" class="md-nav__link">
+      <a href="../../../crds/EgressEndpointSlice.md" class="md-nav__link">
         EgressEndpointSlice
       </a>
     </li>
@@ -498,7 +498,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../crds/EgressClusterEndpointSlice/" class="md-nav__link">
+      <a href="../../../crds/EgressClusterEndpointSlice.md" class="md-nav__link">
         EgressClusterEndpointSlice
       </a>
     </li>
@@ -512,7 +512,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../crds/EgressClusterInfo/" class="md-nav__link">
+      <a href="../../../crds/EgressClusterInfo.md" class="md-nav__link">
         EgressClusterInfo
       </a>
     </li>
@@ -641,21 +641,14 @@
       
         <li class="md-nav__item">
   <a href="#pre-steps" class="md-nav__link">
-    pre-steps
+    Pre-steps
   </a>
   
 </li>
       
         <li class="md-nav__item">
   <a href="#push-a-version-tag" class="md-nav__link">
-    push a version tag
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#post" class="md-nav__link">
-    post
+    Push a Version Tag
   </a>
   
 </li>
@@ -752,21 +745,14 @@
       
         <li class="md-nav__item">
   <a href="#pre-steps" class="md-nav__link">
-    pre-steps
+    Pre-steps
   </a>
   
 </li>
       
         <li class="md-nav__item">
   <a href="#push-a-version-tag" class="md-nav__link">
-    push a version tag
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#post" class="md-nav__link">
-    post
+    Push a Version Tag
   </a>
   
 </li>
@@ -792,79 +778,44 @@
   
 
 
-<h1 id="workflow-for-release">workflow for release</h1>
-<h2 id="pre-steps">pre-steps</h2>
+<h1 id="release-workflow">Release Workflow</h1>
+<h2 id="pre-steps">Pre-steps</h2>
 <ul>
-<li>
-<p>update 'version' and 'appVersion' filed in 'charts/*/Chart.yaml'</p>
-</li>
-<li>
-<p>update version in '/VERSION'</p>
-</li>
-<li>
-<p>a version tag should be set on right branch. The version should go with </p>
-<ul>
-<li>
-<p>v0.1.0-rc0</p>
-</li>
-<li>
-<p>v0.1.0-rc1</p>
-</li>
-<li>
-<p>v0.1.0</p>
-</li>
-<li>
-<p>v0.1.1</p>
-</li>
-<li>
-<p>v0.1.2</p>
-</li>
-<li>
-<p>v0.2.0-rc0</p>
-</li>
-<li>
-<p>v0.2.0</p>
-</li>
+<li>Update <code>version</code> and <code>appVersion</code> fields in <code>charts/*/Chart.yaml</code></li>
+<li>Update version in <code>/VERSION</code></li>
+<li>Set a version tag on the correct branch. The version should follow the pattern:<ul>
+<li>v0.1.0-rc0</li>
+<li>v0.1.0-rc1</li>
+<li>v0.1.0</li>
+<li>v0.1.1</li>
+<li>v0.1.2</li>
+<li>v0.2.0-rc0</li>
+<li>v0.2.0</li>
 </ul>
 </li>
 </ul>
-<h2 id="push-a-version-tag">push a version tag</h2>
-<p>If a tag vx.x.x is pushed , the following steps will automatically run:</p>
+<h2 id="push-a-version-tag">Push a Version Tag</h2>
+<p>When a tag vx.x.x is pushed, the following steps will automatically run:</p>
 <ol>
-<li>
-<p>check the tag name is same with '/VERSION'</p>
+<li>Verify that the tag name matches the <code>/VERSION</code></li>
+<li>Create a branch named <code>release-vx.x.x</code></li>
+<li>Build the images with the pushed tag and push them to the ghcr registry</li>
+<li>Generate the changelog based on historical PRs labeled as <code>release/*</code><ul>
+<li>Submit the changelog file to the <code>changelogs</code> directory of the <code>github_pages</code> branch, with PR labeled as <code>pr/release/robot_update_githubpage</code></li>
+<li>Changelogs are generated based on historical PR labels:<ul>
+<li>Label <code>release/feature</code> will be classified as "Changed Features"</li>
+<li>Label <code>release/bug</code> will be classified as "Fixes"</li>
+</ul>
 </li>
-<li>
-<p>create a branch named 'release-vx.x.x'</p>
+</ul>
 </li>
-<li>
-<p>build the images with the pushed tag, and push to ghcr registry</p>
+<li>Build the chart package with the pushed tag and submit a PR to the <code>github_pages</code> branch<ul>
+<li>Retrieve the chart with the command <code>helm repo add $REPO_NAME https://spidernet-io.github.io/$REPO_NAME</code></li>
+</ul>
 </li>
-<li>
-<p>generate the changelog by historical PR labeled as "pr/release/*"</p>
-<p>submit the changelog file to directory 'changelogs' of branch 'github_pages', with PR labeled as "pr/release/robot_update_githubpage".</p>
-<p>changelogs are generated by historical PR label:</p>
-<p>label "pr/release/feature-new" to be classified to "New Features"</p>
-<p>label "pr/release/feature-changed" to be classified to "Changed Features"</p>
-<p>label "pr/release/feature-bug" to be classified to "Fixes"</p>
-</li>
-<li>
-<p>build the chart package with the pushed tag, and submit a PR to branch 'github_pages' </p>
-<p>you cloud get the chart with command <code>helm repo add $REPO_NAME https://spidernet-io.github.io/$REPO_NAME</code></p>
-</li>
-<li>
-<p>submit '/docs' to '/docs' of branch 'github_pages'</p>
-</li>
-<li>
-<p>create a GitHub Release attached with the chart package and changelog</p>
-</li>
-<li>
-<p>Finally, by hand, need approve the chart PR labeled as "pr/release/robot_update_githubpage" , and changelog PR labeled as "pr/release/robot_update_githubpage"</p>
-</li>
-</ol>
-<h2 id="post">post</h2>
-<ol>
-<li>Submit an issue of the version update to the documentation site &rarr; <a href="https://github.com/DaoCloud/DaoCloud-docs">https://github.com/DaoCloud/DaoCloud-docs</a></li>
+<li>Submit <code>/docs</code> to the <code>/docs</code> directory of the <code>github_pages</code> branch</li>
+<li>Create a GitHub Release with the chart package and changelog attached</li>
+<li>Manually approve the chart PR labeled as <code>pr/release/robot_update_githubpage</code> and the changelog PR labeled as <code>pr/release/robot_update_githubpage</code></li>
 </ol>
 
 
@@ -903,10 +854,10 @@
       <div class="md-dialog__inner md-typeset"></div>
     </div>
     
-    <script id="__config" type="application/json">{"base": "../../..", "features": ["content.code.annotate"], "search": "../../../assets/javascripts/workers/search.208ed371.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
+    <script id="__config" type="application/json">{"base": "../../..", "features": ["content.code.annotate"], "search": "../../../assets/javascripts/workers/search.74e28a9f.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
     
     
-      <script src="../../../assets/javascripts/bundle.b425cdc4.min.js"></script>
+      <script src="../../../assets/javascripts/bundle.220ee61c.min.js"></script>
       
     
   </body>
