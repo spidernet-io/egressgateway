@@ -9,6 +9,7 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 
+	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
@@ -29,6 +30,7 @@ var (
 	err                error
 	c                  client.WithWatch
 	allNodes           []string
+	nodeObjs           []*v1.Node
 	enableV4, enableV6 bool
 )
 
@@ -38,8 +40,18 @@ var _ = BeforeSuite(func() {
 	f, err = framework.NewFramework(GinkgoT(), []func(scheme *runtime.Scheme) error{egressgatewayv1beta1.AddToScheme})
 	Expect(err).NotTo(HaveOccurred(), "failed to NewFramework, details: %w", err)
 	c = f.KClient
+
+	// all nodes
 	allNodes = f.Info.KindNodeList
 	Expect(allNodes).NotTo(BeEmpty())
+
+	for i, node := range allNodes {
+		GinkgoWriter.Printf("%dTh node: %s\n", i, node)
+		getNode, err := f.GetNode(node)
+		Expect(err).NotTo(HaveOccurred())
+		nodeObjs = append(nodeObjs, getNode)
+	}
+	Expect(len(nodeObjs) > 2).To(BeTrue(), "test case needs at lest 3 nodes")
 
 	enableV4, enableV6, err = common.GetIPVersion(f)
 	Expect(err).NotTo(HaveOccurred())

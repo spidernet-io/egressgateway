@@ -113,3 +113,18 @@ func GetContainerIPV6(container string, duration time.Duration) ([]byte, error) 
 	a := fmt.Sprintf("docker inspect %s | grep -w GlobalIPv6Address  | sed 1d | awk '{print $2}' | tr -d '\",' | tr -d '\n'", container)
 	return ExecCommand(a, duration)
 }
+
+func RemoveValueFromSlice[T string | int](slice []T, value T) []T {
+	ss := make([]T, 0)
+	index := -1
+	for i, v := range ss {
+		if v == value {
+			index = i
+			break
+		}
+	}
+	if index != -1 {
+		ss = append(slice[:index], slice[index+1:]...)
+	}
+	return ss
+}
