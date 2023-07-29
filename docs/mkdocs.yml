@@ -82,14 +82,14 @@ nav:
   - Concepts:
       - Architecture: concepts/Architecture.md
       - Datapath: concepts/Datapath.md
-  - CRDs:
-      - EgressNode: crds/EgressNode.md
-      - EgressGateway: crds/EgressGateway.md
-      - EgressPolicy: crds/EgressPolicy.md
-      - EgressClusterPolicy: crds/EgressClusterPolicy.md
-      - EgressEndpointSlice: crds/EgressEndpointSlice.md
-      - EgressClusterEndpointSlice: crds/EgressClusterEndpointSlice.md
-      - EgressClusterInfo: crds/EgressClusterInfo.md
+  - reference:
+      - CRD EgressNode: reference/EgressNode.md
+      - CRD EgressGateway: reference/EgressGateway.md
+      - CRD EgressPolicy: reference/EgressPolicy.md
+      - CRD EgressClusterPolicy: reference/EgressClusterPolicy.md
+      - CRD EgressEndpointSlice: reference/EgressEndpointSlice.md
+      - CRD EgressClusterEndpointSlice: reference/EgressClusterEndpointSlice.md
+      - CRD EgressClusterInfo: reference/EgressClusterInfo.md
   - Troubleshooting: Troubleshooting.md
   - Develop:
       - DataFlow: develop/Dataflow.md
