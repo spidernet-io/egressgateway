@@ -15,7 +15,7 @@
         <link rel="next" href="../Datapath/">
       
       <link rel="icon" href="../../../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.4.3, mkdocs-material-9.1.17">
+      <meta name="generator" content="mkdocs-1.5.0, mkdocs-material-9.1.21">
     
     
       
@@ -23,7 +23,7 @@
       
     
     
-      <link rel="stylesheet" href="../../../assets/stylesheets/main.26e3688c.min.css">
+      <link rel="stylesheet" href="../../../assets/stylesheets/main.eebd395e.min.css">
       
         
         <link rel="stylesheet" href="../../../assets/stylesheets/palette.ecc896b0.min.css">
@@ -65,6 +65,11 @@
     <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
     <label class="md-overlay" for="__drawer"></label>
     <div data-md-component="skip">
+      
+        
+        <a href="#controller" class="md-skip">
+          跳转至
+        </a>
       
     </div>
     <div data-md-component="announce">
@@ -369,9 +374,180 @@
       
       
       
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          Architecture
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
       <a href="./" class="md-nav__link md-nav__link--active">
         Architecture
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="目录">
+  
+  
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      目录
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#controller" class="md-nav__link">
+    Controller
+  </a>
+  
+    <nav class="md-nav" aria-label="Controller">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#egressnode-reconcile-loop-a" class="md-nav__link">
+    EgressNode reconcile loop (a)
+  </a>
+  
+    <nav class="md-nav" aria-label="EgressNode reconcile loop (a)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#_1" class="md-nav__link">
+    初始化
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#egressnode-event" class="md-nav__link">
+    EgressNode Event
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#node-event" class="md-nav__link">
+    Node Event
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#egressgateway-reconcile-loop-b" class="md-nav__link">
+    EgressGateway reconcile loop (b)
+  </a>
+  
+    <nav class="md-nav" aria-label="EgressGateway reconcile loop (b)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#egressgateway-event" class="md-nav__link">
+    EgressGateway Event
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#egresspolicy-event" class="md-nav__link">
+    EgressPolicy Event
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#node-event_1" class="md-nav__link">
+    Node Event
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#egresspolicy-eip" class="md-nav__link">
+    EgressPolicy 选网关节点及 EIP 分配逻辑
+  </a>
+  
+    <nav class="md-nav" aria-label="EgressPolicy 选网关节点及 EIP 分配逻辑">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#egresspolicy" class="md-nav__link">
+    EgressPolicy 选网关节点的模式
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#eip" class="md-nav__link">
+    EIP 分配逻辑
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#eip_1" class="md-nav__link">
+    EIP 回收逻辑
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#egressclusterinfo-reconcile-loop-d" class="md-nav__link">
+    EgressClusterInfo reconcile loop (d)
+  </a>
+  
+    <nav class="md-nav" aria-label="EgressClusterInfo reconcile loop (d)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#node-event_2" class="md-nav__link">
+    Node Event
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#calico-ippool-event" class="md-nav__link">
+    Calico IPPool Event
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_2" class="md-nav__link">
+    配置文件
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
       
     </li>
   
@@ -433,7 +609,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../crds/EgressNode/" class="md-nav__link">
+      <a href="../../../crds/EgressNode.md" class="md-nav__link">
         EgressNode
       </a>
     </li>
@@ -447,7 +623,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../crds/EgressGateway/" class="md-nav__link">
+      <a href="../../../crds/EgressGateway.md" class="md-nav__link">
         EgressGateway
       </a>
     </li>
@@ -461,7 +637,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../crds/EgressPolicy/" class="md-nav__link">
+      <a href="../../../crds/EgressPolicy.md" class="md-nav__link">
         EgressPolicy
       </a>
     </li>
@@ -475,7 +651,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../crds/EgressClusterPolicy/" class="md-nav__link">
+      <a href="../../../crds/EgressClusterPolicy.md" class="md-nav__link">
         EgressClusterPolicy
       </a>
     </li>
@@ -489,7 +665,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../crds/EgressEndpointSlice/" class="md-nav__link">
+      <a href="../../../crds/EgressEndpointSlice.md" class="md-nav__link">
         EgressEndpointSlice
       </a>
     </li>
@@ -503,7 +679,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../crds/EgressClusterEndpointSlice/" class="md-nav__link">
+      <a href="../../../crds/EgressClusterEndpointSlice.md" class="md-nav__link">
         EgressClusterEndpointSlice
       </a>
     </li>
@@ -517,7 +693,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../crds/EgressClusterInfo/" class="md-nav__link">
+      <a href="../../../crds/EgressClusterInfo.md" class="md-nav__link">
         EgressClusterInfo
       </a>
     </li>
@@ -690,6 +866,163 @@
   
   
   
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      目录
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#controller" class="md-nav__link">
+    Controller
+  </a>
+  
+    <nav class="md-nav" aria-label="Controller">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#egressnode-reconcile-loop-a" class="md-nav__link">
+    EgressNode reconcile loop (a)
+  </a>
+  
+    <nav class="md-nav" aria-label="EgressNode reconcile loop (a)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#_1" class="md-nav__link">
+    初始化
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#egressnode-event" class="md-nav__link">
+    EgressNode Event
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#node-event" class="md-nav__link">
+    Node Event
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#egressgateway-reconcile-loop-b" class="md-nav__link">
+    EgressGateway reconcile loop (b)
+  </a>
+  
+    <nav class="md-nav" aria-label="EgressGateway reconcile loop (b)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#egressgateway-event" class="md-nav__link">
+    EgressGateway Event
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#egresspolicy-event" class="md-nav__link">
+    EgressPolicy Event
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#node-event_1" class="md-nav__link">
+    Node Event
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#egresspolicy-eip" class="md-nav__link">
+    EgressPolicy 选网关节点及 EIP 分配逻辑
+  </a>
+  
+    <nav class="md-nav" aria-label="EgressPolicy 选网关节点及 EIP 分配逻辑">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#egresspolicy" class="md-nav__link">
+    EgressPolicy 选网关节点的模式
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#eip" class="md-nav__link">
+    EIP 分配逻辑
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#eip_1" class="md-nav__link">
+    EIP 回收逻辑
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#egressclusterinfo-reconcile-loop-d" class="md-nav__link">
+    EgressClusterInfo reconcile loop (d)
+  </a>
+  
+    <nav class="md-nav" aria-label="EgressClusterInfo reconcile loop (d)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#node-event_2" class="md-nav__link">
+    Node Event
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#calico-ippool-event" class="md-nav__link">
+    Calico IPPool Event
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_2" class="md-nav__link">
+    配置文件
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
 </nav>
                   </div>
                 </div>
@@ -711,7 +1044,106 @@
 
   <h1>Architecture</h1>
 
-
+<p>EgressGateway 由控制面和数据面 2 部分组成，控制面由 4 个控制循环组成，数据面由 3 个控制循环组成。控制面以 Deployment 方式部署，支持多副本高可用，数据面以 DaemonSet 的方式部署。控制循环具体如下图：</p>
+<p><img alt="arch" src="../../proposal/03-egress-ip/arch.png" /></p>
+<h2 id="controller">Controller</h2>
+<h3 id="egressnode-reconcile-loop-a">EgressNode reconcile loop (a)</h3>
+<h4 id="_1">初始化</h4>
+<ol>
+<li>从 ConfigMap 配置文件中获取双栈开启情况及对应的隧道 CIDR</li>
+<li>通过节点名称根据算法生成唯一的标签值</li>
+<li>会检查 Node 是否有对应的 EgressNode，没有的话就创建对应的 EgressNode，且状态设置为 <code>Pending</code>。有隧道 IP 则将 IP 与节点绑定，绑定前会检查 IP 是否合法，不合法则将状态设置为 <code>Pending</code></li>
+</ol>
+<h4 id="egressnode-event">EgressNode Event</h4>
+<ul>
+<li>Del：先释放隧道 IP，再删除。如果 EgressNode 对应的节点还存在，重新创建 EgressNode</li>
+<li>Other：</li>
+<li>phase != <code>Init</code> || phase != <code>Succeeded</code>：则分配 IP，分配成功将状态设置为 <code>Init</code>，分配失败将状态设置为 <code>Failed</code>。这里是全局唯一会分配隧道 IP 的地方</li>
+<li>mark != algorithm(NodeName)：该字段禁止修改，直接报错返回</li>
+</ul>
+<h4 id="node-event">Node Event</h4>
+<ul>
+<li>Del：删除对应的 EgressNode</li>
+<li>Other：</li>
+<li>节点对应的 EgressNode 不存在，则创建 EgressNode</li>
+<li>无隧道 IP，设置 phase 为 <code>Pending</code></li>
+<li>有隧道 IP，校验隧道是否合法，不合法则设置 phase 为 <code>Pending</code></li>
+<li>隧道 IP 合法，校验 IP 是否分配给本节点，不是则设置 phase 为 <code>Pending</code></li>
+<li>隧道 IP 是分配给本节点，phase 状态不为 <code>Succeeded</code> 则设置 phase 为 <code>Init</code></li>
+</ul>
+<h3 id="egressgateway-reconcile-loop-b">EgressGateway reconcile loop (b)</h3>
+<h4 id="egressgateway-event">EgressGateway Event</h4>
+<ul>
+<li>Del：</li>
+<li>Webhook 判断是否还被其他 Policy 引用，如果存在则不允许删除。</li>
+<li>
+<p>通过了 Webhook 的校验说明没有被引用，所以的规则也被清理，则可以直接删除。</p>
+</li>
+<li>
+<p>Other：</p>
+</li>
+<li>EIP 减少，如果 EIP 被引用，禁止修改。分配 IPV4 与 IPV6 时，要求一一对应，所以两者的个数需要一致。</li>
+<li>如果 nodeSelector 被修改，从 status 获取旧的 Node 信息，与最新的 Node 进行对比。将删除节点上的 EIP 重新分配到新的 Node 上。更新对应 EgressNode 中的 EIP 信息。</li>
+</ul>
+<h4 id="egresspolicy-event">EgressPolicy Event</h4>
+<ul>
+<li>Del：列出 EgressPolicy 找到被引用的 EgressGateway，再对 EgressPolicy 与 EgressGateway 解绑。解绑需要做的事情有，找到对应的 EIP 信息。如果使用了 EIP，则判断是否需要回收 EIP。如果此时 EIP 已经没有 policy 使用，则回收 EIP，更新自身及 EgressNode 的 EIP 信息。</li>
+<li>Other：</li>
+<li>EgressPolicy 不能修改绑定的 EgressGateway。如果允许修改，则列出 EgressGateway 找到原先绑定的 EgressGateway，进行解绑。再对新的进行绑定。</li>
+<li>新增 EgressPolicy，则将 EgressPolicy 与 EgressGateway 进行绑定，绑定中，判断是否需要分配 EIP。</li>
+</ul>
+<h4 id="node-event_1">Node Event</h4>
+<ul>
+<li>Del：列出 EgressGateway 挑选出在该节点生效的 EIP，将这些 EIP 重新分配到新的节点上。更新 EgressGateway 的 eip.policy。</li>
+<li>Other：</li>
+<li>NoReady 事件时，相当于触发删除事件。</li>
+<li>标签修改，通过遍历 EgressGateway 所有信息，是否涉及 nodeSelector。如果旧标签不涉及 EgressPolicy，则不做任何处理。如果有涉及，相当于触发了删除事件。如果新的标签符合 EgressGateway 条件，则更新对应的 EgressGateway 的 status 信息。</li>
+</ul>
+<h3 id="egresspolicy-eip">EgressPolicy 选网关节点及 EIP 分配逻辑</h3>
+<p>一个 EgressPolicy 会根据选网关节点的策略，选择一个节点作为网关节点。然后根据是否使用 EIP，来决定是否分配 EIP。分配的 EIP 将绑定到所选的网关节点上。</p>
+<p>分配逻辑都是以单个 EgressGateway 为对象，而不是所有的 EgressGateway。</p>
+<h4 id="egresspolicy">EgressPolicy 选网关节点的模式</h4>
+<ul>
+<li>平均选择：当需要选择网关节点时，选择作为网关节点最少的一个节点。</li>
+<li>最少节点选择：尽量选同一个节点作为网关节点。</li>
+<li>限度选择：一个节点最多只能成为几个 EgressPolicy 的网关节点，限度可以设置，默认为 5。没有达到限度前，则优选选择该节点，达到限度就先选其他的节点，如果都达到了限度，则再随机选择。</li>
+</ul>
+<h4 id="eip">EIP 分配逻辑</h4>
+<ul>
+<li>随机分配：在所有的 EIP 中随机选择一个，不管该 EIP 是否已经分配</li>
+<li>优先使用未分配的 EIP：先使用未分配的 EIP，如果都使用了则再随机分配一个已使用的 EIP</li>
+<li>限度选择：一个 EIP 最多只能被几个 EgressPolicy 使用，限度可以设置，默认为 5，没有达到限度前，则先分配该 EIP，达到限度则选其他的 EIP。都达到限度则随机分配。</li>
+</ul>
+<h4 id="eip_1">EIP 回收逻辑</h4>
+<p>当一个 EIP 没有被使用时，则回收该 EIP，回收就是在 <code>eips</code> 中将该 EIP 字段删除。</p>
+<h3 id="egressclusterinfo-reconcile-loop-d">EgressClusterInfo reconcile loop (d)</h3>
+<h4 id="node-event_2">Node Event</h4>
+<ul>
+<li>Create：node 创建时，将 node 的 ip 自动添加到 egressclusterinfos CR <code>status.egressIgnoreCIDR.nodeIP</code> 中。</li>
+<li>Update：node ip 有更新时，将 node 的 ip 自动更新到 egressclusterinfos CR <code>status.egressIgnoreCIDR.nodeIP</code> 中。</li>
+<li>Delete：node 被删除时，将 node 的 ip 从 egressclusterinfos CR <code>status.egressIgnoreCIDR.nodeIP</code> 中删除。</li>
+</ul>
+<h4 id="calico-ippool-event">Calico IPPool Event</h4>
+<p>当 egressgateway 配置文件的 <code>egressIgnoreCIDR.autoDetect.podCIDR</code> 为 "calico" 时，监听 Calico 的 IPPool Event。
+- Create：Calico IPPool 创建时，将 IPPool CIDR 自动添加到 EgressClusterInfo CR <code>status.egressIgnoreCIDR.podCIDR</code> 中。
+- Update：calico IPPool 有更新时，将 IPPool CIDR 自动更新到 EgressClusterInfo CR <code>status.egressIgnoreCIDR.podCIDR</code> 中。
+- Delete：calico IPPool 被删除时，将 IPPool CIDR 从 EgressClusterInfo CR <code>status.egressIgnoreCIDR.podCIDR</code> 中删除。</p>
+<h4 id="_2">配置文件</h4>
+<p>修改配置文件，增加如下配置：</p>
+<div class="language-yaml highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nt">feature</span><span class="p">:</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="w">  </span><span class="nt">egressIgnoreCIDR</span><span class="p">:</span>
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="w">    </span><span class="nt">autoDetect</span><span class="p">:</span>
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="w">      </span><span class="nt">podCIDR</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;&quot;</span><span class="w">      </span><span class="c1"># 1</span>
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="w">      </span><span class="nt">clusterIP</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span><span class="w">  </span><span class="c1"># 2</span>
+</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="w">      </span><span class="nt">nodeIP</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span><span class="w">     </span><span class="c1"># 3</span>
+</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="w">    </span><span class="nt">custom</span><span class="p">:</span>
+</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a><span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">&quot;10.6.1.0/24&quot;</span>
+</span></code></pre></div>
+<ol>
+<li><code>podCIDR</code>，目前支持 <code>calico</code>、<code>k8s</code>。默认为 <code>k8s</code>。</li>
+<li><code>clusterIP</code>，支持设置为 Service CIDR 自动检测。</li>
+<li><code>nodeIP</code>，支持设置为 Node IP 自动检测。</li>
+</ol>
 
 
 
@@ -749,10 +1181,10 @@
       <div class="md-dialog__inner md-typeset"></div>
     </div>
     
-    <script id="__config" type="application/json">{"base": "../../..", "features": ["content.code.annotate"], "search": "../../../assets/javascripts/workers/search.208ed371.min.js", "translations": {"clipboard.copied": "\u5df2\u590d\u5236", "clipboard.copy": "\u590d\u5236", "search.result.more.one": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.more.other": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 # \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.none": "\u6ca1\u6709\u627e\u5230\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.one": "\u627e\u5230 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.other": "# \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.placeholder": "\u952e\u5165\u4ee5\u5f00\u59cb\u641c\u7d22", "search.result.term.missing": "\u7f3a\u5c11", "select.version": "\u9009\u62e9\u5f53\u524d\u7248\u672c"}}</script>
+    <script id="__config" type="application/json">{"base": "../../..", "features": ["content.code.annotate"], "search": "../../../assets/javascripts/workers/search.74e28a9f.min.js", "translations": {"clipboard.copied": "\u5df2\u590d\u5236", "clipboard.copy": "\u590d\u5236", "search.result.more.one": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.more.other": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 # \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.none": "\u6ca1\u6709\u627e\u5230\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.one": "\u627e\u5230 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.other": "# \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.placeholder": "\u952e\u5165\u4ee5\u5f00\u59cb\u641c\u7d22", "search.result.term.missing": "\u7f3a\u5c11", "select.version": "\u9009\u62e9\u5f53\u524d\u7248\u672c"}}</script>
     
     
-      <script src="../../../assets/javascripts/bundle.b425cdc4.min.js"></script>
+      <script src="../../../assets/javascripts/bundle.220ee61c.min.js"></script>
       
     
   </body>
