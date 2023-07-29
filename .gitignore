@@ -81,3 +81,5 @@ GIT_VERSION
 # build directory
 output
 test/runtime
+
+docs/site.tar.gz
