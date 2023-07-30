@@ -9,8 +9,8 @@
         # setup the cluster
         make e2e_init
 
-        # for china developer, use HTTP_PROXY to get chart 
-        make e2e_init -e HTTP_PROXY=http://10.0.0.1:7890
+        # for china developer, use china image registry, use HTTP_PROXY to pull chart 
+        make e2e_init -e E2E_CHINA_IMAGE_REGISTRY=true -e HTTP_PROXY=http://10.0.0.1:7890
 
         # show the cluster
         export KUBECONFIG=$(pwd)/test/runtime/kubeconfig_egressgateway.config
