@@ -1,27 +1,28 @@
+# 自建集群安装 egressGateway
+
+## 介绍
+
+本文将演示在一个自建集群上快速安装 egressGateway
+
 ## 要求
 
-Egressgateway 目前兼容 Calico CNI，并将在未来支持更多 CNI。 以下是不同 CNI 的配置方法。
+1. 已经具备一个自建好的 kubernetes 集群，至少有 2 个节点。当前，egressGateway 支持的 CNI 只包含 calico
 
-### Calico
+2. 集群准备好 helm 工具
 
-将 FelixConfiguration 中 `chainInsertMode` 的设置更改为 `Append`，更多参考 [calico 文档](https://projectcalico.docs.tigera.io/reference/resources/felixconfig)：
+## 安装准备
 
-```yaml
-apiVersion: projectcalico.org/v3
-kind: FelixConfiguration
-metadata:
-  name: default
-spec:
-  ipv6Support: false
-  ipipMTU: 1400
-  chainInsertMode: Append # (1)
+* 对于 CNI 是 calico 的集群，请执行如下命令，该命令确保 egressGateway 的 iptables 规则不会被 calico 规则覆盖，否则 egressGateway 将不能工作。
+
+```shell
+kubectl patch FelixConfiguration default --patch '{"spec": {"chainInsertMode": "Append"}}'
 ```
 
-1. 更改此行
+> `spec.chainInsertMode` 的意义可参考 [calico 文档](https://projectcalico.docs.tigera.io/reference/resources/felixconfig)：
 
-## 安装
+## 安装 egressGateway
 
-### 添加 helm 仓库
+### 添加 egressGateway 仓库
 
 ```shell
 helm repo add egressgateway https://spidernet-io.github.io/egressgateway/
@@ -30,35 +31,30 @@ helm repo update
 
 ### 安装 egressgateway
 
-以下是一个常用的的 Helm Chart `Values.yaml` 设置选项：
-
-```yaml
-feature:
-  enableIPv4: true
-  enableIPv6: false # (1)
-  tunnelIpv4Subnet: "192.200.0.1/16" # (2)
-  tunnelIpv6Subnet: "fd01::21/112"   # (3)
-```
-
-1. 如果需要 IPv6 则开启该选项，该选项要求 Pod 的网络堆栈是 IPv6
-2. IPv4 隧道子网
-3. IPv6 隧道子网
+可使用如下命令快速安装 egressgateway
 
 ```shell
-helm install egressgateway egressgateway/egressgateway \
-  --values values.yaml \
-  --wait --debug
+helm install egressgateway  egressgateway/egressgateway -n kube-system \
+	--set feature.tunnelIpv4Subnet="192.200.0.1/16" \
+	--set feature.tunnelIpv6Subnet="fd01::21/112"
 ```
+
+> 安装命令中，需要提供用于 egressgateway 隧道节点的 ipv4 和 ipv6 网段，要求该网段和集群内的其他地址不冲突
+> 如果不希望使用 ipv6 ，可使用选项 --set feature.enableIPv6=false 关闭
+
+确认所有的 egressgateway pod 运行正常
 
 ```shell
-kubectl get crd | grep egress
+
 ```
 
-## 创建 EgressGateway CR 对象
+## 创建 EgressGateway 实例
 
-创建一个 EgressGateway CR，通过 `matchLabels` 可以将节点设置为出口网关节点。
+EgressGateway 定义了一组节点作为集群的出口网关，集群内的 egress 流量将会通过这组节点转发而出集群。
+因此，我们需要预先定义一组 EgressGateway，例子如下
 
 ```yaml
+cat <<EOF | kuebctl apply -f -
 apiVersion: egressgateway.spidernet.io/v1beta1
 kind: EgressGateway
 metadata:
@@ -66,65 +62,57 @@ metadata:
 spec:
   ippools:
     ipv4:
-    - "10.6.1.60-10.6.1.66" # (1)
+    - "10.6.1.60-10.6.1.66"
   nodeSelector:
     selector:
       matchLabels:
-        kubernetes.io/hostname: workstation2 # (2)
+        egressgateway: true
+EOF
+``` 
+
+> * 集群的 egress 流量的源 IP 地址，可使用网关节点的 IP，也可使用独立的 VIP。 
+> 如上 yaml 例子中，spec.ippools.ipv4 定义了一组 egress 的 出口 VIP 地址，需要根据具体环境的实际情况调整，
+> 其中，`spec.ippools.ipv4` 的 CIDR 应该是与网关节点上的出口网卡（一般情况下是默认路由的网卡）的子网相同，否则，极有可能导致 egress 访问不通。
+> 
+> * 通过 EgressGateway 的 spec.nodeSelector 来 select 一组节点作为出口网关，它支持 select 多个节点来实现高可用。
+
+给出口网关节点打上 label，可以给多个 node 打上 label，作为生成环境，建议 2 个节点，作为 POC 环境， 建议 1 个节点即可
+
+```shell
+kubectl label node NodeName egressgateway=true
 ```
 
-1. EgressGateway 可以使用 Egress IP 地址范围
-2. 通过 label 选择一个或者一组节点作为出口网关，本组网关用于生效 Egress IP
+查看状态
+```shell
+
+
+```
 
 ## 创建一个测试 Pod 应用
 
 创建一个测试 Pod，以模拟需要出口 Egress IP 的应用程序。
 
-```yaml
-apiVersion: v1
-kind: Pod
-metadata:
-  labels:
-    app: mock-app
-  name: mock-app
-  namespace: default
-spec:
-  containers:
-   - image: nginx
-     imagePullPolicy: IfNotPresent
-     name: nginx
-     resources: {}
-  dnsPolicy: ClusterFirst
-  enableServiceLinks: true
-  nodeName: workstation1 # (1)
+```shell
+kubectl create deployment client --image nginx
 ```
-
-1. 更改 `nodeName` 的值，选择一个非出口网关的节点。
 
 ## 创建 EgressPolicy CR 对象
 
-通过创建 EgressPolicy CR，您可以控制哪些 Pod 在访问特定地址时需要经过出口网关。
+EgressPolicy 实例用于定义哪些 POD 的出口流量要经过 egressGateway node 转发，以及其它的配置细节。
+可创建如下例子，当匹配的 pod 访问任意集群外部的地址（任意不是 node ip、CNI pod CIDR、clusterIP 的地址）时，都会被 egressGateway node 转发
 
 ```yaml
 apiVersion: egressgateway.spidernet.io/v1beta1
 kind: EgressPolicy
 metadata:
-  name: mock-app
+  name: test-client
+  namespace: default
 spec:
-  egressGatewayName: "default" # (1)
   appliedTo:
     podSelector:
-      matchLabels:             # (2)
-        app: mock-app
-  destSubnet:
-    - 10.6.1.92/32             # (3)
+      matchLabels:
+        app: client
 ```
-
-1. 通过设置此值，选取上述创建的名为 `default` 的 EgressGateway 网关。
-2. 通过设置 `matchLabels` 来选择需要进行 Egress 操作的 Pod。
-3. 通过设置 `destSubnet`，可以使匹配的 Pod 在访问特定子网时才进行 Egress 操作。
-
-现在，来自 mock-app 访问 10.6.1.92 的流量将通过出口网关转发。
 
 ## 测试结果
 

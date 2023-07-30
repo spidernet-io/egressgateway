@@ -80,12 +80,14 @@ install_proscope:
 
 # install calico
 .PHONY: install_calico
+install_calico: KIND_CLUSTER_NAME ?= $(E2E_KIND_CLUSTER_NAME)
 install_calico:
 	echo "install calico"
 	export CALICO_VERSION=$(CALICO_VERSION); \
 	export INSTALL_TIME_OUT=$(INSTALL_TIME_OUT); \
 	export E2E_IP_FAMILY=$(E2E_IP_FAMILY); \
 	export E2E_KIND_KUBECONFIG_PATH=$(E2E_KIND_KUBECONFIG_PATH); \
+	export KIND_CLUSTER_NAME=$(E2E_KIND_CLUSTER_NAME) ; \
 	bash ./scripts/installCalico.sh
 
 # install kwok
