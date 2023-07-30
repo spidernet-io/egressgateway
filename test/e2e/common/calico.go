@@ -8,16 +8,15 @@ import (
 	"time"
 
 	. "github.com/onsi/gomega"
-	"github.com/spidernet-io/e2eframework/framework"
 
+	calicov1 "github.com/tigera/operator/pkg/apis/crd.projectcalico.org/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	calicov1 "github.com/tigera/operator/pkg/apis/crd.projectcalico.org/v1"
-
-	"github.com/spidernet-io/egressgateway/pkg/utils"
+	"github.com/spidernet-io/e2eframework/framework"
+	"github.com/spidernet-io/egressgateway/pkg/utils/ip"
 	e "github.com/spidernet-io/egressgateway/test/e2e/err"
 	"github.com/spidernet-io/egressgateway/test/e2e/tools"
 )
@@ -47,10 +46,10 @@ func GetCalicoIPPoolsCidr(f *framework.Framework) (v4Cidrs, v6Cidrs []string) {
 	v4Cidrs, v6Cidrs = make([]string, 0), make([]string, 0)
 	for _, ippool := range ippools {
 		cidr := ippool.Spec.CIDR
-		isV4Cidr, err := utils.IsIPv4Cidr(cidr)
+		isV4Cidr, err := ip.IsIPv4Cidr(cidr)
 		Expect(err).NotTo(HaveOccurred())
 
-		isV6Cidr, err := utils.IsIPv6Cidr(cidr)
+		isV6Cidr, err := ip.IsIPv6Cidr(cidr)
 		Expect(err).NotTo(HaveOccurred())
 
 		if isV4Cidr {

@@ -39,7 +39,8 @@ type TestReqVXLAN struct {
 
 func TestReconcilerEgressNode(t *testing.T) {
 	cases := map[string]TestCaseVXLAN{
-		//"caseAddEgressNode": caseAddEgressNode(),
+		"caseAddEgressNodeIPv4": caseAddEgressNodeIPv4(),
+		"caseAddEgressNodeDual": caseAddEgressNodeDual(),
 	}
 
 	getParent := vxlan.GetParentByDefaultRoute(vxlan.NetLink{
@@ -56,6 +57,7 @@ func TestReconcilerEgressNode(t *testing.T) {
 			builder := fake.NewClientBuilder()
 			builder.WithScheme(schema.GetScheme())
 			builder.WithObjects(c.initialObjects...)
+			builder.WithStatusSubresource(c.initialObjects...)
 			ctx := context.Background()
 			ruleRoute := route.NewRuleRoute(log)
 			reconciler := vxlanReconciler{
@@ -65,6 +67,8 @@ func TestReconcilerEgressNode(t *testing.T) {
 				getParent:      getParent,
 				ruleRoute:      ruleRoute,
 				ruleRouteCache: utils.NewSyncMap[string, []net.IP](),
+				peerMap:        utils.NewSyncMap[string, vxlan.Peer](),
+				vxlan:          vxlan.New(),
 			}
 
 			for _, req := range c.reqs {
@@ -78,8 +82,7 @@ func TestReconcilerEgressNode(t *testing.T) {
 	}
 }
 
-func caseAddEgressNode() TestCaseVXLAN {
-
+func caseAddEgressNodeIPv4() TestCaseVXLAN {
 	_, ipn, err := net.ParseCIDR("192.168.100.1/24")
 	if err != nil {
 		panic(err)
@@ -90,9 +93,8 @@ func caseAddEgressNode() TestCaseVXLAN {
 			NodeName: "workstation1",
 		},
 		FileConfig: config.FileConfig{
-			EnableIPv4: true,
-			EnableIPv6: false,
-
+			EnableIPv4:    true,
+			EnableIPv6:    false,
 			TunnelIPv4Net: ipn,
 			TunnelIPv6Net: nil,
 		},
@@ -105,6 +107,29 @@ func caseAddEgressNode() TestCaseVXLAN {
 				Spec:       egressv1.EgressNodeSpec{},
 				Status:     egressv1.EgressNodeStatus{},
 			},
+			&egressv1.EgressTunnel{
+				ObjectMeta: metav1.ObjectMeta{Name: "workstation2"},
+				Spec:       egressv1.EgressNodeSpec{},
+				Status:     egressv1.EgressNodeStatus{},
+			},
+			&egressv1.EgressTunnel{
+				ObjectMeta: metav1.ObjectMeta{Name: "workstation3"},
+				Spec:       egressv1.EgressNodeSpec{},
+				Status: egressv1.EgressNodeStatus{
+					Tunnel: egressv1.Tunnel{
+						IPv4: "172.16.25.128",
+						IPv6: "",
+						MAC:  "00:0c:29:bb:8b:31",
+						Parent: egressv1.Parent{
+							Name: "ens160",
+							IPv4: "10.6.1.21",
+							IPv6: "",
+						},
+					},
+					Phase: egressv1.EgressNodeSucceeded,
+					Mark:  "",
+				},
+			},
 		},
 		reqs: []TestReqVXLAN{
 			{
@@ -113,6 +138,121 @@ func caseAddEgressNode() TestCaseVXLAN {
 					Name:      "workstation1",
 				},
 				expErr:     false,
+				expRequeue: false,
+			},
+			{
+				nn: types.NamespacedName{
+					Namespace: "EgressTunnel/",
+					Name:      "workstation2",
+				},
+				expErr:     false,
+				expRequeue: false,
+			},
+			{
+				nn: types.NamespacedName{
+					Namespace: "EgressTunnel/",
+					Name:      "workstation3",
+				},
+				expErr:     false,
+				expRequeue: false,
+			},
+			{
+				nn: types.NamespacedName{
+					Namespace: "EgressTunnel/",
+					Name:      "workstation4-not-found",
+				},
+				expErr:     true,
+				expRequeue: false,
+			},
+		},
+		config: cfg,
+	}
+}
+
+func caseAddEgressNodeDual() TestCaseVXLAN {
+	_, tunnelIPv4CIDR, err := net.ParseCIDR("192.168.100.1/24")
+	if err != nil {
+		panic(err)
+	}
+	_, tunnelIPv6CIDR, err := net.ParseCIDR("fd00::/64")
+	if err != nil {
+		panic(err)
+	}
+
+	cfg := &config.Config{
+		EnvConfig: config.EnvConfig{
+			NodeName: "workstation1",
+		},
+		FileConfig: config.FileConfig{
+			EnableIPv4:    true,
+			EnableIPv6:    true,
+			TunnelIPv4Net: tunnelIPv4CIDR,
+			TunnelIPv6Net: tunnelIPv6CIDR,
+		},
+	}
+
+	return TestCaseVXLAN{
+		initialObjects: []client.Object{
+			&egressv1.EgressTunnel{
+				ObjectMeta: metav1.ObjectMeta{Name: "workstation1"},
+				Spec:       egressv1.EgressNodeSpec{},
+				Status:     egressv1.EgressNodeStatus{},
+			},
+			&egressv1.EgressTunnel{
+				ObjectMeta: metav1.ObjectMeta{Name: "workstation2"},
+				Spec:       egressv1.EgressNodeSpec{},
+				Status:     egressv1.EgressNodeStatus{},
+			},
+			&egressv1.EgressTunnel{
+				ObjectMeta: metav1.ObjectMeta{Name: "workstation3"},
+				Spec:       egressv1.EgressNodeSpec{},
+				Status: egressv1.EgressNodeStatus{
+					Tunnel: egressv1.Tunnel{
+						IPv4: "192.168.100.2",
+						IPv6: "fd00::1",
+						MAC:  "00:0c:29:bb:8b:31",
+						Parent: egressv1.Parent{
+							Name: "ens160",
+							IPv4: "10.6.1.21",
+							IPv6: "",
+						},
+					},
+					Phase: egressv1.EgressNodeSucceeded,
+					Mark:  "",
+				},
+			},
+		},
+		reqs: []TestReqVXLAN{
+			{
+				nn: types.NamespacedName{
+					Namespace: "EgressTunnel/",
+					Name:      "workstation1",
+				},
+				expErr:     false,
+				expRequeue: false,
+			},
+			{
+				nn: types.NamespacedName{
+					Namespace: "EgressTunnel/",
+					Name:      "workstation2",
+				},
+				expErr:     false,
+				expRequeue: false,
+			},
+			{
+				nn: types.NamespacedName{
+					Namespace: "EgressTunnel/",
+					Name:      "workstation3",
+				},
+				expErr:     false,
+				expRequeue: false,
+			},
+			{
+				nn: types.NamespacedName{
+					Namespace: "EgressTunnel/",
+					Name:      "workstation4-not-found",
+				},
+				expErr:     true,
 				expRequeue: false,
 			},
 		},

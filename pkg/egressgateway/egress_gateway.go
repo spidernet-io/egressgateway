@@ -6,6 +6,7 @@ package egressgateway
 import (
 	"context"
 	"fmt"
+	"github.com/spidernet-io/egressgateway/pkg/utils/ip"
 	"math/rand"
 	"net"
 	"time"
@@ -657,10 +658,10 @@ func (r egnReconciler) allocatorEIP(selEipLolicy string, nodeName string, pi pol
 		var useIpv4s []net.IP
 		var useIpv4sByNode []net.IP
 
-		ipv4Ranges, _ := utils.MergeIPRanges(constant.IPv4, eg.Spec.Ippools.IPv4)
+		ipv4Ranges, _ := ip.MergeIPRanges(constant.IPv4, eg.Spec.Ippools.IPv4)
 		perIpv4 = pi.ipv4
 		if len(perIpv4) != 0 {
-			result, err := utils.IsIPIncludedRange(constant.IPv4, perIpv4, ipv4Ranges)
+			result, err := ip.IsIPIncludedRange(constant.IPv4, perIpv4, ipv4Ranges)
 			if err != nil {
 				return "", "", err
 			}
@@ -676,8 +677,8 @@ func (r egnReconciler) allocatorEIP(selEipLolicy string, nodeName string, pi pol
 				}
 			}
 
-			ipv4s, _ := utils.ParseIPRanges(constant.IPv4, ipv4Ranges)
-			freeIpv4s := utils.IPsDiffSet(ipv4s, useIpv4s, false)
+			ipv4s, _ := ip.ParseIPRanges(constant.IPv4, ipv4Ranges)
+			freeIpv4s := ip.IPsDiffSet(ipv4s, useIpv4s, false)
 
 			if len(freeIpv4s) == 0 {
 				for _, node := range eg.Status.NodeList {
@@ -709,11 +710,11 @@ func (r egnReconciler) allocatorEIP(selEipLolicy string, nodeName string, pi pol
 		var useIpv6s []net.IP
 		var useIpv6sByNode []net.IP
 
-		ipv6Ranges, _ := utils.MergeIPRanges(constant.IPv6, eg.Spec.Ippools.IPv6)
+		ipv6Ranges, _ := ip.MergeIPRanges(constant.IPv6, eg.Spec.Ippools.IPv6)
 
 		perIpv6 = pi.ipv6
 		if len(perIpv6) != 0 {
-			result, err := utils.IsIPIncludedRange(constant.IPv6, perIpv6, ipv6Ranges)
+			result, err := ip.IsIPIncludedRange(constant.IPv6, perIpv6, ipv6Ranges)
 			if err != nil {
 				return "", "", err
 			}
@@ -729,8 +730,8 @@ func (r egnReconciler) allocatorEIP(selEipLolicy string, nodeName string, pi pol
 				}
 			}
 
-			ipv6s, _ := utils.ParseIPRanges(constant.IPv6, ipv6Ranges)
-			freeIpv6s := utils.IPsDiffSet(ipv6s, useIpv6s, false)
+			ipv6s, _ := ip.ParseIPRanges(constant.IPv6, ipv6Ranges)
+			freeIpv6s := ip.IPsDiffSet(ipv6s, useIpv6s, false)
 
 			if len(freeIpv6s) == 0 {
 				for _, node := range eg.Status.NodeList {

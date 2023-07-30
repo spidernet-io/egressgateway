@@ -7,6 +7,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/spidernet-io/egressgateway/pkg/utils/ip"
 	"math/rand"
 	"net"
 	"time"
@@ -21,7 +22,6 @@ import (
 	"github.com/spidernet-io/egressgateway/pkg/config"
 	"github.com/spidernet-io/egressgateway/pkg/constant"
 	egress "github.com/spidernet-io/egressgateway/pkg/k8s/apis/v1beta1"
-	"github.com/spidernet-io/egressgateway/pkg/utils"
 )
 
 type EgressGatewayWebhook struct {
@@ -62,18 +62,18 @@ func (egw *EgressGatewayWebhook) EgressGatewayValidate(ctx context.Context, req 
 
 	// Checking the number of IPV4 and IPV6 addresses
 	var ipv4s, ipv6s []net.IP
-	ipv4Ranges, err := utils.MergeIPRanges(constant.IPv4, newEg.Spec.Ippools.IPv4)
+	ipv4Ranges, err := ip.MergeIPRanges(constant.IPv4, newEg.Spec.Ippools.IPv4)
 	if err != nil {
 		return webhook.Denied(fmt.Sprintf("Failed to check IP: %v", err))
 	}
 
-	ipv6Ranges, _ := utils.MergeIPRanges(constant.IPv6, newEg.Spec.Ippools.IPv6)
+	ipv6Ranges, _ := ip.MergeIPRanges(constant.IPv6, newEg.Spec.Ippools.IPv6)
 	if err != nil {
 		return webhook.Denied(fmt.Sprintf("Failed to check IP: %v", err))
 	}
 
 	if egw.Config.FileConfig.EnableIPv4 {
-		ipv4s, err = utils.ParseIPRanges(constant.IPv4, ipv4Ranges)
+		ipv4s, err = ip.ParseIPRanges(constant.IPv4, ipv4Ranges)
 		if err != nil {
 			return webhook.Denied(fmt.Sprintf("Failed to check IP: %v", err))
 		}
@@ -84,7 +84,7 @@ func (egw *EgressGatewayWebhook) EgressGatewayValidate(ctx context.Context, req 
 	}
 
 	if egw.Config.FileConfig.EnableIPv6 {
-		ipv6s, err = utils.ParseIPRanges(constant.IPv6, ipv6Ranges)
+		ipv6s, err = ip.ParseIPRanges(constant.IPv6, ipv6Ranges)
 		if err != nil {
 			return webhook.Denied(fmt.Sprintf("Failed to check IP: %v", err))
 		}
@@ -111,7 +111,7 @@ func (egw *EgressGatewayWebhook) EgressGatewayValidate(ctx context.Context, req 
 	// Check whether the IP address to be deleted has been allocated
 	for _, item := range eg.Status.NodeList {
 		for _, eip := range item.Eips {
-			result, err := utils.IsIPIncludedRange(constant.IPv4, eip.IPv4, ipv4Ranges)
+			result, err := ip.IsIPIncludedRange(constant.IPv4, eip.IPv4, ipv4Ranges)
 			if err != nil {
 				return webhook.Denied(fmt.Sprintf("Failed to check IP: %v", err))
 			}
@@ -124,7 +124,7 @@ func (egw *EgressGatewayWebhook) EgressGatewayValidate(ctx context.Context, req 
 
 	// Check the defaultEIP
 	if len(newEg.Spec.Ippools.Ipv4DefaultEIP) != 0 {
-		result, err := utils.IsIPIncludedRange(constant.IPv4, newEg.Spec.Ippools.Ipv4DefaultEIP, ipv4Ranges)
+		result, err := ip.IsIPIncludedRange(constant.IPv4, newEg.Spec.Ippools.Ipv4DefaultEIP, ipv4Ranges)
 		if err != nil {
 			return webhook.Denied(fmt.Sprintf("Failed to check Ipv4DefaultEIP: %v", err))
 		}
@@ -134,7 +134,7 @@ func (egw *EgressGatewayWebhook) EgressGatewayValidate(ctx context.Context, req 
 	}
 
 	if len(newEg.Spec.Ippools.Ipv6DefaultEIP) != 0 {
-		result, err := utils.IsIPIncludedRange(constant.IPv6, newEg.Spec.Ippools.Ipv6DefaultEIP, ipv6Ranges)
+		result, err := ip.IsIPIncludedRange(constant.IPv6, newEg.Spec.Ippools.Ipv6DefaultEIP, ipv6Ranges)
 		if err != nil {
 			return webhook.Denied(fmt.Sprintf("Failed to check Ipv6DefaultEIP: %v", err))
 		}
@@ -160,12 +160,12 @@ func (egw *EgressGatewayWebhook) EgressGatewayMutate(ctx context.Context, req we
 
 	if egw.Config.FileConfig.EnableIPv4 {
 		if len(eg.Spec.Ippools.Ipv4DefaultEIP) == 0 && len(eg.Spec.Ippools.IPv4) != 0 {
-			ipv4Ranges, err := utils.MergeIPRanges(constant.IPv4, eg.Spec.Ippools.IPv4)
+			ipv4Ranges, err := ip.MergeIPRanges(constant.IPv4, eg.Spec.Ippools.IPv4)
 			if err != nil {
 				return webhook.Denied(fmt.Sprintf("ippools.ipv4 format error: %v", err))
 			}
 
-			ipv4s, _ := utils.ParseIPRanges(constant.IPv4, ipv4Ranges)
+			ipv4s, _ := ip.ParseIPRanges(constant.IPv4, ipv4Ranges)
 			if len(ipv4s) != 0 {
 				patch = append(patch, patchOperation{
 					Op:    "add",
@@ -181,12 +181,12 @@ func (egw *EgressGatewayWebhook) EgressGatewayMutate(ctx context.Context, req we
 
 	if egw.Config.FileConfig.EnableIPv6 {
 		if len(eg.Spec.Ippools.Ipv6DefaultEIP) == 0 && len(eg.Spec.Ippools.IPv6) != 0 {
-			ipv6Ranges, err := utils.MergeIPRanges(constant.IPv6, eg.Spec.Ippools.IPv6)
+			ipv6Ranges, err := ip.MergeIPRanges(constant.IPv6, eg.Spec.Ippools.IPv6)
 			if err != nil {
 				return webhook.Denied(fmt.Sprintf("ippools.ipv6 format error: %v", err))
 			}
 
-			ipv6s, _ := utils.ParseIPRanges(constant.IPv6, ipv6Ranges)
+			ipv6s, _ := ip.ParseIPRanges(constant.IPv6, ipv6Ranges)
 			if len(ipv6s) != 0 {
 				patch = append(patch, patchOperation{
 					Op:    "add",

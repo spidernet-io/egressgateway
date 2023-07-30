@@ -185,7 +185,7 @@ func (r *vxlanReconciler) updateEgressNodeStatus(node *egressv1.EgressTunnel, ve
 		ctx := context.Background()
 		err = r.client.Get(ctx, types.NamespacedName{Name: r.cfg.NodeName}, node)
 		if err != nil {
-			if !errors.IsNotFound(err) {
+			if errors.IsNotFound(err) {
 				return nil
 			}
 			return err
@@ -283,11 +283,7 @@ func (r *vxlanReconciler) parseVTEP(status egressv1.EgressNodeStatus) *vxlan.Pee
 	if !ready {
 		return nil
 	}
-	return &vxlan.Peer{
-		IPv4: ipv4,
-		IPv6: ipv6,
-		MAC:  mac,
-	}
+	return &vxlan.Peer{IPv4: ipv4, IPv6: ipv6, MAC: mac}
 }
 
 func (r *vxlanReconciler) version() int {

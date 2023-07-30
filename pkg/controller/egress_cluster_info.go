@@ -6,6 +6,7 @@ package controller
 import (
 	"context"
 	"fmt"
+	"github.com/spidernet-io/egressgateway/pkg/utils/ip"
 	"strings"
 	"sync"
 
@@ -144,11 +145,11 @@ func (r *eciReconciler) reconcileCalicoIPPool(ctx context.Context, req reconcile
 	log.Info("update event")
 
 	// check if cidr about ippools changed
-	isv4Cidr, err := utils.IsIPv4Cidr(ippool.Spec.CIDR)
+	isv4Cidr, err := ip.IsIPv4Cidr(ippool.Spec.CIDR)
 	if err != nil {
 		return reconcile.Result{Requeue: true}, err
 	}
-	isv6Cidr, err := utils.IsIPv6Cidr(ippool.Spec.CIDR)
+	isv6Cidr, err := ip.IsIPv6Cidr(ippool.Spec.CIDR)
 	if err != nil {
 		return reconcile.Result{Requeue: true}, err
 	}
@@ -547,11 +548,11 @@ func getCidr(pod *corev1.Pod, param string) (ipv4Range, ipv6Range []string, err 
 	// get cidr
 	ipRanges := strings.Split(ipRange, ",")
 	if len(ipRanges) == 1 {
-		if isV4, _ := utils.IsIPv4Cidr(ipRanges[0]); isV4 {
+		if isV4, _ := ip.IsIPv4Cidr(ipRanges[0]); isV4 {
 			ipv4Range = ipRanges
 			ipv6Range = []string{}
 		}
-		if isV6, _ := utils.IsIPv6Cidr(ipRanges[0]); isV6 {
+		if isV6, _ := ip.IsIPv6Cidr(ipRanges[0]); isV6 {
 			ipv6Range = ipRanges
 			ipv4Range = []string{}
 
