@@ -4,6 +4,8 @@
 
 set -o errexit -o nounset -o pipefail
 
+set -x
+
 OS=$(uname | tr 'A-Z' 'a-z')
 SED_COMMAND="sed"
 

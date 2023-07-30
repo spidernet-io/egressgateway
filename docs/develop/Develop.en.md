@@ -1,17 +1,23 @@
 ## Quick Start
 
-1. `make build_local_image`
+1. build local CI image 
 
-2. setup cluster
+        make build_local_image
 
+3. setup cluster
+
+        # setup the cluster
         make e2e_init
-        
+
+        # show the cluster
         export KUBECONFIG=$(pwd)/test/runtime/kubeconfig_egressgateway.config
         kubectl get node
 
-3. `make e2e_run`
+4. run the E2E test 
 
-4. check proscope, browser visits http://nodeIP:4040
+        make e2e_run
+
+5. check proscope, browser visits http://nodeIP:4040
 
 ### Go Package (Structure) Design
 
