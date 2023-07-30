@@ -4,20 +4,23 @@
 
         make build_local_image
 
-3. setup cluster
+2. setup cluster
 
         # setup the cluster
         make e2e_init
+
+        # for china developer, use HTTP_PROXY to get chart 
+        make e2e_init -e HTTP_PROXY=http://10.0.0.1:7890
 
         # show the cluster
         export KUBECONFIG=$(pwd)/test/runtime/kubeconfig_egressgateway.config
         kubectl get node
 
-4. run the E2E test 
+3. run the E2E test 
 
         make e2e_run
 
-5. check proscope, browser visits http://nodeIP:4040
+4. check proscope, browser visits http://nodeIP:4040
 
 ### Go Package (Structure) Design
 
