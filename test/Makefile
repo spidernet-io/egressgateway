@@ -108,8 +108,10 @@ install_kwok:
 .PHONY: run_nettool_server
 run_nettool_server: load_nettool_image
 	echo "delete nettool server container"
-	-@ { docker rm --name $(NETTOOLS_SERVER_A) }
-	-@ { docker rm --name $(NETTOOLS_SERVER_B) }
+	-@  docker stop  $(NETTOOLS_SERVER_A) &>/dev/null
+	-@  docker rm  $(NETTOOLS_SERVER_A) &>/dev/null
+	-@  docker stop  $(NETTOOLS_SERVER_B) &>/dev/null
+	-@  docker rm  $(NETTOOLS_SERVER_B) &>/dev/null
 	echo "run nettool server container"
 	{ docker run -itd --name $(NETTOOLS_SERVER_A)  --network kind $(NETTOOLS_IMAGE) $(NETTOOLS_SERVER_BIN) -protocol $(MOD) -tcpPort $(TCP_PORT) --udpPort $(UDP_PORT) -webPort $(WEB_PORT) & } || { echo "failed to run nettools server a"; exit 1; }; \
 	{ docker run -itd --name $(NETTOOLS_SERVER_B)  --network kind $(NETTOOLS_IMAGE) $(NETTOOLS_SERVER_BIN) -protocol $(MOD) -tcpPort $(TCP_PORT) --udpPort $(UDP_PORT) -webPort $(WEB_PORT) & } || { echo "failed to run nettools server b"; exit 1; }; \
