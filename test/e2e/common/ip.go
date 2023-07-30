@@ -6,6 +6,7 @@ package common
 import (
 	"context"
 	"fmt"
+
 	"math/big"
 	"net"
 	"os/exec"
@@ -13,7 +14,7 @@ import (
 	"time"
 
 	"github.com/spidernet-io/egressgateway/pkg/constant"
-	"github.com/spidernet-io/egressgateway/pkg/utils"
+	iputil "github.com/spidernet-io/egressgateway/pkg/utils/ip"
 	e "github.com/spidernet-io/egressgateway/test/e2e/err"
 	"github.com/spidernet-io/egressgateway/test/e2e/tools"
 )
@@ -137,7 +138,7 @@ func CheckIPIncluded(version constant.IPVersion, ip string, ips []string) (bool,
 		_, _, err := net.ParseCIDR(item)
 		if err != nil {
 			// item is not cidr
-			include, err := utils.IsIPIncludedRange(version, ip, []string{item})
+			include, err := iputil.IsIPIncludedRange(version, ip, []string{item})
 			if err != nil {
 				return false, err
 			}

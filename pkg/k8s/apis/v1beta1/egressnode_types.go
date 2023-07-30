@@ -17,7 +17,7 @@ type EgressTunnelList struct {
 }
 
 // EgressTunnel represents an egress tunnel
-// +kubebuilder:resource:categories={egressnode},path="egresstunnels",singular="egresstunnel",scope="Cluster",shortName={egt}
+// +kubebuilder:resource:categories={egresstunnel},path="egresstunnels",singular="egresstunnel",scope="Cluster",shortName={egt}
 // +kubebuilder:printcolumn:JSONPath=".status.tunnel.mac",description="tunnelMac",name="tunnelMac",type=string
 // +kubebuilder:printcolumn:JSONPath=".status.tunnel.ipv4",description="tunnelIPv4",name="tunnelIPv4",type=string
 // +kubebuilder:printcolumn:JSONPath=".status.tunnel.ipv6",description="tunnelIPv6",name="tunnelIPv6",type=string

@@ -358,7 +358,7 @@ unitest_tests:
 	-@rm -rf $(UNITEST_OUTPUT)
 	-@mkdir -p $(UNITEST_OUTPUT)
 	@echo "run unitest tests"
-	$(ROOT_DIR)/tools/golang/ginkgo.sh   \
+	sudo $(ROOT_DIR)/tools/golang/ginkgo.sh   \
 		--cover --coverprofile=./coverage.out --covermode set  \
 		--json-report unitestreport.json \
 		-randomize-suites -randomize-all --keep-going  --timeout=1h  -p   --slow-spec-threshold=120s \

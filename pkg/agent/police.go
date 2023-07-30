@@ -487,16 +487,6 @@ func parseMark(mark string) (uint32, error) {
 	return i32, nil
 }
 
-func parseMarkToInt(mark string) (int, error) {
-	tmp := strings.ReplaceAll(mark, "0x", "")
-	i64, err := strconv.ParseInt(tmp, 16, 32)
-	if err != nil {
-		return 0, err
-	}
-	i32 := int(i64)
-	return i32, nil
-}
-
 func (r *policeReconciler) buildPolicyRule(policyName string, mark uint32, version uint8, isIgnoreInternalCIDR bool) *iptables.Rule {
 	tmp := "v4-"
 	ignoreInternalCIDRName := EgressClusterCIDRIPv4

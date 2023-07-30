@@ -105,7 +105,7 @@ func ValidateHook(client client.Client, cfg *config.Config) *webhook.Admission {
 				}
 
 				if req.Operation == v1.Create {
-					if cfg.FileConfig.EnableIPv4 && cfg.FileConfig.EnableIPv6 {
+					if cfg.FileConfig.EnableIPv4 || cfg.FileConfig.EnableIPv6 {
 						if ok, err := checkEIP(client, ctx, *egp); !ok {
 							return webhook.Denied(err.Error())
 						}
@@ -161,7 +161,7 @@ func checkEIP(client client.Client, ctx context.Context, egp egressv1.EgressPoli
 	return true, nil
 }
 
-// ValidateHook ValidateHook
+// MutateHook MutateHook
 func MutateHook(client client.Client, cfg *config.Config) *webhook.Admission {
 	return &webhook.Admission{
 		Handler: admission.HandlerFunc(func(ctx context.Context, req webhook.AdmissionRequest) webhook.AdmissionResponse {
