@@ -93,12 +93,15 @@ install_calico:
 # install kwok
 .PHONY: install_kwok
 install_kwok:
-	[ "$(E2E_INSTALL_KWOK)" == "true" ] || { echo "no kwok" ; exit 0 ; }
-	echo "install kwok"
-	export INSTALL_TIME_OUT=$(INSTALL_TIME_OUT); \
-	export E2E_KIND_KUBECONFIG_PATH=$(E2E_KIND_KUBECONFIG_PATH); \
-	export https_proxy=$(HTTP_PROXY) ; \
-	bash ./scripts/installKwok.sh
+	if [ "$(E2E_INSTALL_KWOK)" == "true" ] ; then \
+		echo "install kwok" ; \
+		export INSTALL_TIME_OUT=$(INSTALL_TIME_OUT); \
+		export E2E_KIND_KUBECONFIG_PATH=$(E2E_KIND_KUBECONFIG_PATH); \
+		export https_proxy=$(HTTP_PROXY) ; \
+		bash ./scripts/installKwok.sh ; \
+	else \
+	  	echo "does not install kwok" ; \
+	fi
 
 
 # run_nettool_server
