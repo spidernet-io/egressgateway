@@ -24,9 +24,9 @@ helm install egressgateway egressgateway/egressgateway --namespace kube-system
 ### Feature parameters
 
 | Name                                            | Description                                                                                                                | Value                   |
-| ----------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- | ----------------------- |
+| ----------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |-------------------------|
 | `feature.enableIPv4`                            | Enable IPv4                                                                                                                | `true`                  |
-| `feature.enableIPv6`                            | Enable IPv6                                                                                                                | `true`                  |
+| `feature.enableIPv6`                            | Enable IPv6                                                                                                                | `false`                 |
 | `feature.datapathMode`                          | iptables mode, [`iptables`, `ebpf`]                                                                                        | `iptables`              |
 | `feature.tunnelIpv4Subnet`                      | Tunnel IPv4 subnet                                                                                                         | `172.31.0.0/16`         |
 | `feature.tunnelIpv6Subnet`                      | Tunnel IPv6 subnet                                                                                                         | `fd11::/112`            |
