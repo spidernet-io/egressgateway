@@ -56,7 +56,7 @@ jobs:
         uses: actions/upload-artifact@v3.1.1
         with:
           name: README.md
-          path: charts/README.md
+          path: thisProject/charts/README.md
 
       - name: Diff chart/README.md
         id: execute
