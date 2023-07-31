@@ -92,7 +92,7 @@ helm repo update
         EOF
 
     创建命令中：
-    * 集群的 egress 流量的源 IP 地址，可使用网关节点的 IP，也可使用独立的 VIP。 如上 yaml 例子中，spec.ippools.ipv4 定义了一组 egress 的 出口 VIP 地址，需要根据具体环境的实际情况调整，
+    * 如上 yaml 例子中，spec.ippools.ipv4 定义了一组 egress 的 出口 VIP 地址，需要根据具体环境的实际情况调整，
      其中，`spec.ippools.ipv4` 的 CIDR 应该是与网关节点上的出口网卡（一般情况下是默认路由的网卡）的子网相同，否则，极有可能导致 egress 访问不通。
 
     * 通过 EgressGateway 的 spec.nodeSelector 来 select 一组节点作为出口网关，它支持 select 多个节点来实现高可用。
@@ -154,7 +154,10 @@ EgressPolicy 对象是租户级别的，因此，它务必创建在 selected 应
 
     如上创建命令中：
     * spec.egressGatewayName 指定了使用那一组 egressGateway 的名字
-    * spec.appliedTo.podSelector 指定了本策略生效在集群内的哪些 pod 
+    * spec.appliedTo.podSelector 指定了本策略生效在集群内的哪些 pod
+    * 集群的 egress 流量的源 IP 地址有两种选择：
+      （1）可使用网关节点的 IP。它可适用于公有云和传统网络等环境，缺点是，随着网关节点的故障，出口源 IP 可能会发生变化。可设置 spec.egressIP.useNodeIP=true 来生效。
+      （2）可使用独立的 VIP，因为 egressGateway 是基于 ARP 原理生效 VIP，所以它适用于传统网络，而不适用于公有云等环境，它的优点是，出口源 IP 永久是固定的。在 EgressPolicy 中不做任何设置，则默认使用 egressGatewayName 的缺省 VIP，或者可单独手动指定 spec.egressIP.ipv4 ，其IP值务必是符合 egressGateway 中的 IP 池
 
 3. 查看 EgressPolicy 的状态
 
