@@ -61,7 +61,7 @@ endef
 
 
 .PHONY: build_local_image
-build_local_image: build_local_agent_image build_local_controller_image
+build_local_image: build_local_agent_image build_local_controller_image build_local_nettools_image
 
 .PHONY: build_local_agent_image
 build_local_agent_image: IMAGE_NAME := ${REGISTER}/${GIT_REPO}-agent

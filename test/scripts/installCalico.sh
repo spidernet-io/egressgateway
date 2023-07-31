@@ -4,6 +4,8 @@
 
 set -o errexit -o nounset -o pipefail
 
+set -x
+
 OS=$(uname | tr 'A-Z' 'a-z')
 SED_COMMAND="sed"
 
@@ -11,8 +13,10 @@ CURRENT_FILENAME=$( basename $0 )
 CURRENT_DIR_PATH=$(cd $(dirname $0); pwd)
 PROJECT_ROOT_PATH=$( cd ${CURRENT_DIR_PATH}/../.. && pwd )
 
-mkdir -p ${PROJECT_ROOT_PATH}/.tmp/yaml
-cp ${PROJECT_ROOT_PATH}/test/yaml/calico.yaml ${PROJECT_ROOT_PATH}/.tmp/yaml/calico.yaml
+DEST_CALICO_YAML_DIR=${PROJECT_ROOT_PATH}/test/.tmp/yaml
+rm -rf ${DEST_CALICO_YAML_DIR}
+mkdir -p ${DEST_CALICO_YAML_DIR}
+cp ${PROJECT_ROOT_PATH}/test/yaml/calico.yaml ${DEST_CALICO_YAML_DIR}/calico.yaml
 
 export CALICO_VERSION=${CALICO_VERSION}
 export CALICO_AUTODETECTION_METHOD=interface=eth0
@@ -51,11 +55,20 @@ for env in ${ENV_LIST}; do
     KEY="${env%%=*}"
     VALUE="${env#*=}"
     echo $KEY $VALUE
-    ${SED_COMMAND} -i "s/<<${KEY}>>/${VALUE}/g" ${PROJECT_ROOT_PATH}/.tmp/yaml/calico.yaml
+    ${SED_COMMAND} -i "s/<<${KEY}>>/${VALUE}/g" ${DEST_CALICO_YAML_DIR}/calico.yaml
+done
+sleep 1
+
+# accelerate local cluster , in case that it times out to wait calico ready
+IMAGE_LIST=`cat ${DEST_CALICO_YAML_DIR}/calico.yaml | grep "image: " | awk '{print \$2}' | sort  | uniq  | tr '\n' ' ' | tr '\r' ' ' `
+echo "image: ${IMAGE_LIST}"
+for IMAGE in ${IMAGE_LIST} ; do
+    echo "load calico image ${IMAGE} to kind cluster"
+    docker pull ${IMAGE}
+    kind load docker-image ${IMAGE} --name ${KIND_CLUSTER_NAME}
 done
 
-kubectl apply -f  ${PROJECT_ROOT_PATH}/.tmp/yaml/calico.yaml --kubeconfig ${E2E_KIND_KUBECONFIG_PATH}
-
+kubectl apply -f  ${DEST_CALICO_YAML_DIR}/calico.yaml --kubeconfig ${E2E_KIND_KUBECONFIG_PATH}
 sleep 3
 
 kubectl wait --for=condition=ready -l k8s-app=calico-node --timeout=${INSTALL_TIME_OUT} pod -n kube-system --kubeconfig ${E2E_KIND_KUBECONFIG_PATH}

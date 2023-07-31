@@ -3,9 +3,12 @@
 ## Copyright Authors of Spider
 
 set -o errexit -o nounset -o pipefail
+set -x
 
 # Temporary directory
 KWOK_WORK_DIR=$(mktemp -d)
+echo "KWOK_WORK_DIR=${KWOK_WORK_DIR}"
+
 # KWOK repository
 KWOK_REPO=kubernetes-sigs/kwok
 # Get latest

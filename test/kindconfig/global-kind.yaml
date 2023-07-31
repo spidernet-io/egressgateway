@@ -5,6 +5,7 @@ networking:
   # insert subnet inform
   apiServerAddress: 127.0.0.1
   kubeProxyMode: iptables
+  disableDefaultCNI: true
 kubeadmConfigPatches:
   - |
     kind: ClusterConfiguration

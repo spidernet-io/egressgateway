@@ -80,29 +80,38 @@ install_proscope:
 
 # install calico
 .PHONY: install_calico
+install_calico: KIND_CLUSTER_NAME ?= $(E2E_KIND_CLUSTER_NAME)
 install_calico:
 	echo "install calico"
 	export CALICO_VERSION=$(CALICO_VERSION); \
 	export INSTALL_TIME_OUT=$(INSTALL_TIME_OUT); \
 	export E2E_IP_FAMILY=$(E2E_IP_FAMILY); \
 	export E2E_KIND_KUBECONFIG_PATH=$(E2E_KIND_KUBECONFIG_PATH); \
+	export KIND_CLUSTER_NAME=$(E2E_KIND_CLUSTER_NAME) ; \
 	bash ./scripts/installCalico.sh
 
 # install kwok
 .PHONY: install_kwok
 install_kwok:
-	echo "install kwok"
-	export INSTALL_TIME_OUT=$(INSTALL_TIME_OUT); \
-	export E2E_KIND_KUBECONFIG_PATH=$(E2E_KIND_KUBECONFIG_PATH); \
-	bash ./scripts/installKwok.sh
+	if [ "$(E2E_INSTALL_KWOK)" == "true" ] ; then \
+		echo "install kwok" ; \
+		export INSTALL_TIME_OUT=$(INSTALL_TIME_OUT); \
+		export E2E_KIND_KUBECONFIG_PATH=$(E2E_KIND_KUBECONFIG_PATH); \
+		export https_proxy=$(HTTP_PROXY) ; \
+		bash ./scripts/installKwok.sh ; \
+	else \
+	  	echo "does not install kwok" ; \
+	fi
 
 
 # run_nettool_server
 .PHONY: run_nettool_server
 run_nettool_server: load_nettool_image
 	echo "delete nettool server container"
-	-@ { docker rm --name $(NETTOOLS_SERVER_A) }
-	-@ { docker rm --name $(NETTOOLS_SERVER_B) }
+	-@  docker stop  $(NETTOOLS_SERVER_A) &>/dev/null
+	-@  docker rm  $(NETTOOLS_SERVER_A) &>/dev/null
+	-@  docker stop  $(NETTOOLS_SERVER_B) &>/dev/null
+	-@  docker rm  $(NETTOOLS_SERVER_B) &>/dev/null
 	echo "run nettool server container"
 	{ docker run -itd --name $(NETTOOLS_SERVER_A)  --network kind $(NETTOOLS_IMAGE) $(NETTOOLS_SERVER_BIN) -protocol $(MOD) -tcpPort $(TCP_PORT) --udpPort $(UDP_PORT) -webPort $(WEB_PORT) & } || { echo "failed to run nettools server a"; exit 1; }; \
 	{ docker run -itd --name $(NETTOOLS_SERVER_B)  --network kind $(NETTOOLS_IMAGE) $(NETTOOLS_SERVER_BIN) -protocol $(MOD) -tcpPort $(TCP_PORT) --udpPort $(UDP_PORT) -webPort $(WEB_PORT) & } || { echo "failed to run nettools server b"; exit 1; }; \

@@ -52,12 +52,21 @@ jobs:
           --readme "thisProject/charts/README.md"
           echo "-----------------------------"
 
+      - name: Upload artifact digests
+        uses: actions/upload-artifact@v3.1.1
+        with:
+          name: README.md
+          path: thisProject/charts/README.md
+
+      - name: Diff chart/README.md
+        id: execute
+        run: |
           cd thisProject
           if git diff --quiet; then
             echo -e "\033[32mREADME.md has not changed\033[0m"
           else
             echo -e "\033[31mcharts/README.md has changed!\033[0m"
-            echo -e "\033[31mPlease refer to the project https://github.com/bitnami-labs/readme-generator-for-helm to install the Helm chart README.md generation tool, regenerate the README.md, and then commit the code.\033[0m"
+            echo -e "\033[31mPlease refer to artifact, and then commit the code.\033[0m"
             echo -e "\033[31mAlternatively, copy the contents of the new README.md below into your commit.\033[0m"
             echo -e "\033[31m-----------------------------\033[0m"
             cat charts/README.md
