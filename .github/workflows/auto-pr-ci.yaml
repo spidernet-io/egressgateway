@@ -228,7 +228,7 @@ jobs:
     # there is an issue where it cannot be started. This is a
     # compatibility problem with the `kindest/node` image in kind,
     # and we are waiting for a fix from upstream.
-    if: ${{  always() && needs.prepare.outputs.e2e_enabled == 'true' && needs.prepare.outputs.ipfamily_dual_e2e == 'true' && (needs.prepare.outputs.kindNodeImage == 'kindest/node:v1.22.17' | needs.prepare.outputs.kindNodeImage == 'kindest/node:v1.23.17') }}
+    if: ${{  always() && needs.prepare.outputs.e2e_enabled == 'true' && needs.prepare.outputs.ipfamily_dual_e2e == 'true' && (needs.prepare.outputs.kindNodeImage == 'kindest/node:v1.22.17' || needs.prepare.outputs.kindNodeImage == 'kindest/node:v1.23.17') }}
     uses: ./.github/workflows/call-e2e.yaml
     with:
       ref: ${{ needs.prepare.outputs.ref }}
@@ -244,7 +244,7 @@ jobs:
     # there is an issue where it cannot be started. This is a
     # compatibility problem with the `kindest/node` image in kind,
     # and we are waiting for a fix from upstream.
-    if: ${{  always() && needs.prepare.outputs.e2e_enabled == 'true' && needs.prepare.outputs.ipfamily_ipv4only_e2e == 'true' && (needs.prepare.outputs.kindNodeImage == 'kindest/node:v1.22.17' | needs.prepare.outputs.kindNodeImage == 'kindest/node:v1.23.17') }}
+    if: ${{  always() && needs.prepare.outputs.e2e_enabled == 'true' && needs.prepare.outputs.ipfamily_ipv4only_e2e == 'true' && (needs.prepare.outputs.kindNodeImage == 'kindest/node:v1.22.17' || needs.prepare.outputs.kindNodeImage == 'kindest/node:v1.23.17') }}
     uses: ./.github/workflows/call-e2e.yaml
     with:
       ref: ${{ needs.prepare.outputs.ref }}
@@ -260,7 +260,7 @@ jobs:
     # there is an issue where it cannot be started. This is a
     # compatibility problem with the `kindest/node` image in kind,
     # and we are waiting for a fix from upstream.
-    if: ${{  always() && needs.prepare.outputs.e2e_enabled == 'true'  && needs.prepare.outputs.ipfamily_ipv6only_e2e == 'true' && (needs.prepare.outputs.kindNodeImage == 'kindest/node:v1.22.17' | needs.prepare.outputs.kindNodeImage == 'kindest/node:v1.23.17') }}
+    if: ${{  always() && needs.prepare.outputs.e2e_enabled == 'true'  && needs.prepare.outputs.ipfamily_ipv6only_e2e == 'true' && (needs.prepare.outputs.kindNodeImage == 'kindest/node:v1.22.17' || needs.prepare.outputs.kindNodeImage == 'kindest/node:v1.23.17') }}
     uses: ./.github/workflows/call-e2e.yaml
     with:
       ref: ${{ needs.prepare.outputs.ref }}
