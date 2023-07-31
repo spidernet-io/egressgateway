@@ -205,12 +205,15 @@ EgressPolicy 对象是租户级别的，因此，它务必创建在 selected 应
 
 ## 测试效果
 
-我们可以看到 mock-app 访问外部服务时对端看到的 IP 是 EgressGateway 的 IP 地址。
+1. 可在集群外部部署应用 nettools，用于模拟一个集群外部的服务，nettools 会在 http 回复中返回请求者的源IP 地址
+
+2. 在集群内部的 visitor pod 中，验证出口流量的效果
+我们可以看到 visitor 访问外部服务，nettools 返回的源 IP 符合了 EgressPolicy.status.eip 的效果 。
 
     $ kubectl get pod
-    NAME                       READY   STATUS    RESTARTS   AGE
-    visitor-6764bb48cc-29vq9   1/1     Running   0          15m
+      NAME                       READY   STATUS    RESTARTS   AGE
+      visitor-6764bb48cc-29vq9   1/1     Running   0          15m
 
-    $kubectl exec -it mock-app bash
+    $kubectl exec -it visitor-6764bb48cc-29vq9 bash
       $ curl 10.6.1.92:8080
       Remote IP: 10.6.1.60
