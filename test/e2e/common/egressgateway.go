@@ -48,8 +48,33 @@ func DeleteEgressGateway(f *framework.Framework, gateway *egressv1beta1.EgressGa
 	return f.DeleteResource(gateway, opts...)
 }
 
-func UpdateEgressGateway(f *framework.Framework, gateway *egressv1beta1.EgressGateway, opts ...client.UpdateOption) error {
-	return f.UpdateResource(gateway, opts...)
+func UpdateEgressGateway(f *framework.Framework, gateway *egressv1beta1.EgressGateway, timeout time.Duration, opts ...client.UpdateOption) error {
+	ctx, cancel := context.WithTimeout(context.TODO(), timeout)
+	defer cancel()
+
+	eg := new(egressv1beta1.EgressGateway)
+	for {
+		select {
+		case <-ctx.Done():
+			return ERR_TIMEOUT
+		default:
+			e := GetEgressGateway(f, gateway.Name, eg)
+			if e != nil {
+				return e
+			}
+			gateway.ResourceVersion = eg.ResourceVersion
+			e = f.UpdateResource(gateway, opts...)
+			if e == nil {
+				GinkgoWriter.Printf("the latest resourceVersion is: %s\n", eg.ResourceVersion)
+				return nil
+			}
+			if !errors.IsConflict(e) {
+				return e
+			}
+			GinkgoWriter.Printf("conflict, need retry, now the request resourceVersion is: %s\n", eg.ResourceVersion)
+			time.Sleep(time.Second)
+		}
+	}
 }
 
 // DeleteEgressGatewayIfExists delete egressGateway if its exists
