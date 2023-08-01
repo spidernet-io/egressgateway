@@ -75,4 +75,19 @@ kubectl wait --for=condition=ready -l k8s-app=calico-node --timeout=${INSTALL_TI
 kubectl --kubeconfig ${E2E_KIND_KUBECONFIG_PATH} patch felixconfigurations.crd.projectcalico.org default --type='merge' -p '{"spec":{"chainInsertMode":"Append"}}' || { echo "failed to patch calico chainInsertMode"; exit 1; }
 kubectl get po -n kube-system --kubeconfig ${E2E_KIND_KUBECONFIG_PATH}
 
+sleep 15
+
+case ${E2E_IP_FAMILY} in
+  ipv6)
+  kubectl --kubeconfig ${E2E_KIND_KUBECONFIG_PATH} get ippool default-ipv6-ippool -o yaml > default-ipv6-ippool.yaml
+  echo "  natOutgoing: true" >> default-ipv6-ippool.yaml
+  kubectl --kubeconfig ${E2E_KIND_KUBECONFIG_PATH} apply -f default-ipv6-ippool.yaml
+    ;;
+  dual)
+  kubectl --kubeconfig ${E2E_KIND_KUBECONFIG_PATH} get ippool default-ipv6-ippool -o yaml > default-ipv6-ippool.yaml
+  echo "  natOutgoing: true" >> default-ipv6-ippool.yaml
+  kubectl --kubeconfig ${E2E_KIND_KUBECONFIG_PATH} apply -f default-ipv6-ippool.yaml
+    ;;
+esac
+
 echo -e "\033[35m Succeed to install Calico \033[0m"

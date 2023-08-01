@@ -178,40 +178,40 @@ var _ = Describe("Operate egressGateway", Label("egressGateway"), func() {
 			}
 		},
 			Entry("Failed when add invalid `IP` to `Ippools`", Label("G00009"), false, func() error {
-				Expect(common.GetEgressGateway(f, name, eg)).NotTo(HaveOccurred())
 				if enableV4 {
 					eg.Spec.Ippools.IPv4 = append(eg.Spec.Ippools.IPv4, invalidIPv4)
 				}
 				if enableV6 {
 					eg.Spec.Ippools.IPv6 = append(eg.Spec.Ippools.IPv6, invalidIPv6)
 				}
-				return common.UpdateEgressGateway(f, eg)
+				GinkgoWriter.Printf("UpdateEgressGateway: %s\n", eg.Name)
+				return common.UpdateEgressGateway(f, eg, time.Second*10)
 			}),
 			Entry("Succeeded when add valid `IP` to `Ippools`", Label("G00012", "G00013"), true, func() error {
-				Expect(common.GetEgressGateway(f, name, eg)).NotTo(HaveOccurred())
 				if enableV4 {
 					eg.Spec.Ippools.IPv4 = append(eg.Spec.Ippools.IPv4, singleIpv4Pool...)
 				}
 				if enableV6 {
 					eg.Spec.Ippools.IPv6 = append(eg.Spec.Ippools.IPv6, singleIpv6Pool...)
 				}
-				return common.UpdateEgressGateway(f, eg)
+				GinkgoWriter.Printf("UpdateEgressGateway: %s\n", eg.Name)
+				return common.UpdateEgressGateway(f, eg, time.Second*10)
 			}),
 			Entry("Failed when delete `IP` that being used", Label("G00010"), false, func() error {
-				Expect(common.GetEgressGateway(f, name, eg)).NotTo(HaveOccurred())
 				if enableV4 {
 					eg.Spec.Ippools.IPv4 = tools.RemoveValueFromSlice(eg.Spec.Ippools.IPv4, v4DefaultEip)
 				}
 				if enableV6 {
 					eg.Spec.Ippools.IPv6 = tools.RemoveValueFromSlice(eg.Spec.Ippools.IPv6, v6DefaultEip)
 				}
-				return common.UpdateEgressGateway(f, eg)
+				GinkgoWriter.Printf("UpdateEgressGateway: %s\n", eg.Name)
+				return common.UpdateEgressGateway(f, eg, time.Second*10)
 			}),
 			Entry("Failed when add different number of ip to `Ippools.IPv4` and `Ippools.IPv6`", Label("G00011"), false, func() error {
-				Expect(common.GetEgressGateway(f, name, eg)).NotTo(HaveOccurred())
 				if enableV4 && enableV6 {
 					eg.Spec.Ippools.IPv4 = append(eg.Spec.Ippools.IPv4, singleIpv4Pool...)
-					return common.UpdateEgressGateway(f, eg)
+					GinkgoWriter.Printf("UpdateEgressGateway: %s\n", eg.Name)
+					return common.UpdateEgressGateway(f, eg, time.Second*10)
 				}
 				return ErrNotNeed
 			}),
