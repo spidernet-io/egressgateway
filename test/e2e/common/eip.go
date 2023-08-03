@@ -154,7 +154,9 @@ func CheckEipInClientPod(f *framework.Framework, pod *corev1.Pod, eIP, serverIP 
 		default:
 			out, err := GetClientPodLog(f, pod, serverIP, connectionTimeout, logDuration)
 			Expect(err).NotTo(HaveOccurred())
-			GinkgoWriter.Printf("the client-pod log: \n%s\n", out)
+			if err != nil {
+				GinkgoWriter.Printf("the client-pod log: \n%s\n", out)
+			}
 			if expect {
 				if strings.Contains(out, WEBSOCKET) && strings.Contains(out, eIP) {
 					webSocketOk = true
