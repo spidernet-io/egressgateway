@@ -4495,6 +4495,8 @@ spec:
             # Use Kubernetes API as the backing datastore.
             - name: DATASTORE_TYPE
               value: "kubernetes"
+            - name: "CALICO_IPV6POOL_NAT_OUTGOING"
+              value: "true"
             # Wait for the datastore.
             - name: WAIT_FOR_DATASTORE
               value: "true"
