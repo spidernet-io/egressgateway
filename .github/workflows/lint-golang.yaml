@@ -149,8 +149,8 @@ jobs:
         run: |
           result=${{ steps.golangci_lint.outcome }}
           [ "${result}"x == "failure"x ] && echo "step golangci_lint failed" && exit 1
-          result=${{ steps.other.outcome }}
-          [ "${result}"x == "failure"x ] && echo "step gokart failed" && exit 3
+          result=${{ steps.lintgolang.outcome }}
+          [ "${result}"x == "failure"x ] && echo "step lintgolang failed" && exit 3
           echo "all succeed"
           exit 0
 
