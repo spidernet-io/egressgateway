@@ -25,10 +25,10 @@ import (
 	"io"
 	"net"
 	"os"
-	"sync"
 	"time"
 
 	"github.com/prometheus/client_golang/prometheus"
+	wlock "github.com/spidernet-io/egressgateway/pkg/lock"
 	"golang.org/x/sys/unix"
 )
 
@@ -59,7 +59,7 @@ func NewSharedLock(lockFilePath string, lockTimeout, lockProbeInterval time.Dura
 // This is safe because each of our goroutines is accessing a different iptables table, so they
 // don't conflict with each other.
 type SharedLock struct {
-	lock              sync.Mutex
+	lock              wlock.Mutex
 	referenceCount    int
 	lockHandle        io.Closer
 	lockFilePath      string
@@ -98,7 +98,7 @@ func (l *SharedLock) Unlock() {
 		panic("Unmatched Unlock()")
 	}
 	if l.referenceCount == 0 {
-		//log.Debug("Releasing iptables lock.")
+		// log.Debug("Releasing iptables lock.")
 		err := l.lockHandle.Close()
 		if err != nil {
 			// We haven't done anything with the file or socket, so we shouldn't be
