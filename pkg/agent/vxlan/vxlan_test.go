@@ -89,3 +89,33 @@ func TestDiffLink(t *testing.T) {
 		})
 	}
 }
+
+func TestVxlan(t *testing.T) {
+	device := New()
+	mac, err := net.ParseMAC("66:bf:c7:47:5c:14")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	ipv6, ipv6Net, err := net.ParseCIDR("fd01::1/120")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	ipv4Net := &net.IPNet{
+		IP:   []byte{10, 6, 1, 21},
+		Mask: []byte{255, 255, 255, 0},
+	}
+
+	ipv6Net = &net.IPNet{
+		IP:   ipv6,
+		Mask: ipv6Net.Mask,
+	}
+
+	err = device.EnsureLink("egress",
+		101, 3456, mac, 0,
+		ipv4Net, nil, true)
+	if err != nil {
+		t.Fatal(err)
+	}
+}

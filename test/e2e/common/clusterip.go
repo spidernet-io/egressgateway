@@ -9,8 +9,7 @@ import (
 
 	. "github.com/onsi/gomega"
 	"github.com/spidernet-io/e2eframework/framework"
-
-	"github.com/spidernet-io/egressgateway/pkg/utils"
+	"github.com/spidernet-io/egressgateway/pkg/utils/ip"
 )
 
 func GetClusterIpCidr(f *framework.Framework) (ipv4s, ipv6s []string) {
@@ -27,7 +26,7 @@ func GetClusterIpCidr(f *framework.Framework) (ipv4s, ipv6s []string) {
 	Expect(len(svcSubnetKV)).To(Equal(2))
 	subnets := strings.Split(svcSubnetKV[1], ",")
 
-	ipv4s, ipv6s, err = utils.GetIPV4V6Cidr(subnets)
+	ipv4s, ipv6s, err = ip.GetIPV4V6Cidr(subnets)
 	Expect(err).NotTo(HaveOccurred())
 	return ipv4s, ipv6s
 }

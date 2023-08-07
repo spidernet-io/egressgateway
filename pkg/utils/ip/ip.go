@@ -1,7 +1,7 @@
 // Copyright 2022 Authors of spidernet-io
 // SPDX-License-Identifier: Apache-2.0
 
-package utils
+package ip
 
 import (
 	"bytes"
@@ -58,8 +58,7 @@ func IsIPVersion(version constant.IPVersion) error {
 func GetIPV4V6(ips []string) (IPV4s, IPV6s []string, err error) {
 	for _, ip := range ips {
 		if net.ParseIP(ip) == nil {
-			err = fmt.Errorf(constant.InvalidIPFormat)
-			return nil, nil, err
+			return nil, nil, ErrInvalidIP
 		}
 		if isIPv4, _ := IsIPv4(ip); isIPv4 {
 			IPV4s = append(IPV4s, ip)
@@ -73,21 +72,23 @@ func GetIPV4V6(ips []string) (IPV4s, IPV6s []string, err error) {
 
 func GetIPV4V6Cidr(ipCidrs []string) (IPV4Cidrs, IPV6Cidrs []string, err error) {
 	for _, ipCidr := range ipCidrs {
-		isIPv4Cidr, err := IsIPv4Cidr(ipCidr)
-		if err != nil {
-			return nil, nil, err
-		}
-		if isIPv4Cidr {
-			IPV4Cidrs = append(IPV4Cidrs, ipCidr)
-			continue
-		}
-
-		isIPv6Cidr, err := IsIPv6Cidr(ipCidr)
-		if err != nil {
-			return nil, nil, err
-		}
-		if isIPv6Cidr {
-			IPV6Cidrs = append(IPV6Cidrs, ipCidr)
+		if strings.Contains(ipCidr, ".") {
+			isIPv4Cidr, err := IsIPv4Cidr(ipCidr)
+			if err != nil {
+				return nil, nil, err
+			}
+			if isIPv4Cidr {
+				IPV4Cidrs = append(IPV4Cidrs, ipCidr)
+				continue
+			}
+		} else {
+			isIPv6Cidr, err := IsIPv6Cidr(ipCidr)
+			if err != nil {
+				return nil, nil, err
+			}
+			if isIPv6Cidr {
+				IPV6Cidrs = append(IPV6Cidrs, ipCidr)
+			}
 		}
 	}
 	return
@@ -104,6 +105,9 @@ func IsSameIPs(a, b []string) (bool, error) {
 	sortedB, err := SortIPs(b)
 	if err != nil {
 		return false, err
+	}
+	if len(sortedA) != len(sortedB) {
+		return false, nil
 	}
 
 	for i := range sortedA {
@@ -189,25 +193,27 @@ func SortIPCidrs(ips []string) ([]string, error) {
 }
 
 func IsIPv4Cidr(cidr string) (bool, error) {
-	netIP, _, err := net.ParseCIDR(cidr)
+	_, ipnet, err := net.ParseCIDR(cidr)
 	if err != nil {
 		return false, err
 	}
-	if netIP.To4() != nil {
-		return true, nil
+	verified := ipnet.IP.To4() != nil && ipnet.Mask != nil && len(ipnet.Mask) == net.IPv4len
+	if !verified {
+		return false, fmt.Errorf("%s is invalid IPv4 CIDR", cidr)
 	}
-	return false, nil
+	return true, nil
 }
 
 func IsIPv6Cidr(cidr string) (bool, error) {
-	netIP, _, err := net.ParseCIDR(cidr)
+	_, ipnet, err := net.ParseCIDR(cidr)
 	if err != nil {
 		return false, err
 	}
-	if netIP.To4() == nil {
-		return true, nil
+	verified := ipnet.IP.To16() != nil && ipnet.Mask != nil && len(ipnet.Mask) == net.IPv6len
+	if !verified {
+		return false, fmt.Errorf("%s is invalid IPv6 CIDR", cidr)
 	}
-	return false, nil
+	return true, nil
 }
 
 // IPsDiffSet calculates the difference set of two IP address slices.

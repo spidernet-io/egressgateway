@@ -9,7 +9,7 @@ spec:
   group: egressgateway.spidernet.io
   names:
     categories:
-    - egressnode
+    - egresstunnel
     kind: EgressTunnel
     listKind: EgressTunnelList
     plural: egresstunnels

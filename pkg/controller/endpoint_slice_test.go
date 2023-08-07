@@ -7,6 +7,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"sigs.k8s.io/controller-runtime/pkg/event"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -492,5 +493,52 @@ func caseDeletePod() TestCaseEPS {
 		initialObjects: initialObjects,
 		reqs:           reqs,
 		config:         conf,
+	}
+}
+
+func TestPodPredicate(t *testing.T) {
+	p := podPredicate{}
+	if !p.Create(event.CreateEvent{
+		Object: &corev1.Pod{
+			ObjectMeta: metav1.ObjectMeta{
+				Name: "default",
+				Labels: map[string]string{
+					"aa": "bb",
+				},
+			},
+			Status: corev1.PodStatus{
+				PodIP: "10.6.1.21",
+				PodIPs: []corev1.PodIP{
+					{IP: "10.6.1.21"},
+				},
+			},
+		},
+	}) {
+		t.Fatal("got false")
+	}
+
+	if !p.Delete(event.DeleteEvent{}) {
+		t.Fatal("got false")
+	}
+
+	if !p.Update(event.UpdateEvent{
+		ObjectOld: &corev1.Pod{
+			ObjectMeta: metav1.ObjectMeta{
+				Name: "default",
+				Labels: map[string]string{
+					"aa": "bb",
+				},
+			},
+		},
+		ObjectNew: &corev1.Pod{
+			ObjectMeta: metav1.ObjectMeta{
+				Name: "default",
+				Labels: map[string]string{
+					"aa": "cc",
+				},
+			},
+		},
+	}) {
+		t.Fatal("got false")
 	}
 }
