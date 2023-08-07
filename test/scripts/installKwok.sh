@@ -12,7 +12,23 @@ echo "KWOK_WORK_DIR=${KWOK_WORK_DIR}"
 # KWOK repository
 KWOK_REPO=kubernetes-sigs/kwok
 # Get latest
-KWOK_LATEST_RELEASE=$(curl "https://api.github.com/repos/${KWOK_REPO}/releases/latest" | jq -r '.tag_name')
+got="no"
+for i in {0..12}; do
+  KWOK_LATEST_RELEASE=$(curl "https://api.github.com/repos/${KWOK_REPO}/releases/latest" | jq -r '.tag_name')
+  if [[ -z ${KWOK_LATEST_RELEASE} ]]; then
+    echo "${i}th, can not get tag, retry..."
+    sleep 2s
+  else
+    echo "KWOK_LATEST_RELEASE=${KWOK_LATEST_RELEASE}"
+    got="ok"
+    break
+  fi
+done
+
+if [[ "${got}" = "no" ]]; then
+  echo "timeout to get tag"
+  exit 1
+fi
 
 cat <<EOF > "${KWOK_WORK_DIR}/kustomization.yaml"
 apiVersion: kustomize.config.k8s.io/v1beta1
