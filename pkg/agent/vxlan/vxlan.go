@@ -5,21 +5,19 @@ package vxlan
 
 import (
 	"fmt"
+	"github.com/spidernet-io/egressgateway/pkg/ethtool"
+	wlock "github.com/spidernet-io/egressgateway/pkg/lock"
+	"github.com/vishvananda/netlink"
 	"io"
 	"net"
 	"os"
 	"reflect"
-	"sync"
 	"syscall"
-
-	"github.com/vishvananda/netlink"
-
-	"github.com/spidernet-io/egressgateway/pkg/ethtool"
 )
 
 // Device is vxlan device manager
 type Device struct {
-	lock      sync.RWMutex
+	lock      wlock.RWMutex
 	link      *netlink.Vxlan
 	getParent func(version int) (*Parent, error)
 }
