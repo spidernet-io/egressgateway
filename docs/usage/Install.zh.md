@@ -110,6 +110,7 @@ helm repo update
               name: default
               uid: 7ce835e2-2075-4d26-ba63-eacd841aadfe
             spec:
+              clusterDefault: true
               ippools:
                 ipv4:
                 - 172.22.0.100-172.22.0.110
@@ -145,7 +146,6 @@ EgressPolicy 对象是租户级别的，因此，它务必创建在 selected 应
           name: test
           namespace: default
         spec:
-          egressGatewayName: "default"
           appliedTo:
             podSelector:
               matchLabels:
@@ -176,7 +176,6 @@ EgressPolicy 对象是租户级别的，因此，它务必创建在 selected 应
             podSelector:
               matchLabels:
                 app: visitor
-          egressGatewayName: default
           egressIP:
             allocatorPolicy: default
             useNodeIP: false

@@ -9,7 +9,6 @@ import (
 	"fmt"
 	"net"
 
-	admissionv1 "k8s.io/api/admission/v1"
 	v1 "k8s.io/api/admission/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/types"
@@ -28,12 +27,6 @@ const (
 	EgressPolicy        = "EgressPolicy"
 	EgressClusterPolicy = "EgressClusterPolicy"
 )
-
-type patchOperation struct {
-	Op    string      `json:"op"`
-	Path  string      `json:"path"`
-	Value interface{} `json:"value,omitempty"`
-}
 
 // ValidateHook ValidateHook
 func ValidateHook(client client.Client, cfg *config.Config) *webhook.Admission {
@@ -166,101 +159,6 @@ func checkEIP(client client.Client, ctx context.Context, egp egressv1.EgressPoli
 	}
 
 	return true, nil
-}
-
-// MutateHook MutateHook
-func MutateHook(client client.Client, cfg *config.Config) *webhook.Admission {
-	return &webhook.Admission{
-		Handler: admission.HandlerFunc(func(ctx context.Context, req webhook.AdmissionRequest) webhook.AdmissionResponse {
-
-			switch req.Kind.Kind {
-			case EgressGateway:
-				return (&egressgateway.EgressGatewayWebhook{Client: client, Config: cfg}).EgressGatewayMutate(ctx, req)
-			case EgressPolicy:
-				return egressPolicyMutateHook(client, cfg, ctx, req)
-			case EgressClusterPolicy:
-				return egressClusterPolicyMutateHook(client, cfg, ctx, req)
-			}
-
-			return webhook.Allowed("checked")
-		}),
-	}
-}
-
-// MutateHook egresspolicy
-func egressPolicyMutateHook(client client.Client, cfg *config.Config, ctx context.Context, req webhook.AdmissionRequest) admission.Response {
-	isPatch := false
-	egp := new(egressv1.EgressPolicy)
-	err := json.Unmarshal(req.Object.Raw, egp)
-	if err != nil {
-		return webhook.Denied(fmt.Sprintf("json unmarshal EgressPolicy with error: %v", err))
-	}
-
-	reviewResponse := webhook.AdmissionResponse{}
-	var patch []patchOperation
-
-	if egp.Spec.EgressIP.IsEmpty() {
-		patch = append(patch, patchOperation{
-			Op:    "add",
-			Path:  "/spec/egressIP",
-			Value: egressv1.EgressIP{UseNodeIP: false, AllocatorPolicy: "default"},
-		})
-		isPatch = true
-	}
-
-	if isPatch {
-		patchBytes, err := json.Marshal(patch)
-		if err != nil {
-			return webhook.Denied(fmt.Sprintf("failed to set the default value of the EgressIP field: %v", err))
-		}
-
-		reviewResponse.Allowed = true
-		reviewResponse.Patch = patchBytes
-		pt := admissionv1.PatchTypeJSONPatch
-		reviewResponse.PatchType = &pt
-
-		return reviewResponse
-	}
-
-	return webhook.Allowed("checked")
-}
-
-// MutateHook egressclusterpolicy
-func egressClusterPolicyMutateHook(client client.Client, cfg *config.Config, ctx context.Context, req webhook.AdmissionRequest) admission.Response {
-	isPatch := false
-	egcp := new(egressv1.EgressClusterPolicy)
-	err := json.Unmarshal(req.Object.Raw, egcp)
-	if err != nil {
-		return webhook.Denied(fmt.Sprintf("json unmarshal EgressPolicy with error: %v", err))
-	}
-
-	reviewResponse := webhook.AdmissionResponse{}
-	var patch []patchOperation
-
-	if egcp.Spec.EgressIP.IsEmpty() {
-		patch = append(patch, patchOperation{
-			Op:    "add",
-			Path:  "/spec/egressIP",
-			Value: egressv1.EgressIP{UseNodeIP: false, AllocatorPolicy: "default"},
-		})
-		isPatch = true
-	}
-
-	if isPatch {
-		patchBytes, err := json.Marshal(patch)
-		if err != nil {
-			return webhook.Denied(fmt.Sprintf("failed to set the default value of the EgressIP field: %v", err))
-		}
-
-		reviewResponse.Allowed = true
-		reviewResponse.Patch = patchBytes
-		pt := admissionv1.PatchTypeJSONPatch
-		reviewResponse.PatchType = &pt
-
-		return reviewResponse
-	}
-
-	return webhook.Allowed("checked")
 }
 
 func validateSubnet(subnet []string) webhook.AdmissionResponse {

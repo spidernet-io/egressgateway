@@ -27,6 +27,10 @@ spec:
       jsonPath: .spec.ippools.ipv6DefaultEIP
       name: ipv6DefaultEIP
       type: string
+    - description: clusterDefault
+      jsonPath: .spec.clusterDefault
+      name: clusterDefault
+      type: boolean
     name: v1beta1
     schema:
       openAPIV3Schema:
@@ -46,6 +50,8 @@ spec:
             type: object
           spec:
             properties:
+              clusterDefault:
+                type: boolean
               ippools:
                 properties:
                   ipv4:
