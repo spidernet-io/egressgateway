@@ -33,7 +33,7 @@ var (
 
 	cli client.Client
 
-	node1Label map[string]string
+	node1, node2 *corev1.Node
 )
 
 var _ = BeforeSuite(func() {
@@ -55,7 +55,8 @@ var _ = BeforeSuite(func() {
 	Expect(len(nodes.Items) > 2).To(BeTrue(), "test case needs at lest 3 nodes")
 
 	//
-	node1Label = nodes.Items[0].Labels
+	node1 = &nodes.Items[0]
+	node2 = &nodes.Items[1]
 
 	// get egressgateway config
 	configMap := &corev1.ConfigMap{}

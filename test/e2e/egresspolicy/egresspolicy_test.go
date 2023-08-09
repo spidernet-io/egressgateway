@@ -25,7 +25,7 @@ var _ = Describe("EgressPolicy", Ordered, func() {
 		ctx := context.Background()
 
 		// create EgressGateway
-		pool, err := common.GenIPPools(ctx, cli, 3, 1)
+		pool, err := common.GenIPPools(ctx, cli, egressConfig, 3, 1)
 		Expect(err).NotTo(HaveOccurred())
 		nodeSelector := egressv1.NodeSelector{Selector: &metav1.LabelSelector{MatchLabels: nodeLabel}}
 

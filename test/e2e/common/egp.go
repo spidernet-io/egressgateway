@@ -6,6 +6,7 @@ package common
 import (
 	"context"
 	"fmt"
+	"reflect"
 	"time"
 
 	"github.com/go-faker/faker/v4"
@@ -73,7 +74,7 @@ func CreateEgressClusterPolicy(ctx context.Context, cli client.Client, cfg econf
 	defer cancel()
 
 	res := &egressv1.EgressClusterPolicy{
-		ObjectMeta: metav1.ObjectMeta{GenerateName: "policy-" + faker.Word()},
+		ObjectMeta: metav1.ObjectMeta{GenerateName: "cluster-policy-" + faker.Word()},
 		Spec: egressv1.EgressClusterPolicySpec{
 			EgressGatewayName: egw,
 			AppliedTo: egressv1.ClusterAppliedTo{PodSelector: &metav1.LabelSelector{
@@ -114,6 +115,81 @@ func CreateEgressClusterPolicy(ctx context.Context, cli client.Client, cfg econf
 			}
 
 			time.Sleep(time.Second / 2)
+		}
+	}
+}
+
+func CreateEgressPolicyCustom(ctx context.Context, cli client.Client, setUp func(egp *egressv1.EgressPolicy)) (*egressv1.EgressPolicy, error) {
+	name := "egp-" + faker.Word()
+	ns := "default"
+	res := &egressv1.EgressPolicy{
+		ObjectMeta: metav1.ObjectMeta{Name: name, Namespace: ns},
+	}
+
+	setUp(res)
+
+	err := cli.Create(ctx, res)
+	if err != nil {
+		return nil, err
+	}
+	return res, nil
+}
+
+func CreateEgressClusterPolicyCustom(ctx context.Context, cli client.Client, setUp func(egcp *egressv1.EgressClusterPolicy)) (*egressv1.EgressClusterPolicy, error) {
+	name := "egcp-" + faker.Word()
+	res := &egressv1.EgressClusterPolicy{
+		ObjectMeta: metav1.ObjectMeta{Name: name},
+	}
+
+	setUp(res)
+
+	err := cli.Create(ctx, res)
+	if err != nil {
+		return nil, err
+	}
+	return res, nil
+}
+
+func CheckEgressPolicyStatusSynced(ctx context.Context, cli client.Client, egp *egressv1.EgressPolicy, expectStatus *egressv1.EgressPolicyStatus, timeout time.Duration) error {
+	ctx, cancel := context.WithTimeout(ctx, timeout)
+	defer cancel()
+
+	for {
+		select {
+		case <-ctx.Done():
+			return fmt.Errorf("check EgressPolicyStatus synced timeout")
+		default:
+			key := types.NamespacedName{Name: egp.Name, Namespace: egp.Namespace}
+			err := cli.Get(ctx, key, egp)
+			if err != nil {
+				return nil
+			}
+			if reflect.DeepEqual(*expectStatus, egp.Status) {
+				return nil
+			}
+			time.Sleep(time.Second)
+		}
+	}
+}
+
+func CheckEgressClusterPolicyStatusSynced(ctx context.Context, cli client.Client, egcp *egressv1.EgressClusterPolicy, expectStatus *egressv1.EgressPolicyStatus, timeout time.Duration) error {
+	ctx, cancel := context.WithTimeout(ctx, timeout)
+	defer cancel()
+
+	for {
+		select {
+		case <-ctx.Done():
+			return fmt.Errorf("check EgressPolicyStatus synced timeout")
+		default:
+			key := types.NamespacedName{Name: egcp.Name}
+			err := cli.Get(ctx, key, egcp)
+			if err != nil {
+				return nil
+			}
+			if reflect.DeepEqual(*expectStatus, egcp.Status) {
+				return nil
+			}
+			time.Sleep(time.Second)
 		}
 	}
 }

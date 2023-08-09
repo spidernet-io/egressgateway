@@ -18,7 +18,7 @@ import (
 	"github.com/spidernet-io/egressgateway/test/e2e/common"
 )
 
-var _ = Describe("Test default egress gateway", Label("DefaultEgressGateway", "G00017"), Ordered, func() {
+var _ = Describe("Test default egress gateway", Label("DefaultEgressGateway", "G00019"), Ordered, func() {
 	var clusterDefaultEgw *egressv1.EgressGateway
 	var nsDefaultEgw *egressv1.EgressGateway
 	var policy1 *egressv1.EgressPolicy
