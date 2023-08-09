@@ -86,7 +86,7 @@ var _ = Describe("Reliability", func() {
 			Expect(common.CreateEgressPolicy(f, egressPolicyYaml)).NotTo(HaveOccurred(), "egressPolicyYaml: ", common.YamlMarshal(egressPolicyYaml))
 
 			// wait policy status about eip updated
-			v4Eip, v6Eip, err = common.WaitEgressPolicyEipUpdated(f, egressPolicyName, common.NSDefault, v4DefaultEip, v6DefaultEip, v4Enabled, v6Enabled, time.Second*3)
+			v4Eip, v6Eip, _, _, err = common.WaitEgressPolicyEipUpdated(f, egressPolicyName, common.NSDefault, v4DefaultEip, v6DefaultEip, v4Enabled, v6Enabled, time.Second*3)
 			Expect(err).NotTo(HaveOccurred())
 			GinkgoWriter.Printf("v4Eip: %s, v6Eip: %s\n", v4Eip, v6Eip)
 

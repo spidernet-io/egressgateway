@@ -36,6 +36,7 @@ type EgressPolicySpec struct {
 	// +kubebuilder:validation:Optional
 	EgressGatewayName string `json:"egressGatewayName,omitempty"`
 	// +kubebuilder:validation:Optional
+	// +kubebuilder:default:={allocatorPolicy: default, useNodeIP: false}
 	EgressIP EgressIP `json:"egressIP,omitempty"`
 	// +kubebuilder:validation:Required
 	AppliedTo AppliedTo `json:"appliedTo"`
@@ -81,6 +82,10 @@ type AppliedTo struct {
 
 func init() {
 	SchemeBuilder.Register(&EgressPolicy{}, &EgressPolicyList{})
+}
+
+func (eip EgressIP) IsEmpty() bool {
+	return eip.IPv4 == EgressIP{}.IPv4 && eip.IPv6 == EgressIP{}.IPv6 && eip.UseNodeIP == EgressIP{}.UseNodeIP && eip.AllocatorPolicy == EgressIP{}.AllocatorPolicy
 }
 
 const (

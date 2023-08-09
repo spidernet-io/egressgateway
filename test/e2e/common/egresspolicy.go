@@ -138,18 +138,18 @@ func EditEgressClusterPolicy(f *framework.Framework, policy *v1beta1.EgressClust
 	return f.UpdateResource(policy, opts...)
 }
 
-func WaitEgressPolicyEipUpdated(f *framework.Framework, name, namespace, expectV4Eip, expectV6Eip string, enableV4, enableV6 bool, timeout time.Duration) (v4Eip, v6Eip string, e error) {
+func WaitEgressPolicyEipUpdated(f *framework.Framework, name, namespace, expectV4Eip, expectV6Eip string, enableV4, enableV6 bool, timeout time.Duration) (v4Eip, v6Eip, allocatorPolicy string, useNodeIP bool, e error) {
 	policy := new(v1beta1.EgressPolicy)
 	ctx, cancel := context.WithTimeout(context.TODO(), timeout)
 	defer cancel()
 	for {
 		select {
 		case <-ctx.Done():
-			return "", "", ERR_TIMEOUT
+			return "", "", "", true, ERR_TIMEOUT
 		default:
 			e = GetEgressPolicy(f, name, namespace, policy)
 			if e != nil {
-				return "", "", e
+				return "", "", "", true, e
 			}
 			if enableV4 {
 				if len(expectV4Eip) != 0 {
@@ -180,23 +180,26 @@ func WaitEgressPolicyEipUpdated(f *framework.Framework, name, namespace, expectV
 				}
 				v6Eip = policy.Status.Eip.Ipv6
 			}
+
+			allocatorPolicy = policy.Spec.EgressIP.AllocatorPolicy
+			useNodeIP = policy.Spec.EgressIP.UseNodeIP
 			return
 		}
 	}
 }
 
-func WaitEgressClusterPolicyEipUpdated(f *framework.Framework, name, expectV4Eip, expectV6Eip string, enableV4, enableV6 bool, timeout time.Duration) (v4Eip, v6Eip string, e error) {
+func WaitEgressClusterPolicyEipUpdated(f *framework.Framework, name, expectV4Eip, expectV6Eip string, enableV4, enableV6 bool, timeout time.Duration) (v4Eip, v6Eip, allocatorPolicy string, useNodeIP bool, e error) {
 	policy := new(v1beta1.EgressClusterPolicy)
 	ctx, cancel := context.WithTimeout(context.TODO(), timeout)
 	defer cancel()
 	for {
 		select {
 		case <-ctx.Done():
-			return "", "", ERR_TIMEOUT
+			return "", "", "", true, ERR_TIMEOUT
 		default:
 			e = GetEgressPolicy(f, name, "", policy)
 			if e != nil {
-				return "", "", e
+				return "", "", "", true, e
 			}
 			if enableV4 {
 				if len(expectV4Eip) != 0 {
@@ -227,6 +230,9 @@ func WaitEgressClusterPolicyEipUpdated(f *framework.Framework, name, expectV4Eip
 				}
 				v6Eip = policy.Status.Eip.Ipv6
 			}
+
+			allocatorPolicy = policy.Spec.EgressIP.AllocatorPolicy
+			useNodeIP = policy.Spec.EgressIP.UseNodeIP
 			return
 		}
 	}
