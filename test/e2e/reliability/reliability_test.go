@@ -5,6 +5,7 @@ package reliability_test
 
 import (
 	"context"
+
 	"github.com/go-faker/faker/v4"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -35,7 +36,7 @@ var _ = Describe("Reliability", func() {
 			err = common.LabelNodes(ctx, cli, egNodes, labels)
 			Expect(err).NotTo(HaveOccurred())
 
-			pool, err := common.GenIPPools(ctx, cli, 3, 2)
+			pool, err := common.GenIPPools(ctx, cli, egressConfig.EnableIPv4, egressConfig.EnableIPv6, 3, 2)
 			Expect(err).NotTo(HaveOccurred())
 
 			egw, err = common.CreateGatewayNew(ctx, cli, "egw-"+faker.Word(), pool, selector)

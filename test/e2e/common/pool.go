@@ -7,25 +7,26 @@ import (
 	"context"
 	"net"
 
-	egressv1 "github.com/spidernet-io/egressgateway/pkg/k8s/apis/v1beta1"
 	corev1 "k8s.io/api/core/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+
+	egressv1 "github.com/spidernet-io/egressgateway/pkg/k8s/apis/v1beta1"
 )
 
-func GenIPPools(ctx context.Context, cli client.Client, num int64, increase uint8) (egressv1.Ippools, error) {
+func GenIPPools(ctx context.Context, cli client.Client, enableIPv4, enableIPv6 bool, num int64, increase uint8) (egressv1.Ippools, error) {
 	res := egressv1.Ippools{}
 	ipv4, ipv6, err := getRandomEgressIPByNode(ctx, cli, increase)
 	if err != nil {
 		return res, err
 	}
-	if len(ipv4) != 0 {
+	if len(ipv4) != 0 && enableIPv4 {
 		end, err := AddIP(ipv4, num)
 		if err != nil {
 			return res, err
 		}
 		res.IPv4 = append(res.IPv4, ipv4+"-"+end)
 	}
-	if len(ipv6) != 0 {
+	if len(ipv6) != 0 && enableIPv6 {
 		end, err := AddIP(ipv6, num)
 		if err != nil {
 			return res, err

@@ -39,7 +39,7 @@ var _ = Describe("IP Allocation", Label("Reliability_IP"), func() {
 		extraNum = 20
 
 		// create EgressGateway and pods
-		egw, pods, err = common.CreateEgressGatewayAndPodsBeforeEach(ctx, cli, nodeNameList, config.Image, IPNum, 1)
+		egw, pods, err = common.CreateEgressGatewayAndPodsBeforeEach(ctx, cli, egressConfig.EnableIPv4, egressConfig.EnableIPv6, nodeNameList, config.Image, IPNum, 1)
 		Expect(err).NotTo(HaveOccurred(), fmt.Sprintf("failed create egw or pods: %v\n", err))
 		GinkgoWriter.Printf("succeeded create egw: %s\n", egw.Name)
 
