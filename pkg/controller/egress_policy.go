@@ -38,7 +38,7 @@ func (r *egpReconciler) Reconcile(ctx context.Context, req reconcile.Request) (r
 	log.Info("reconciling")
 	switch kind {
 	case "EgressGateway":
-		return r.reconcileEG(ctx, newReq, log)
+		return r.reconcileEGW(ctx, newReq, log)
 	default:
 		return reconcile.Result{}, nil
 	}
@@ -47,7 +47,7 @@ func (r *egpReconciler) Reconcile(ctx context.Context, req reconcile.Request) (r
 // reconcileEN reconcile egressgateway
 // goal:
 // - update egresspolicy
-func (r *egpReconciler) reconcileEG(ctx context.Context, req reconcile.Request, log logr.Logger) (reconcile.Result, error) {
+func (r *egpReconciler) reconcileEGW(ctx context.Context, req reconcile.Request, log logr.Logger) (reconcile.Result, error) {
 	deleted := false
 	egw := new(v1beta1.EgressGateway)
 	err := r.client.Get(ctx, req.NamespacedName, egw)
@@ -70,28 +70,33 @@ func (r *egpReconciler) reconcileEG(ctx context.Context, req reconcile.Request, 
 	}
 
 	for _, item := range egpList.Items {
-		policy := v1beta1.Policy{Name: item.Name, Namespace: item.Namespace}
-		eipStatus, isExist := egressgateway.GetEIPStatusByPolicy(policy, *egw)
-		if !isExist {
-			continue
-		}
+		if item.Spec.EgressGatewayName == egw.Name {
+			newEGP := item.DeepCopy()
 
-		newEGP := item.DeepCopy()
-		for _, eip := range eipStatus.Eips {
-			for _, p := range eip.Policies {
-				if p == policy {
-					newEGP.Status.Eip.Ipv4 = eip.IPv4
-					newEGP.Status.Eip.Ipv6 = eip.IPv6
-					newEGP.Status.Node = eipStatus.Name
+			newEGP.Status.Eip.Ipv4 = ""
+			newEGP.Status.Eip.Ipv6 = ""
+			newEGP.Status.Node = ""
+
+			policy := v1beta1.Policy{Name: item.Name, Namespace: item.Namespace}
+			eipStatus, isExist := egressgateway.GetEIPStatusByPolicy(policy, *egw)
+			if isExist {
+				for _, eip := range eipStatus.Eips {
+					for _, p := range eip.Policies {
+						if p == policy {
+							newEGP.Status.Eip.Ipv4 = eip.IPv4
+							newEGP.Status.Eip.Ipv6 = eip.IPv6
+							newEGP.Status.Node = eipStatus.Name
+						}
+					}
 				}
 			}
-		}
 
-		log.V(1).Info("update egresspolicy status", "status", newEGP.Status)
-		err = r.client.Status().Update(ctx, newEGP)
-		if err != nil {
-			log.Error(err, "update egresspolicy status", "status", newEGP.Status)
-			return reconcile.Result{Requeue: true}, err
+			log.V(1).Info("update egresspolicy status", "status", newEGP.Status)
+			err = r.client.Status().Update(ctx, newEGP)
+			if err != nil {
+				log.Error(err, "update egresspolicy status", "status", newEGP.Status)
+				return reconcile.Result{Requeue: true}, err
+			}
 		}
 	}
 

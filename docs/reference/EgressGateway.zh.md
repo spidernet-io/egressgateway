@@ -23,7 +23,7 @@ spec:
 status:                         
   nodeList:                     # 9
     - name: "node1"             # 10
-      status: "Ready"           # 11
+      status: "Succeeded"       # 11
       epis:                     # 12
         - ipv4: "10.6.1.55"     # 13
           ipv6: "fd00::55"      # 14
@@ -42,7 +42,7 @@ status:
 8. EgressGateway 选择 Egress 节点的策略，目前仅支持平均选择；
 9. 节点选择器选择的 Egress 节点，以及节点上有效的 Egress IP，以及使用该 Egress IP 的 EgressPolicy；
 10. Egress 节点的名称；
-11. Egress 节点的状态；
+11. Egress 节点对应的 EgressTunnel 对象的状态；
 12. 此 Egress 节点上有效的 EIP 信息；
 13. Egress IPv4，如果 EgressPolicy 和 EgressClusterPolicy 使用节点 IP，则此字段为空；
 14. Egress IPv6，在双栈情况下，IPv4 和 IPv6 一一对应；

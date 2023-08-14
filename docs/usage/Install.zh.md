@@ -121,10 +121,12 @@ helm repo update
             status:
               nodeList:
               - name: egressgateway-worker1
+                status: Succeeded
               - name: egressgateway-worker2
+                status: Succeeded
 
     在如上输出中：
-    * status.nodeList 字段已经识别到了符合 spec.nodeSelector 的节点，它们将作为网关节点
+    * status.nodeList 字段已经识别到了符合 spec.nodeSelector 的节点及该节点对应的 EgressTunnel 对象的状态
     * spec.ippools.ipv4DefaultEIP 字段会从 spec.ippools.ipv4 中随机选择一个 IP 地址作为该组 EgressGateway 的默认 VIP，它的作用是：当为应用创建 EgressPolicy 对象时，如果未指定 VIP 地址，则默认分配使用该默认 VIP
 
 ## 创建应用和出口策略

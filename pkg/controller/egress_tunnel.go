@@ -101,7 +101,7 @@ func (r *egReconciler) Reconcile(ctx context.Context, req reconcile.Request) (re
 	log.Info("reconciling")
 	switch kind {
 	case "EgressTunnel":
-		return r.reconcileEN(ctx, newReq, log)
+		return r.reconcileEGN(ctx, newReq, log)
 	case "Node":
 		return r.reconcileNode(ctx, newReq, log)
 	default:
@@ -109,10 +109,10 @@ func (r *egReconciler) Reconcile(ctx context.Context, req reconcile.Request) (re
 	}
 }
 
-// reconcileEN reconcile egress node
+// reconcileEGN reconcile egress node
 // goal:
 // - update egress node
-func (r *egReconciler) reconcileEN(ctx context.Context, req reconcile.Request, log logr.Logger) (reconcile.Result, error) {
+func (r *egReconciler) reconcileEGN(ctx context.Context, req reconcile.Request, log logr.Logger) (reconcile.Result, error) {
 	deleted := false
 	egressnode := new(egressv1.EgressTunnel)
 	err := r.client.Get(ctx, req.NamespacedName, egressnode)
