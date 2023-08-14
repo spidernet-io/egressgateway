@@ -4,10 +4,31 @@ import (
 	"github.com/pyroscope-io/godeltaprof/internal/pprof"
 	"io"
 	"runtime"
+	"sync"
 )
 
+// HeapProfiler is a stateful profiler for heap allocations in Go programs.
+// It is based on runtime.MemProfile and provides similar functionality to
+// pprof.WriteHeapProfile, but with some key differences.
+//
+// The HeapProfiler tracks the delta of heap allocations since the last
+// profile was written, effectively providing a snapshot of the changes
+// in heap usage between two points in time. This is in contrast to the
+// pprof.WriteHeapProfile function, which accumulates profiling data
+// and results in profiles that represent the entire lifetime of the program.
+//
+// The HeapProfiler is safe for concurrent use, as it serializes access to
+// its internal state using a sync.Mutex. This ensures that multiple goroutines
+// can call the Profile method without causing any data race issues.
+//
+// Usage:
+//
+//	hp := godeltaprof.NewHeapProfiler()
+//	...
+//	err := hp.Profile(someWriter)
 type HeapProfiler struct {
-	impl pprof.DeltaHeapProfiler
+	impl  pprof.DeltaHeapProfiler
+	mutex sync.Mutex
 }
 
 func NewHeapProfiler() *HeapProfiler {
@@ -15,6 +36,9 @@ func NewHeapProfiler() *HeapProfiler {
 }
 
 func (d *HeapProfiler) Profile(w io.Writer) error {
+	d.mutex.Lock()
+	defer d.mutex.Unlock()
+
 	// Find out how many records there are (MemProfile(nil, true)),
 	// allocate that many records, and get the data.
 	// There's a race—more records might be added between
