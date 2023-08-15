@@ -16,7 +16,7 @@ on:
       push:
         required: true
         type: string
-      # upload artifate
+      # upload artifact
       upload:
         required: true
         type: string
@@ -41,7 +41,9 @@ jobs:
           - name: controller
             dockerfile: ./images/controller/Dockerfile
             context: ./
-
+          - name: nettools
+            dockerfile: ./images/nettools/Dockerfile
+            context: ./
     steps:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2.9.1

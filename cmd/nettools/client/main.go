@@ -96,8 +96,8 @@ func webClient(config utils.Config) {
 	defer wg.Done()
 
 	dialer := websocket.Dialer{}
-	log.Println("trying to connect websocket: ", fmt.Sprintf("ws://%s:%s/", *config.Addr, *config.WebPort))
-	conn, _, err := dialer.Dial(fmt.Sprintf("ws://%s:%s/", *config.Addr, *config.WebPort), nil)
+	log.Println("trying to connect websocket: ", fmt.Sprintf("ws://%s:%s/ws", *config.Addr, *config.WebPort))
+	conn, _, err := dialer.Dial(fmt.Sprintf("ws://%s:%s/ws", *config.Addr, *config.WebPort), nil)
 	if err != nil {
 		log.Fatalln("WEB: connect server failed: ", err)
 	}

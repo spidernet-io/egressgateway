@@ -142,7 +142,7 @@ func udpServer(config utils.Config) {
 func websocketServer(config utils.Config) {
 	defer wg.Done()
 
-	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+	http.HandleFunc("/ws", func(w http.ResponseWriter, r *http.Request) {
 		conn, _ := upgrader.Upgrade(w, r, nil) // error ignored for sake of simplicity
 
 		for {
@@ -164,9 +164,9 @@ func websocketServer(config utils.Config) {
 		}
 	})
 
-	// http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-	// 	http.ServeFile(w, r, "websockets.html")
-	// })
+	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		_, _ = fmt.Fprintf(w, "Remote IP: %v\n", r.RemoteAddr)
+	})
 
 	log.Println("WebSocket Server listen on: ", *config.Addr, ":", *config.WebPort)
 
