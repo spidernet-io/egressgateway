@@ -177,6 +177,9 @@ EgressPolicy 对象是租户级别的，因此，它务必创建在 selected 应
               matchLabels:
                 app: visitor
           egressGatewayName: default
+          egressIP:
+            allocatorPolicy: default
+            useNodeIP: false
         status:
           eip:
             ipv4: 172.22.0.110

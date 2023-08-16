@@ -109,24 +109,29 @@ var _ = Describe("EgressPolicy", func() {
 			GinkgoWriter.Printf("Create egressPolicy: %s\n", egressPolicyName)
 			Expect(createPolicy()).NotTo(HaveOccurred())
 
-			var v4Eip, v6Eip string
+			var v4Eip, v6Eip, allocatorPolicy string
+			var useNodeIP bool
 			if isGlobal {
 				// WaitEgressClusterPolicyEipUpdated
 				GinkgoWriter.Printf("WaitEgressClusterPolicyEipUpdated...\n")
-				v4Eip, v6Eip, err = common.WaitEgressClusterPolicyEipUpdated(f, egressPolicyName, "", "", v4Enabled, v6Enabled, time.Second*3)
+				v4Eip, v6Eip, allocatorPolicy, useNodeIP, err = common.WaitEgressClusterPolicyEipUpdated(f, egressPolicyName, "", "", v4Enabled, v6Enabled, time.Second*3)
 				Expect(err).NotTo(HaveOccurred())
-				GinkgoWriter.Printf("v4Eip: %s, v6Eip: %s\n", v4Eip, v6Eip)
+				GinkgoWriter.Printf("v4Eip: %s, v6Eip: %s, allocatorPolicy: %s, useNodeIP: %v\n", v4Eip, v6Eip, allocatorPolicy, useNodeIP)
 			} else {
 				// WaitEgressPolicyEipUpdated
 				GinkgoWriter.Printf("WaitEgressPolicyEipUpdated...\n")
-				v4Eip, v6Eip, err = common.WaitEgressPolicyEipUpdated(f, egressPolicyName, common.NSDefault, "", "", v4Enabled, v6Enabled, time.Second*3)
+				v4Eip, v6Eip, allocatorPolicy, useNodeIP, err = common.WaitEgressPolicyEipUpdated(f, egressPolicyName, common.NSDefault, "", "", v4Enabled, v6Enabled, time.Second*3)
 				Expect(err).NotTo(HaveOccurred())
-				GinkgoWriter.Printf("v4Eip: %s, v6Eip: %s\n", v4Eip, v6Eip)
+				GinkgoWriter.Printf("v4Eip: %s, v6Eip: %s, allocatorPolicy: %s, useNodeIP: %v\n", v4Eip, v6Eip, allocatorPolicy, useNodeIP)
 			}
 
 			// check eip in podA
 			GinkgoWriter.Printf("Check export ip in dsA: %s pods\n", dsNameA)
 			checkEip(podAList, v4Eip, v6Eip, serverIPv4A, serverIPv6A, true, time.Second*5)
+
+			// check allocatorPolicy、allocatorPolicy default value
+			Expect(allocatorPolicy).To(Equal("default"))
+			Expect(useNodeIP).To(Equal(false))
 
 			By("case P00011: update policy to empty `DestSubnet`")
 			// update policy `DestSubnet`, Set to empty

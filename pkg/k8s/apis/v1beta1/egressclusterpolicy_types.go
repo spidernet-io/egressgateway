@@ -36,6 +36,7 @@ type EgressClusterPolicySpec struct {
 	// +kubebuilder:validation:Optional
 	EgressGatewayName string `json:"egressGatewayName,omitempty"`
 	// +kubebuilder:validation:Optional
+	// +kubebuilder:default:={allocatorPolicy: default, useNodeIP: false}
 	EgressIP EgressIP `json:"egressIP,omitempty"`
 	// +kubebuilder:validation:Required
 	AppliedTo ClusterAppliedTo `json:"appliedTo"`

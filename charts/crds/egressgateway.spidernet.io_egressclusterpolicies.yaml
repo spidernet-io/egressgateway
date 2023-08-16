@@ -164,6 +164,9 @@ spec:
               egressGatewayName:
                 type: string
               egressIP:
+                default:
+                  allocatorPolicy: default
+                  useNodeIP: false
                 properties:
                   allocatorPolicy:
                     default: default
