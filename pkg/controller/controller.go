@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/go-logr/logr"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/healthz"
@@ -55,21 +56,8 @@ func New(cfg *config.Config) (types.Service, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to create manager: %w", err)
 	}
-	if err := mgr.AddHealthzCheck("healthz", healthz.Ping); err != nil {
-		return nil, fmt.Errorf("failed to AddHealthzCheck: %w", err)
-	}
-	if err := mgr.AddReadyzCheck("readyz", healthz.Ping); err != nil {
-		return nil, fmt.Errorf("failed to AddReadyzCheck: %w", err)
-	}
-	mgr.GetWebhookServer().Register("/validate", webhook.ValidateHook(mgr.GetClient(), cfg))
-	mgr.GetWebhookServer().Register("/mutate", webhook.MutateHook(mgr.GetClient(), cfg))
 
-	err = mgr.Add(&profiling.GoPS{Port: cfg.GopsPort, Log: log})
-	if err != nil {
-		return nil, err
-	}
-	err = mgr.Add(&profiling.Pyroscope{Addr: cfg.PyroscopeServerAddr, Name: cfg.PodName, Log: log})
-	if err != nil {
+	if err = setManger(mgr, cfg, log); err != nil {
 		return nil, err
 	}
 
@@ -110,6 +98,30 @@ func New(cfg *config.Config) (types.Service, error) {
 	}
 
 	return &Controller{client: mgr.GetClient(), manager: mgr}, err
+}
+
+func setManger(mgr manager.Manager, cfg *config.Config, log logr.Logger) error {
+	err := mgr.Add(&profiling.GoPS{Port: cfg.GopsPort, Log: log})
+	if err != nil {
+		return err
+	}
+	err = mgr.Add(&profiling.Pyroscope{Addr: cfg.PyroscopeServerAddr, Name: cfg.PodName, Log: log})
+	if err != nil {
+		return err
+	}
+	cli, err := client.New(cfg.KubeConfig, client.Options{Scheme: schema.GetScheme()})
+	if err != nil {
+		return err
+	}
+	if err := mgr.AddHealthzCheck("healthz", healthz.Ping); err != nil {
+		return fmt.Errorf("failed to AddHealthzCheck: %w", err)
+	}
+	if err := mgr.AddReadyzCheck("readyz", healthz.Ping); err != nil {
+		return fmt.Errorf("failed to AddReadyzCheck: %w", err)
+	}
+	mgr.GetWebhookServer().Register("/validate", webhook.ValidateHook(cli, cfg))
+	mgr.GetWebhookServer().Register("/mutate", webhook.MutateHook(cli, cfg))
+	return nil
 }
 
 func (c *Controller) Start(ctx context.Context) error {

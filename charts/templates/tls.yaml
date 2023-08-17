@@ -102,6 +102,8 @@ webhooks:
           - UPDATE
         resources:
         - egressgateways
+        - egresspolicies
+        - egressclusterpolicies
     sideEffects: None
 
 {{- if eq .Values.controller.tls.method "certmanager" -}}

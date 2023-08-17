@@ -67,6 +67,7 @@ kind: EgressGateway
 metadata:
   name: default
 spec:
+  clusterDefault: true
   ippools:
     ipv4:
       - "10.6.1.60-10.6.1.66" # (1)  
@@ -114,18 +115,16 @@ kind: EgressPolicy
 metadata:
   name: mock-app
 spec:
-  egressGatewayName: "default" # (1)  
   appliedTo:
     podSelector:
-      matchLabels:             # (2)
+      matchLabels:             # (1)
         app: mock-app
   destSubnet:
-    - 10.6.1.92/32             # (3)
+    - 10.6.1.92/32             # (2)
 ```
 
-1. By setting this value, select the EgressGateway named `default` created above.
-2. Select Pods that need to perform Egress operations by setting `matchLabels`.
-3. By setting `destSubnet`, only matched Pods will perform Egress operations when accessing a specific subnet.
+1. Select Pods that need to perform Egress operations by setting `matchLabels`.
+2. By setting `destSubnet`, only matched Pods will perform Egress operations when accessing a specific subnet.
 
 Now, traffic from mock-app accessing 10.6.1.92 will be forwarded through the egress gateway.
 

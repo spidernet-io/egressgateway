@@ -30,6 +30,7 @@ require (
 	github.com/vishvananda/netlink v1.2.1-beta.2.0.20230130171208-05506ada9f99
 	go.uber.org/zap v1.25.0
 	golang.org/x/sys v0.10.0
+	gomodules.xyz/jsonpatch/v2 v2.3.0
 	gopkg.in/yaml.v2 v2.4.0
 	gopkg.in/yaml.v3 v3.0.1
 	k8s.io/api v0.27.3
@@ -135,7 +136,6 @@ require (
 	golang.org/x/text v0.11.0 // indirect
 	golang.org/x/time v0.3.0 // indirect
 	golang.org/x/tools v0.9.3 // indirect
-	gomodules.xyz/jsonpatch/v2 v2.3.0 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
 	google.golang.org/protobuf v1.30.0 // indirect
 	gopkg.in/inf.v0 v0.9.1 // indirect

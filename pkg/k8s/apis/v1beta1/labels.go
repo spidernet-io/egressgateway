@@ -3,4 +3,7 @@
 
 package v1beta1
 
-const LabelPolicyName = "spidernet.io/policy-name"
+const (
+	LabelPolicyName                    = "spidernet.io/policy-name"
+	LabelNamespaceEgressGatewayDefault = "spidernet.io/egressgateway-default"
+)
