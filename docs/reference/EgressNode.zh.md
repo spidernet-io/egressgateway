@@ -14,7 +14,7 @@ status:
          name: "ens160"        # 4
          ipv4: "10.6.1.21/16"  # 5
          ipv6: "fd00::21/112"  # 6
-   phase: "Succeeded"          # 7
+   phase: "Ready"              # 7
    mark: "0x26000000"          # 8
 ```
 
@@ -27,6 +27,6 @@ status:
 7. 当前隧道状态
     - `Pending`：等待分配 IP
     - `Init`：分配隧道 IP 成功
-    - `Succeeded`：隧道 IP 已分配，且隧道已建成
+    - `Ready`：隧道 IP 已分配，且隧道已建成
     - `Failed`：隧道 IP 分配失败
 8. 数据包 mark 值，每个节点对应一个。例如节点 A 的有 Egress 流量需要转发到网关节点 B，会对 A 节点的流量打 mark 进行标记。

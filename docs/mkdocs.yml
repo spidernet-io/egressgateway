@@ -79,6 +79,9 @@ nav:
       - Install: usage/Install.md
       - Upgrade: usage/Upgrade.md
       - Uninstall: usage/Uninstall.md
+  - Usage:
+      - Namespace Default EgressGateway: usage/NamespaceDefaultEgressGateway.md
+      - Cluster Default EgressGateway: usage/ClusterDefaultEgressGateway.md
   - Concepts:
       - Architecture: concepts/Architecture.md
       - Datapath: concepts/Datapath.md

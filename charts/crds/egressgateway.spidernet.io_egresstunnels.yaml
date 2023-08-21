@@ -67,7 +67,7 @@ spec:
                 - Pending
                 - Init
                 - Failed
-                - Succeeded
+                - Ready
                 - ""
                 type: string
               tunnel:

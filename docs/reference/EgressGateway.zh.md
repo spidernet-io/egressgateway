@@ -23,7 +23,7 @@ spec:
 status:                         
   nodeList:                     # 9
     - name: "node1"             # 10
-      status: "Succeeded"       # 11
+      status: "Ready"           # 11
       epis:                     # 12
         - ipv4: "10.6.1.55"     # 13
           ipv6: "fd00::55"      # 14

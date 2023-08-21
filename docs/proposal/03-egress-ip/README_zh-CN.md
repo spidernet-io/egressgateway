@@ -42,7 +42,7 @@ status:
          name: "ens160"        # 4
          ipv4: "10.6.1.21/16"  # 5
          ipv6: "fd00::21/112"  # 6
-   phase: "Succeeded"          # 7
+   phase: "Ready"              # 7
    mark: "0x26000000"          # 8
 ```
 

@@ -110,6 +110,7 @@ helm repo update
               name: default
               uid: 7ce835e2-2075-4d26-ba63-eacd841aadfe
             spec:
+              clusterDefault: true
               ippools:
                 ipv4:
                 - 172.22.0.100-172.22.0.110
@@ -121,9 +122,9 @@ helm repo update
             status:
               nodeList:
               - name: egressgateway-worker1
-                status: Succeeded
+                status: Ready
               - name: egressgateway-worker2
-                status: Succeeded
+                status: Ready
 
     在如上输出中：
     * status.nodeList 字段已经识别到了符合 spec.nodeSelector 的节点及该节点对应的 EgressTunnel 对象的状态
@@ -147,7 +148,6 @@ EgressPolicy 对象是租户级别的，因此，它务必创建在 selected 应
           name: test
           namespace: default
         spec:
-          egressGatewayName: "default"
           appliedTo:
             podSelector:
               matchLabels:
@@ -178,7 +178,9 @@ EgressPolicy 对象是租户级别的，因此，它务必创建在 selected 应
             podSelector:
               matchLabels:
                 app: visitor
-          egressGatewayName: default
+          egressIP:
+            allocatorPolicy: default
+            useNodeIP: false
         status:
           eip:
             ipv4: 172.22.0.110

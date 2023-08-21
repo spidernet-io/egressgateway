@@ -21,6 +21,7 @@ type EgressGatewayList struct {
 // +kubebuilder:resource:categories={egressgateway},path="egressgateways",singular="egressgateway",scope="Cluster",shortName={egw}
 // +kubebuilder:printcolumn:JSONPath=".spec.ippools.ipv4DefaultEIP",description="ipv4DefaultEIP",name="ipv4DefaultEIP",type=string
 // +kubebuilder:printcolumn:JSONPath=".spec.ippools.ipv6DefaultEIP",description="ipv6DefaultEIP",name="ipv6DefaultEIP",type=string
+// +kubebuilder:printcolumn:JSONPath=".spec.clusterDefault",description="clusterDefault",name="clusterDefault",type=boolean
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
 type EgressGateway struct {
@@ -32,6 +33,8 @@ type EgressGateway struct {
 }
 
 type EgressGatewaySpec struct {
+	// +kubebuilder:validation:Optional
+	ClusterDefault bool `json:"clusterDefault,omitempty"`
 	// +kubebuilder:validation:Optional
 	Ippools Ippools `json:"ippools,omitempty"`
 	// +kubebuilder:validation:Required

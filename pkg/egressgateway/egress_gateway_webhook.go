@@ -60,6 +60,15 @@ func (egw *EgressGatewayWebhook) EgressGatewayValidate(ctx context.Context, req 
 		return webhook.Denied(fmt.Sprintf("json unmarshal EgressGateway with error: %v", err))
 	}
 
+	if newEg.Spec.ClusterDefault {
+		egwList := new(egress.EgressGatewayList)
+		for _, item := range egwList.Items {
+			if item.Spec.ClusterDefault && item.Name != newEg.Name {
+				return webhook.Denied(fmt.Sprintf("A cluster can only have one default gateway, default gateway: %s.", item.Name))
+			}
+		}
+	}
+
 	// Checking the number of IPV4 and IPV6 addresses
 	var ipv4s, ipv6s []net.IP
 	ipv4Ranges, err := ip.MergeIPRanges(constant.IPv4, newEg.Spec.Ippools.IPv4)

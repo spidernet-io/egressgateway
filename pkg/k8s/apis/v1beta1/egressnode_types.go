@@ -38,7 +38,7 @@ type EgressNodeSpec struct{}
 type EgressNodeStatus struct {
 	// +kubebuilder:validation:Optional
 	Tunnel Tunnel `json:"tunnel,omitempty"`
-	// +kubebuilder:validation:Enum=Pending;Init;Failed;Succeeded;""
+	// +kubebuilder:validation:Enum=Pending;Init;Failed;Ready;""
 	Phase EgressNodePhase `json:"phase,omitempty"`
 	// +kubebuilder:validation:Optional
 	Mark string `json:"mark,omitempty"`
@@ -73,8 +73,8 @@ const (
 	EgressNodeInit EgressNodePhase = "Init"
 	// EgressNodeFailed allocate tunnel address failed
 	EgressNodeFailed EgressNodePhase = "Failed"
-	// EgressNodeSucceeded tunnel is available
-	EgressNodeSucceeded EgressNodePhase = "Succeeded"
+	// EgressNodeReady tunnel is available
+	EgressNodeReady EgressNodePhase = "Ready"
 )
 
 func init() {
