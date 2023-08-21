@@ -6,6 +6,7 @@ package agent
 import (
 	"context"
 	"crypto/sha1"
+	"errors"
 	"fmt"
 	"net"
 	"path"
@@ -15,7 +16,7 @@ import (
 	"time"
 
 	"github.com/go-logr/logr"
-	"k8s.io/apimachinery/pkg/api/errors"
+	apierr "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/sets"
@@ -303,7 +304,7 @@ func (r *policeReconciler) getPolicySubnet(ns, name string) ([]string, error) {
 	}
 	err := r.client.Get(context.Background(), key, obj)
 	if err != nil {
-		if !errors.IsNotFound(err) {
+		if !apierr.IsNotFound(err) {
 			return nil, err
 		}
 	}
@@ -380,7 +381,7 @@ func (r *policeReconciler) updatePolicyIPSet(policyNs string, policyName string,
 		}
 		for _, ip := range ips {
 			err := r.ipset.AddEntry(ip, ipSet, true)
-			if err != nil && err != ipset.ErrAlreadyAddedEntry {
+			if err != nil && !errors.Is(err, ipset.ErrAlreadyAddedEntry) {
 				return err
 			}
 		}
@@ -473,7 +474,9 @@ func buildEipRule(policyName string, eip IP, version uint8, isIgnoreInternalCIDR
 	}
 
 	action := iptables.SNATAction{ToAddr: ip}
-	rule := &iptables.Rule{Match: matchCriteria, Action: action, Comment: []string{}}
+	rule := &iptables.Rule{Match: matchCriteria, Action: action, Comment: []string{
+		fmt.Sprintf("snat policy %s", policyName),
+	}}
 	return rule
 }
 
@@ -506,7 +509,9 @@ func (r *policeReconciler) buildPolicyRule(policyName string, mark uint32, versi
 	}
 
 	action := iptables.SetMaskedMarkAction{Mark: mark, Mask: 0xffffffff}
-	rule := &iptables.Rule{Match: matchCriteria, Action: action, Comment: []string{}}
+	rule := &iptables.Rule{Match: matchCriteria, Action: action, Comment: []string{
+		fmt.Sprintf("Set mark for EgressPolicy %s", policyName),
+	}}
 	return rule
 }
 
@@ -514,9 +519,17 @@ func buildNatStaticRule(base uint32) map[string][]iptables.Rule {
 	res := map[string][]iptables.Rule{"POSTROUTING": {
 		{
 			Match:  iptables.MatchCriteria{}.MarkMatchesWithMask(base, 0xffffffff),
-			Action: iptables.AcceptAction{}},
+			Action: iptables.AcceptAction{},
+			Comment: []string{
+				"Accept for egress traffic from pod going to EgressNode",
+			},
+		},
 		{
-			Match: iptables.MatchCriteria{}, Action: iptables.JumpAction{Target: "EGRESSGATEWAY-SNAT-EIP"},
+			Match:  iptables.MatchCriteria{},
+			Action: iptables.JumpAction{Target: "EGRESSGATEWAY-SNAT-EIP"},
+			Comment: []string{
+				"SNAT for egress traffic",
+			},
 		},
 	}}
 	return res
@@ -530,7 +543,7 @@ func (r *policeReconciler) reconcileClusterInfo(ctx context.Context, req reconci
 	deleted := false
 	err := r.client.Get(ctx, req.NamespacedName, info)
 	if err != nil {
-		if !errors.IsNotFound(err) {
+		if !apierr.IsNotFound(err) {
 			return reconcile.Result{}, err
 		}
 		deleted = true
@@ -679,10 +692,16 @@ func buildFilterStaticRule(base uint32) map[string][]iptables.Rule {
 		"FORWARD": {{
 			Match:  iptables.MatchCriteria{}.MarkMatchesWithMask(base, 0xffffffff),
 			Action: iptables.AcceptAction{},
+			Comment: []string{
+				"Accept for egress traffic from pod going to EgressNode",
+			},
 		}},
 		"OUTPUT": {{
 			Match:  iptables.MatchCriteria{}.MarkMatchesWithMask(base, 0xffffffff),
 			Action: iptables.AcceptAction{},
+			Comment: []string{
+				"Accept for egress traffic from pod going to EgressNode",
+			},
 		}},
 	}
 	return res
@@ -693,12 +712,24 @@ func buildMangleStaticRule(base uint32) map[string][]iptables.Rule {
 		"FORWARD": {{
 			Match:  iptables.MatchCriteria{}.MarkMatchesWithMask(base, 0xff000000),
 			Action: iptables.SetMaskedMarkAction{Mark: base, Mask: 0xffffffff},
+			Comment: []string{
+				"Accept for egress traffic from pod going to EgressNode",
+			},
 		}},
 		"POSTROUTING": {{
 			Match:  iptables.MatchCriteria{}.MarkMatchesWithMask(base, 0xffffffff),
 			Action: iptables.AcceptAction{},
+			Comment: []string{
+				"Accept for egress traffic from pod going to EgressNode",
+			},
 		}},
-		"PREROUTING": {{Match: iptables.MatchCriteria{}, Action: iptables.JumpAction{Target: "EGRESSGATEWAY-MARK-REQUEST"}}},
+		"PREROUTING": {{
+			Match:  iptables.MatchCriteria{},
+			Action: iptables.JumpAction{Target: "EGRESSGATEWAY-MARK-REQUEST"},
+			Comment: []string{
+				"Checking for EgressPolicy matched traffic",
+			},
+		}},
 	}
 	return res
 }
@@ -714,7 +745,7 @@ func (r *policeReconciler) reconcilePolicy(ctx context.Context, req reconcile.Re
 	deleted := false
 	err := r.client.Get(ctx, req.NamespacedName, policy)
 	if err != nil {
-		if !errors.IsNotFound(err) {
+		if !apierr.IsNotFound(err) {
 			return reconcile.Result{}, err
 		}
 		deleted = true
@@ -735,7 +766,7 @@ func (r *policeReconciler) reconcilePolicy(ctx context.Context, req reconcile.Re
 	gateway := new(egressv1.EgressGateway)
 	err = r.client.Get(ctx, types.NamespacedName{Name: policy.Spec.EgressGatewayName}, gateway)
 	if err != nil {
-		if !errors.IsNotFound(err) {
+		if !apierr.IsNotFound(err) {
 			return reconcile.Result{Requeue: true}, err
 		}
 		return reconcile.Result{}, nil
@@ -776,7 +807,7 @@ func (r *policeReconciler) reconcileClusterPolicy(ctx context.Context, req recon
 	deleted := false
 	err := r.client.Get(ctx, req.NamespacedName, policy)
 	if err != nil {
-		if !errors.IsNotFound(err) {
+		if !apierr.IsNotFound(err) {
 			return reconcile.Result{}, err
 		}
 		deleted = true
@@ -797,7 +828,7 @@ func (r *policeReconciler) reconcileClusterPolicy(ctx context.Context, req recon
 	gateway := new(egressv1.EgressGateway)
 	err = r.client.Get(ctx, types.NamespacedName{Name: policy.Spec.EgressGatewayName}, gateway)
 	if err != nil {
-		if !errors.IsNotFound(err) {
+		if !apierr.IsNotFound(err) {
 			return reconcile.Result{Requeue: true}, err
 		}
 		return reconcile.Result{Requeue: false}, nil
