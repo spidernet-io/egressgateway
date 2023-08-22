@@ -24,7 +24,6 @@
 
 # EgressGateway E2E 用例
 - 用例中，所有有关 `eip` 校验的内容，都包含了 tcp，udp 和 web socket
-
 | 用例编号   | 标题                                                                                                     | 优先级 | 冒烟    | 状态 | 其他 |
 |--------|--------------------------------------------------------------------------------------------------------|-----|-------|----|----|
 | G00001 | 使用不合法的 `Ippools` 时，创建 EgressGateway 会失败                                                                | p2  | false |    |    |
@@ -40,7 +39,9 @@
 | G00011 | 向 `Ippools.IPv4` 和 `Ippools.IPv6` 添加不同数量的 IP 时，更新 EgressGateway 会失败                                    | p2  | false |    |    |
 | G00012 | 向 `Ippools.IPv4` 和 `Ippools.IPv6` 添加相同数量的 IP 时，更新 EgressGateway 会成功                                    | p2  | false |    |    |
 | G00013 | 向 `Ippools` 中添加合法的 IP 地址，更新 EgressGateway 成功                                                           | p2  | false |    |    |
-| G00014 | 当 `NodeSelector` 被编辑后，`egressGatewayStatus` 会如预期更新正确                                                   | p2  | false |    |    |
+| G00014 | 编辑 `NodeSelector` 使其匹配另一个节点，`Status.NodeList` 更新为新匹配的节点，使用该 EgressGateway 的 policy `Status.Node` 更新为新匹配的节点                          | p2  | false |      |     |
+| G00015 | 编辑 `NodeSelector` 使其不匹配任何节点，`Status.NodeList` 为空，使用该 EgressGateway 的 policy `Status.Node` 为空         | p2  | false |      |     |
+| G00016 | 编辑 `NodeSelector` 使其匹配一个节点，`Status.NodeList` 为所匹配的节点，使用该 EgressGateway 的 policy `Status.Node` 更新为新匹配的节点         | p2  | false |      |     |
 | G00015 | 当存在 Policy （包括命名空间级别和集群级别）正在使用 EgressGateway 时，删除 EgressGateway 会失败                                    | p2  | false |    |    |
 | G00016 | 当没有 Policy 使用 EgressGateway 时，删除 EgressGateway 成功                                                      | p2  | false |    |    |
 | G00017 | 创建 `EgressCluster` 或者 `EgressClusterPolicy` 时使用未指定 `spec.egressGatewayName` 时，可以使用自动设置租户或者集群默认网关，并创建成功 | p2  | false |    |    |

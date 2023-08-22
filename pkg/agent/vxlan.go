@@ -222,7 +222,7 @@ func (r *vxlanReconciler) updateEgressNodeStatus(node *egressv1.EgressTunnel, ve
 	// calculate whether the state has changed, update if the status changes.
 	vtep := r.parseVTEP(node.Status)
 	if vtep != nil {
-		phase := egressv1.EgressNodeSucceeded
+		phase := egressv1.EgressNodeReady
 		if node.Status.Phase != phase {
 			needUpdate = true
 			node.Status.Phase = phase

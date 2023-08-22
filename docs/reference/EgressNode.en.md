@@ -14,7 +14,7 @@ status:
          name: "ens160"        # 4
          ipv4: "10.6.1.21/16"  # 5
          ipv6: "fd00::21/112"  # 6
-   phase: "Succeeded"          # 7
+   phase: "Ready"              # 7
    mark: "0x26000000"          # 8
 ```
 
@@ -27,6 +27,6 @@ status:
 7. Current tunnel status
     - `Pending`: Waiting for IP allocation
     - `Init`: Tunnel IP allocation successful
-    - `Succeeded`: Tunnel IP allocated and tunnel established
+    - `Ready`: Tunnel IP allocated and tunnel established
     - `Failed`: Tunnel IP allocation failed
 8. Packet mark value, one for each node. For example, if node A has egress traffic that needs to be forwarded to gateway node B, the traffic of node A will be marked with a mark.

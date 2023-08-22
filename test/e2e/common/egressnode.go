@@ -64,7 +64,7 @@ func CheckEgressNodeStatus(f *framework.Framework, nodes []string, opt ...client
 		// check egressNode status
 		status := egressNodeObj.Status
 		// check phase
-		Expect(status.Phase).To(Equal(egressv1.EgressNodeSucceeded))
+		Expect(status.Phase).To(Equal(egressv1.EgressNodeReady))
 		// check physicalInterface
 		Expect(CheckEgressNodeInterface(node, status.Tunnel.Parent.Name, time.Second*10)).To(BeTrue())
 		// check mac
