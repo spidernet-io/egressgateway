@@ -1,0 +1,24 @@
+name: Build Image Latest
+
+on:
+  push:
+    branches:
+      - 'main'
+  workflow_dispatch:
+
+permissions: write-all
+
+concurrency:
+  group: ${{ github.workflow }}
+  cancel-in-progress: true
+
+jobs:
+  call-workflow:
+    uses: ./.github/workflows/call-release-image.yaml
+    with:
+      ref: 'main'
+      tagoverride: 'latest'
+      push: "true"
+      upload: "false"
+      race: "0"
+    secrets: inherit
