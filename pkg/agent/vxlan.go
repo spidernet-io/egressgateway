@@ -6,9 +6,8 @@ package agent
 import (
 	"context"
 	"fmt"
-	"strconv"
-
 	"net"
+	"strconv"
 	"strings"
 	"time"
 
@@ -60,9 +59,31 @@ func (r *vxlanReconciler) Reconcile(ctx context.Context, req reconcile.Request) 
 	switch kind {
 	case "EgressTunnel":
 		return r.reconcileEgressNode(ctx, newReq, log)
+	case "EgressGateway":
+		return r.reconcileEgressGateway(ctx, newReq, log)
 	default:
 		return reconcile.Result{}, nil
 	}
+}
+
+func (r *vxlanReconciler) reconcileEgressGateway(ctx context.Context, req reconcile.Request, log logr.Logger) (reconcile.Result, error) {
+	egressNodeMap, err := r.getEgressNodeByEgressGateway(ctx, req.Name)
+	if err != nil {
+		r.log.Error(err, "vxlan reconcile egress gateway")
+		return reconcile.Result{}, err
+	}
+
+	r.peerMap.Range(func(key string, val vxlan.Peer) bool {
+		if _, ok := egressNodeMap[key]; ok {
+			err = r.ruleRoute.Ensure(r.cfg.FileConfig.VXLAN.Name, val.IPv4, val.IPv6, val.Mark, val.Mark)
+			if err != nil {
+				r.log.Error(err, "vxlan reconcile EgressGateway with error")
+			}
+		}
+		return true
+	})
+
+	return reconcile.Result{}, nil
 }
 
 // reconcileEgressNode
@@ -135,10 +156,18 @@ func (r *vxlanReconciler) reconcileEgressNode(ctx context.Context, req reconcile
 			log.Error(err, "add egress node, ensure route with error")
 		}
 
-		err = r.ruleRoute.Ensure(r.cfg.FileConfig.VXLAN.Name, peer.IPv4, peer.IPv6, peer.Mark, peer.Mark)
+		egressNodeMap, err := r.listEgressNode(ctx)
 		if err != nil {
-			r.log.Error(err, "ensure vxlan link")
+			return reconcile.Result{}, err
 		}
+		if _, ok := egressNodeMap[node.Name]; ok {
+			// if it is egressnode
+			err = r.ruleRoute.Ensure(r.cfg.FileConfig.VXLAN.Name, peer.IPv4, peer.IPv6, peer.Mark, peer.Mark)
+			if err != nil {
+				r.log.Error(err, "ensure vxlan link")
+			}
+		}
+
 		return reconcile.Result{}, nil
 	}
 
@@ -148,6 +177,38 @@ func (r *vxlanReconciler) reconcileEgressNode(ctx context.Context, req reconcile
 	}
 
 	return reconcile.Result{}, nil
+}
+
+func (r *vxlanReconciler) getEgressNodeByEgressGateway(ctx context.Context, name string) (map[string]struct{}, error) {
+	res := make(map[string]struct{})
+	egw := &egressv1.EgressGateway{}
+	err := r.client.Get(ctx, types.NamespacedName{Name: name}, egw)
+	if err != nil {
+		if errors.IsNotFound(err) {
+			return res, nil
+		}
+		return nil, err
+	}
+	for _, node := range egw.Status.NodeList {
+		res[node.Name] = struct{}{}
+	}
+	return res, nil
+}
+
+func (r *vxlanReconciler) listEgressNode(ctx context.Context) (map[string]struct{}, error) {
+	list := &egressv1.EgressGatewayList{}
+	err := r.client.List(ctx, list)
+	if err != nil {
+		return nil, err
+	}
+
+	res := make(map[string]struct{})
+	for _, item := range list.Items {
+		for _, node := range item.Status.NodeList {
+			res[node.Name] = struct{}{}
+		}
+	}
+	return res, nil
 }
 
 func (r *vxlanReconciler) ensureEgressNodeStatus(node *egressv1.EgressTunnel) error {
@@ -354,13 +415,18 @@ func (r *vxlanReconciler) keepVXLAN() {
 
 		markMap := make(map[int]struct{})
 		r.peerMap.Range(func(key string, val vxlan.Peer) bool {
-			if val.Mark != 0 {
-				markMap[val.Mark] = struct{}{}
-			}
-			err = r.ruleRoute.Ensure(r.cfg.FileConfig.VXLAN.Name, val.IPv4, val.IPv6, val.Mark, val.Mark)
+			egressNodeMap, err := r.listEgressNode(context.Background())
 			if err != nil {
-				r.log.Error(err, "ensure vxlan link with error")
-				reduce = false
+				r.log.Error(err, "ensure vxlan list EgressNode with error")
+				return false
+			}
+			if _, ok := egressNodeMap[key]; ok && val.Mark != 0 {
+				markMap[val.Mark] = struct{}{}
+				err = r.ruleRoute.Ensure(r.cfg.FileConfig.VXLAN.Name, val.IPv4, val.IPv6, val.Mark, val.Mark)
+				if err != nil {
+					r.log.Error(err, "ensure vxlan link with error")
+					reduce = false
+				}
 			}
 			return true
 		})
@@ -387,7 +453,7 @@ func (r *vxlanReconciler) ensureRoute() error {
 		return err
 	}
 
-	peerMap := make(map[string]vxlan.Peer, 0)
+	peerMap := make(map[string]vxlan.Peer)
 	r.peerMap.Range(func(key string, peer vxlan.Peer) bool {
 		if key == r.cfg.EnvConfig.NodeName {
 			return true
@@ -396,7 +462,7 @@ func (r *vxlanReconciler) ensureRoute() error {
 		return true
 	})
 
-	expected := make(map[string]struct{}, 0)
+	expected := make(map[string]struct{})
 	for _, peer := range peerMap {
 		expected[peer.MAC.String()] = struct{}{}
 	}
@@ -463,6 +529,11 @@ func newEgressNodeController(mgr manager.Manager, cfg *config.Config, log logr.L
 	if err := c.Watch(source.Kind(mgr.GetCache(), &egressv1.EgressTunnel{}),
 		handler.EnqueueRequestsFromMapFunc(utils.KindToMapFlat("EgressTunnel"))); err != nil {
 		return fmt.Errorf("failed to watch EgressTunnel: %w", err)
+	}
+
+	if err := c.Watch(source.Kind(mgr.GetCache(), &egressv1.EgressGateway{}),
+		handler.EnqueueRequestsFromMapFunc(utils.KindToMapFlat("EgressGateway"))); err != nil {
+		return fmt.Errorf("failed to watch EgressGateway: %w", err)
 	}
 
 	go r.keepVXLAN()
