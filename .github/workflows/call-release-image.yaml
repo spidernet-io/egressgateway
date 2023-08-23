@@ -23,6 +23,9 @@ on:
       suffix:
         required: false
         type: string
+      tagoverride:
+        required: false
+        type: string
       race:
         required: true
         type: string
@@ -72,8 +75,12 @@ jobs:
           [ -n "${image_suffix}" ] && echo "RUN_SUFFIX=-${image_suffix}" >> $GITHUB_ENV
           echo "RUN_PUSH=${image_push}" >> $GITHUB_ENV
           echo "RUN_UPLOAD=${image_upload}" >> $GITHUB_ENV
-          # it is invalid if the ref is branch name "xx/xx/xx"
-          echo "RUN_IMAGE_TAG=${image_ref##*/}" >> $GITHUB_ENV
+          if ${{ inputs.tagoverride != '' }} ; then
+               echo "RUN_IMAGE_TAG=${{ inputs.tagoverride }}" >> $GITHUB_ENV
+          else
+              # it is invalid if the ref is branch name "xx/xx/xx"
+              echo "RUN_IMAGE_TAG=${image_ref##*/}" >> $GITHUB_ENV          
+          fi
           exit 0
 
       - name: Checkout Source Code
