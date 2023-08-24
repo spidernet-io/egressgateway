@@ -151,7 +151,7 @@ jobs:
                     if ! ERROR_MESSAGE=`git cherry-pick $COMMIT 2>&1` ; then
                           echo ">>>>>>>>>>>> fail when cherry pick $COMMIT to branch $BRANCH "
                           echo "$ERROR_MESSAGE"
-                          echo "---- failuire detail"
+                          echo "---- failure detail"
                           git status
                           git diff
                           echo "<<<<<<<<<<<<<"
@@ -198,7 +198,7 @@ jobs:
           echo "=========== check result ============"
           if [ "$FINAL_FAILURE" == "true" ] ; then
               # if failed to create issue or pr, fails
-              echo "error, failuire happened"
+              echo "error, failure happened"
           else
               echo "all done"
           fi
