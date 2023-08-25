@@ -96,6 +96,7 @@ install_kwok:
 	if [ "$(E2E_INSTALL_KWOK)" == "true" ] ; then \
 		echo "install kwok" ; \
 		export INSTALL_TIME_OUT=$(INSTALL_TIME_OUT); \
+		export KWOK_VERSION=$(KWOK_VERSION); \
 		export E2E_KIND_KUBECONFIG_PATH=$(E2E_KIND_KUBECONFIG_PATH); \
 		export https_proxy=$(HTTP_PROXY) ; \
 		bash ./scripts/installKwok.sh ; \
