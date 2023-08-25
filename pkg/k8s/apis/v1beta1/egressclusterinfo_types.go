@@ -5,7 +5,7 @@ package v1beta1
 
 import metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-// EgressClusterInfoList contains a list of EgressClusterStatus
+// EgressClusterInfoList contains a list of EgressClusterInfo
 // +kubebuilder:object:root=true
 type EgressClusterInfoList struct {
 	metav1.TypeMeta `json:",inline"`
@@ -24,25 +24,41 @@ type EgressClusterInfo struct {
 	metav1.ObjectMeta `json:"metadata"`
 
 	// +kubebuilder:validation:Optional
-	Spec EgressClusterStatusSpec `json:"spec,omitempty"`
+	Spec EgressClusterInfoSpec `json:"spec,omitempty"`
 	// +kubebuilder:validation:Optional
-	Status EgressClusterStatus `json:"status,omitempty"`
+	Status EgressClusterInfoStatus `json:"status,omitempty"`
 }
 
-type EgressClusterStatusSpec struct{}
-
-type EgressClusterStatus struct {
+type EgressClusterInfoSpec struct {
 	// +kubebuilder:validation:Optional
-	EgressIgnoreCIDR EgressIgnoreCIDR `json:"egressIgnoreCIDR,omitempty"`
+	AutoDetect AutoDetect `json:"autoDetect,omitempty"`
+	// +kubebuilder:validation:Optional
+	ExtraCidr []string `json:"extraCidr,omitempty"`
 }
 
-type EgressIgnoreCIDR struct {
+type EgressClusterInfoStatus struct {
 	// +kubebuilder:validation:Optional
-	NodeIP IPListPair `json:"nodeIP,omitempty"`
+	PodCidrMode PodCidrMode `json:"podCidrMode,omitempty"`
 	// +kubebuilder:validation:Optional
-	ClusterIP IPListPair `json:"clusterIP,omitempty"`
+	NodeIP map[string]IPListPair `json:"nodeIP,omitempty"`
 	// +kubebuilder:validation:Optional
-	PodCIDR IPListPair `json:"podCIDR,omitempty"`
+	ClusterIP *IPListPair `json:"clusterIP,omitempty"`
+	// +kubebuilder:validation:Optional
+	PodCIDR map[string]IPListPair `json:"podCIDR,omitempty"`
+	// +kubebuilder:validation:Optional
+	ExtraCidr []string `json:"extraCidr,omitempty"`
+}
+
+type AutoDetect struct {
+	// +kubebuilder:validation:Optional
+	// +kubebuilder:default:="auto"
+	PodCidrMode PodCidrMode `json:"podCidrMode,omitempty"`
+	// +kubebuilder:validation:Optional
+	// +kubebuilder:default:=true
+	ClusterIP bool `json:"clusterIP,omitempty"`
+	// +kubebuilder:validation:Optional
+	// +kubebuilder:default:=true
+	NodeIP bool `json:"nodeIP,omitempty"`
 }
 
 type IPListPair struct {
@@ -51,6 +67,15 @@ type IPListPair struct {
 	// +kubebuilder:validation:Optional
 	IPv6 []string `json:"ipv6,omitempty"`
 }
+
+type PodCidrMode string
+
+const (
+	CniTypeK8s    PodCidrMode = "k8s"
+	CniTypeCalico PodCidrMode = "calico"
+	CniTypeAuto   PodCidrMode = "auto"
+	CniTypeEmpty  PodCidrMode = ""
+)
 
 func init() {
 	SchemeBuilder.Register(&EgressClusterInfo{}, &EgressClusterInfoList{})

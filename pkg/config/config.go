@@ -66,21 +66,20 @@ type EnvConfig struct {
 }
 
 type FileConfig struct {
-	EnableIPv4                   bool             `yaml:"enableIPv4"`
-	EnableIPv6                   bool             `yaml:"enableIPv6"`
-	IPTables                     IPTables         `yaml:"iptables"`
-	DatapathMode                 string           `yaml:"datapathMode"`
-	TunnelIpv4Subnet             string           `yaml:"tunnelIpv4Subnet"`
-	TunnelIpv6Subnet             string           `yaml:"tunnelIpv6Subnet"`
-	TunnelIPv4Net                *net.IPNet       `json:"-"`
-	TunnelIPv6Net                *net.IPNet       `json:"-"`
-	TunnelDetectMethod           string           `yaml:"tunnelDetectMethod"`
-	VXLAN                        VXLAN            `yaml:"vxlan"`
-	EgressIgnoreCIDR             EgressIgnoreCIDR `yaml:"egressIgnoreCIDR"`
-	MaxNumberEndpointPerSlice    int              `yaml:"maxNumberEndpointPerSlice"`
-	Mark                         string           `yaml:"mark"`
-	AnnouncedInterfacesToExclude []string         `yaml:"announcedInterfacesToExclude"`
-	AnnounceExcludeRegexp        *regexp.Regexp   `json:"-"`
+	EnableIPv4                   bool           `yaml:"enableIPv4"`
+	EnableIPv6                   bool           `yaml:"enableIPv6"`
+	IPTables                     IPTables       `yaml:"iptables"`
+	DatapathMode                 string         `yaml:"datapathMode"`
+	TunnelIpv4Subnet             string         `yaml:"tunnelIpv4Subnet"`
+	TunnelIpv6Subnet             string         `yaml:"tunnelIpv6Subnet"`
+	TunnelIPv4Net                *net.IPNet     `json:"-"`
+	TunnelIPv6Net                *net.IPNet     `json:"-"`
+	TunnelDetectMethod           string         `yaml:"tunnelDetectMethod"`
+	VXLAN                        VXLAN          `yaml:"vxlan"`
+	MaxNumberEndpointPerSlice    int            `yaml:"maxNumberEndpointPerSlice"`
+	Mark                         string         `yaml:"mark"`
+	AnnouncedInterfacesToExclude []string       `yaml:"announcedInterfacesToExclude"`
+	AnnounceExcludeRegexp        *regexp.Regexp `json:"-"`
 }
 
 const TunnelInterfaceDefaultRoute = "defaultRouteInterface"
@@ -102,11 +101,6 @@ type IPTables struct {
 	InitialPostWriteIntervalSecond int    `yaml:"initialPostWriteIntervalSecond"`
 	RestoreSupportsLock            bool   `yaml:"restoreSupportsLock"`
 	LockFilePath                   string `yaml:"lockFilePath"`
-}
-
-type EgressIgnoreCIDR struct {
-	AutoDetect `yaml:"autoDetect"`
-	Custom     []string `yaml:"custom"`
 }
 
 type AutoDetect struct {
@@ -150,14 +144,6 @@ func LoadConfig(isAgent bool) (*Config, error) {
 				LockProbeIntervalMillis: 50,
 				LockFilePath:            "/run/xtables.lock",
 				RestoreSupportsLock:     restoreSupportsLock,
-			},
-			EgressIgnoreCIDR: EgressIgnoreCIDR{
-				AutoDetect: AutoDetect{
-					PodCIDR:   "",
-					ClusterIP: true,
-					NodeIP:    true,
-				},
-				Custom: []string{},
 			},
 			Mark: "0x26000000",
 		},

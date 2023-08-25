@@ -36,45 +36,69 @@ spec:
           metadata:
             type: object
           spec:
+            properties:
+              autoDetect:
+                properties:
+                  clusterIP:
+                    default: true
+                    type: boolean
+                  nodeIP:
+                    default: true
+                    type: boolean
+                  podCidrMode:
+                    default: auto
+                    type: string
+                type: object
+              extraCidr:
+                items:
+                  type: string
+                type: array
             type: object
           status:
             properties:
-              egressIgnoreCIDR:
+              clusterIP:
                 properties:
-                  clusterIP:
-                    properties:
-                      ipv4:
-                        items:
-                          type: string
-                        type: array
-                      ipv6:
-                        items:
-                          type: string
-                        type: array
-                    type: object
-                  nodeIP:
-                    properties:
-                      ipv4:
-                        items:
-                          type: string
-                        type: array
-                      ipv6:
-                        items:
-                          type: string
-                        type: array
-                    type: object
-                  podCIDR:
-                    properties:
-                      ipv4:
-                        items:
-                          type: string
-                        type: array
-                      ipv6:
-                        items:
-                          type: string
-                        type: array
-                    type: object
+                  ipv4:
+                    items:
+                      type: string
+                    type: array
+                  ipv6:
+                    items:
+                      type: string
+                    type: array
                 type: object
+              extraCidr:
+                items:
+                  type: string
+                type: array
+              nodeIP:
+                additionalProperties:
+                  properties:
+                    ipv4:
+                      items:
+                        type: string
+                      type: array
+                    ipv6:
+                      items:
+                        type: string
+                      type: array
+                  type: object
+                type: object
+              podCIDR:
+                additionalProperties:
+                  properties:
+                    ipv4:
+                      items:
+                        type: string
+                      type: array
+                    ipv6:
+                      items:
+                        type: string
+                      type: array
+                  type: object
+                type: object
+              podCidrMode:
+                type: string
             type: object
         required:
         - metadata

@@ -42,7 +42,7 @@ jobs:
           repository: ${{ github.event.pull_request.head.repo.full_name }}
           path: thisProject
 
-      - name: Diff chart/README.md
+      - name: Generate chart/README.md
         id: execute
         run: |
           echo -e "\033[32mUse readme-generator-for-helm to generate README.md\033[0m"
@@ -59,7 +59,6 @@ jobs:
           path: thisProject/charts/README.md
 
       - name: Diff chart/README.md
-        id: execute
         run: |
           cd thisProject
           if git diff --quiet; then

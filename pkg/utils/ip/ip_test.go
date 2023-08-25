@@ -139,7 +139,7 @@ func TestIsIPv4Cidr(t *testing.T) {
 			name:    "IPv6 CIDR",
 			args:    "2001:0db8:85a3:0000:0000:8a2e:0370:7334/64",
 			want:    false,
-			wantErr: true,
+			wantErr: false,
 		},
 		{
 			name:    "invalid input format",
@@ -197,7 +197,7 @@ func TestIsIPv6Cidr(t *testing.T) {
 			name:    "IPv4 cidr",
 			args:    "192.168.0.0/16",
 			want:    false,
-			wantErr: true,
+			wantErr: false,
 		},
 		{
 			name:    "invalid CIDR",

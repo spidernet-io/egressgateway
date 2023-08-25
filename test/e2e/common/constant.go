@@ -34,7 +34,13 @@ const (
 const (
 	EGRESSGATEWAY_CONFIGMAP_NAME = "egressgateway"
 	EGRESSGATEWAY_CONFIGMAP_KEY  = "conf.yml"
-	CALICO                       = "calico"
+)
+
+// egressClusterInfo
+const (
+	Calico = "calico"
+	K8s    = "k8s"
+	Auto   = "auto"
 )
 
 // test
