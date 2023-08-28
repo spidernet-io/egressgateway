@@ -942,7 +942,7 @@ k8s.io/utils/net
 k8s.io/utils/pointer
 k8s.io/utils/strings/slices
 k8s.io/utils/trace
-# modernc.org/memory v1.6.0
+# modernc.org/memory v1.7.1
 ## explicit; go 1.18
 modernc.org/memory
 # sigs.k8s.io/cluster-api-provider-azure v1.10.2
