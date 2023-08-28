@@ -24,6 +24,7 @@
 
 # EgressGateway E2E 用例
 - 用例中，所有有关 `eip` 校验的内容，都包含了 tcp，udp 和 web socket
+
 | 用例编号   | 标题                                                                                                     | 优先级 | 冒烟    | 状态 | 其他 |
 |--------|--------------------------------------------------------------------------------------------------------|-----|-------|----|----|
 | G00001 | 使用不合法的 `Ippools` 时，创建 EgressGateway 会失败                                                                | p2  | false |    |    |
@@ -45,3 +46,5 @@
 | G00015 | 当存在 Policy （包括命名空间级别和集群级别）正在使用 EgressGateway 时，删除 EgressGateway 会失败                                    | p2  | false |    |    |
 | G00016 | 当没有 Policy 使用 EgressGateway 时，删除 EgressGateway 成功                                                      | p2  | false |    |    |
 | G00017 | 创建 `EgressCluster` 或者 `EgressClusterPolicy` 时使用未指定 `spec.egressGatewayName` 时，可以使用自动设置租户或者集群默认网关，并创建成功 | p2  | false |    |    |
+| G00018 | 当 `Ippools.IPv4` 和 `Ippools.IPv6` 为空时，创建 EgressGateway 成功 | p2  | false |    |    |
+| G00019 | 当 `Ippools.IPv4` 和 `Ippools.IPv6` 为空时，创建 `EgressCluster` 或者 `EgressClusterPolicy`，未指定 `spec.egressIP.useNodeIP` 时，policy 创建失败，`spec.egressIP.useNodeIP` 为 true 时，policy 创建成功 | p2  | false |    |    |

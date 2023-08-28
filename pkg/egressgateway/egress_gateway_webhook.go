@@ -7,10 +7,11 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/spidernet-io/egressgateway/pkg/utils/ip"
 	"math/rand"
 	"net"
 	"time"
+
+	"github.com/spidernet-io/egressgateway/pkg/utils/ip"
 
 	admissionv1 "k8s.io/api/admission/v1"
 	v1 "k8s.io/api/admission/v1"
@@ -87,9 +88,6 @@ func (egw *EgressGatewayWebhook) EgressGatewayValidate(ctx context.Context, req 
 			return webhook.Denied(fmt.Sprintf("Failed to check IP: %v", err))
 		}
 
-		if len(ipv4s) == 0 {
-			return webhook.Denied("ippools.ipv4 is empty")
-		}
 	}
 
 	if egw.Config.FileConfig.EnableIPv6 {
@@ -98,9 +96,6 @@ func (egw *EgressGatewayWebhook) EgressGatewayValidate(ctx context.Context, req 
 			return webhook.Denied(fmt.Sprintf("Failed to check IP: %v", err))
 		}
 
-		if len(ipv6s) == 0 {
-			return webhook.Denied("ippools.ipv6 is empty")
-		}
 	}
 
 	if egw.Config.FileConfig.EnableIPv4 && egw.Config.FileConfig.EnableIPv6 {
