@@ -42,7 +42,7 @@ func (r *endpointClusterReconciler) Reconcile(ctx context.Context, req reconcile
 		"kind", "EgressClusterEndpointSlice",
 	)
 
-	log.Info("reconcile")
+	log.V(1).Info("reconcile")
 	deleted := false
 	policy := new(v1beta1.EgressClusterPolicy)
 	err := r.client.Get(ctx, req.NamespacedName, policy)

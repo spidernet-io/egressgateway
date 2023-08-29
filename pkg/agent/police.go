@@ -536,7 +536,7 @@ func buildNatStaticRule(base uint32) map[string][]iptables.Rule {
 }
 
 func (r *policeReconciler) reconcileClusterInfo(ctx context.Context, req reconcile.Request, log logr.Logger) (reconcile.Result, error) {
-	log = log.WithValues("name", req.Name)
+	log = log.V(1).WithValues("name", req.Name)
 	log.Info("reconciling")
 
 	info := new(egressv1.EgressClusterInfo)
@@ -698,7 +698,7 @@ func (r *policeReconciler) ensureClusterInfoIPSet() error {
 // - add/update/delete egress gateway
 //   - iptables/ipset
 func (r *policeReconciler) reconcileGateway(ctx context.Context, req reconcile.Request, log logr.Logger) (reconcile.Result, error) {
-	log.Info("reconciling")
+	log.V(1).Info("reconciling")
 	err := r.initApplyPolicy()
 	if err != nil {
 		return reconcile.Result{Requeue: true}, err
@@ -758,7 +758,7 @@ func buildMangleStaticRule(base uint32) map[string][]iptables.Rule {
 // - ipset
 func (r *policeReconciler) reconcilePolicy(ctx context.Context, req reconcile.Request, log logr.Logger) (reconcile.Result, error) {
 	log = log.WithValues("name", req.Name, "namespace", req.Namespace)
-	log.Info("reconciling")
+	log.V(1).Info("reconciling")
 
 	policy := new(egressv1.EgressPolicy)
 	deleted := false
@@ -820,7 +820,7 @@ func (r *policeReconciler) reconcilePolicy(ctx context.Context, req reconcile.Re
 // - ipset
 func (r *policeReconciler) reconcileClusterPolicy(ctx context.Context, req reconcile.Request, log logr.Logger) (reconcile.Result, error) {
 	log = log.WithValues("name", req.Name)
-	log.Info("reconciling")
+	log.V(1).Info("reconciling")
 
 	policy := new(egressv1.EgressClusterPolicy)
 	deleted := false
