@@ -44,7 +44,7 @@ func (r *endpointReconciler) Reconcile(ctx context.Context, req reconcile.Reques
 		"name", req.Name,
 		"kind", "EgressPolicy")
 
-	log.Info("reconcile")
+	log.V(1).Info("reconcile")
 	deleted := false
 	policy := new(v1beta1.EgressPolicy)
 	err := r.client.Get(ctx, req.NamespacedName, policy)

@@ -35,7 +35,7 @@ func (r *egpReconciler) Reconcile(ctx context.Context, req reconcile.Request) (r
 	}
 
 	log := r.log.WithValues("name", newReq.Name, "kind", kind)
-	log.Info("reconciling")
+	log.V(1).Info("reconciling")
 	switch kind {
 	case "EgressGateway":
 		return r.reconcileEGW(ctx, newReq, log)

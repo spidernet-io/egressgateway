@@ -435,7 +435,7 @@ func (r egnReconciler) reconcileEGP(ctx context.Context, req reconcile.Request, 
 	} else {
 		log = log.WithValues("name", req.Name, "namespace", req.Namespace)
 	}
-	log.Info("reconciling")
+	log.V(1).Info("reconciling")
 
 	deleted := false
 	isUpdate := false
