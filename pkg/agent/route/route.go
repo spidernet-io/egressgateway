@@ -36,13 +36,12 @@ func (r *RuleRoute) PurgeStaleRules(marks map[int]struct{}, baseMark string) err
 						return err
 					}
 				}
-				return nil
 			}
 		}
 		return nil
 	}
 
-	rules, err := netlink.RuleList(netlink.FAMILY_V4)
+	rules, err := netlink.RuleListFiltered(netlink.FAMILY_V4, nil, netlink.RT_FILTER_MARK)
 	if err != nil {
 		return err
 	}
@@ -50,7 +49,7 @@ func (r *RuleRoute) PurgeStaleRules(marks map[int]struct{}, baseMark string) err
 		return err
 	}
 
-	rules, err = netlink.RuleList(netlink.FAMILY_V6)
+	rules, err = netlink.RuleListFiltered(netlink.FAMILY_V6, nil, netlink.RT_FILTER_MARK)
 	if err != nil {
 		return err
 	}
