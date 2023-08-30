@@ -6,8 +6,9 @@ package webhook
 import (
 	"context"
 	"encoding/json"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 	"testing"
+
+	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/stretchr/testify/assert"
 	admissionv1 "k8s.io/api/admission/v1"
@@ -92,7 +93,17 @@ func TestValidateEgressPolicy(t *testing.T) {
 		expErrMessage     string
 	}{
 		"case, valid": {
-			existingResources: nil,
+			existingResources: []client.Object{
+				&v1beta1.EgressGateway{
+					ObjectMeta: metav1.ObjectMeta{Name: "test"},
+					Spec: v1beta1.EgressGatewaySpec{
+						Ippools: v1beta1.Ippools{
+							IPv4: []string{"172.18.1.2-172.18.1.5"},
+							IPv6: []string{"fc00:f853:ccd:e793:a::3-fc00:f853:ccd:e793:a::6"},
+						},
+					},
+				},
+			},
 			spec: v1beta1.EgressPolicySpec{
 				EgressGatewayName: "test",
 				EgressIP: v1beta1.EgressIP{
