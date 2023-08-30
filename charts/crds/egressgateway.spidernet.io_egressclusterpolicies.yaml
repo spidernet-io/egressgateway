@@ -31,9 +31,9 @@ spec:
       jsonPath: .status.eip.ipv6
       name: ipv6
       type: string
-    - description: egressNode
+    - description: egressTunnel
       jsonPath: .status.node
-      name: egressNode
+      name: egressTunnel
       type: string
     name: v1beta1
     schema:

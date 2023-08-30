@@ -11,7 +11,7 @@ import (
 	"github.com/cilium/ipam/service/ipallocator"
 	"github.com/stretchr/testify/assert"
 	corev1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/apis/meta/v1"
+	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
@@ -30,7 +30,7 @@ type TestNodeReq struct {
 	expRequeue bool
 }
 
-func TestEgressNodeCtrlForEgressNode(t *testing.T) {
+func TestEgressTunnelCtrlForEgressTunnel(t *testing.T) {
 	cfg := &config.Config{
 		EnvConfig:  config.EnvConfig{},
 		FileConfig: config.FileConfig{EnableIPv4: true, EnableIPv6: false},
@@ -40,7 +40,7 @@ func TestEgressNodeCtrlForEgressNode(t *testing.T) {
 		&corev1.Node{ObjectMeta: v1.ObjectMeta{Name: "node1"}},
 		&egressv1.EgressTunnel{
 			ObjectMeta: v1.ObjectMeta{Name: "node1"},
-			Status:     egressv1.EgressNodeStatus{},
+			Status:     egressv1.EgressTunnelStatus{},
 		},
 	}
 
@@ -88,36 +88,36 @@ func TestEgressNodeCtrlForEgressNode(t *testing.T) {
 		assert.Equal(t, req.expRequeue, res.Requeue)
 	}
 
-	egressNode := &egressv1.EgressTunnel{}
+	egressTunnel := &egressv1.EgressTunnel{}
 
-	err = reconciler.client.Get(ctx, types.NamespacedName{Name: "node1"}, egressNode)
+	err = reconciler.client.Get(ctx, types.NamespacedName{Name: "node1"}, egressTunnel)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	if egressNode.Status.Mark == "" {
+	if egressTunnel.Status.Mark == "" {
 		t.Fatal("mark is empty")
 	}
-	if egressNode.Status.Tunnel.MAC == "" {
+	if egressTunnel.Status.Tunnel.MAC == "" {
 		t.Fatal("mac is empty")
 	}
-	if egressNode.Status.Tunnel.IPv4 == "" {
+	if egressTunnel.Status.Tunnel.IPv4 == "" {
 		t.Fatal("ipv4 is empty")
 	}
 
-	err = reconciler.client.Delete(ctx, egressNode)
+	err = reconciler.client.Delete(ctx, egressTunnel)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	err = reconciler.client.Get(ctx, types.NamespacedName{Name: "node1"}, egressNode)
+	err = reconciler.client.Get(ctx, types.NamespacedName{Name: "node1"}, egressTunnel)
 	if err != nil {
 	} else {
-		t.Fatal("expect deleted egress node, but got one")
+		t.Fatal("expect deleted egress tunnel, but got one")
 	}
 }
 
-func TestEgressNodeCtrlForNode(t *testing.T) {
+func TestEgressTunnelCtrlForNode(t *testing.T) {
 	cfg := &config.Config{}
 	node := &corev1.Node{ObjectMeta: v1.ObjectMeta{Name: "node1"}}
 	initialObjects := []client.Object{node}
@@ -161,8 +161,8 @@ func TestEgressNodeCtrlForNode(t *testing.T) {
 		assert.Equal(t, req.expRequeue, res.Requeue)
 	}
 
-	egressNode := &egressv1.EgressTunnel{}
-	err = reconciler.client.Get(ctx, types.NamespacedName{Name: "node1"}, egressNode)
+	egressTunnel := &egressv1.EgressTunnel{}
+	err = reconciler.client.Get(ctx, types.NamespacedName{Name: "node1"}, egressTunnel)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -180,9 +180,9 @@ func TestEgressNodeCtrlForNode(t *testing.T) {
 		assert.Equal(t, req.expRequeue, res.Requeue)
 	}
 
-	err = reconciler.client.Get(ctx, types.NamespacedName{Name: "node1"}, egressNode)
+	err = reconciler.client.Get(ctx, types.NamespacedName{Name: "node1"}, egressTunnel)
 	if err != nil {
-	} else if egressNode.DeletionTimestamp.IsZero() {
-		t.Fatal("expect deleted egress node, but got one")
+	} else if egressTunnel.DeletionTimestamp.IsZero() {
+		t.Fatal("expect deleted egress tunnel, but got one")
 	}
 }

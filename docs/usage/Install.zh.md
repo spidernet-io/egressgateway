@@ -169,7 +169,7 @@ EgressPolicy 对象是租户级别的，因此，它务必创建在 selected 应
 3. 查看 EgressPolicy 的状态
 
         $ kubectl get EgressPolicy -A
-        NAMESPACE   NAME   GATEWAY   IPV4           IPV6   EGRESSNODE
+        NAMESPACE   NAME   GATEWAY   IPV4           IPV6   EGRESSTUNNEL
         default     test   default   172.22.0.110          egressgateway-worker2
 
         $ kubectl get EgressPolicy test -o yaml

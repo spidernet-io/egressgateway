@@ -67,10 +67,10 @@ To ensure that the running applications are not affected before uninstalling Egr
 
     It is worth noting that before uninstalling EgressGateway, it is recommended to back up related data and ensure that the uninstall operation does not affect the ongoing business applications.
 
-4. During the uninstallation process, sometimes the EgressNodes CRD of EgressGateway may remain in a waiting state for deletion. If you encounter this situation, you can try using the following command to resolve the issue:
+4. During the uninstallation process, sometimes the EgressTunnels CRD of EgressGateway may remain in a waiting state for deletion. If you encounter this situation, you can try using the following command to resolve the issue:
 
     ```shell
-    kubectl patch crd egressnodes.egressgateway.spidernet.io -p '{"metadata":{"finalizers": []}}' --type=merge
+    kubectl patch crd egresstunnels.egressgateway.spidernet.io -p '{"metadata":{"finalizers": []}}' --type=merge
     ```
 
     This command removes the finalizer in the EgressGateway CRD, allowing Kubernetes to delete it. This issue is caused by the controller-manager, and we are monitoring the Kubernetes team's progress on fixing it.

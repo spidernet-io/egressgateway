@@ -7,7 +7,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// EgressTunnelList egress node list
+// EgressTunnelList egress tunnel list
 // +kubebuilder:object:root=true
 type EgressTunnelList struct {
 	metav1.TypeMeta `json:",inline"`
@@ -29,17 +29,17 @@ type EgressTunnel struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata"`
 
-	Spec   EgressNodeSpec   `json:"spec,omitempty"`
-	Status EgressNodeStatus `json:"status,omitempty"`
+	Spec   EgressTunnelSpec   `json:"spec,omitempty"`
+	Status EgressTunnelStatus `json:"status,omitempty"`
 }
 
-type EgressNodeSpec struct{}
+type EgressTunnelSpec struct{}
 
-type EgressNodeStatus struct {
+type EgressTunnelStatus struct {
 	// +kubebuilder:validation:Optional
 	Tunnel Tunnel `json:"tunnel,omitempty"`
 	// +kubebuilder:validation:Enum=Pending;Init;Failed;Ready;""
-	Phase EgressNodePhase `json:"phase,omitempty"`
+	Phase EgressTunnelPhase `json:"phase,omitempty"`
 	// +kubebuilder:validation:Optional
 	Mark string `json:"mark,omitempty"`
 }
@@ -64,17 +64,17 @@ type Parent struct {
 	IPv6 string `json:"ipv6,omitempty"`
 }
 
-type EgressNodePhase string
+type EgressTunnelPhase string
 
 const (
-	// EgressNodePending wait for tunnel address available
-	EgressNodePending EgressNodePhase = "Pending"
-	// EgressNodeInit Init tunnel address
-	EgressNodeInit EgressNodePhase = "Init"
-	// EgressNodeFailed allocate tunnel address failed
-	EgressNodeFailed EgressNodePhase = "Failed"
-	// EgressNodeReady tunnel is available
-	EgressNodeReady EgressNodePhase = "Ready"
+	// EgressTunnelPending wait for tunnel address available
+	EgressTunnelPending EgressTunnelPhase = "Pending"
+	// EgressTunnelInit Init tunnel address
+	EgressTunnelInit EgressTunnelPhase = "Init"
+	// EgressTunnelFailed allocate tunnel address failed
+	EgressTunnelFailed EgressTunnelPhase = "Failed"
+	// EgressTunnelReady tunnel is available
+	EgressTunnelReady EgressTunnelPhase = "Ready"
 )
 
 func init() {

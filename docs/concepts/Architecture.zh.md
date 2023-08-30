@@ -5,26 +5,26 @@ EgressGateway 由控制面和数据面 2 部分组成，控制面由 4 个控制
 
 ## Controller
 
-### EgressNode reconcile loop (a) 
+### EgressTunnel reconcile loop (a) 
 
 #### 初始化
 
 1. 从 ConfigMap 配置文件中获取双栈开启情况及对应的隧道 CIDR
 2. 通过节点名称根据算法生成唯一的标签值
-3. 会检查 Node 是否有对应的 EgressNode，没有的话就创建对应的 EgressNode，且状态设置为 `Pending`。有隧道 IP 则将 IP 与节点绑定，绑定前会检查 IP 是否合法，不合法则将状态设置为 `Pending`
+3. 会检查 Node 是否有对应的 EgressTunnel，没有的话就创建对应的 EgressTunnel，且状态设置为 `Pending`。有隧道 IP 则将 IP 与节点绑定，绑定前会检查 IP 是否合法，不合法则将状态设置为 `Pending`
 
-#### EgressNode Event
+#### EgressTunnel Event
 
-- Del：先释放隧道 IP，再删除。如果 EgressNode 对应的节点还存在，重新创建 EgressNode
+- Del：先释放隧道 IP，再删除。如果 EgressTunnel 对应的节点还存在，重新创建 EgressTunnel
 - Other：
   - phase != `Init` || phase != `Ready`：则分配 IP，分配成功将状态设置为 `Init`，分配失败将状态设置为 `Failed`。这里是全局唯一会分配隧道 IP 的地方
   - mark != algorithm(NodeName)：该字段禁止修改，直接报错返回
 
 #### Node Event
 
-- Del：删除对应的 EgressNode
+- Del：删除对应的 EgressTunnel
 - Other：
-  - 节点对应的 EgressNode 不存在，则创建 EgressNode
+  - 节点对应的 EgressTunnel 不存在，则创建 EgressTunnel
   - 无隧道 IP，设置 phase 为 `Pending`
   - 有隧道 IP，校验隧道是否合法，不合法则设置 phase 为 `Pending`
   - 隧道 IP 合法，校验 IP 是否分配给本节点，不是则设置 phase 为 `Pending`
@@ -40,11 +40,11 @@ EgressGateway 由控制面和数据面 2 部分组成，控制面由 4 个控制
 
 - Other：
   * EIP 减少，如果 EIP 被引用，禁止修改。分配 IPV4 与 IPV6 时，要求一一对应，所以两者的个数需要一致。
-  * 如果 nodeSelector 被修改，从 status 获取旧的 Node 信息，与最新的 Node 进行对比。将删除节点上的 EIP 重新分配到新的 Node 上。更新对应 EgressNode 中的 EIP 信息。
+  * 如果 nodeSelector 被修改，从 status 获取旧的 Node 信息，与最新的 Node 进行对比。将删除节点上的 EIP 重新分配到新的 Node 上。更新对应 EgressTunnel 中的 EIP 信息。
 
 #### EgressPolicy Event
 
-- Del：列出 EgressPolicy 找到被引用的 EgressGateway，再对 EgressPolicy 与 EgressGateway 解绑。解绑需要做的事情有，找到对应的 EIP 信息。如果使用了 EIP，则判断是否需要回收 EIP。如果此时 EIP 已经没有 policy 使用，则回收 EIP，更新自身及 EgressNode 的 EIP 信息。
+- Del：列出 EgressPolicy 找到被引用的 EgressGateway，再对 EgressPolicy 与 EgressGateway 解绑。解绑需要做的事情有，找到对应的 EIP 信息。如果使用了 EIP，则判断是否需要回收 EIP。如果此时 EIP 已经没有 policy 使用，则回收 EIP，更新自身及 EgressTunnel 的 EIP 信息。
 - Other：
   * EgressPolicy 不能修改绑定的 EgressGateway。如果允许修改，则列出 EgressGateway 找到原先绑定的 EgressGateway，进行解绑。再对新的进行绑定。
   * 新增 EgressPolicy，则将 EgressPolicy 与 EgressGateway 进行绑定，绑定中，判断是否需要分配 EIP。

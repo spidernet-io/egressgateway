@@ -1,8 +1,8 @@
-The EgressNode CRD is used to record tunnel network interface information for cross-node communication. It is a cluster scope resource that corresponds one-to-one with the Kubernetes Node resource name.
+The EgressTunnel CRD is used to record tunnel network interface information for cross-node communication. It is a cluster scope resource that corresponds one-to-one with the Kubernetes Node resource name.
 
 ```yaml
 apiVersion: egressgateway.spidernet.io/v1beta1
-kind: EgressNode
+kind: EgressTunnel
 metadata:
    name: "node1"
 status:

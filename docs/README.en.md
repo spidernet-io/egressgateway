@@ -24,7 +24,7 @@ There are two clusters A and B. Cluster A is VMWare-based and runs mainly Databa
 
 ### CRDs
 
-* EgressNode
+* EgressTunnel
 * EgressGateway
 * EgressPolicy
 * EgressClusterPolicy

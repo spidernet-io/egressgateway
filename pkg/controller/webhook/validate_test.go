@@ -457,7 +457,7 @@ func TestUpdateEgressPolicy(t *testing.T) {
 	}
 }
 
-func TestValidateEgressNode(t *testing.T) {
+func TestValidateEgressTunnel(t *testing.T) {
 	ctx := context.Background()
 
 	cases := map[string]struct {
@@ -470,7 +470,7 @@ func TestValidateEgressNode(t *testing.T) {
 				ObjectMeta: metav1.ObjectMeta{
 					Name: "node1",
 				},
-				Spec: v1beta1.EgressNodeSpec{},
+				Spec: v1beta1.EgressTunnelSpec{},
 			},
 			expAllow: true,
 		},

@@ -1,7 +1,7 @@
 // Copyright 2022 Authors of spidernet-io
 // SPDX-License-Identifier: Apache-2.0
 
-package egressnode_test
+package egresstunnel_test
 
 import (
 	"testing"
@@ -10,9 +10,9 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-func TestEgressnode(t *testing.T) {
+func TestEgresstunnel(t *testing.T) {
 	RegisterFailHandler(Fail)
-	RunSpecs(t, "Egressnode Suite")
+	RunSpecs(t, "Egresstunnel Suite")
 }
 
 //

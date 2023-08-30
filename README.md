@@ -38,7 +38,7 @@ The gateway provides network egress capabilities for Kubernetes clusters.
 
 ### CRDs
 
-* EgressNode
+* EgressTunnel
 * EgressGateway
 * EgressPolicy
 * EgressClusterPolicy

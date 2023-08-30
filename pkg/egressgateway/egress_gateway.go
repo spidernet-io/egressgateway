@@ -116,7 +116,7 @@ func (r egnReconciler) reconcileNode(ctx context.Context, req reconcile.Request,
 				if err == nil {
 					egw.Status.NodeList = append(egw.Status.NodeList, egress.EgressIPStatus{Name: node.Name, Status: string(egt.Status.Phase)})
 				} else {
-					egw.Status.NodeList = append(egw.Status.NodeList, egress.EgressIPStatus{Name: node.Name, Status: string(egress.EgressNodeFailed)})
+					egw.Status.NodeList = append(egw.Status.NodeList, egress.EgressIPStatus{Name: node.Name, Status: string(egress.EgressTunnelFailed)})
 				}
 
 				r.log.V(1).Info("update egress gateway status", "status", egw.Status)
@@ -208,7 +208,7 @@ func (r egnReconciler) reconcileEGW(ctx context.Context, req reconcile.Request, 
 			if err == nil {
 				perNodeMap[node.Name] = egress.EgressIPStatus{Name: node.Name, Status: string(egt.Status.Phase)}
 			} else {
-				perNodeMap[node.Name] = egress.EgressIPStatus{Name: node.Name, Status: string(egress.EgressNodeFailed)}
+				perNodeMap[node.Name] = egress.EgressIPStatus{Name: node.Name, Status: string(egress.EgressTunnelFailed)}
 			}
 			isUpdate = true
 		}
@@ -246,7 +246,7 @@ func (r egnReconciler) reconcileEGW(ctx context.Context, req reconcile.Request, 
 	readyNum := 0
 	policyNum := 0
 	for _, node := range perNodeMap {
-		if node.Status == string(egress.EgressNodeReady) {
+		if node.Status == string(egress.EgressTunnelReady) {
 			readyNum++
 			policyNum += len(node.Eips)
 		}
@@ -338,7 +338,7 @@ func (r egnReconciler) reconcileEGT(ctx context.Context, req reconcile.Request, 
 			egw := item.DeepCopy()
 
 			// If the node is not in success state, the policy on the node is reassigned
-			if egt.Status.Phase != egress.EgressNodeReady {
+			if egt.Status.Phase != egress.EgressTunnelReady {
 				for _, node := range egw.Status.NodeList {
 					if node.Name != egt.Name {
 						perNodeMap[node.Name] = node
@@ -357,14 +357,14 @@ func (r egnReconciler) reconcileEGT(ctx context.Context, req reconcile.Request, 
 			} else {
 				for _, node := range egw.Status.NodeList {
 					if node.Name == egt.Name {
-						if node.Status != string(egress.EgressNodeReady) {
-							perNodeMap[node.Name] = egress.EgressIPStatus{Name: node.Name, Eips: node.Eips, Status: string(egress.EgressNodeReady)}
+						if node.Status != string(egress.EgressTunnelReady) {
+							perNodeMap[node.Name] = egress.EgressIPStatus{Name: node.Name, Eips: node.Eips, Status: string(egress.EgressTunnelReady)}
 
 							// When the first gateway node of an egw recovers, you need to rebind the policy that references the egw
 							readyNum := 0
 							policyNum := 0
 							for _, node := range perNodeMap {
-								if node.Status == string(egress.EgressNodeReady) {
+								if node.Status == string(egress.EgressTunnelReady) {
 									readyNum++
 									policyNum += len(node.Eips)
 								}
@@ -734,7 +734,7 @@ func (r egnReconciler) reAllocatorPolicy(ctx context.Context, policy egress.Poli
 	ipv4 = pi.ipv4
 	if len(ipv4) != 0 {
 		perNode = GetNodeByIP(ipv4, *egw)
-		if nodeMap[perNode].Status != string(egress.EgressNodeReady) {
+		if nodeMap[perNode].Status != string(egress.EgressTunnelReady) {
 			perNode = ""
 		}
 
@@ -766,7 +766,7 @@ func (r egnReconciler) reAllocatorPolicy(ctx context.Context, policy egress.Poli
 			ipv6 = egw.Spec.Ippools.Ipv6DefaultEIP
 
 			perNode = GetNodeByIP(ipv4, *egw)
-			if nodeMap[perNode].Status != string(egress.EgressNodeReady) {
+			if nodeMap[perNode].Status != string(egress.EgressTunnelReady) {
 				perNode = ""
 			}
 
@@ -798,7 +798,7 @@ func (r egnReconciler) allocatorNode(selNodePolicy string, nodeMap map[string]eg
 	perNodePolicyNum := 0
 	i := 0
 	for _, node := range nodeMap {
-		if node.Status != string(egress.EgressNodeReady) {
+		if node.Status != string(egress.EgressTunnelReady) {
 			continue
 		}
 
