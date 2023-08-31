@@ -2,6 +2,7 @@ site_name: EgressGateway
 docs_dir: docs
 site_dir: site
 repo_name: spidernet-io/egressgateway
+site_url: https://spidernet-io.github.io/egressgateway/
 repo_url: https://github.com/spidernet-io/egressgateway
 remote_branch: github_pages
 theme:
@@ -28,13 +29,11 @@ plugins:
       docs_structure: suffix
       material_alternate: true
       languages:
-        default:
-          name: Default (en)
-          build: true
-        en:
+        - locale: en
+          default: true
           name: English
           build: true
-        zh:
+        - locale: zh
           name: 中文
           build: true
   - tags
@@ -79,17 +78,20 @@ nav:
       - Install: usage/Install.md
       - Upgrade: usage/Upgrade.md
       - Uninstall: usage/Uninstall.md
+  - Usage:
+      - Namespace Default EgressGateway: usage/NamespaceDefaultEgressGateway.md
+      - Cluster Default EgressGateway: usage/ClusterDefaultEgressGateway.md
   - Concepts:
       - Architecture: concepts/Architecture.md
       - Datapath: concepts/Datapath.md
-  - CRDs:
-      - EgressNode: crds/EgressNode.md
-      - EgressGateway: crds/EgressGateway.md
-      - EgressPolicy: crds/EgressPolicy.md
-      - EgressClusterPolicy: crds/EgressClusterPolicy.md
-      - EgressEndpointSlice: crds/EgressEndpointSlice.md
-      - EgressClusterEndpointSlice: crds/EgressClusterEndpointSlice.md
-      - EgressClusterInfo: crds/EgressClusterInfo.md
+  - reference:
+      - CRD EgressTunnel: reference/EgressTunnel.md
+      - CRD EgressGateway: reference/EgressGateway.md
+      - CRD EgressPolicy: reference/EgressPolicy.md
+      - CRD EgressClusterPolicy: reference/EgressClusterPolicy.md
+      - CRD EgressEndpointSlice: reference/EgressEndpointSlice.md
+      - CRD EgressClusterEndpointSlice: reference/EgressClusterEndpointSlice.md
+      - CRD EgressClusterInfo: reference/EgressClusterInfo.md
   - Troubleshooting: Troubleshooting.md
   - Develop:
       - DataFlow: develop/Dataflow.md

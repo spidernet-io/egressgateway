@@ -1,219 +1,409 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">
     <url>
-         <loc>None./</loc>
-         <lastmod>2023-07-28</lastmod>
-         <changefreq>daily</changefreq>
-         <xhtml:link rel="alternate" hreflang="en" href="Noneen/"/>
-         <xhtml:link rel="alternate" hreflang="zh" href="Nonezh/"/>
-         
+        <loc>https://spidernet-io.github.io/egressgateway/</loc>
+        <lastmod>2023-08-31</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://spidernet-io.github.io/egressgateway/"/>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://spidernet-io.github.io/egressgateway/zh/"/>
     </url>
     <url>
-         <loc>NoneTroubleshooting/</loc>
-         <lastmod>2023-07-28</lastmod>
-         <changefreq>daily</changefreq>
-         <xhtml:link rel="alternate" hreflang="en" href="Noneen/Troubleshooting/"/>
-         <xhtml:link rel="alternate" hreflang="zh" href="Nonezh/Troubleshooting/"/>
-         
+        <loc>https://spidernet-io.github.io/egressgateway/Troubleshooting/</loc>
+        <lastmod>2023-08-31</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://spidernet-io.github.io/egressgateway/Troubleshooting/"/>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://spidernet-io.github.io/egressgateway/zh/Troubleshooting/"/>
     </url>
     <url>
-         <loc>Noneconcepts/Architecture/</loc>
-         <lastmod>2023-07-28</lastmod>
-         <changefreq>daily</changefreq>
-         <xhtml:link rel="alternate" hreflang="en" href="Noneen/concepts/Architecture/"/>
-         <xhtml:link rel="alternate" hreflang="zh" href="Nonezh/concepts/Architecture/"/>
-         
+        <loc>https://spidernet-io.github.io/egressgateway/concepts/Architecture/</loc>
+        <lastmod>2023-08-31</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://spidernet-io.github.io/egressgateway/concepts/Architecture/"/>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://spidernet-io.github.io/egressgateway/zh/concepts/Architecture/"/>
     </url>
     <url>
-         <loc>Noneconcepts/Datapath/</loc>
-         <lastmod>2023-07-28</lastmod>
-         <changefreq>daily</changefreq>
-         <xhtml:link rel="alternate" hreflang="en" href="Noneen/concepts/Datapath/"/>
-         <xhtml:link rel="alternate" hreflang="zh" href="Nonezh/concepts/Datapath/"/>
-         
+        <loc>https://spidernet-io.github.io/egressgateway/concepts/Datapath/</loc>
+        <lastmod>2023-08-31</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://spidernet-io.github.io/egressgateway/concepts/Datapath/"/>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://spidernet-io.github.io/egressgateway/zh/concepts/Datapath/"/>
     </url>
     <url>
-         <loc>Nonedevelop/Contribute/</loc>
-         <lastmod>2023-07-28</lastmod>
-         <changefreq>daily</changefreq>
-         <xhtml:link rel="alternate" hreflang="en" href="Noneen/develop/Contribute/"/>
-         <xhtml:link rel="alternate" hreflang="zh" href="Nonezh/develop/Contribute/"/>
-         
+        <loc>https://spidernet-io.github.io/egressgateway/develop/Contribute/</loc>
+        <lastmod>2023-08-31</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://spidernet-io.github.io/egressgateway/develop/Contribute/"/>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://spidernet-io.github.io/egressgateway/zh/develop/Contribute/"/>
     </url>
     <url>
-         <loc>Nonedevelop/Dataflow/</loc>
-         <lastmod>2023-07-28</lastmod>
-         <changefreq>daily</changefreq>
-         <xhtml:link rel="alternate" hreflang="en" href="Noneen/develop/Dataflow/"/>
-         <xhtml:link rel="alternate" hreflang="zh" href="Nonezh/develop/Dataflow/"/>
-         
+        <loc>https://spidernet-io.github.io/egressgateway/develop/Dataflow/</loc>
+        <lastmod>2023-08-31</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://spidernet-io.github.io/egressgateway/develop/Dataflow/"/>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://spidernet-io.github.io/egressgateway/zh/develop/Dataflow/"/>
     </url>
     <url>
-         <loc>Nonedevelop/Develop/</loc>
-         <lastmod>2023-07-28</lastmod>
-         <changefreq>daily</changefreq>
-         <xhtml:link rel="alternate" hreflang="en" href="Noneen/develop/Develop/"/>
-         <xhtml:link rel="alternate" hreflang="zh" href="Nonezh/develop/Develop/"/>
-         
+        <loc>https://spidernet-io.github.io/egressgateway/develop/Develop/</loc>
+        <lastmod>2023-08-31</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://spidernet-io.github.io/egressgateway/develop/Develop/"/>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://spidernet-io.github.io/egressgateway/zh/develop/Develop/"/>
     </url>
     <url>
-         <loc>Nonedevelop/Release/</loc>
-         <lastmod>2023-07-28</lastmod>
-         <changefreq>daily</changefreq>
-         <xhtml:link rel="alternate" hreflang="en" href="Noneen/develop/Release/"/>
-         <xhtml:link rel="alternate" hreflang="zh" href="Nonezh/develop/Release/"/>
-         
+        <loc>https://spidernet-io.github.io/egressgateway/develop/Release/</loc>
+        <lastmod>2023-08-31</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://spidernet-io.github.io/egressgateway/develop/Release/"/>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://spidernet-io.github.io/egressgateway/zh/develop/Release/"/>
     </url>
     <url>
-         <loc>Nonedevelop/Roadmap/</loc>
-         <lastmod>2023-07-28</lastmod>
-         <changefreq>daily</changefreq>
-         <xhtml:link rel="alternate" hreflang="en" href="Noneen/develop/Roadmap/"/>
-         <xhtml:link rel="alternate" hreflang="zh" href="Nonezh/develop/Roadmap/"/>
-         
+        <loc>https://spidernet-io.github.io/egressgateway/develop/Roadmap/</loc>
+        <lastmod>2023-08-31</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://spidernet-io.github.io/egressgateway/develop/Roadmap/"/>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://spidernet-io.github.io/egressgateway/zh/develop/Roadmap/"/>
     </url>
     <url>
-         <loc>Noneproposal/01-egress-gateway/EgressGateway/</loc>
-         <lastmod>2023-07-28</lastmod>
-         <changefreq>daily</changefreq>
-         <xhtml:link rel="alternate" hreflang="en" href="Noneen/proposal/01-egress-gateway/EgressGateway/"/>
-         <xhtml:link rel="alternate" hreflang="zh" href="Nonezh/proposal/01-egress-gateway/EgressGateway/"/>
-         
+        <loc>https://spidernet-io.github.io/egressgateway/proposal/01-egress-gateway/EgressGateway/</loc>
+        <lastmod>2023-08-31</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://spidernet-io.github.io/egressgateway/proposal/01-egress-gateway/EgressGateway/"/>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://spidernet-io.github.io/egressgateway/zh/proposal/01-egress-gateway/EgressGateway/"/>
     </url>
     <url>
-         <loc>Noneproposal/02-egress-node/EgressNode-zh_CN/</loc>
-         <lastmod>2023-07-28</lastmod>
-         <changefreq>daily</changefreq>
-         <xhtml:link rel="alternate" hreflang="en" href="Noneen/proposal/02-egress-node/EgressNode-zh_CN/"/>
-         <xhtml:link rel="alternate" hreflang="zh" href="Nonezh/proposal/02-egress-node/EgressNode-zh_CN/"/>
-         
+        <loc>https://spidernet-io.github.io/egressgateway/proposal/02-egress-node/EgressTunnel-zh_CN/</loc>
+        <lastmod>2023-08-31</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://spidernet-io.github.io/egressgateway/proposal/02-egress-node/EgressTunnel-zh_CN/"/>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://spidernet-io.github.io/egressgateway/zh/proposal/02-egress-node/EgressTunnel-zh_CN/"/>
     </url>
     <url>
-         <loc>Noneproposal/03-egress-ip/README_zh-CN/</loc>
-         <lastmod>2023-07-28</lastmod>
-         <changefreq>daily</changefreq>
-         <xhtml:link rel="alternate" hreflang="en" href="Noneen/proposal/03-egress-ip/README_zh-CN/"/>
-         <xhtml:link rel="alternate" hreflang="zh" href="Nonezh/proposal/03-egress-ip/README_zh-CN/"/>
-         
+        <loc>https://spidernet-io.github.io/egressgateway/proposal/03-egress-ip/README_zh-CN/</loc>
+        <lastmod>2023-08-31</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://spidernet-io.github.io/egressgateway/proposal/03-egress-ip/README_zh-CN/"/>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://spidernet-io.github.io/egressgateway/zh/proposal/03-egress-ip/README_zh-CN/"/>
     </url>
     <url>
-         <loc>Noneproposal/04-auto-detect-egress-ignore-cidr/README_zh-CN/</loc>
-         <lastmod>2023-07-28</lastmod>
-         <changefreq>daily</changefreq>
-         <xhtml:link rel="alternate" hreflang="en" href="Noneen/proposal/04-auto-detect-egress-ignore-cidr/README_zh-CN/"/>
-         <xhtml:link rel="alternate" hreflang="zh" href="Nonezh/proposal/04-auto-detect-egress-ignore-cidr/README_zh-CN/"/>
-         
+        <loc>https://spidernet-io.github.io/egressgateway/proposal/04-auto-detect-egress-ignore-cidr/README_zh-CN/</loc>
+        <lastmod>2023-08-31</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://spidernet-io.github.io/egressgateway/proposal/04-auto-detect-egress-ignore-cidr/README_zh-CN/"/>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://spidernet-io.github.io/egressgateway/zh/proposal/04-auto-detect-egress-ignore-cidr/README_zh-CN/"/>
     </url>
     <url>
-         <loc>Noneproposal/05-egress-gateway-policy-cluster/README_zh-CN/</loc>
-         <lastmod>2023-07-28</lastmod>
-         <changefreq>daily</changefreq>
-         <xhtml:link rel="alternate" hreflang="en" href="Noneen/proposal/05-egress-gateway-policy-cluster/README_zh-CN/"/>
-         <xhtml:link rel="alternate" hreflang="zh" href="Nonezh/proposal/05-egress-gateway-policy-cluster/README_zh-CN/"/>
-         
+        <loc>https://spidernet-io.github.io/egressgateway/proposal/05-egress-gateway-policy-cluster/README_zh-CN/</loc>
+        <lastmod>2023-08-31</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://spidernet-io.github.io/egressgateway/proposal/05-egress-gateway-policy-cluster/README_zh-CN/"/>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://spidernet-io.github.io/egressgateway/zh/proposal/05-egress-gateway-policy-cluster/README_zh-CN/"/>
     </url>
     <url>
-         <loc>Nonereference/EgressClusterEndpointSlice/</loc>
-         <lastmod>2023-07-28</lastmod>
-         <changefreq>daily</changefreq>
-         <xhtml:link rel="alternate" hreflang="en" href="Noneen/reference/EgressClusterEndpointSlice/"/>
-         <xhtml:link rel="alternate" hreflang="zh" href="Nonezh/reference/EgressClusterEndpointSlice/"/>
-         
+        <loc>https://spidernet-io.github.io/egressgateway/reference/EgressClusterEndpointSlice/</loc>
+        <lastmod>2023-08-31</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://spidernet-io.github.io/egressgateway/reference/EgressClusterEndpointSlice/"/>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://spidernet-io.github.io/egressgateway/zh/reference/EgressClusterEndpointSlice/"/>
     </url>
     <url>
-         <loc>Nonereference/EgressClusterInfo/</loc>
-         <lastmod>2023-07-28</lastmod>
-         <changefreq>daily</changefreq>
-         <xhtml:link rel="alternate" hreflang="en" href="Noneen/reference/EgressClusterInfo/"/>
-         <xhtml:link rel="alternate" hreflang="zh" href="Nonezh/reference/EgressClusterInfo/"/>
-         
+        <loc>https://spidernet-io.github.io/egressgateway/reference/EgressClusterInfo/</loc>
+        <lastmod>2023-08-31</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://spidernet-io.github.io/egressgateway/reference/EgressClusterInfo/"/>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://spidernet-io.github.io/egressgateway/zh/reference/EgressClusterInfo/"/>
     </url>
     <url>
-         <loc>Nonereference/EgressClusterPolicy/</loc>
-         <lastmod>2023-07-28</lastmod>
-         <changefreq>daily</changefreq>
-         <xhtml:link rel="alternate" hreflang="en" href="Noneen/reference/EgressClusterPolicy/"/>
-         <xhtml:link rel="alternate" hreflang="zh" href="Nonezh/reference/EgressClusterPolicy/"/>
-         
+        <loc>https://spidernet-io.github.io/egressgateway/reference/EgressClusterPolicy/</loc>
+        <lastmod>2023-08-31</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://spidernet-io.github.io/egressgateway/reference/EgressClusterPolicy/"/>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://spidernet-io.github.io/egressgateway/zh/reference/EgressClusterPolicy/"/>
     </url>
     <url>
-         <loc>Nonereference/EgressEndpointSlice/</loc>
-         <lastmod>2023-07-28</lastmod>
-         <changefreq>daily</changefreq>
-         <xhtml:link rel="alternate" hreflang="en" href="Noneen/reference/EgressEndpointSlice/"/>
-         <xhtml:link rel="alternate" hreflang="zh" href="Nonezh/reference/EgressEndpointSlice/"/>
-         
+        <loc>https://spidernet-io.github.io/egressgateway/reference/EgressEndpointSlice/</loc>
+        <lastmod>2023-08-31</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://spidernet-io.github.io/egressgateway/reference/EgressEndpointSlice/"/>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://spidernet-io.github.io/egressgateway/zh/reference/EgressEndpointSlice/"/>
     </url>
     <url>
-         <loc>Nonereference/EgressGateway/</loc>
-         <lastmod>2023-07-28</lastmod>
-         <changefreq>daily</changefreq>
-         <xhtml:link rel="alternate" hreflang="en" href="Noneen/reference/EgressGateway/"/>
-         <xhtml:link rel="alternate" hreflang="zh" href="Nonezh/reference/EgressGateway/"/>
-         
+        <loc>https://spidernet-io.github.io/egressgateway/reference/EgressGateway/</loc>
+        <lastmod>2023-08-31</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://spidernet-io.github.io/egressgateway/reference/EgressGateway/"/>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://spidernet-io.github.io/egressgateway/zh/reference/EgressGateway/"/>
     </url>
     <url>
-         <loc>Nonereference/EgressNode/</loc>
-         <lastmod>2023-07-28</lastmod>
-         <changefreq>daily</changefreq>
-         <xhtml:link rel="alternate" hreflang="en" href="Noneen/reference/EgressNode/"/>
-         <xhtml:link rel="alternate" hreflang="zh" href="Nonezh/reference/EgressNode/"/>
-         
+        <loc>https://spidernet-io.github.io/egressgateway/reference/EgressPolicy/</loc>
+        <lastmod>2023-08-31</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://spidernet-io.github.io/egressgateway/reference/EgressPolicy/"/>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://spidernet-io.github.io/egressgateway/zh/reference/EgressPolicy/"/>
     </url>
     <url>
-         <loc>Nonereference/EgressPolicy/</loc>
-         <lastmod>2023-07-28</lastmod>
-         <changefreq>daily</changefreq>
-         <xhtml:link rel="alternate" hreflang="en" href="Noneen/reference/EgressPolicy/"/>
-         <xhtml:link rel="alternate" hreflang="zh" href="Nonezh/reference/EgressPolicy/"/>
-         
+        <loc>https://spidernet-io.github.io/egressgateway/reference/EgressTunnel/</loc>
+        <lastmod>2023-08-31</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://spidernet-io.github.io/egressgateway/reference/EgressTunnel/"/>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://spidernet-io.github.io/egressgateway/zh/reference/EgressTunnel/"/>
     </url>
     <url>
-         <loc>Nonereference/_example_zh/</loc>
-         <lastmod>2023-07-28</lastmod>
-         <changefreq>daily</changefreq>
-         <xhtml:link rel="alternate" hreflang="en" href="Noneen/reference/_example_zh/"/>
-         <xhtml:link rel="alternate" hreflang="zh" href="Nonezh/reference/_example_zh/"/>
-         
+        <loc>https://spidernet-io.github.io/egressgateway/reference/_example_zh/</loc>
+        <lastmod>2023-08-31</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://spidernet-io.github.io/egressgateway/reference/_example_zh/"/>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://spidernet-io.github.io/egressgateway/zh/reference/_example_zh/"/>
     </url>
     <url>
-         <loc>Noneusage/Install/</loc>
-         <lastmod>2023-07-28</lastmod>
-         <changefreq>daily</changefreq>
-         <xhtml:link rel="alternate" hreflang="en" href="Noneen/usage/Install/"/>
-         <xhtml:link rel="alternate" hreflang="zh" href="Nonezh/usage/Install/"/>
-         
+        <loc>https://spidernet-io.github.io/egressgateway/usage/ClusterDefaultEgressGateway/</loc>
+        <lastmod>2023-08-31</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://spidernet-io.github.io/egressgateway/usage/ClusterDefaultEgressGateway/"/>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://spidernet-io.github.io/egressgateway/zh/usage/ClusterDefaultEgressGateway/"/>
     </url>
     <url>
-         <loc>Noneusage/Uninstall/</loc>
-         <lastmod>2023-07-28</lastmod>
-         <changefreq>daily</changefreq>
-         <xhtml:link rel="alternate" hreflang="en" href="Noneen/usage/Uninstall/"/>
-         <xhtml:link rel="alternate" hreflang="zh" href="Nonezh/usage/Uninstall/"/>
-         
+        <loc>https://spidernet-io.github.io/egressgateway/usage/Install/</loc>
+        <lastmod>2023-08-31</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://spidernet-io.github.io/egressgateway/usage/Install/"/>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://spidernet-io.github.io/egressgateway/zh/usage/Install/"/>
     </url>
     <url>
-         <loc>Noneusage/Upgrade/</loc>
-         <lastmod>2023-07-28</lastmod>
-         <changefreq>daily</changefreq>
-         <xhtml:link rel="alternate" hreflang="en" href="Noneen/usage/Upgrade/"/>
-         <xhtml:link rel="alternate" hreflang="zh" href="Nonezh/usage/Upgrade/"/>
-         
+        <loc>https://spidernet-io.github.io/egressgateway/usage/NamespaceDefaultEgressGateway/</loc>
+        <lastmod>2023-08-31</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://spidernet-io.github.io/egressgateway/usage/NamespaceDefaultEgressGateway/"/>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://spidernet-io.github.io/egressgateway/zh/usage/NamespaceDefaultEgressGateway/"/>
     </url>
     <url>
-         <loc>Noneusage/_feature_example_zh/</loc>
-         <lastmod>2023-07-28</lastmod>
-         <changefreq>daily</changefreq>
-         <xhtml:link rel="alternate" hreflang="en" href="Noneen/usage/_feature_example_zh/"/>
-         <xhtml:link rel="alternate" hreflang="zh" href="Nonezh/usage/_feature_example_zh/"/>
-         
+        <loc>https://spidernet-io.github.io/egressgateway/usage/Uninstall/</loc>
+        <lastmod>2023-08-31</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://spidernet-io.github.io/egressgateway/usage/Uninstall/"/>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://spidernet-io.github.io/egressgateway/zh/usage/Uninstall/"/>
     </url>
     <url>
-         <loc>Noneusage/_install_example_zh/</loc>
-         <lastmod>2023-07-28</lastmod>
-         <changefreq>daily</changefreq>
-         <xhtml:link rel="alternate" hreflang="en" href="Noneen/usage/_install_example_zh/"/>
-         <xhtml:link rel="alternate" hreflang="zh" href="Nonezh/usage/_install_example_zh/"/>
-         
+        <loc>https://spidernet-io.github.io/egressgateway/usage/Upgrade/</loc>
+        <lastmod>2023-08-31</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://spidernet-io.github.io/egressgateway/usage/Upgrade/"/>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://spidernet-io.github.io/egressgateway/zh/usage/Upgrade/"/>
+    </url>
+    <url>
+        <loc>https://spidernet-io.github.io/egressgateway/usage/_feature_example_zh/</loc>
+        <lastmod>2023-08-31</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://spidernet-io.github.io/egressgateway/usage/_feature_example_zh/"/>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://spidernet-io.github.io/egressgateway/zh/usage/_feature_example_zh/"/>
+    </url>
+    <url>
+        <loc>https://spidernet-io.github.io/egressgateway/usage/_install_example_zh/</loc>
+        <lastmod>2023-08-31</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://spidernet-io.github.io/egressgateway/usage/_install_example_zh/"/>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://spidernet-io.github.io/egressgateway/zh/usage/_install_example_zh/"/>
+    </url>
+    <url>
+        <loc>https://spidernet-io.github.io/egressgateway/zh/</loc>
+        <lastmod>2023-08-31</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://spidernet-io.github.io/egressgateway/zh/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://spidernet-io.github.io/egressgateway/"/>
+    </url>
+    <url>
+        <loc>https://spidernet-io.github.io/egressgateway/zh/Troubleshooting/</loc>
+        <lastmod>2023-08-31</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://spidernet-io.github.io/egressgateway/zh/Troubleshooting/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://spidernet-io.github.io/egressgateway/Troubleshooting/"/>
+    </url>
+    <url>
+        <loc>https://spidernet-io.github.io/egressgateway/zh/concepts/Architecture/</loc>
+        <lastmod>2023-08-31</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://spidernet-io.github.io/egressgateway/zh/concepts/Architecture/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://spidernet-io.github.io/egressgateway/concepts/Architecture/"/>
+    </url>
+    <url>
+        <loc>https://spidernet-io.github.io/egressgateway/zh/concepts/Datapath/</loc>
+        <lastmod>2023-08-31</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://spidernet-io.github.io/egressgateway/zh/concepts/Datapath/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://spidernet-io.github.io/egressgateway/concepts/Datapath/"/>
+    </url>
+    <url>
+        <loc>https://spidernet-io.github.io/egressgateway/zh/develop/Contribute/</loc>
+        <lastmod>2023-08-31</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://spidernet-io.github.io/egressgateway/zh/develop/Contribute/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://spidernet-io.github.io/egressgateway/develop/Contribute/"/>
+    </url>
+    <url>
+        <loc>https://spidernet-io.github.io/egressgateway/zh/develop/Dataflow/</loc>
+        <lastmod>2023-08-31</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://spidernet-io.github.io/egressgateway/zh/develop/Dataflow/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://spidernet-io.github.io/egressgateway/develop/Dataflow/"/>
+    </url>
+    <url>
+        <loc>https://spidernet-io.github.io/egressgateway/zh/develop/Develop/</loc>
+        <lastmod>2023-08-31</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://spidernet-io.github.io/egressgateway/zh/develop/Develop/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://spidernet-io.github.io/egressgateway/develop/Develop/"/>
+    </url>
+    <url>
+        <loc>https://spidernet-io.github.io/egressgateway/zh/develop/Release/</loc>
+        <lastmod>2023-08-31</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://spidernet-io.github.io/egressgateway/zh/develop/Release/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://spidernet-io.github.io/egressgateway/develop/Release/"/>
+    </url>
+    <url>
+        <loc>https://spidernet-io.github.io/egressgateway/zh/develop/Roadmap/</loc>
+        <lastmod>2023-08-31</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://spidernet-io.github.io/egressgateway/zh/develop/Roadmap/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://spidernet-io.github.io/egressgateway/develop/Roadmap/"/>
+    </url>
+    <url>
+        <loc>https://spidernet-io.github.io/egressgateway/zh/proposal/01-egress-gateway/EgressGateway/</loc>
+        <lastmod>2023-08-31</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://spidernet-io.github.io/egressgateway/zh/proposal/01-egress-gateway/EgressGateway/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://spidernet-io.github.io/egressgateway/proposal/01-egress-gateway/EgressGateway/"/>
+    </url>
+    <url>
+        <loc>https://spidernet-io.github.io/egressgateway/zh/proposal/02-egress-node/EgressTunnel-zh_CN/</loc>
+        <lastmod>2023-08-31</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://spidernet-io.github.io/egressgateway/zh/proposal/02-egress-node/EgressTunnel-zh_CN/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://spidernet-io.github.io/egressgateway/proposal/02-egress-node/EgressTunnel-zh_CN/"/>
+    </url>
+    <url>
+        <loc>https://spidernet-io.github.io/egressgateway/zh/proposal/03-egress-ip/README_zh-CN/</loc>
+        <lastmod>2023-08-31</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://spidernet-io.github.io/egressgateway/zh/proposal/03-egress-ip/README_zh-CN/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://spidernet-io.github.io/egressgateway/proposal/03-egress-ip/README_zh-CN/"/>
+    </url>
+    <url>
+        <loc>https://spidernet-io.github.io/egressgateway/zh/proposal/04-auto-detect-egress-ignore-cidr/README_zh-CN/</loc>
+        <lastmod>2023-08-31</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://spidernet-io.github.io/egressgateway/zh/proposal/04-auto-detect-egress-ignore-cidr/README_zh-CN/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://spidernet-io.github.io/egressgateway/proposal/04-auto-detect-egress-ignore-cidr/README_zh-CN/"/>
+    </url>
+    <url>
+        <loc>https://spidernet-io.github.io/egressgateway/zh/proposal/05-egress-gateway-policy-cluster/README_zh-CN/</loc>
+        <lastmod>2023-08-31</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://spidernet-io.github.io/egressgateway/zh/proposal/05-egress-gateway-policy-cluster/README_zh-CN/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://spidernet-io.github.io/egressgateway/proposal/05-egress-gateway-policy-cluster/README_zh-CN/"/>
+    </url>
+    <url>
+        <loc>https://spidernet-io.github.io/egressgateway/zh/reference/EgressClusterEndpointSlice/</loc>
+        <lastmod>2023-08-31</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://spidernet-io.github.io/egressgateway/zh/reference/EgressClusterEndpointSlice/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://spidernet-io.github.io/egressgateway/reference/EgressClusterEndpointSlice/"/>
+    </url>
+    <url>
+        <loc>https://spidernet-io.github.io/egressgateway/zh/reference/EgressClusterInfo/</loc>
+        <lastmod>2023-08-31</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://spidernet-io.github.io/egressgateway/zh/reference/EgressClusterInfo/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://spidernet-io.github.io/egressgateway/reference/EgressClusterInfo/"/>
+    </url>
+    <url>
+        <loc>https://spidernet-io.github.io/egressgateway/zh/reference/EgressClusterPolicy/</loc>
+        <lastmod>2023-08-31</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://spidernet-io.github.io/egressgateway/zh/reference/EgressClusterPolicy/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://spidernet-io.github.io/egressgateway/reference/EgressClusterPolicy/"/>
+    </url>
+    <url>
+        <loc>https://spidernet-io.github.io/egressgateway/zh/reference/EgressEndpointSlice/</loc>
+        <lastmod>2023-08-31</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://spidernet-io.github.io/egressgateway/zh/reference/EgressEndpointSlice/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://spidernet-io.github.io/egressgateway/reference/EgressEndpointSlice/"/>
+    </url>
+    <url>
+        <loc>https://spidernet-io.github.io/egressgateway/zh/reference/EgressGateway/</loc>
+        <lastmod>2023-08-31</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://spidernet-io.github.io/egressgateway/zh/reference/EgressGateway/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://spidernet-io.github.io/egressgateway/reference/EgressGateway/"/>
+    </url>
+    <url>
+        <loc>https://spidernet-io.github.io/egressgateway/zh/reference/EgressPolicy/</loc>
+        <lastmod>2023-08-31</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://spidernet-io.github.io/egressgateway/zh/reference/EgressPolicy/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://spidernet-io.github.io/egressgateway/reference/EgressPolicy/"/>
+    </url>
+    <url>
+        <loc>https://spidernet-io.github.io/egressgateway/zh/reference/EgressTunnel/</loc>
+        <lastmod>2023-08-31</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://spidernet-io.github.io/egressgateway/zh/reference/EgressTunnel/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://spidernet-io.github.io/egressgateway/reference/EgressTunnel/"/>
+    </url>
+    <url>
+        <loc>https://spidernet-io.github.io/egressgateway/zh/reference/_example_zh/</loc>
+        <lastmod>2023-08-31</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://spidernet-io.github.io/egressgateway/zh/reference/_example_zh/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://spidernet-io.github.io/egressgateway/reference/_example_zh/"/>
+    </url>
+    <url>
+        <loc>https://spidernet-io.github.io/egressgateway/zh/usage/ClusterDefaultEgressGateway/</loc>
+        <lastmod>2023-08-31</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://spidernet-io.github.io/egressgateway/zh/usage/ClusterDefaultEgressGateway/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://spidernet-io.github.io/egressgateway/usage/ClusterDefaultEgressGateway/"/>
+    </url>
+    <url>
+        <loc>https://spidernet-io.github.io/egressgateway/zh/usage/Install/</loc>
+        <lastmod>2023-08-31</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://spidernet-io.github.io/egressgateway/zh/usage/Install/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://spidernet-io.github.io/egressgateway/usage/Install/"/>
+    </url>
+    <url>
+        <loc>https://spidernet-io.github.io/egressgateway/zh/usage/NamespaceDefaultEgressGateway/</loc>
+        <lastmod>2023-08-31</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://spidernet-io.github.io/egressgateway/zh/usage/NamespaceDefaultEgressGateway/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://spidernet-io.github.io/egressgateway/usage/NamespaceDefaultEgressGateway/"/>
+    </url>
+    <url>
+        <loc>https://spidernet-io.github.io/egressgateway/zh/usage/Uninstall/</loc>
+        <lastmod>2023-08-31</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://spidernet-io.github.io/egressgateway/zh/usage/Uninstall/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://spidernet-io.github.io/egressgateway/usage/Uninstall/"/>
+    </url>
+    <url>
+        <loc>https://spidernet-io.github.io/egressgateway/zh/usage/Upgrade/</loc>
+        <lastmod>2023-08-31</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://spidernet-io.github.io/egressgateway/zh/usage/Upgrade/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://spidernet-io.github.io/egressgateway/usage/Upgrade/"/>
+    </url>
+    <url>
+        <loc>https://spidernet-io.github.io/egressgateway/zh/usage/_feature_example_zh/</loc>
+        <lastmod>2023-08-31</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://spidernet-io.github.io/egressgateway/zh/usage/_feature_example_zh/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://spidernet-io.github.io/egressgateway/usage/_feature_example_zh/"/>
+    </url>
+    <url>
+        <loc>https://spidernet-io.github.io/egressgateway/zh/usage/_install_example_zh/</loc>
+        <lastmod>2023-08-31</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://spidernet-io.github.io/egressgateway/zh/usage/_install_example_zh/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://spidernet-io.github.io/egressgateway/usage/_install_example_zh/"/>
     </url>
 </urlset>
