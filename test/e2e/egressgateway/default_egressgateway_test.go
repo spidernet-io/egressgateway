@@ -85,6 +85,10 @@ var _ = Describe("Test default egress gateway", Label("DefaultEgressGateway", "G
 	})
 
 	It("test namespace default egress gateway", func() {
+		// create the default egress gateway of default ns
+		err := f.CreateResource(nsDefaultEgw)
+		Expect(err).NotTo(HaveOccurred())
+
 		ns, err := f.GetNamespace("default")
 		Expect(err).NotTo(HaveOccurred())
 

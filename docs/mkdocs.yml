@@ -85,7 +85,7 @@ nav:
       - Architecture: concepts/Architecture.md
       - Datapath: concepts/Datapath.md
   - reference:
-      - CRD EgressNode: reference/EgressNode.md
+      - CRD EgressTunnel: reference/EgressTunnel.md
       - CRD EgressGateway: reference/EgressGateway.md
       - CRD EgressPolicy: reference/EgressPolicy.md
       - CRD EgressClusterPolicy: reference/EgressClusterPolicy.md

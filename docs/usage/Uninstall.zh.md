@@ -67,10 +67,10 @@
 
     需要注意的是，在卸载 EgressGateway 之前，建议先备份相关数据，并确保卸载操作不会影响正在使用的业务应用。
 
-4. 在卸载过程中，有时候会遇到 EgressGateway 的 EgressNodes CRD 一直处于等待删除的情况。如果您遇到了这种情况，可以尝试使用下面的命令解决问题：
+4. 在卸载过程中，有时候会遇到 EgressGateway 的 EgressTunnels CRD 一直处于等待删除的情况。如果您遇到了这种情况，可以尝试使用下面的命令解决问题：
 
     ```shell
-    kubectl patch crd egressnodes.egressgateway.spidernet.io -p '{"metadata":{"finalizers": []}}' --type=merge
+    kubectl patch crd egresstunnels.egressgateway.spidernet.io -p '{"metadata":{"finalizers": []}}' --type=merge
     ```
 
     这个命令的作用是删除 EgressGateway CRD 中的 finalizer，从而允许 Kubernetes 删除这个 CRD。此问题是由 controller-manager 引起的，我们正在关注 Kubernetes 团队对此问题的修复情况。

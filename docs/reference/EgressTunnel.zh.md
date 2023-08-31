@@ -1,8 +1,8 @@
-EgressNode CRD 用于记录跨节点通信的隧道网卡信息。这是一个集群级资源，它与 Kubernetes Node 资源名称一一对应。
+EgressTunnel CRD 用于记录跨节点通信的隧道网卡信息。这是一个集群级资源，它与 Kubernetes Node 资源名称一一对应。
 
 ```yaml
 apiVersion: egressgateway.spidernet.io/v1beta1
-kind: EgressNode
+kind: EgressTunnel
 metadata:
    name: "node1"
 status:

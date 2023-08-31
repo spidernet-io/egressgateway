@@ -58,10 +58,10 @@ var (
 )
 
 var (
-	egressNodeFinalizers = "egressgateway.spidernet.io/egressnode"
+	egressTunnelFinalizers = "egressgateway.spidernet.io/egresstunnel"
 )
 
-func egressNodeControllerMetricCollectors() []prometheus.Collector {
+func egressTunnelControllerMetricCollectors() []prometheus.Collector {
 	return []prometheus.Collector{
 		countNumIPAllocateNextCalls,
 		countNumIPReleaseCalls,
@@ -87,11 +87,11 @@ func (r *egReconciler) Reconcile(ctx context.Context, req reconcile.Request) (re
 	}
 
 	r.doOnce.Do(func() {
-		r.log.Info("first reconcile of egressnode controller, init egressnode")
+		r.log.Info("first reconcile of egresstunnel controller, init egresstunnel")
 	redo:
-		err := r.initEgressNode()
+		err := r.initEgressTunnel()
 		if err != nil {
-			r.log.Error(err, "init egress node controller with error")
+			r.log.Error(err, "init egress tunnel controller with error")
 			time.Sleep(time.Second)
 			goto redo
 		}
@@ -109,28 +109,28 @@ func (r *egReconciler) Reconcile(ctx context.Context, req reconcile.Request) (re
 	}
 }
 
-// reconcileEGN reconcile egress node
+// reconcileEGN reconcile egress tunnel
 // goal:
-// - update egress node
+// - update egress tunnel
 func (r *egReconciler) reconcileEGN(ctx context.Context, req reconcile.Request, log logr.Logger) (reconcile.Result, error) {
 	deleted := false
-	egressnode := new(egressv1.EgressTunnel)
-	err := r.client.Get(ctx, req.NamespacedName, egressnode)
+	egresstunnel := new(egressv1.EgressTunnel)
+	err := r.client.Get(ctx, req.NamespacedName, egresstunnel)
 	if err != nil {
 		if !errors.IsNotFound(err) {
 			return reconcile.Result{Requeue: true}, err
 		}
 		deleted = true
 	}
-	deleted = deleted || !egressnode.GetDeletionTimestamp().IsZero()
+	deleted = deleted || !egresstunnel.GetDeletionTimestamp().IsZero()
 
 	if deleted {
-		if len(egressnode.Finalizers) > 0 {
+		if len(egresstunnel.Finalizers) > 0 {
 			// For the existence of Node, when the user manually deletes EgressTunnel,
 			// we first release the EgressTunnel and then regenerate it.
-			err := r.releaseEgressNode(*egressnode, log, func() error {
-				cleanFinalizers(egressnode)
-				err = r.client.Update(context.Background(), egressnode)
+			err := r.releaseEgressTunnel(*egresstunnel, log, func() error {
+				cleanFinalizers(egresstunnel)
+				err = r.client.Update(context.Background(), egresstunnel)
 				if err != nil {
 					return err
 				}
@@ -144,7 +144,7 @@ func (r *egReconciler) reconcileEGN(ctx context.Context, req reconcile.Request, 
 		return reconcile.Result{Requeue: false}, nil
 	}
 
-	err = r.keepEgressNode(*egressnode, log)
+	err = r.keepEgressTunnel(*egresstunnel, log)
 	if err != nil {
 		return reconcile.Result{Requeue: true}, err
 	}
@@ -154,7 +154,7 @@ func (r *egReconciler) reconcileEGN(ctx context.Context, req reconcile.Request, 
 
 func cleanFinalizers(node *egressv1.EgressTunnel) {
 	for i, item := range node.Finalizers {
-		if item == egressNodeFinalizers {
+		if item == egressTunnelFinalizers {
 			node.Finalizers = append(node.Finalizers[:i], node.Finalizers[i+1:]...)
 		}
 	}
@@ -177,15 +177,15 @@ func (r *egReconciler) reconcileNode(ctx context.Context, req reconcile.Request,
 	deleted = deleted || !node.GetDeletionTimestamp().IsZero()
 
 	if deleted {
-		egressNode := new(egressv1.EgressTunnel)
-		err := r.client.Get(ctx, req.NamespacedName, egressNode)
+		egressTunnel := new(egressv1.EgressTunnel)
+		err := r.client.Get(ctx, req.NamespacedName, egressTunnel)
 		if err != nil {
 			if !errors.IsNotFound(err) {
 				return reconcile.Result{Requeue: true}, err
 			}
 			return reconcile.Result{}, nil
 		}
-		err = r.deleteEgressNode(*egressNode, log)
+		err = r.deleteEgressTunnel(*egressTunnel, log)
 		if err != nil {
 			return reconcile.Result{Requeue: true}, err
 		}
@@ -195,11 +195,11 @@ func (r *egReconciler) reconcileNode(ctx context.Context, req reconcile.Request,
 	en := new(egressv1.EgressTunnel)
 	err = r.client.Get(ctx, req.NamespacedName, en)
 	if err != nil {
-		log.Info("create egress node")
+		log.Info("create egress tunnel")
 		if !errors.IsNotFound(err) {
 			return reconcile.Result{Requeue: true}, err
 		}
-		err := r.createEgressNode(ctx, node.Name, log)
+		err := r.createEgressTunnel(ctx, node.Name, log)
 		if err != nil {
 			return reconcile.Result{Requeue: true}, err
 		}
@@ -209,21 +209,21 @@ func (r *egReconciler) reconcileNode(ctx context.Context, req reconcile.Request,
 	return reconcile.Result{Requeue: false}, nil
 }
 
-func (r *egReconciler) createEgressNode(ctx context.Context, name string, log logr.Logger) error {
-	log.V(1).Info("try to create egress node")
-	egressNode := &egressv1.EgressTunnel{ObjectMeta: metav1.ObjectMeta{
+func (r *egReconciler) createEgressTunnel(ctx context.Context, name string, log logr.Logger) error {
+	log.V(1).Info("try to create egress tunnel")
+	egressTunnel := &egressv1.EgressTunnel{ObjectMeta: metav1.ObjectMeta{
 		Name:       name,
-		Finalizers: []string{egressNodeFinalizers},
+		Finalizers: []string{egressTunnelFinalizers},
 	}}
-	err := r.client.Create(ctx, egressNode)
+	err := r.client.Create(ctx, egressTunnel)
 	if err != nil {
-		return fmt.Errorf("failed to create egress node: %v", err)
+		return fmt.Errorf("failed to create egress tunnel: %v", err)
 	}
-	log.V(1).Info("create egress node succeeded")
+	log.V(1).Info("create egress tunnel succeeded")
 	return nil
 }
 
-func (r *egReconciler) releaseEgressNode(node egressv1.EgressTunnel, log logr.Logger, commit func() error) error {
+func (r *egReconciler) releaseEgressTunnel(node egressv1.EgressTunnel, log logr.Logger, commit func() error) error {
 	rollback := make([]func(), 0)
 	var err error
 
@@ -236,12 +236,12 @@ func (r *egReconciler) releaseEgressNode(node egressv1.EgressTunnel, log logr.Lo
 	}()
 
 	if node.Status.Mark != "" {
-		log.V(1).Info("try to release egress node mark", "mark", node.Status.Mark)
+		log.V(1).Info("try to release egress tunnel mark", "mark", node.Status.Mark)
 		err := r.mark.Release(node.Status.Mark)
 		if err != nil {
-			return fmt.Errorf("failed to release egress node mark: %v", err)
+			return fmt.Errorf("failed to release egress tunnel mark: %v", err)
 		}
-		log.V(1).Info("release egress node mark succeeded", "mark", node.Status.Mark)
+		log.V(1).Info("release egress tunnel mark succeeded", "mark", node.Status.Mark)
 		countNumMarkReleaseCalls.Inc()
 
 		rollback = append(rollback, func() {
@@ -249,33 +249,33 @@ func (r *egReconciler) releaseEgressNode(node egressv1.EgressTunnel, log logr.Lo
 		})
 	}
 	if node.Status.Tunnel.IPv4 != "" && r.allocatorV4 != nil {
-		log.V(1).Info("try to release egress node tunnel ipv4", "ipv4", node.Status.Tunnel.IPv4)
+		log.V(1).Info("try to release egress tunnel tunnel ipv4", "ipv4", node.Status.Tunnel.IPv4)
 
 		ip := net.ParseIP(node.Status.Tunnel.IPv4)
 		if ipv4 := ip.To4(); ipv4 != nil {
 			err := r.allocatorV4.Release(ipv4)
 			if err != nil {
-				return fmt.Errorf("failed to release egress node tunnel ipv4: %v", err)
+				return fmt.Errorf("failed to release egress tunnel tunnel ipv4: %v", err)
 			}
 			countNumIPReleaseCallsIpv4.Inc()
 		}
-		log.V(1).Info("release egress node ipv4 succeeded", "ipv4", node.Status.Tunnel.IPv4)
+		log.V(1).Info("release egress tunnel ipv4 succeeded", "ipv4", node.Status.Tunnel.IPv4)
 
 		rollback = append(rollback, func() {
 			_ = r.allocatorV4.Allocate(ip)
 		})
 	}
 	if node.Status.Tunnel.IPv6 != "" && r.allocatorV6 != nil {
-		log.V(1).Info("try to release egress node tunnel ipv6", "ipv6", node.Status.Tunnel.IPv6)
+		log.V(1).Info("try to release egress tunnel tunnel ipv6", "ipv6", node.Status.Tunnel.IPv6)
 		ip := net.ParseIP(node.Status.Tunnel.IPv6)
 		if ipv6 := ip.To16(); ipv6 != nil {
 			err := r.allocatorV6.Release(ipv6)
 			if err != nil {
-				return fmt.Errorf("failed to release egress node tunnel ipv6: %v", err)
+				return fmt.Errorf("failed to release egress tunnel tunnel ipv6: %v", err)
 			}
 			countNumIPReleaseCallsIpv6.Inc()
 		}
-		log.V(1).Info("release egress node ipv6 succeeded", "ipv6", node.Status.Tunnel.IPv6)
+		log.V(1).Info("release egress tunnel ipv6 succeeded", "ipv6", node.Status.Tunnel.IPv6)
 
 		rollback = append(rollback, func() {
 			_ = r.allocatorV6.Allocate(ip)
@@ -285,14 +285,14 @@ func (r *egReconciler) releaseEgressNode(node egressv1.EgressTunnel, log logr.Lo
 	return commit()
 }
 
-func (r *egReconciler) deleteEgressNode(node egressv1.EgressTunnel, log logr.Logger) error {
-	err := r.releaseEgressNode(node, log, func() error {
-		log.V(1).Info("try to delete egress node")
+func (r *egReconciler) deleteEgressTunnel(node egressv1.EgressTunnel, log logr.Logger) error {
+	err := r.releaseEgressTunnel(node, log, func() error {
+		log.V(1).Info("try to delete egress tunnel")
 		err := r.client.Delete(context.Background(), &node)
 		if err != nil {
 			return err
 		}
-		log.V(1).Info("delete egress node succeeded")
+		log.V(1).Info("delete egress tunnel succeeded")
 		return nil
 	})
 	if err != nil {
@@ -381,18 +381,18 @@ func (r *egReconciler) reBuildCache(node egressv1.EgressTunnel, log logr.Logger)
 	}
 
 	if needUpdate {
-		log.V(1).Info("try to update egress node")
-		err := r.updateEgressNode(*newNode)
+		log.V(1).Info("try to update egress tunnel")
+		err := r.updateEgressTunnel(*newNode)
 		if err != nil {
-			return fmt.Errorf("rebuild failed to update egress node: %v", err)
+			return fmt.Errorf("rebuild failed to update egress tunnel: %v", err)
 		}
-		log.V(1).Info("update egress node succeeded")
+		log.V(1).Info("update egress tunnel succeeded")
 	}
 
 	return nil
 }
 
-func (r *egReconciler) keepEgressNode(node egressv1.EgressTunnel, log logr.Logger) error {
+func (r *egReconciler) keepEgressTunnel(node egressv1.EgressTunnel, log logr.Logger) error {
 	rollback := make([]func(), 0)
 	var err error
 	needUpdate := false
@@ -465,37 +465,37 @@ func (r *egReconciler) keepEgressNode(node egressv1.EgressTunnel, log logr.Logge
 	}
 
 	if needUpdate {
-		err := r.updateEgressNode(*newNode)
+		err := r.updateEgressTunnel(*newNode)
 		if err != nil {
-			return fmt.Errorf("rebuild failed to update egress node: %v", err)
+			return fmt.Errorf("rebuild failed to update egress tunnel: %v", err)
 		}
 	}
 
 	return nil
 }
 
-func (r *egReconciler) updateEgressNode(node egressv1.EgressTunnel) error {
-	phase := egressv1.EgressNodeInit
+func (r *egReconciler) updateEgressTunnel(node egressv1.EgressTunnel) error {
+	phase := egressv1.EgressTunnelInit
 	if node.Status.Tunnel.Parent.Name == "" {
-		phase = egressv1.EgressNodeInit
+		phase = egressv1.EgressTunnelInit
 	}
 	if node.Status.Mark == "" {
-		phase = egressv1.EgressNodePending
+		phase = egressv1.EgressTunnelPending
 	}
 	if node.Status.Tunnel.IPv4 == "" && r.allocatorV4 != nil {
-		phase = egressv1.EgressNodePending
+		phase = egressv1.EgressTunnelPending
 	}
 	if node.Status.Tunnel.IPv6 == "" && r.allocatorV6 != nil {
-		phase = egressv1.EgressNodePending
+		phase = egressv1.EgressTunnelPending
 	}
 	if node.Status.Tunnel.MAC == "" {
-		phase = egressv1.EgressNodePending
+		phase = egressv1.EgressTunnelPending
 	}
 	node.Status.Phase = phase
 
 	err := r.client.Status().Update(context.Background(), &node)
 	if err != nil {
-		return fmt.Errorf("rebuild failed to update egress node: %v", err)
+		return fmt.Errorf("rebuild failed to update egress tunnel: %v", err)
 	}
 	return nil
 }
@@ -511,7 +511,7 @@ func generateMACAddress(nodeName string) (string, error) {
 	return hw.String(), nil
 }
 
-func (r *egReconciler) initEgressNode() error {
+func (r *egReconciler) initEgressTunnel() error {
 	nodes := &egressv1.EgressTunnelList{}
 	err := r.client.List(context.Background(), nodes)
 	if err != nil {
@@ -539,12 +539,12 @@ func (r *egReconciler) initEgressNode() error {
 	end := time.Now()
 	delta := end.Sub(start)
 
-	r.log.Info("rebuild egressnode cache", "total", len(nodes.Items), "speed", delta)
+	r.log.Info("rebuild egresstunnel cache", "total", len(nodes.Items), "speed", delta)
 
 	return nil
 }
 
-func newEgressNodeController(mgr manager.Manager, log logr.Logger, cfg *config.Config) error {
+func newEgressTunnelController(mgr manager.Manager, log logr.Logger, cfg *config.Config) error {
 	if cfg == nil {
 		return fmt.Errorf("cfg can not be nil")
 	}
@@ -583,19 +583,19 @@ func newEgressNodeController(mgr manager.Manager, log logr.Logger, cfg *config.C
 		}
 	}
 
-	log.Info("new egressnode controller")
-	c, err := controller.New("egressnode", mgr, controller.Options{Reconciler: r})
+	log.Info("new egresstunnel controller")
+	c, err := controller.New("egresstunnel", mgr, controller.Options{Reconciler: r})
 	if err != nil {
 		return err
 	}
 
-	log.Info("egressnode controller watch EgressTunnel")
+	log.Info("egresstunnel controller watch EgressTunnel")
 	if err := c.Watch(source.Kind(mgr.GetCache(), &egressv1.EgressTunnel{}),
 		handler.EnqueueRequestsFromMapFunc(utils.KindToMapFlat("EgressTunnel"))); err != nil {
 		return fmt.Errorf("failed to watch EgressTunnel: %w", err)
 	}
 
-	log.Info("egressnode controller watch Node")
+	log.Info("egresstunnel controller watch Node")
 	if err := c.Watch(source.Kind(mgr.GetCache(), &corev1.Node{}),
 		handler.EnqueueRequestsFromMapFunc(utils.KindToMapFlat("Node"))); err != nil {
 		return fmt.Errorf("failed to watch Node: %w", err)

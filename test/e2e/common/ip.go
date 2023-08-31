@@ -19,7 +19,7 @@ import (
 	"github.com/spidernet-io/egressgateway/test/e2e/tools"
 )
 
-func CheckEgressNodeIP(nodeName string, ip string, duration time.Duration) bool {
+func CheckEgressTunnelIP(nodeName string, ip string, duration time.Duration) bool {
 	command := fmt.Sprintf("ip a show %s | grep %s", EGRESS_VXLAN_INTERFACE_NAME, ip)
 	if _, err := tools.ExecInKindNode(nodeName, command, duration); err != nil {
 		return false
@@ -27,7 +27,7 @@ func CheckEgressNodeIP(nodeName string, ip string, duration time.Duration) bool 
 	return true
 }
 
-func CheckEgressNodeMac(nodeName string, mac string, duration time.Duration) bool {
+func CheckEgressTunnelMac(nodeName string, mac string, duration time.Duration) bool {
 	command := fmt.Sprintf("ip l show %s | grep %s", EGRESS_VXLAN_INTERFACE_NAME, mac)
 	if _, err := tools.ExecInKindNode(nodeName, command, duration); err != nil {
 		return false
@@ -35,7 +35,7 @@ func CheckEgressNodeMac(nodeName string, mac string, duration time.Duration) boo
 	return true
 }
 
-func CheckEgressNodeInterface(nodeName string, nic string, duration time.Duration) bool {
+func CheckEgressTunnelInterface(nodeName string, nic string, duration time.Duration) bool {
 	command := fmt.Sprintf("ip r l default | grep %s", nic)
 	if _, err := tools.ExecInKindNode(nodeName, command, duration); err != nil {
 		return false

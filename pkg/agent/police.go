@@ -196,7 +196,7 @@ func (r *policeReconciler) initApplyPolicy() error {
 			node := new(egressv1.EgressTunnel)
 			err := r.client.Get(context.Background(), types.NamespacedName{Name: val.NodeName}, node)
 			if err != nil {
-				r.log.Error(err, "failed to get egress node, skip building rule of policy")
+				r.log.Error(err, "failed to get egress tunnel, skip building rule of policy")
 				continue
 			}
 			policyName := policy.Name
@@ -521,7 +521,7 @@ func buildNatStaticRule(base uint32) map[string][]iptables.Rule {
 			Match:  iptables.MatchCriteria{}.MarkMatchesWithMask(base, 0xffffffff),
 			Action: iptables.AcceptAction{},
 			Comment: []string{
-				"Accept for egress traffic from pod going to EgressNode",
+				"Accept for egress traffic from pod going to EgressTunnel",
 			},
 		},
 		{
@@ -712,14 +712,14 @@ func buildFilterStaticRule(base uint32) map[string][]iptables.Rule {
 			Match:  iptables.MatchCriteria{}.MarkMatchesWithMask(base, 0xffffffff),
 			Action: iptables.AcceptAction{},
 			Comment: []string{
-				"Accept for egress traffic from pod going to EgressNode",
+				"Accept for egress traffic from pod going to EgressTunnel",
 			},
 		}},
 		"OUTPUT": {{
 			Match:  iptables.MatchCriteria{}.MarkMatchesWithMask(base, 0xffffffff),
 			Action: iptables.AcceptAction{},
 			Comment: []string{
-				"Accept for egress traffic from pod going to EgressNode",
+				"Accept for egress traffic from pod going to EgressTunnel",
 			},
 		}},
 	}
@@ -732,14 +732,14 @@ func buildMangleStaticRule(base uint32) map[string][]iptables.Rule {
 			Match:  iptables.MatchCriteria{}.MarkMatchesWithMask(base, 0xff000000),
 			Action: iptables.SetMaskedMarkAction{Mark: base, Mask: 0xffffffff},
 			Comment: []string{
-				"Accept for egress traffic from pod going to EgressNode",
+				"Accept for egress traffic from pod going to EgressTunnel",
 			},
 		}},
 		"POSTROUTING": {{
 			Match:  iptables.MatchCriteria{}.MarkMatchesWithMask(base, 0xffffffff),
 			Action: iptables.AcceptAction{},
 			Comment: []string{
-				"Accept for egress traffic from pod going to EgressNode",
+				"Accept for egress traffic from pod going to EgressTunnel",
 			},
 		}},
 		"PREROUTING": {{

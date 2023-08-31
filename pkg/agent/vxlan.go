@@ -58,7 +58,7 @@ func (r *vxlanReconciler) Reconcile(ctx context.Context, req reconcile.Request) 
 	log.Info("reconciling")
 	switch kind {
 	case "EgressTunnel":
-		return r.reconcileEgressNode(ctx, newReq, log)
+		return r.reconcileEgressTunnel(ctx, newReq, log)
 	case "EgressGateway":
 		return r.reconcileEgressGateway(ctx, newReq, log)
 	default:
@@ -67,14 +67,14 @@ func (r *vxlanReconciler) Reconcile(ctx context.Context, req reconcile.Request) 
 }
 
 func (r *vxlanReconciler) reconcileEgressGateway(ctx context.Context, req reconcile.Request, log logr.Logger) (reconcile.Result, error) {
-	egressNodeMap, err := r.getEgressNodeByEgressGateway(ctx, req.Name)
+	egressTunnelMap, err := r.getEgressTunnelByEgressGateway(ctx, req.Name)
 	if err != nil {
 		r.log.Error(err, "vxlan reconcile egress gateway")
 		return reconcile.Result{}, err
 	}
 
 	r.peerMap.Range(func(key string, val vxlan.Peer) bool {
-		if _, ok := egressNodeMap[key]; ok {
+		if _, ok := egressTunnelMap[key]; ok {
 			err = r.ruleRoute.Ensure(r.cfg.FileConfig.VXLAN.Name, val.IPv4, val.IPv6, val.Mark, val.Mark)
 			if err != nil {
 				r.log.Error(err, "vxlan reconcile EgressGateway with error")
@@ -86,8 +86,8 @@ func (r *vxlanReconciler) reconcileEgressGateway(ctx context.Context, req reconc
 	return reconcile.Result{}, nil
 }
 
-// reconcileEgressNode
-func (r *vxlanReconciler) reconcileEgressNode(ctx context.Context, req reconcile.Request, log logr.Logger) (reconcile.Result, error) {
+// reconcileEgressTunnel
+func (r *vxlanReconciler) reconcileEgressTunnel(ctx context.Context, req reconcile.Request, log logr.Logger) (reconcile.Result, error) {
 	node := new(egressv1.EgressTunnel)
 	deleted := false
 	err := r.client.Get(ctx, req.NamespacedName, node)
@@ -108,7 +108,7 @@ func (r *vxlanReconciler) reconcileEgressNode(ctx context.Context, req reconcile
 			r.peerMap.Delete(req.Name)
 			err := r.ensureRoute()
 			if err != nil {
-				log.Error(err, "delete egress node, ensure route with error")
+				log.Error(err, "delete egress tunnel, ensure route with error")
 			}
 		}
 		return reconcile.Result{}, nil
@@ -153,15 +153,15 @@ func (r *vxlanReconciler) reconcileEgressNode(ctx context.Context, req reconcile
 		r.peerMap.Store(node.Name, peer)
 		err = r.ensureRoute()
 		if err != nil {
-			log.Error(err, "add egress node, ensure route with error")
+			log.Error(err, "add egress tunnel, ensure route with error")
 		}
 
-		egressNodeMap, err := r.listEgressNode(ctx)
+		egressTunnelMap, err := r.listEgressTunnel(ctx)
 		if err != nil {
 			return reconcile.Result{}, err
 		}
-		if _, ok := egressNodeMap[node.Name]; ok {
-			// if it is egressnode
+		if _, ok := egressTunnelMap[node.Name]; ok {
+			// if it is egresstunnel
 			err = r.ruleRoute.Ensure(r.cfg.FileConfig.VXLAN.Name, peer.IPv4, peer.IPv6, peer.Mark, peer.Mark)
 			if err != nil {
 				r.log.Error(err, "ensure vxlan link")
@@ -171,7 +171,7 @@ func (r *vxlanReconciler) reconcileEgressNode(ctx context.Context, req reconcile
 		return reconcile.Result{}, nil
 	}
 
-	err = r.ensureEgressNodeStatus(node)
+	err = r.ensureEgressTunnelStatus(node)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
@@ -179,7 +179,7 @@ func (r *vxlanReconciler) reconcileEgressNode(ctx context.Context, req reconcile
 	return reconcile.Result{}, nil
 }
 
-func (r *vxlanReconciler) getEgressNodeByEgressGateway(ctx context.Context, name string) (map[string]struct{}, error) {
+func (r *vxlanReconciler) getEgressTunnelByEgressGateway(ctx context.Context, name string) (map[string]struct{}, error) {
 	res := make(map[string]struct{})
 	egw := &egressv1.EgressGateway{}
 	err := r.client.Get(ctx, types.NamespacedName{Name: name}, egw)
@@ -195,7 +195,7 @@ func (r *vxlanReconciler) getEgressNodeByEgressGateway(ctx context.Context, name
 	return res, nil
 }
 
-func (r *vxlanReconciler) listEgressNode(ctx context.Context) (map[string]struct{}, error) {
+func (r *vxlanReconciler) listEgressTunnel(ctx context.Context) (map[string]struct{}, error) {
 	list := &egressv1.EgressGatewayList{}
 	err := r.client.List(ctx, list)
 	if err != nil {
@@ -211,7 +211,7 @@ func (r *vxlanReconciler) listEgressNode(ctx context.Context) (map[string]struct
 	return res, nil
 }
 
-func (r *vxlanReconciler) ensureEgressNodeStatus(node *egressv1.EgressTunnel) error {
+func (r *vxlanReconciler) ensureEgressTunnelStatus(node *egressv1.EgressTunnel) error {
 	needUpdate := false
 
 	if r.version() == 4 && node.Status.Tunnel.Parent.IPv4 == "" {
@@ -223,7 +223,7 @@ func (r *vxlanReconciler) ensureEgressNodeStatus(node *egressv1.EgressTunnel) er
 	}
 
 	if needUpdate {
-		err := r.updateEgressNodeStatus(node, r.version())
+		err := r.updateEgressTunnelStatus(node, r.version())
 		if err != nil {
 			return err
 		}
@@ -236,7 +236,7 @@ func (r *vxlanReconciler) ensureEgressNodeStatus(node *egressv1.EgressTunnel) er
 	return nil
 }
 
-func (r *vxlanReconciler) updateEgressNodeStatus(node *egressv1.EgressTunnel, version int) error {
+func (r *vxlanReconciler) updateEgressTunnelStatus(node *egressv1.EgressTunnel, version int) error {
 	parent, err := r.getParent(version)
 	if err != nil {
 		return err
@@ -283,7 +283,7 @@ func (r *vxlanReconciler) updateEgressNodeStatus(node *egressv1.EgressTunnel, ve
 	// calculate whether the state has changed, update if the status changes.
 	vtep := r.parseVTEP(node.Status)
 	if vtep != nil {
-		phase := egressv1.EgressNodeReady
+		phase := egressv1.EgressTunnelReady
 		if node.Status.Phase != phase {
 			needUpdate = true
 			node.Status.Phase = phase
@@ -309,7 +309,7 @@ func (r *vxlanReconciler) updateEgressNodeStatus(node *egressv1.EgressTunnel, ve
 	return nil
 }
 
-func (r *vxlanReconciler) parseVTEP(status egressv1.EgressNodeStatus) *vxlan.Peer {
+func (r *vxlanReconciler) parseVTEP(status egressv1.EgressTunnelStatus) *vxlan.Peer {
 	var ipv4 *net.IP
 	var ipv6 *net.IP
 	ready := true
@@ -386,7 +386,7 @@ func (r *vxlanReconciler) keepVXLAN() {
 			}
 		}
 
-		err := r.updateEgressNodeStatus(nil, r.version())
+		err := r.updateEgressTunnelStatus(nil, r.version())
 		if err != nil {
 			r.log.Error(err, "update EgressTunnel status")
 			time.Sleep(time.Second)
@@ -415,12 +415,12 @@ func (r *vxlanReconciler) keepVXLAN() {
 
 		markMap := make(map[int]struct{})
 		r.peerMap.Range(func(key string, val vxlan.Peer) bool {
-			egressNodeMap, err := r.listEgressNode(context.Background())
+			egressTunnelMap, err := r.listEgressTunnel(context.Background())
 			if err != nil {
-				r.log.Error(err, "ensure vxlan list EgressNode with error")
+				r.log.Error(err, "ensure vxlan list EgressTunnel with error")
 				return false
 			}
-			if _, ok := egressNodeMap[key]; ok && val.Mark != 0 {
+			if _, ok := egressTunnelMap[key]; ok && val.Mark != 0 {
 				markMap[val.Mark] = struct{}{}
 				err = r.ruleRoute.Ensure(r.cfg.FileConfig.VXLAN.Name, val.IPv4, val.IPv6, val.Mark, val.Mark)
 				if err != nil {
@@ -496,7 +496,7 @@ func parseMarkToInt(mark string) (int, error) {
 	return i32, nil
 }
 
-func newEgressNodeController(mgr manager.Manager, cfg *config.Config, log logr.Logger) error {
+func newEgressTunnelController(mgr manager.Manager, cfg *config.Config, log logr.Logger) error {
 	ruleRoute := route.NewRuleRoute(log)
 
 	r := &vxlanReconciler{

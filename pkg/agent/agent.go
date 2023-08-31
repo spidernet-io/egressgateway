@@ -68,7 +68,7 @@ func New(cfg *config.Config) (types.Service, error) {
 
 	metrics.RegisterMetricCollectors()
 
-	err = newEgressNodeController(mgr, cfg, log)
+	err = newEgressTunnelController(mgr, cfg, log)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create node controller: %w", err)
 	}
