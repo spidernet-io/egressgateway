@@ -22,6 +22,10 @@ theme:
 #    - search.suggest
 #    - search.share
 
+extra:
+  version:
+    provider: mike
+
 plugins:
   - i18n:
       default_language: !ENV [DEFAULT_LANGUAGE, "en"]
