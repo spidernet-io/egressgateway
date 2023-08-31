@@ -92,7 +92,7 @@ if [ -z "${START_TAG}" ] ; then
     if [ -n "${RC}" ] ; then
       START_TAG="v${START_X}.${START_Y}.${START_Z}-rc$START_RC"
     else
-      START_TAG=` sed -E "s?[0-9]+\.[0-9]+\.[0-9]+?${START_X}.${START_Y}.${START_Z}?" <<<  "${DEST_TAG_WITHOUT_RC}" `
+      START_TAG="v${START_X}.${START_Y}.${START_Z}"
     fi
 fi
 
