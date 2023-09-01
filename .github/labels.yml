@@ -4,7 +4,10 @@
 - name: release/bug
   description: bug pr recoded in new release
   color: d73a4a
-- name: release/feature
+- name: release/feature-changed
+  description: feature pr recoded in new release
+  color: 0075ca
+- name: release/feature-new
   description: feature pr recoded in new release
   color: 0075ca
 - name: release/none
