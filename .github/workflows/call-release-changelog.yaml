@@ -2,7 +2,8 @@ name: Call Release Changelog
 
 env:
   SCRIPT_PATH: "./tools/scripts/changelog.sh"
-  LABEL_FEATURE: "release/feature"
+  LABEL_FEATURE: "release/feature-new"
+  LABEL_CHANGED: "release/feature-changed"
   LABEL_BUG: "release/bug"
   DEST_BRANCH: github_pages
   DEST_DIRECTORY: 'changelogs/'
@@ -82,6 +83,7 @@ jobs:
         run: |
           set -x
           export LABEL_FEATURE=${{ env.LABEL_FEATURE }}
+          export LABEL_CHANGED=${{ env.LABEL_CHANGED }}
           export LABEL_BUG=${{ env.LABEL_BUG }}
           export PROJECT_REPO=${{ github.repository }}
           export GH_TOKEN=${{ github.token }}

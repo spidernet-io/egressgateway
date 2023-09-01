@@ -7,7 +7,7 @@ on:
     types: [opened, labeled, unlabeled, synchronize]
 
 env:
-  LEASE_ONE_OF_LABELS: "release/bug release/feature release/none pr/robot_update"
+  LEASE_ONE_OF_LABELS: "release/bug release/feature-new release/feature-changed release/none pr/robot_update"
   FORBID_LABELS: "pr/not-ready not-ready"
 
 jobs:
