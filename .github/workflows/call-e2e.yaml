@@ -121,7 +121,7 @@ jobs:
         uses: nick-invision/retry@v2
         with:
           timeout_minutes: 10
-          max_attempts: 3
+          max_attempts: 1
           shell: bash
           command: |
             make e2e_init -e E2E_KIND_CLUSTER_NAME=${{ env.RUN_KIND_CLUSTER_NAME }} \
