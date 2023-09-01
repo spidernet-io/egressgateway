@@ -111,6 +111,11 @@ jobs:
           done
           docker images
 
+      - name: Run test
+        run: |
+          make -C test checkBin
+
+      
       # test against commit version
       - name: Setup Kind Cluster
         uses: nick-invision/retry@v2
