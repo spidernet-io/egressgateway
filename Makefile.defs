@@ -181,8 +181,13 @@ E2E_KIND_IPV4_POD_CIDR = 172.40.0.0/16
 E2E_KIND_IPV6_POD_CIDR = fd40::/48
 
 #====== calico
-CALICO_VERSION = v3.25.0
+CALICO_VERSION ?=
 INSTALL_TIME_OUT = 300s
+ifeq ($(E2E_CHINA_IMAGE_REGISTRY),true)
+    CALICO_REGISTRY ?= docker.m.daocloud.io
+else
+    CALICO_REGISTRY ?=
+endif
 
 #====== nettools
 NODE_NAME=$(E2E_KIND_CLUSTER_NAME)-control-plane

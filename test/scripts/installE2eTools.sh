@@ -2,6 +2,8 @@
 ## SPDX-License-Identifier: Apache-2.0
 ## Copyright Authors of Spider
 
+set -x
+
 OS=$(uname | tr 'A-Z' 'a-z')
 
 DOWNLOAD_OPT=""
@@ -55,6 +57,17 @@ if ! helm > /dev/null 2>&1 ; then
     ! helm version &>/dev/null && echo "error, failed to install helm" && exit 1
 else
     echo "pass   'helm' installed:  $( helm version | grep -E -o "Version:\"v[^[:space:]]+\"" ) "
+fi
+
+# Install yq
+if ! which yq ; then
+  echo "install yq"
+  curl ${DOWNLOAD_OPT} -Lo /tmp/yq.tar.gz https://github.com/mikefarah/yq/releases/download/v4.35.1/yq_linux_amd64.tar.gz
+  tar -C /usr/local/bin -xzf /tmp/yq.tar.gz
+  mv /usr/local/bin/yq_linux_amd64 /usr/local/bin/yq
+  ! yq -V &>/dev/null && echo "error, failed to install yq" && exit 1
+else
+  echo "installed yq"
 fi
 
 # docker
