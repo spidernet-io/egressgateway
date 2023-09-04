@@ -35,6 +35,7 @@ type eciReconciler struct {
 	mgr                          manager.Manager
 	c                            controller.Controller
 	ignoreCalico                 bool
+	isWatchingNode               bool
 	k8sPodCidr                   map[string]egressv1beta1.IPListPair
 	v4ClusterCidr, v6ClusterCidr []string
 	eci                          *egressv1beta1.EgressClusterInfo
@@ -162,16 +163,19 @@ func (r *eciReconciler) reconcileEgressClusterInfo(ctx context.Context, req reco
 
 	// ignore nodeIP
 	if r.eci.Spec.AutoDetect.NodeIP {
-		// need watch node
-		if err := watchSource(r.c, source.Kind(r.mgr.GetCache(), &corev1.Node{}), kindNode); err != nil {
-			return err
+		if !r.isWatchingNode {
+			// need watch node
+			if err := watchSource(r.c, source.Kind(r.mgr.GetCache(), &corev1.Node{}), kindNode); err != nil {
+				return err
+			}
+			r.isWatchingNode = true
+			// need to list all node
+			nodesIP, err := r.listNodeIPs(ctx)
+			if err != nil {
+				return err
+			}
+			r.eci.Status.NodeIP = nodesIP
 		}
-		// need to list all node
-		nodesIP, err := r.listNodeIPs(ctx)
-		if err != nil {
-			return err
-		}
-		r.eci.Status.NodeIP = nodesIP
 	} else {
 		r.eci.Status.NodeIP = nil
 	}
@@ -372,12 +376,12 @@ func (r *eciReconciler) initEgressClusterInfo(ctx context.Context) error {
 		r.k8sPodCidr = k8sCidr
 		r.eci.Status.PodCIDR = k8sCidr
 	case egressv1beta1.CniTypeCalico:
-		// get calico ippool
-		pools, err := r.listCalicoIPPools(ctx)
-		if err != nil {
-			return err
+		if !r.ignoreCalico && !r.isCheckCalicoGoroutineRunning.Load() {
+			if r.stopCheckChan == nil {
+				r.stopCheckChan = make(chan struct{})
+			}
+			r.startCheckCalico(r.stopCheckChan)
 		}
-		r.eci.Status.PodCIDR = pools
 	case egressv1beta1.CniTypeEmpty:
 		r.eci.Status.PodCIDR = nil
 	case egressv1beta1.CniTypeAuto:
