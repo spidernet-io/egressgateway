@@ -202,11 +202,11 @@ var _ = Describe("EgressPolicy", func() {
 				checkEip(podBList, v4Eip, v6Eip, serverIPv4A, serverIPv6A, false, time.Second*5)
 			}
 		},
-			Entry("When global-level", true, func() error {
+			PEntry("When global-level", true, func() error {
 				GinkgoWriter.Printf("GenerateEgressClusterPolicyYaml: %s\n", egressPolicyName)
 				return common.CreateEgressPolicy(f, common.GenerateEgressClusterPolicyYaml(egressPolicyName, egressGatewayName, emptyEgressIP, podALabel, nil, dst))
 			}),
-			Entry("When namespace-level", false, func() error {
+			PEntry("When namespace-level", false, func() error {
 				GinkgoWriter.Printf("GenerateEgressPolicyYaml: %s\n", egressPolicyName)
 				return common.CreateEgressPolicy(f, common.GenerateEgressPolicyYaml(egressPolicyName, egressGatewayName, common.NSDefault, emptyEgressIP, podALabel, nil, dst))
 			}),
