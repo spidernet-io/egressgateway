@@ -1,0 +1,1413 @@
+
+<!doctype html>
+<html lang="zh" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+        <link rel="canonical" href="https://spidernet-io.github.io/egressgateway/v0.2/zh/usage/Install/">
+      
+      
+        <link rel="prev" href="../../">
+      
+      
+        <link rel="next" href="../Upgrade/">
+      
+      
+      <link rel="icon" href="../../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.5.2, mkdocs-material-9.2.8">
+    
+    
+      
+        <title>Install - EgressGateway</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../../assets/stylesheets/main.046329b4.min.css">
+      
+        
+        <link rel="stylesheet" href="../../../assets/stylesheets/palette.85d0ee34.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../../..",location),__md_hash=e=>[...e].reduce((e,_)=>(e<<5)-e+_.charCodeAt(0),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+    
+  </head>
+  
+  
+    
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="#4478D1" data-md-color-accent="indigo">
+  
+    
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#egressgateway" class="md-skip">
+          跳转至
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+      <div data-md-color-scheme="default" data-md-component="outdated" hidden>
+        
+      </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="页眉">
+    <a href="../../" title="EgressGateway" class="md-header__button md-logo" aria-label="EgressGateway" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54Z"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3V6m0 5h18v2H3v-2m0 5h18v2H3v-2Z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            EgressGateway
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Install
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+    
+    
+      <div class="md-header__option">
+  <div class="md-select">
+    
+    <button class="md-header__button md-icon" aria-label="选择当前语言">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m12.87 15.07-2.54-2.51.03-.03A17.52 17.52 0 0 0 14.07 6H17V4h-7V2H8v2H1v2h11.17C11.5 7.92 10.44 9.75 9 11.35 8.07 10.32 7.3 9.19 6.69 8h-2c.73 1.63 1.73 3.17 2.98 4.56l-5.09 5.02L4 19l5-5 3.11 3.11.76-2.04M18.5 10h-2L12 22h2l1.12-3h4.75L21 22h2l-4.5-12m-2.62 7 1.62-4.33L19.12 17h-3.24Z"/></svg>
+    </button>
+    <div class="md-select__inner">
+      <ul class="md-select__list">
+        
+          <li class="md-select__item">
+            <a href="../../../usage/Install/" hreflang="en" class="md-select__link">
+              English
+            </a>
+          </li>
+        
+          <li class="md-select__item">
+            <a href="./" hreflang="zh" class="md-select__link">
+              中文
+            </a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</div>
+    
+    
+      <label class="md-header__button md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
+      </label>
+      <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="搜索" placeholder="搜索" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12Z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="查找">
+        
+        <button type="reset" class="md-search__icon md-icon" title="清空当前内容" aria-label="清空当前内容" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41Z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            正在初始化搜索引擎
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/spidernet-io/egressgateway" title="前往仓库" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.4.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2023 Fonticons, Inc.--><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81z"/></svg>
+  </div>
+  <div class="md-source__repository">
+    spidernet-io/egressgateway
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="导航栏" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../../" title="EgressGateway" class="md-nav__button md-logo" aria-label="EgressGateway" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54Z"/></svg>
+
+    </a>
+    EgressGateway
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/spidernet-io/egressgateway" title="前往仓库" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.4.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2023 Fonticons, Inc.--><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81z"/></svg>
+  </div>
+  <div class="md-source__repository">
+    spidernet-io/egressgateway
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Overview
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+    
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+        
+        
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" checked>
+        
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Getting started
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            Getting started
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+    
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  <span class="md-ellipsis">
+    Install
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  <span class="md-ellipsis">
+    Install
+  </span>
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="目录">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      目录
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#_1" class="md-nav__link">
+    介绍
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_2" class="md-nav__link">
+    要求
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_3" class="md-nav__link">
+    安装准备
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#egressgateway_1" class="md-nav__link">
+    安装 EgressGateway
+  </a>
+  
+    <nav class="md-nav" aria-label="安装 EgressGateway">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#egressgateway_2" class="md-nav__link">
+    添加 EgressGateway 仓库
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#egressgateway_3" class="md-nav__link">
+    安装 EgressGateway
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#egressgateway_4" class="md-nav__link">
+    创建 EgressGateway 实例
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_4" class="md-nav__link">
+    创建应用和出口策略
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_5" class="md-nav__link">
+    测试效果
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../Upgrade/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Upgrade
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../Uninstall/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Uninstall
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Usage
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            Usage
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../NamespaceDefaultEgressGateway/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Namespace Default EgressGateway
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ClusterDefaultEgressGateway/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Cluster Default EgressGateway
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Concepts
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            Concepts
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../concepts/Architecture/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Architecture
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../concepts/Datapath/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Datapath
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
+        
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    reference
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            reference
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/EgressTunnel/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    CRD EgressTunnel
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/EgressGateway/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    CRD EgressGateway
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/EgressPolicy/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    CRD EgressPolicy
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/EgressClusterPolicy/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    CRD EgressClusterPolicy
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/EgressEndpointSlice/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    CRD EgressEndpointSlice
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/EgressClusterEndpointSlice/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    CRD EgressClusterEndpointSlice
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/EgressClusterInfo/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    CRD EgressClusterInfo
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../Troubleshooting/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Troubleshooting
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" >
+        
+          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Develop
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7">
+            <span class="md-nav__icon md-icon"></span>
+            Develop
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../develop/Dataflow/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    DataFlow
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../develop/Contribute/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Contribute
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../develop/Release/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Release
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_8" >
+        
+          <label class="md-nav__link" for="__nav_8" id="__nav_8_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Community
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_8_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_8">
+            <span class="md-nav__icon md-icon"></span>
+            Community
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../develop/Roadmap/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Roadmap
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="目录">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      目录
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#_1" class="md-nav__link">
+    介绍
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_2" class="md-nav__link">
+    要求
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_3" class="md-nav__link">
+    安装准备
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#egressgateway_1" class="md-nav__link">
+    安装 EgressGateway
+  </a>
+  
+    <nav class="md-nav" aria-label="安装 EgressGateway">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#egressgateway_2" class="md-nav__link">
+    添加 EgressGateway 仓库
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#egressgateway_3" class="md-nav__link">
+    安装 EgressGateway
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#egressgateway_4" class="md-nav__link">
+    创建 EgressGateway 实例
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_4" class="md-nav__link">
+    创建应用和出口策略
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_5" class="md-nav__link">
+    测试效果
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+  
+  
+
+
+<h1 id="egressgateway">自建集群安装 EgressGateway</h1>
+<h2 id="_1">介绍</h2>
+<p>本文将演示在一个自建集群上快速安装 EgressGateway</p>
+<h2 id="_2">要求</h2>
+<ol>
+<li>
+<p>已经具备一个自建好的 Kubernetes 集群，至少有 2 个节点。当前，EgressGateway 支持的 CNI 只包含 Calico</p>
+</li>
+<li>
+<p>集群准备好 helm 工具</p>
+</li>
+</ol>
+<h2 id="_3">安装准备</h2>
+<ul>
+<li>对于 CNI 是 calico 的集群，请执行如下命令，该命令确保 EgressGateway 的 iptables 规则不会被 Calico 规则覆盖，否则 EgressGateway 将不能工作。</li>
+</ul>
+<div class="language-shell highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="c1"># set chainInsertMode</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>$<span class="w"> </span>kubectl<span class="w"> </span>patch<span class="w"> </span>FelixConfiguration<span class="w"> </span>default<span class="w"> </span>--patch<span class="w"> </span><span class="s1">&#39;{&quot;spec&quot;: {&quot;chainInsertMode&quot;: &quot;Append&quot;}}&#39;</span>
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="c1"># check status</span>
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>$<span class="w"> </span>kubectl<span class="w"> </span>get<span class="w"> </span>FelixConfiguration<span class="w"> </span>default<span class="w"> </span>-o<span class="w"> </span>yaml
+</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="w">    </span>apiVersion:<span class="w"> </span>crd.projectcalico.org/v1
+</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="w">    </span>kind:<span class="w"> </span>FelixConfiguration
+</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a><span class="w">    </span>metadata:
+</span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="w">      </span>generation:<span class="w"> </span><span class="m">2</span>
+</span><span id="__span-0-10"><a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a><span class="w">      </span>name:<span class="w"> </span>default
+</span><span id="__span-0-11"><a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a><span class="w">      </span>resourceVersion:<span class="w"> </span><span class="s2">&quot;873&quot;</span>
+</span><span id="__span-0-12"><a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a><span class="w">      </span>uid:<span class="w"> </span>0548a2a5-f771-455b-86f7-27e07fb8223d
+</span><span id="__span-0-13"><a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a><span class="w">    </span>spec:
+</span><span id="__span-0-14"><a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a><span class="w">      </span>chainInsertMode:<span class="w"> </span>Append
+</span><span id="__span-0-15"><a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a><span class="w">      </span>......
+</span></code></pre></div>
+<blockquote>
+<p><code>spec.chainInsertMode</code> 的意义可参考 <a href="https://projectcalico.docs.tigera.io/reference/resources/felixconfig">calico 文档</a>：</p>
+</blockquote>
+<h2 id="egressgateway_1">安装 EgressGateway</h2>
+<h3 id="egressgateway_2">添加 EgressGateway 仓库</h3>
+<div class="language-shell highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>helm<span class="w"> </span>repo<span class="w"> </span>add<span class="w"> </span>egressgateway<span class="w"> </span>https://spidernet-io.github.io/egressgateway/
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>helm<span class="w"> </span>repo<span class="w"> </span>update
+</span></code></pre></div>
+<h3 id="egressgateway_3">安装 EgressGateway</h3>
+<ol>
+<li>
+<p>可使用如下命令快速安装 EgressGateway</p>
+<div class="language-shell highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>helm<span class="w"> </span>install<span class="w"> </span>egressgateway<span class="w"> </span>egressgateway/egressgateway<span class="w"> </span>-n<span class="w"> </span>kube-system<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="w">    </span>--set<span class="w"> </span>feature.tunnelIpv4Subnet<span class="o">=</span><span class="s2">&quot;192.200.0.1/16&quot;</span>
+</span></code></pre></div>
+<p>在安装命令中，有如下注意点：</p>
+<ul>
+<li>
+<p>安装命令中，需要提供用于 EgressGateway 隧道节点的 IPv4 和 IPv6 网段，要求该网段和集群内的其他地址不冲突</p>
+</li>
+<li>
+<p>可使用选项 <code>--set feature.tunnelDetectMethod="interface=eth0"</code> 来定制 EgressGateway 隧道的承载网卡，否则，默认使用默认路由的网卡</p>
+</li>
+<li>
+<p>如果希望使用 IPv6 ，可使用选项 <code>--set feature.enableIPv6=true</code> 开启，并设置 <code>feature.tunnelIpv6Subnet</code></p>
+</li>
+<li>
+<p>EgressGateway Controller 支持高可用，可通过 <code>--set controller.replicas=2</code> 设置</p>
+</li>
+</ul>
+</li>
+<li>
+<p>确认所有的 EgressGateway Pod 运行正常。
+    <div class="language-shell highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>$<span class="w"> </span>kubectl<span class="w"> </span>get<span class="w"> </span>pod<span class="w"> </span>-n<span class="w"> </span>kube-system<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span>egressgateway
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>egressgateway-agent-29lt5<span class="w">                  </span><span class="m">1</span>/1<span class="w">     </span>Running<span class="w">   </span><span class="m">0</span><span class="w">          </span>9h
+</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>egressgateway-agent-94n8k<span class="w">                  </span><span class="m">1</span>/1<span class="w">     </span>Running<span class="w">   </span><span class="m">0</span><span class="w">          </span>9h
+</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>egressgateway-agent-klkhf<span class="w">                  </span><span class="m">1</span>/1<span class="w">     </span>Running<span class="w">   </span><span class="m">0</span><span class="w">          </span>9h
+</span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>egressgateway-controller-5754f6658-7pn4z<span class="w">   </span><span class="m">1</span>/1<span class="w">     </span>Running<span class="w">   </span><span class="m">0</span><span class="w">          </span>9h
+</span></code></pre></div></p>
+</li>
+<li>
+<p>任何功能配置，可通过调整 EgressGateway 实例租户下的 ConfigMap EgressGateway 来实现。</p>
+</li>
+</ol>
+<h2 id="egressgateway_4">创建 EgressGateway 实例</h2>
+<ol>
+<li>
+<p>EgressGateway 定义了一组节点作为集群的出口网关，集群内的 egress 流量将会通过这组节点转发而出集群。
+因此，我们需要预先定义一组 EgressGateway，例子如下</p>
+<div class="language-text highlight"><pre><span></span><code>cat &lt;&lt;EOF | kubectl apply -f -
+apiVersion: egressgateway.spidernet.io/v1beta1
+kind: EgressGateway
+metadata:
+  name: default
+spec:
+  ippools:
+    ipv4:
+    - &quot;10.6.1.60-10.6.1.66&quot;
+  nodeSelector:
+    selector:
+      matchLabels:
+        egressgateway: &quot;true&quot;
+EOF
+</code></pre></div>
+<p>创建命令中：</p>
+<ul>
+<li>如上 yaml 例子中，<code>spec.ippools.ipv4</code> 定义了一组 egress 的 出口 VIP 地址，需要根据具体环境的实际情况调整，
+ 其中，<code>spec.ippools.ipv4</code> 的 CIDR 应该是与网关节点上的出口网卡（一般情况下是默认路由的网卡）的子网相同，否则，极有可能导致 egress 访问不通。</li>
+<li>通过 EgressGateway 的 <code>spec.nodeSelector</code> 来 select 一组节点作为出口网关，它支持 select 多个节点来实现高可用。</li>
+</ul>
+</li>
+<li>
+<p>给出口网关节点打上 label，可以给多个 node 打上 label，作为生成环境，建议 2 个节点，作为 POC 环境， 建议 1 个节点即可</p>
+<div class="language-text highlight"><pre><span></span><code>kubectl label node $NodeName egressgateway=&quot;true&quot;
+</code></pre></div>
+</li>
+<li>
+<p>查看状态如下</p>
+<div class="language-text highlight"><pre><span></span><code>$ kubectl get EgressGateway default -o yaml
+    apiVersion: egressgateway.spidernet.io/v1beta1
+    kind: EgressGateway
+    metadata:
+      name: default
+      uid: 7ce835e2-2075-4d26-ba63-eacd841aadfe
+    spec:
+      clusterDefault: true
+      ippools:
+        ipv4:
+        - 172.22.0.100-172.22.0.110
+        ipv4DefaultEIP: 172.22.0.110
+      nodeSelector:
+        selector:
+          matchLabels:
+            egressgateway: &quot;true&quot;
+    status:
+      nodeList:
+      - name: egressgateway-worker1
+        status: Ready
+      - name: egressgateway-worker2
+        status: Ready
+</code></pre></div>
+<p>在如上输出中：
+* <code>status.nodeList</code> 字段已经识别到了符合 <code>spec.nodeSelector</code> 的节点及该节点对应的 EgressTunnel 对象的状态
+* <code>spec.ippools.ipv4DefaultEIP</code> 字段会从 `spec.ippools.ipv4`` 中随机选择一个 IP 地址作为该组 EgressGateway 的默认 VIP，它的作用是：当为应用创建 EgressPolicy 对象时，如果未指定 VIP 地址，则默认分配使用该默认 VIP</p>
+</li>
+</ol>
+<h2 id="_4">创建应用和出口策略</h2>
+<ol>
+<li>创建一个应用，它将用于测试 POD 访问集群外部用途，并给它打上 label。</li>
+</ol>
+<div class="language-shell highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>kubectl<span class="w"> </span>create<span class="w"> </span>deployment<span class="w"> </span>visitor<span class="w"> </span>--image<span class="w"> </span>nginx
+</span></code></pre></div>
+<ol>
+<li>
+<p>为应用创建 EgressPolicy CR 对象。
+EgressPolicy 实例用于定义哪些 POD 的出口流量要经过 egressGateway node 转发，以及其它的配置细节。
+可创建如下例子，当匹配的 pod 访问任意集群外部的地址（任意不是 Node IP、CNI Pod CIDR、ClusterIP 的地址）时，都会被 EgressGateway Node 转发。注意的是，
+EgressPolicy 对象是租户级别的，因此，它务必创建在 selected 应用的租户下</p>
+<div class="language-text highlight"><pre><span></span><code>cat &lt;&lt;EOF | kubectl apply -f -
+apiVersion: egressgateway.spidernet.io/v1beta1
+kind: EgressPolicy
+metadata:
+  name: test
+  namespace: default
+spec:
+  appliedTo:
+    podSelector:
+      matchLabels:
+        app: &quot;visitor&quot;
+EOF
+</code></pre></div>
+<p>如上创建命令中：</p>
+<ul>
+<li><code>spec.egressGatewayName</code> 指定了使用哪一组 EgressGateway 的名字。  </li>
+<li><code>spec.appliedTo.podSelector</code> 指定了本策略生效在集群内的哪些 Pod。</li>
+<li>集群的 egress 流量的源 IP 地址有两种选择：<ul>
+<li>可使用网关节点的 IP。它可适用于公有云和传统网络等环境，缺点是，随着网关节点的故障，出口源 IP 可能会发生变化。可设置 <code>spec.egressIP.useNodeIP=true</code> 来生效。</li>
+<li>可使用独立的 VIP，因为 EgressGateway 是基于 ARP 原理生效 VIP，所以它适用于传统网络，而不适用于公有云等环境，它的优点是，出口源 IP 永久是固定的。在 EgressPolicy 中不做任何设置，则默认使用 egressGatewayName 的缺省 VIP，或者可单独手动指定 <code>spec.egressIP.ipv4</code> ，其 IP 值务必是符合 EgressGateway 中的 IP 池。</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>
+<p>查看 EgressPolicy 的状态</p>
+<div class="language-text highlight"><pre><span></span><code>$ kubectl get EgressPolicy -A
+NAMESPACE   NAME   GATEWAY   IPV4           IPV6   EGRESSTUNNEL
+default     test   default   172.22.0.110          egressgateway-worker2
+
+$ kubectl get EgressPolicy test -o yaml
+apiVersion: egressgateway.spidernet.io/v1beta1
+kind: EgressPolicy
+metadata:
+  name: test
+  namespace: default
+spec:
+  appliedTo:
+    podSelector:
+      matchLabels:
+        app: visitor
+  egressIP:
+    allocatorPolicy: default
+    useNodeIP: false
+status:
+  eip:
+    ipv4: 172.22.0.110
+  node: egressgateway-worker2
+</code></pre></div>
+<p>如上输出中：</p>
+<ul>
+<li>
+<p><code>status.eip</code> 展示了该组应用出集群时使用的出口 IP 地址</p>
+</li>
+<li>
+<p><code>status.node</code> 展示了哪一个 EgressGateway 的节点在实时的负责出口流量的转发。注：EgressGateway 节点支持高可用，当存在多个 EgressGateway 节点时，所有的 EgressPolicy 会均摊到不同的 EgressGateway 节点上实施。</p>
+</li>
+</ul>
+</li>
+<li>
+<p>查看 EgressEndpointSlices 的状态</p>
+<p>每个 EgressPolicy 对象，都有一个对应的 EgressEndpointSlices 对象，其中存储了 EgressPolicy select 的 Pod 的 IP 地址集合。当应用无法出口访问时，可排查该对象中的 IP 地址是否正常。</p>
+<div class="language-shell highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>$<span class="w"> </span>kubectl<span class="w"> </span>get<span class="w"> </span>egressendpointslices<span class="w"> </span>-A
+</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="w">  </span>NAMESPACE<span class="w">   </span>NAME<span class="w">         </span>AGE
+</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="w">  </span>default<span class="w">     </span>test-kvlp6<span class="w">   </span>18s
+</span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a>
+</span><span id="__span-5-5"><a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a>$<span class="w"> </span>kubectl<span class="w"> </span>get<span class="w"> </span>egressendpointslices<span class="w"> </span>test-kvlp6<span class="w"> </span>-o<span class="w"> </span>yaml
+</span><span id="__span-5-6"><a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a>apiVersion:<span class="w"> </span>egressgateway.spidernet.io/v1beta1
+</span><span id="__span-5-7"><a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a>endpoints:
+</span><span id="__span-5-8"><a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a>-<span class="w"> </span>ipv4:
+</span><span id="__span-5-9"><a id="__codelineno-5-9" name="__codelineno-5-9" href="#__codelineno-5-9"></a><span class="w">  </span>-<span class="w"> </span><span class="m">172</span>.40.14.195
+</span><span id="__span-5-10"><a id="__codelineno-5-10" name="__codelineno-5-10" href="#__codelineno-5-10"></a><span class="w">  </span>node:<span class="w"> </span>egressgateway-worker
+</span><span id="__span-5-11"><a id="__codelineno-5-11" name="__codelineno-5-11" href="#__codelineno-5-11"></a><span class="w">  </span>ns:<span class="w"> </span>default
+</span><span id="__span-5-12"><a id="__codelineno-5-12" name="__codelineno-5-12" href="#__codelineno-5-12"></a><span class="w">  </span>pod:<span class="w"> </span>visitor-6764bb48cc-29vq9
+</span><span id="__span-5-13"><a id="__codelineno-5-13" name="__codelineno-5-13" href="#__codelineno-5-13"></a>kind:<span class="w"> </span>EgressEndpointSlice
+</span><span id="__span-5-14"><a id="__codelineno-5-14" name="__codelineno-5-14" href="#__codelineno-5-14"></a>metadata:
+</span><span id="__span-5-15"><a id="__codelineno-5-15" name="__codelineno-5-15" href="#__codelineno-5-15"></a><span class="w">  </span>name:<span class="w"> </span>test-kvlp6
+</span><span id="__span-5-16"><a id="__codelineno-5-16" name="__codelineno-5-16" href="#__codelineno-5-16"></a><span class="w">  </span>namespace:<span class="w"> </span>default
+</span></code></pre></div>
+</li>
+</ol>
+<h2 id="_5">测试效果</h2>
+<ol>
+<li>
+<p>可在集群外部部署应用 nettools，用于模拟一个集群外部的服务，nettools 会在 http 回复中返回请求者的源 IP 地址。
+  <div class="language-shell highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>docker<span class="w"> </span>run<span class="w"> </span>-d<span class="w"> </span>--net<span class="o">=</span>host<span class="w"> </span>ghcr.io/spidernet-io/egressgateway-nettools:latest<span class="w"> </span>/usr/bin/nettools-server<span class="w"> </span>-protocol<span class="w"> </span>web<span class="w"> </span>-webPort<span class="w"> </span><span class="m">8080</span>
+</span></code></pre></div></p>
+</li>
+<li>
+<p>在集群内部的 visitor Pod 中，验证出口流量的效果，我们可以看到 visitor 访问外部服务，nettools 返回的源 IP 符合了 EgressPolicy <code>.status.eip</code> 的效果。
+  <div class="language-text highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>$ kubectl get pod
+</span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>  NAME                       READY   STATUS    RESTARTS   AGE
+</span><span id="__span-7-3"><a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a>  visitor-6764bb48cc-29vq9   1/1     Running   0          15m
+</span><span id="__span-7-4"><a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a>
+</span><span id="__span-7-5"><a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a>$ kubectl exec -it visitor-6764bb48cc-29vq9 bash
+</span><span id="__span-7-6"><a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a>  $ curl 10.6.1.92:8080
+</span><span id="__span-7-7"><a id="__codelineno-7-7" name="__codelineno-7-7" href="#__codelineno-7-7"></a>  Remote IP: 10.6.1.60
+</span></code></pre></div></p>
+</li>
+</ol>
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    <script id="__config" type="application/json">{"base": "../../..", "features": ["content.code.annotate"], "search": "../../../assets/javascripts/workers/search.dfff1995.min.js", "translations": {"clipboard.copied": "\u5df2\u590d\u5236", "clipboard.copy": "\u590d\u5236", "search.result.more.one": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.more.other": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 # \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.none": "\u6ca1\u6709\u627e\u5230\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.one": "\u627e\u5230 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.other": "# \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.placeholder": "\u952e\u5165\u4ee5\u5f00\u59cb\u641c\u7d22", "search.result.term.missing": "\u7f3a\u5c11", "select.version": "\u9009\u62e9\u5f53\u524d\u7248\u672c"}, "version": {"provider": "mike"}}</script>
+    
+    
+      <script src="../../../assets/javascripts/bundle.dff1b7c8.min.js"></script>
+      
+    
+  </body>
+</html>
