@@ -1,0 +1,123 @@
+name: Call Release Chart
+
+env:
+  MERGE_BRANCH: github_pages
+  PR_LABEL: pr/robot_update
+  PR_REVIEWER: lou-lan
+  CHART_OUTPUT_PATH: output/chart/*
+
+on:
+  workflow_call:
+    inputs:
+      ref:
+        required: true
+        type: string
+    outputs:
+      artifact:
+        description: "name of chart artifact"
+        value: chart_package_artifact
+  # --- call by manual
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: 'branch, tag, sha'
+        required: true
+        default: main
+
+permissions: write-all
+
+jobs:
+  package:
+    name: prepare
+    runs-on: ubuntu-latest
+    outputs:
+      ref: ${{ env.RUN_REF }}
+    steps:
+      - name: Get Ref
+        id: get_ref
+        run: |
+          pwd
+          ls
+          if ${{ github.event_name == 'workflow_dispatch' }}; then
+              echo "call by workflow_dispatch"
+              echo "REF=${{ github.event.inputs.ref }}" >> $GITHUB_ENV
+          elif ${{ inputs.ref != '' }}; then
+              echo "call by workflow_call"
+              echo "REF=${{ inputs.ref }}" >> $GITHUB_ENV
+          else
+              echo "unexpected event: ${{ github.event_name }}"
+              exit 1
+          fi
+
+      - name: Checkout Code
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+          ref: ${{ env.REF }}
+
+      - name: Install yq
+        run: |
+          YQ_VERSION=v4.33.1
+          YQ_BINARY="yq_$(uname | tr 'A-Z' 'a-z')_amd64"
+          wget https://github.com/mikefarah/yq/releases/download/${YQ_VERSION}/${YQ_BINARY}.tar.gz -O /tmp/yq.tar.gz
+          tar -xzf /tmp/yq.tar.gz -C /tmp
+          sudo mv /tmp/${YQ_BINARY} /usr/bin/yq
+          sudo chmod +x /usr/bin/yq
+          yq &>/dev/null || exit 1
+
+      - name: Build chart
+        run: |
+          make chart_package
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v3.1.2
+        with:
+          name: chart_package_artifact
+          path: ${{ env.CHART_OUTPUT_PATH }}
+          retention-days: 1
+          if-no-files-found: error
+
+  create_pr:
+    name: Create PR
+    needs: [package]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+        with:
+          ref: ${{ env.MERGE_BRANCH }}
+          fetch-depth: 0
+
+      ## chart
+      - name: Install Helm
+        uses: azure/setup-helm@v3.5
+
+      - name: Download Chart Artifact
+        uses: actions/download-artifact@v3.0.2
+        with:
+          name: chart_package_artifact
+          path: charts
+
+      - name: Update Chart Yaml
+        run: |
+          name=${{ github.repository }}
+          proj=${name#*/}
+          url=https://${{ github.repository_owner }}.github.io/${proj}
+          helm repo index  ./charts  --url ${url}/charts
+          mv ./charts/index.yaml ./index.yaml
+
+      # Allow auto-merge on general
+      - name: Create Pull Request
+        id: create_pr
+        uses: peter-evans/create-pull-request@v5.0.2
+        with:
+          title: "robot update chart from ${{ needs.package.outputs.REF }} to branch ${{ env.MERGE_BRANCH }} "
+          commit-message: "robot update chart from  ${{ needs.package.outputs.REF }} to branch ${{ env.MERGE_BRANCH }} "
+          branch-suffix: timestamp
+          branch: robot/update_doc
+          delete-branch: true
+          base: ${{ env.MERGE_BRANCH }}
+          signoff: true
+          token: ${{ secrets.GITHUB_TOKEN }}
+          labels: ${{ env.PR_LABEL }}
+          reviewers: ${{ env.PR_REVIWER }}
