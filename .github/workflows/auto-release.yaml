@@ -86,6 +86,7 @@ jobs:
           echo "try to create label "
           gh label create ${branchLabelName} --force ; if [ $? -ne 0 ]; then echo -e "\e[31merror, failed to create label ${branchLabelName}\e[0m"; fi
           gh label create ${mainLabelName} --force ; if [ $? -ne 0 ]; then echo -e "\e[31merror, failed to create label ${mainLabelName}\e[0m"; fi
+
   build-release-image:
     needs: get-tag
     uses: ./.github/workflows/build-image-release.yaml
@@ -106,16 +107,23 @@ jobs:
     with:
       ref: ${{ needs.get-tag.outputs.tag }}
     secrets: inherit
+  
+  release-chart:
+    needs: [build-release-image, get-tag]
+    uses: ./.github/workflows/call-release-chart.yaml
+    with:
+      ref: ${{ needs.get-tag.outputs.tag }}
+    secrets: inherit
 
   create-release:
-    needs: [release-changelog, get-tag, release-pages]
+    needs: [release-changelog, get-tag, release-chart]
     name: create release
     runs-on: ubuntu-latest
     steps:
       - name: Download Chart Artifact
         uses: actions/download-artifact@v3.0.2
         with:
-          name: ${{ needs.release-pages.outputs.artifact }}
+          name: ${{ needs.release-chart.outputs.artifact }}
           path: chart-package/
 
       - name: Download Changelog Artifact
