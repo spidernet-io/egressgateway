@@ -10,4 +10,6 @@
 
 // +kubebuilder:rbac:groups=crd.projectcalico.org,resources=ippools,verbs=get;list;watch;create;update;patch;delete
 
+// +kubebuilder:rbac:groups=admissionregistration.k8s.io,resources=mutatingwebhookconfigurations;validatingwebhookconfigurations,verbs=get;list;watch;create;update;patch;delete
+
 package v1beta1

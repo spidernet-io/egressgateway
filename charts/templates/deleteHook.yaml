@@ -1,0 +1,25 @@
+{{- if .Values.cleanup.enable }}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ .Values.controller.name | trunc 48 | trimSuffix "-" }}-hook-pre-delete
+  annotations:
+    "helm.sh/hook": pre-delete
+    "helm.sh/hook-delete-policy": hook-succeeded,hook-failed
+spec:
+  template:
+    spec:
+      serviceAccountName: {{ .Values.controller.name | trunc 63 | trimSuffix "-" }}
+      containers:
+        - name: pre-delete
+          image: {{ include "project.egressgatewayController.image" . | quote }}
+          command:
+            - {{ .Values.controller.cmdBinName }}
+            - clean
+            - --validate
+            - {{ .Values.controller.name | trunc 63 | trimSuffix "-" }}
+            - --mutating
+            - {{ .Values.controller.name | trunc 63 | trimSuffix "-" }}
+      restartPolicy: Never
+  backoffLimit: 2
+{{- end }}

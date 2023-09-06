@@ -391,3 +391,6 @@ controller:
       extraIpAddresses: []
       ## @param controller.tls.auto.extraDnsNames Extra DNS names of server cert for auto method
       extraDnsNames: []
+cleanup:
+  ## @param cleanup.enable clean up resources when helm uninstall
+  enable: true
