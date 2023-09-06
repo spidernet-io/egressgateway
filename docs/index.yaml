@@ -3,7 +3,7 @@ entries:
   egressgateway:
   - apiVersion: v2
     appVersion: 0.2.0
-    created: "2023-08-31T11:32:15.680678588Z"
+    created: "2023-09-06T02:50:09.478098802Z"
     description: egressgateway
     digest: 16f30976755f2ed774707467e4044d5ccfa1e2535b94fc50674959903f6b52b9
     home: https://spidernet-io.github.io/agent
@@ -22,7 +22,7 @@ entries:
     version: 0.2.0
   - apiVersion: v2
     appVersion: 0.2.0-rc2
-    created: "2023-08-31T11:32:15.678909885Z"
+    created: "2023-09-06T02:50:09.473676849Z"
     description: egressgateway
     digest: 748bc8e4aaf4e78dc90c337d1452aec7a73ef9e4df51574ff5210510ee471120
     home: https://spidernet-io.github.io/agent
@@ -41,7 +41,7 @@ entries:
     version: 0.2.0-rc2
   - apiVersion: v2
     appVersion: 0.2.0-rc1
-    created: "2023-08-31T11:32:15.677116581Z"
+    created: "2023-09-06T02:50:09.470495011Z"
     description: egressgateway
     digest: 1acf5ac4830954225ba7b02831f7b408f3b5620958e80cff47a4e56f44afc1ad
     home: https://spidernet-io.github.io/agent
@@ -60,7 +60,7 @@ entries:
     version: 0.2.0-rc1
   - apiVersion: v2
     appVersion: 0.2.0-rc0
-    created: "2023-08-31T11:32:15.675413882Z"
+    created: "2023-09-06T02:50:09.467654877Z"
     description: egressgateway
     digest: 04a1a7d1a153fa14a6536c18dae1d30bc879268e683530f9af0d403e7b163eb9
     home: https://spidernet-io.github.io/agent
@@ -79,7 +79,7 @@ entries:
     version: 0.2.0-rc0
   - apiVersion: v2
     appVersion: 0.1.0
-    created: "2023-08-31T11:32:15.673398965Z"
+    created: "2023-09-06T02:50:09.462405115Z"
     description: egressgateway
     digest: c56cb553fcb5e8b76fa0eafcf8b314f32d88489706666ffd4c9377c345c1e1d0
     home: https://spidernet-io.github.io/agent
@@ -98,7 +98,7 @@ entries:
     version: 0.1.0
   - apiVersion: v2
     appVersion: 0.1.0-rc0
-    created: "2023-08-31T11:32:15.67125274Z"
+    created: "2023-09-06T02:50:09.459827184Z"
     description: egressgateway
     digest: 368ac7fae20203ccac3533a185f1d0681c55b615c4d4a6e6e4f67189977f2f9f
     home: https://spidernet-io.github.io/agent
@@ -115,4 +115,4 @@ entries:
     urls:
     - https://spidernet-io.github.io/egressgateway/charts/egressgateway-0.1.0-rc0.tgz
     version: 0.1.0-rc0
-generated: "2023-08-31T11:32:15.667887944Z"
+generated: "2023-09-06T02:50:09.455800736Z"
