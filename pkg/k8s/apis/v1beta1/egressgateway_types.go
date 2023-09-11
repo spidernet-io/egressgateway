@@ -77,7 +77,7 @@ type EgressIPStatus struct {
 	// +kubebuilder:validation:Optional
 	Name string `json:"name,omitempty"`
 	// +kubebuilder:validation:Optional
-	Eips []Eips `json:"epis,omitempty"`
+	Eips []Eips `json:"eips,omitempty"`
 	// +kubebuilder:validation:Optional
 	Status string `json:"status,omitempty"`
 }
