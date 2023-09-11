@@ -126,7 +126,7 @@ spec:
               nodeList:
                 items:
                   properties:
-                    epis:
+                    eips:
                       items:
                         properties:
                           ipv4:
