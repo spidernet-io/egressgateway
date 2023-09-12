@@ -34,7 +34,7 @@ import (
 type eciReconciler struct {
 	mgr                          manager.Manager
 	c                            controller.Controller
-	ignoreCalico                 bool
+	isWatchingCalico             bool // whether controller is watching calico
 	isWatchingNode               bool
 	k8sPodCidr                   map[string]egressv1beta1.IPListPair
 	v4ClusterCidr, v6ClusterCidr []string
@@ -188,14 +188,25 @@ func (r *eciReconciler) reconcileEgressClusterInfo(ctx context.Context, req reco
 			return err
 		}
 	case egressv1beta1.CniTypeCalico:
-		if !r.ignoreCalico && !r.isCheckCalicoGoroutineRunning.Load() {
+		if !r.isWatchingCalico && !r.isCheckCalicoGoroutineRunning.Load() {
 			if r.stopCheckChan == nil {
 				r.stopCheckChan = make(chan struct{})
 			}
+			// set empty before check calico
+			r.eci.Status.PodCIDR = nil
+			r.eci.Status.PodCidrMode = egressv1beta1.CniTypeEmpty
+
+			// check if calico is exists
 			r.startCheckCalico(r.stopCheckChan)
+		} else {
+			pools, err := r.listCalicoIPPools(ctx)
+			if err != nil {
+				return err
+			}
+			r.eci.Status.PodCIDR = pools
+			r.eci.Status.PodCidrMode = egressv1beta1.CniTypeCalico
 		}
 	case egressv1beta1.CniTypeK8s:
-		r.ignoreCalico = false
 		// close all check goroutine
 		r.stopAllCheckGoroutine()
 
@@ -209,7 +220,6 @@ func (r *eciReconciler) reconcileEgressClusterInfo(ctx context.Context, req reco
 		r.eci.Status.PodCIDR = r.k8sPodCidr
 		r.eci.Status.PodCidrMode = egressv1beta1.CniTypeK8s
 	case egressv1beta1.CniTypeEmpty:
-		r.ignoreCalico = false
 		// close all check goroutine
 		r.stopAllCheckGoroutine()
 
@@ -376,11 +386,18 @@ func (r *eciReconciler) initEgressClusterInfo(ctx context.Context) error {
 		r.k8sPodCidr = k8sCidr
 		r.eci.Status.PodCIDR = k8sCidr
 	case egressv1beta1.CniTypeCalico:
-		if !r.ignoreCalico && !r.isCheckCalicoGoroutineRunning.Load() {
+		if !r.isWatchingCalico && !r.isCheckCalicoGoroutineRunning.Load() {
 			if r.stopCheckChan == nil {
 				r.stopCheckChan = make(chan struct{})
 			}
 			r.startCheckCalico(r.stopCheckChan)
+		} else {
+			pools, err := r.listCalicoIPPools(ctx)
+			if err != nil {
+				return err
+			}
+			r.eci.Status.PodCIDR = pools
+			r.eci.Status.PodCidrMode = egressv1beta1.CniTypeCalico
 		}
 	case egressv1beta1.CniTypeEmpty:
 		r.eci.Status.PodCIDR = nil
@@ -574,11 +591,9 @@ func (r *eciReconciler) checkCalicoExists(stopChan <-chan struct{}) {
 	r.log.V(1).Info("checkCalicoExists...")
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
+	defer r.taskToken.Store(false)
+	defer r.isCheckCalicoGoroutineRunning.Store(false)
 
-	r.eciMutex.RLock()
-	podCidr := r.eci.Status.PodCIDR
-	cidrModeStatus := r.eci.Status.PodCidrMode
-	r.eciMutex.RUnlock()
 	for {
 		select {
 		case <-stopChan:
@@ -596,20 +611,6 @@ func (r *eciReconciler) checkCalicoExists(stopChan <-chan struct{}) {
 			pools, err := r.listCalicoIPPools(ctx)
 			if err != nil {
 				r.log.V(1).Info("failed listCalicoIPPools when checkCalicoExists, try again", "details", err)
-				if podCidr != nil || cidrModeStatus != egressv1beta1.CniTypeEmpty {
-					// if not found calico ippool, then eci.status.podCidr and podCidrMode should be empty
-					r.eciMutex.Lock()
-					r.eci.Status.PodCIDR = nil
-					r.eci.Status.PodCidrMode = egressv1beta1.CniTypeEmpty
-					err := r.updateEgressClusterInfo(ctx)
-					r.eciMutex.Unlock()
-					if err != nil {
-						r.log.V(1).Info("failed updateEgressClusterInfo when calico is not exists, try again", "details", err)
-						continue
-					}
-					podCidr = nil
-					cidrModeStatus = egressv1beta1.CniTypeEmpty
-				}
 				time.Sleep(time.Second * 3)
 				continue
 			}
@@ -618,7 +619,7 @@ func (r *eciReconciler) checkCalicoExists(stopChan <-chan struct{}) {
 				r.taskToken.Store(true)
 			}
 
-			if !r.ignoreCalico {
+			if !r.isWatchingCalico {
 			RETRY:
 				r.log.V(1).Info("find calico ippool, egressClusterInfo controller begin to watch calico ippool")
 				if err = watchSource(r.c, source.Kind(r.mgr.GetCache(), &calicov1.IPPool{}), kindCalicoIPPool); err != nil {
@@ -627,7 +628,7 @@ func (r *eciReconciler) checkCalicoExists(stopChan <-chan struct{}) {
 					goto RETRY
 				}
 				r.log.V(1).Info("egressClusterInfo controller succeeded to watch calico ippool")
-				r.ignoreCalico = true
+				r.isWatchingCalico = true
 			}
 			// find calico update the egci
 			r.eciMutex.Lock()
@@ -641,8 +642,9 @@ func (r *eciReconciler) checkCalicoExists(stopChan <-chan struct{}) {
 				goto TASK
 			}
 			// finish task
-			r.isCheckCalicoGoroutineRunning.Store(false)
-			r.taskToken.Store(false)
+			//  if here to set false, when the goroutine stopped by other process, the value is not set successfully, so it should set defer
+			//r.isCheckCalicoGoroutineRunning.Store(false)
+			//r.taskToken.Store(false)
 			return
 		}
 	}
