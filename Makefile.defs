@@ -203,7 +203,6 @@ TCP_PORT="63380"
 UDP_PORT="63381"
 WEB_PORT="63382"
 
-
 # for pull chart and visit github
 HTTP_PROXY ?=
 E2E_CHINA_IMAGE_REGISTRY ?= false

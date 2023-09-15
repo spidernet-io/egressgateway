@@ -4,17 +4,19 @@
 package egressgateway_test
 
 import (
+	"context"
 	"testing"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 
-	v1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/runtime"
+	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/yaml"
 
-	"github.com/spidernet-io/e2eframework/framework"
-	egressgatewayv1beta1 "github.com/spidernet-io/egressgateway/pkg/k8s/apis/v1beta1"
+	econfig "github.com/spidernet-io/egressgateway/pkg/config"
+	"github.com/spidernet-io/egressgateway/pkg/schema"
 	"github.com/spidernet-io/egressgateway/test/e2e/common"
 )
 
@@ -26,34 +28,43 @@ func TestEgressgateway(t *testing.T) {
 const gateway = "gateway"
 
 var (
-	f                  *framework.Framework
-	err                error
-	c                  client.WithWatch
-	allNodes           []string
-	nodeObjs           []*v1.Node
-	enableV4, enableV6 bool
+	config       *common.Config
+	egressConfig econfig.FileConfig
+
+	cli client.Client
+
+	node1Label map[string]string
 )
 
 var _ = BeforeSuite(func() {
 	GinkgoRecover()
 
-	f, err = framework.NewFramework(GinkgoT(), []func(scheme *runtime.Scheme) error{egressgatewayv1beta1.AddToScheme})
-	Expect(err).NotTo(HaveOccurred(), "failed to NewFramework, details: %w", err)
-	c = f.KClient
-
-	// all nodes
-	allNodes = f.Info.KindNodeList
-	Expect(allNodes).NotTo(BeEmpty())
-
-	for i, node := range allNodes {
-		GinkgoWriter.Printf("%dTh node: %s\n", i, node)
-		getNode, err := f.GetNode(node)
-		Expect(err).NotTo(HaveOccurred())
-		nodeObjs = append(nodeObjs, getNode)
-	}
-	Expect(len(nodeObjs) > 2).To(BeTrue(), "test case needs at lest 3 nodes")
-
-	enableV4, enableV6, err = common.GetIPVersion(f)
+	var err error
+	config, err = common.ReadConfig()
 	Expect(err).NotTo(HaveOccurred())
-	GinkgoWriter.Printf("enableV4: %v, enableV6: %v\n", enableV4, enableV6)
+
+	cli, err = client.New(config.KubeConfigFile, client.Options{Scheme: schema.GetScheme()})
+	Expect(err).NotTo(HaveOccurred())
+
+	ctx := context.Background()
+
+	// check nodes
+	nodes := &corev1.NodeList{}
+	err = cli.List(ctx, nodes)
+	Expect(err).NotTo(HaveOccurred())
+	Expect(len(nodes.Items) > 2).To(BeTrue(), "test case needs at lest 3 nodes")
+
+	//
+	node1Label = nodes.Items[0].Labels
+
+	// get egressgateway config
+	configMap := &corev1.ConfigMap{}
+	err = cli.Get(ctx, types.NamespacedName{Name: "egressgateway", Namespace: config.Namespace}, configMap)
+	Expect(err).NotTo(HaveOccurred())
+
+	raw, ok := configMap.Data["conf.yml"]
+	Expect(ok).To(BeTrue(), "not found egress config file")
+
+	err = yaml.Unmarshal([]byte(raw), &egressConfig)
+	Expect(err).NotTo(HaveOccurred())
 })

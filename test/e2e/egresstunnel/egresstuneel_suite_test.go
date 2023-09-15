@@ -14,19 +14,3 @@ func TestEgresstunnel(t *testing.T) {
 	RegisterFailHandler(Fail)
 	RunSpecs(t, "Egresstunnel Suite")
 }
-
-//
-//var (
-//	f     *framework.Framework
-//	err   error
-//	nodes []string
-//)
-//
-//var _ = BeforeSuite(func() {
-//	GinkgoRecover()
-//
-//	f, err = framework.NewFramework(GinkgoT(), []func(scheme *runtime.Scheme) error{egressgatewayv1.AddToScheme})
-//	Expect(err).NotTo(HaveOccurred(), "failed to NewFramework, details: %w", err)
-//	nodes = f.Info.KindNodeList
-//	Expect(nodes).NotTo(BeEmpty())
-//})

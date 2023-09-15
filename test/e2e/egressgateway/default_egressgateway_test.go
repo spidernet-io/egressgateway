@@ -4,11 +4,18 @@
 package egressgateway_test
 
 import (
+	"context"
+	"time"
+
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-	egressv1 "github.com/spidernet-io/egressgateway/pkg/k8s/apis/v1beta1"
+
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
+
+	egressv1 "github.com/spidernet-io/egressgateway/pkg/k8s/apis/v1beta1"
+	"github.com/spidernet-io/egressgateway/test/e2e/common"
 )
 
 var _ = Describe("Test default egress gateway", Label("DefaultEgressGateway", "G00017"), Ordered, func() {
@@ -19,10 +26,10 @@ var _ = Describe("Test default egress gateway", Label("DefaultEgressGateway", "G
 
 	BeforeAll(func() {
 		ipPool := egressv1.Ippools{}
-		if enableV4 {
+		if egressConfig.EnableIPv4 {
 			ipPool.IPv4 = []string{"10.99.0.1"}
 		}
-		if enableV6 {
+		if egressConfig.EnableIPv6 {
 			ipPool.IPv6 = []string{"4c83:a33d:f5e5:d0b5:b76e:117c:ba98:7518"}
 		}
 		clusterDefaultEgw = &egressv1.EgressGateway{
@@ -42,10 +49,10 @@ var _ = Describe("Test default egress gateway", Label("DefaultEgressGateway", "G
 		nsDefaultEgw = clusterDefaultEgw.DeepCopy()
 		nsDefaultEgw.Name = "ns-default"
 		nsDefaultEgw.Spec.ClusterDefault = false
-		if enableV4 {
+		if egressConfig.EnableIPv4 {
 			nsDefaultEgw.Spec.Ippools.IPv4 = []string{"10.99.0.2"}
 		}
-		if enableV6 {
+		if egressConfig.EnableIPv6 {
 			nsDefaultEgw.Spec.Ippools.IPv6 = []string{"4c83:a11d:f5e5:d0b5:b76e:117c:ba98:7518"}
 		}
 
@@ -66,30 +73,63 @@ var _ = Describe("Test default egress gateway", Label("DefaultEgressGateway", "G
 		}
 		policy2 = policy1.DeepCopy()
 		policy2.Name = "test-default-egw-policy2"
+
+		DeferCleanup(func() {
+			ctx := context.Background()
+
+			err := common.DeleteObj(ctx, cli, policy2)
+			Expect(err).NotTo(HaveOccurred())
+
+			err = common.DeleteObj(ctx, cli, policy1)
+			Expect(err).NotTo(HaveOccurred())
+
+			time.Sleep(time.Second * 3)
+
+			err = common.DeleteObj(ctx, cli, nsDefaultEgw)
+			Expect(err).NotTo(HaveOccurred())
+
+			err = common.DeleteObj(ctx, cli, clusterDefaultEgw)
+			Expect(err).NotTo(HaveOccurred())
+
+			ns := &corev1.Namespace{}
+			key := types.NamespacedName{Name: "default"}
+			err = cli.Get(ctx, key, ns)
+			Expect(err).NotTo(HaveOccurred())
+			_, ok := ns.Labels[egressv1.LabelNamespaceEgressGatewayDefault]
+			if ok {
+				delete(ns.Labels, egressv1.LabelNamespaceEgressGatewayDefault)
+				err = cli.Update(ctx, ns)
+				Expect(err).NotTo(HaveOccurred())
+			}
+		})
 	})
 
 	It("test cluster default egress gateway", func() {
 		// create global egress gateway
-		err := f.CreateResource(clusterDefaultEgw)
+		ctx := context.Background()
+		err := cli.Create(ctx, clusterDefaultEgw)
 		Expect(err).NotTo(HaveOccurred())
 
 		// create egress policy1
-		err = f.CreateResource(policy1)
+		err = cli.Create(ctx, policy1)
 		Expect(err).NotTo(HaveOccurred())
 
 		// check policy1 is bind to cluster default
 		key := types.NamespacedName{Namespace: policy1.Namespace, Name: policy1.Name}
-		err = f.GetResource(key, policy1)
+		err = cli.Get(ctx, key, policy1)
 		Expect(err).NotTo(HaveOccurred())
 		Expect(policy1.Spec.EgressGatewayName).To(Equal(clusterDefaultEgw.Name))
 	})
 
 	It("test namespace default egress gateway", func() {
 		// create the default egress gateway of default ns
-		err := f.CreateResource(nsDefaultEgw)
+		ctx := context.Background()
+		err := cli.Create(ctx, nsDefaultEgw)
 		Expect(err).NotTo(HaveOccurred())
 
-		ns, err := f.GetNamespace("default")
+		ns := &corev1.Namespace{}
+		key := types.NamespacedName{Name: "default"}
+		err = cli.Get(ctx, key, ns)
 		Expect(err).NotTo(HaveOccurred())
 
 		if ns.Labels == nil {
@@ -98,55 +138,17 @@ var _ = Describe("Test default egress gateway", Label("DefaultEgressGateway", "G
 		val, ok := ns.Labels[egressv1.LabelNamespaceEgressGatewayDefault]
 		if !ok || val != nsDefaultEgw.Name {
 			ns.Labels[egressv1.LabelNamespaceEgressGatewayDefault] = nsDefaultEgw.Name
-			err = f.UpdateResource(ns)
+			err = cli.Update(ctx, ns)
 			Expect(err).NotTo(HaveOccurred())
 		}
-		err = f.CreateResource(policy2)
+		err = cli.Create(ctx, policy2)
 		Expect(err).NotTo(HaveOccurred())
 
 		// check policy2 is bind to namespace default
-		key := types.NamespacedName{Namespace: policy2.Namespace, Name: policy2.Name}
-		err = f.GetResource(key, policy2)
+		key = types.NamespacedName{Namespace: policy2.Namespace, Name: policy2.Name}
+		err = cli.Get(ctx, key, policy2)
 		Expect(err).NotTo(HaveOccurred())
 		Expect(policy2.Spec.EgressGatewayName).To(Equal(nsDefaultEgw.Name))
 	})
 
-	AfterAll(func() {
-		key := types.NamespacedName{Namespace: policy2.Namespace, Name: policy2.Name}
-		err := f.GetResource(key, policy2)
-		if err == nil {
-			err = f.DeleteResource(policy2)
-			Expect(err).NotTo(HaveOccurred())
-		}
-
-		key = types.NamespacedName{Namespace: policy1.Namespace, Name: policy1.Name}
-		err = f.GetResource(key, policy1)
-		if err == nil {
-			err = f.DeleteResource(policy1)
-			Expect(err).NotTo(HaveOccurred())
-		}
-
-		key = types.NamespacedName{Name: nsDefaultEgw.Name}
-		err = f.GetResource(key, nsDefaultEgw)
-		if err == nil {
-			err = f.DeleteResource(nsDefaultEgw)
-			Expect(err).NotTo(HaveOccurred())
-		}
-
-		key = types.NamespacedName{Name: clusterDefaultEgw.Name}
-		err = f.GetResource(key, clusterDefaultEgw)
-		if err == nil {
-			err = f.DeleteResource(clusterDefaultEgw)
-			Expect(err).NotTo(HaveOccurred())
-		}
-
-		ns, err := f.GetNamespace("default")
-		Expect(err).NotTo(HaveOccurred())
-		_, ok := ns.Labels[egressv1.LabelNamespaceEgressGatewayDefault]
-		if ok {
-			delete(ns.Labels, egressv1.LabelNamespaceEgressGatewayDefault)
-			err = f.UpdateResource(ns)
-			Expect(err).NotTo(HaveOccurred())
-		}
-	})
 })

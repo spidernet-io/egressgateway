@@ -4,20 +4,20 @@
 package reliability_test
 
 import (
+	"context"
 	"testing"
-	"time"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 
-	v1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/runtime"
+	"gopkg.in/yaml.v3"
+	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	"github.com/spidernet-io/e2eframework/framework"
-	egressgatewayv1beta1 "github.com/spidernet-io/egressgateway/pkg/k8s/apis/v1beta1"
+	econfig "github.com/spidernet-io/egressgateway/pkg/config"
+	"github.com/spidernet-io/egressgateway/pkg/schema"
 	"github.com/spidernet-io/egressgateway/test/e2e/common"
-	"github.com/spidernet-io/egressgateway/test/e2e/tools"
 )
 
 func TestReliability(t *testing.T) {
@@ -26,79 +26,49 @@ func TestReliability(t *testing.T) {
 }
 
 var (
-	f   *framework.Framework
-	err error
-	c   client.WithWatch
+	config       *common.Config
+	egressConfig econfig.FileConfig
 
-	v4Enabled, v6Enabled    bool
-	nodes, masters, workers []string
-	nodeObjs                []*v1.Node
+	cli client.Client
 
-	serverIPv4, serverIPv6 string
-	dst                    []string
+	nodeLabel map[string]string
 
-	delOpts client.DeleteOption
+	nodeNameList []string
 )
 
 var _ = BeforeSuite(func() {
 	GinkgoRecover()
 
-	delOpts = client.GracePeriodSeconds(0)
-
-	f, err = framework.NewFramework(GinkgoT(), []func(scheme *runtime.Scheme) error{egressgatewayv1beta1.AddToScheme})
-	Expect(err).NotTo(HaveOccurred(), "failed to NewFramework, details: %w", err)
-	c = f.KClient
-
-	// IP version of cluster
-	v4Enabled, v6Enabled, err = common.GetIPVersion(f)
+	var err error
+	config, err = common.ReadConfig()
 	Expect(err).NotTo(HaveOccurred())
-	GinkgoWriter.Printf("v4Enabled: %v, v6Enabled: %v\n", v4Enabled, v6Enabled)
 
-	// all nodes
-	nodes = f.Info.KindNodeList
-	GinkgoWriter.Printf("nodes: %v\n", nodes)
-
-	for i, node := range nodes {
-		GinkgoWriter.Printf("%dTh node: %s\n", i, node)
-		getNode, err := f.GetNode(node)
-		Expect(err).NotTo(HaveOccurred())
-		nodeObjs = append(nodeObjs, getNode)
-	}
-	Expect(len(nodeObjs) > 2).To(BeTrue(), "test case needs at lest 3 nodes")
-
-	masters, err = common.GetNodesByMatchLabels(f, common.ControlPlaneLabel)
+	cli, err = client.New(config.KubeConfigFile, client.Options{Scheme: schema.GetScheme()})
 	Expect(err).NotTo(HaveOccurred())
-	Expect(masters).NotTo(BeEmpty())
-	GinkgoWriter.Printf("masters: %v\n", masters)
 
-	workers, err = common.GetUnmatchedNodes(f, masters)
+	ctx := context.Background()
+
+	// check nodes
+	nodes := &corev1.NodeList{}
+	err = cli.List(ctx, nodes)
 	Expect(err).NotTo(HaveOccurred())
-	Expect(len(workers) > 0).To(BeTrue(), "worker nodes number is less then 2")
-	GinkgoWriter.Printf("workers: %v\n", workers)
+	Expect(len(nodes.Items) > 2).To(BeTrue(), "test case needs at lest 3 nodes")
 
-	// net-tool server
-	dst = make([]string, 0)
-	if v4Enabled {
-		serverIpv4b, err := tools.GetContainerIPV4(common.Env[common.NETTOOLS_SERVER_A], time.Second*10)
-		Expect(err).NotTo(HaveOccurred())
-		serverIPv4 = string(serverIpv4b)
-		GinkgoWriter.Printf("serverIPv4: %v\n", serverIPv4)
-		Expect(serverIPv4).NotTo(BeEmpty())
+	//
+	nodeLabel = nodes.Items[0].Labels
 
-		dst = append(dst, serverIPv4+"/8")
-		GinkgoWriter.Printf("dst: %v\n", dst)
+	for _, item := range nodes.Items {
+		nodeNameList = append(nodeNameList, item.Name)
 	}
 
-	if v6Enabled {
-		serverIpv6b, err := tools.GetContainerIPV6(common.Env[common.NETTOOLS_SERVER_A], time.Second*10)
-		Expect(err).NotTo(HaveOccurred())
-		serverIPv6 = string(serverIpv6b)
-		Expect(serverIPv6).NotTo(BeEmpty())
+	// get egressgateway config
+	configMap := &corev1.ConfigMap{}
+	err = cli.Get(ctx, types.NamespacedName{Name: "egressgateway", Namespace: config.Namespace}, configMap)
+	Expect(err).NotTo(HaveOccurred())
 
-		dst = append(dst, serverIPv6+"/64")
-		GinkgoWriter.Printf("dst: %v\n", dst)
+	raw, ok := configMap.Data["conf.yml"]
+	Expect(ok).To(BeTrue(), "not found egress config file")
 
-		serverIPv6 = "[" + serverIPv6 + "]"
-		GinkgoWriter.Printf("serverIPv6: %v\n", serverIPv6)
-	}
+	err = yaml.Unmarshal([]byte(raw), &egressConfig)
+	Expect(err).NotTo(HaveOccurred())
 })
