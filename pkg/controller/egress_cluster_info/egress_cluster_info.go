@@ -42,7 +42,7 @@ type eciReconciler struct {
 	client                       client.Client
 	log                          logr.Logger
 	doOnce                       sync.Once
-	eciMutex, updateMutex        lock.RWMutex
+	eciMutex                     lock.RWMutex
 	// stopCheckChan Stop the goroutine that detect the existence of the cni
 	stopCheckChan                 chan struct{}
 	isCheckCalicoGoroutineRunning atomic.Bool
@@ -114,7 +114,7 @@ func (r *eciReconciler) Reconcile(ctx context.Context, req reconcile.Request) (r
 	}
 
 	r.eciMutex.Lock()
-	defer r.eciMutex.Unlock()
+	defer r.eciMutex.UnlockIgnoreTime()
 
 	eciStatusCopy := r.eci.Status.DeepCopy()
 
@@ -332,7 +332,7 @@ func (r *eciReconciler) reconcileNode(ctx context.Context, req reconcile.Request
 // initEgressClusterInfo create EgressClusterInfo cr when first reconcile
 func (r *eciReconciler) initEgressClusterInfo(ctx context.Context) error {
 	r.eciMutex.Lock()
-	defer r.eciMutex.Unlock()
+	defer r.eciMutex.UnlockIgnoreTime()
 
 	r.log.Info("start init EgressClusterInfo", "name", defaultEgressClusterInfoName)
 
@@ -574,15 +574,6 @@ func (r *eciReconciler) getK8sPodCidr() (map[string]egressv1beta1.IPListPair, er
 
 // updateEgressClusterInfo update EgressClusterInfo cr
 func (r *eciReconciler) updateEgressClusterInfo(ctx context.Context) error {
-	r.updateMutex.Lock()
-	defer r.updateMutex.Unlock()
-	egci := new(egressv1beta1.EgressClusterInfo)
-	err := r.client.Get(ctx, types.NamespacedName{Name: defaultEgressClusterInfoName}, egci)
-	if err != nil {
-		return err
-	}
-
-	r.eci.ResourceVersion = egci.ResourceVersion
 	return r.client.Status().Update(ctx, r.eci)
 }
 
