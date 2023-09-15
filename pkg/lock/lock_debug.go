@@ -19,7 +19,7 @@ import (
 const (
 	// selfishThresholdSec is the number of seconds that should be used when
 	// detecting if a lock was held for more than the specified time.
-	selfishThresholdSec = 0.5
+	selfishThresholdSec = 1
 
 	// Waiting for a lock for longer than DeadlockTimeout is considered a deadlock.
 	// Ignored is DeadlockTimeout <= 0.
