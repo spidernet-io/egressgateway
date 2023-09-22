@@ -80,6 +80,9 @@ type FileConfig struct {
 	Mark                         string         `yaml:"mark"`
 	AnnouncedInterfacesToExclude []string       `yaml:"announcedInterfacesToExclude"`
 	AnnounceExcludeRegexp        *regexp.Regexp `json:"-"`
+	EnableReplyRoute             bool           `yaml:"enableReplyRoute"`
+	ReplyRouteTable              int            `yaml:"replyRouteTable"`
+	ReplyRouteMark               int            `yaml:"replyRouteMark"`
 }
 
 const TunnelInterfaceDefaultRoute = "defaultRouteInterface"
