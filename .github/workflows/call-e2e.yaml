@@ -29,6 +29,10 @@ on:
         required: false
         type: string
         default: ubuntu-latest
+      cni:
+        required: false
+        type: string
+        default: calico
 
 jobs:
   e2e_against_commit:
@@ -138,7 +142,7 @@ jobs:
           RESULT=0
           make e2e_run -e E2E_KIND_CLUSTER_NAME=${{ env.RUN_KIND_CLUSTER_NAME }}  \
               -e E2E_GINKGO_LABELS=${E2E_LABELS} \
-              -e E2E_IP_FAMILY=${{ inputs.ipfamily }} || RESULT=1
+              -e E2E_IP_FAMILY=${{ inputs.ipfamily }} -e CNI=${{ env.cni }}} || RESULT=1
           if ((RESULT==0)) ; then
               echo "RUN_PASS=true" >> $GITHUB_ENV
           else

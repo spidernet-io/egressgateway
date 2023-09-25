@@ -192,7 +192,7 @@ endif
 #====== nettools
 NODE_NAME=$(E2E_KIND_CLUSTER_NAME)-control-plane
 NETTOOLS_CLIENT=nettools-client
-NET_TOOLS_IMAGE_TAG="v1"
+NET_TOOLS_IMAGE_TAG=v1
 NETTOOLS_SERVER_A="nettools-server-a"
 NETTOOLS_SERVER_B="nettools-server-b"
 NETTOOLS_SERVER_BIN="nettools-server"
