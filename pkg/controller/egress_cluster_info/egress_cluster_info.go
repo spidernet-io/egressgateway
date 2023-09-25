@@ -42,7 +42,7 @@ type eciReconciler struct {
 	client                       client.Client
 	log                          logr.Logger
 	doOnce                       sync.Once
-	eciMutex, updateMutex        lock.RWMutex
+	eciMutex                     lock.RWMutex
 	// stopCheckChan Stop the goroutine that detect the existence of the cni
 	stopCheckChan                 chan struct{}
 	isCheckCalicoGoroutineRunning atomic.Bool
@@ -143,7 +143,7 @@ func (r *eciReconciler) Reconcile(ctx context.Context, req reconcile.Request) (r
 	}
 
 	if !reflect.DeepEqual(eciStatusCopy, r.eci.Status) {
-		err = r.updateEgressClusterInfo(ctx)
+		err = r.client.Status().Update(ctx, r.eci)
 		if err != nil {
 			//r.eci = eciCopy
 			if errors.IsConflict(err) {
@@ -417,7 +417,7 @@ func (r *eciReconciler) initEgressClusterInfo(ctx context.Context) error {
 
 	if !reflect.DeepEqual(egci, r.eci) {
 		r.log.Info("first init egressClusterInfo, need update")
-		err = r.updateEgressClusterInfo(ctx)
+		err = r.client.Status().Update(ctx, r.eci)
 		if err != nil {
 			r.eci = egci
 			return err
@@ -572,20 +572,6 @@ func (r *eciReconciler) getK8sPodCidr() (map[string]egressv1beta1.IPListPair, er
 	return k8sPodCIDR, nil
 }
 
-// updateEgressClusterInfo update EgressClusterInfo cr
-func (r *eciReconciler) updateEgressClusterInfo(ctx context.Context) error {
-	r.updateMutex.Lock()
-	defer r.updateMutex.Unlock()
-	egci := new(egressv1beta1.EgressClusterInfo)
-	err := r.client.Get(ctx, types.NamespacedName{Name: defaultEgressClusterInfoName}, egci)
-	if err != nil {
-		return err
-	}
-
-	r.eci.ResourceVersion = egci.ResourceVersion
-	return r.client.Status().Update(ctx, r.eci)
-}
-
 // checkCalicoExists once calico is detected, start watch
 func (r *eciReconciler) checkCalicoExists(stopChan <-chan struct{}) {
 	r.log.V(1).Info("checkCalicoExists...")
@@ -634,10 +620,10 @@ func (r *eciReconciler) checkCalicoExists(stopChan <-chan struct{}) {
 			r.eciMutex.Lock()
 			r.eci.Status.PodCIDR = pools
 			r.eci.Status.PodCidrMode = egressv1beta1.CniTypeCalico
-			err = r.updateEgressClusterInfo(ctx)
+			err = r.client.Status().Update(ctx, r.eci)
 			r.eciMutex.Unlock()
 			if err != nil {
-				r.log.V(1).Info("failed updateEgressClusterInfo, try again", "details", err)
+				r.log.V(1).Info("failed update egressClusterInfo, try again", "details", err)
 				time.Sleep(time.Second)
 				goto TASK
 			}
