@@ -15,7 +15,6 @@ import (
 	"time"
 
 	"github.com/mohae/deepcopy"
-	"github.com/spidernet-io/egressgateway/test/e2e/err"
 )
 
 var r = rand.New(rand.NewSource(time.Now().UnixNano()))
@@ -80,7 +79,7 @@ func IsSameSlice(a, b []string) bool {
 // ExecInKindNode exec command in kind node
 func ExecInKindNode(nodeName string, command string, duration time.Duration) ([]byte, error) {
 	if len(nodeName) == 0 || len(command) == 0 {
-		return nil, err.EMPTY_INPUT
+		return nil, fmt.Errorf("empty input")
 	}
 	ctx, cancel := context.WithTimeout(context.TODO(), duration)
 	defer cancel()

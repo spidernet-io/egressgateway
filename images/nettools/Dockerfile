@@ -49,7 +49,4 @@ ENV ENV_VERSION=${VERSION}
 COPY --from=builder /tmp/install/${TARGETOS}/${TARGETARCH}/bin/*   /usr/bin/
 RUN mv /usr/bin/client /usr/bin/nettools-client && mv /usr/bin/server /usr/bin/nettools-server
 
-
-
- CMD ["/bin/sh"]
-
+CMD ["/bin/sh"]

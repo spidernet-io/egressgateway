@@ -4,29 +4,53 @@
 package common
 
 import (
-	"regexp"
+	"context"
+	"fmt"
 	"strings"
 
-	. "github.com/onsi/gomega"
-	"github.com/spidernet-io/e2eframework/framework"
-	"github.com/spidernet-io/egressgateway/pkg/utils/ip"
+	"gopkg.in/yaml.v3"
+	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/types"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-func GetClusterIpCidr(f *framework.Framework) (ipv4s, ipv6s []string) {
-	configMap, err := f.GetConfigmap(kubeadmConfig, kubeSystem)
-	Expect(err).NotTo(HaveOccurred())
-	Expect(configMap).NotTo(BeNil())
-	v, ok := configMap.Data[clusterConfiguration]
-	Expect(ok).To(BeTrue())
-	Expect(v).NotTo(BeEmpty())
+func GetClusterCIDR(ctx context.Context, cli client.Client) (ipv4, ipv6 []string, err error) {
+	key := types.NamespacedName{Namespace: "kube-system", Name: "kubeadm-config"}
+	configMap := &corev1.ConfigMap{}
+	err = cli.Get(ctx, key, configMap)
+	if err != nil {
+		return
+	}
 
-	reg := regexp.MustCompile(serviceSubnet + `: (.*)`)
-	svcSubnetKV := reg.FindStringSubmatch(v)
-	Expect(svcSubnetKV).NotTo(BeNil())
-	Expect(len(svcSubnetKV)).To(Equal(2))
-	subnets := strings.Split(svcSubnetKV[1], ",")
+	v, ok := configMap.Data["ClusterConfiguration"]
+	if !ok {
+		err = fmt.Errorf("can get kube-system configmap")
+		return
+	}
 
-	ipv4s, ipv6s, err = ip.GetIPV4V6Cidr(subnets)
-	Expect(err).NotTo(HaveOccurred())
-	return ipv4s, ipv6s
+	c := &KubeAdmConfig{}
+	err = yaml.Unmarshal([]byte(v), c)
+	if err != nil {
+		return
+	}
+
+	res := strings.Split(c.Networking.ServiceSubnet, ",")
+	if len(res) == 2 {
+		ipv4 = []string{res[0]}
+		ipv6 = []string{res[1]}
+	} else if strings.Contains(c.Networking.ServiceSubnet, ":") {
+		ipv6 = []string{c.Networking.ServiceSubnet}
+	} else if strings.Contains(c.Networking.ServiceSubnet, ",") {
+		ipv4 = []string{c.Networking.ServiceSubnet}
+	}
+
+	return
+}
+
+type KubeAdmConfig struct {
+	Networking Networking `yaml:"networking"`
+}
+
+type Networking struct {
+	ServiceSubnet string `yaml:"serviceSubnet"`
 }

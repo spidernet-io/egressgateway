@@ -266,42 +266,24 @@ clean:
 e2e_test: KIND_CLUSTER_NAME ?= $(E2E_KIND_CLUSTER_NAME)
 e2e_test: KIND_KUBECONFIG ?= $(E2E_KIND_KUBECONFIG_PATH)
 e2e_test:
-	@echo -e "\033[35m Run e2e test on the cluster $(KIND_CLUSTER_NAME) \033[0m "
-	@ echo -e "\033[35m [E2E] Run E2E with ginkgo label=$(E2E_GINKGO_LABELS) , timeout=$(E2E_TIMEOUT) GINKGO_OPTION=$(E2E_GINKGO_OPTION) \033[0m"
-	@  NODE_LIST=` docker ps | egrep " kindest/node.* $(KIND_CLUSTER_NAME)-(control|worker)" | awk '{print $$NF }' ` ; \
-		[ -n "$$NODE_LIST" ] || { echo "error, failed to find any kind nodes, please setup kind cluster $(KIND_CLUSTER_NAME) first" ; exit 1 ; } ; \
-		NODE_LIST=` echo "$${NODE_LIST}" | tr -d ' ' | tr '\n' ',' ` ; \
-		NODE_LIST=$${NODE_LIST%%,} ; \
-		echo "find cluster node: $${NODE_LIST}" ; \
-		export E2E_KIND_CLUSTER_NODE_LIST="$${NODE_LIST}" ; \
-		export E2E_CLUSTER_NAME=$(KIND_CLUSTER_NAME) ; \
-		echo "nettools server info"; \
-		export IMAGE=$(NETTOOLS_IMAGE); \
-		export NETTOOLS_SERVER_A=$(NETTOOLS_SERVER_A); \
-		export NETTOOLS_SERVER_B=$(NETTOOLS_SERVER_B); \
-		export MOD=$(MOD); \
-		export TCP_PORT=$(TCP_PORT); \
-		export UDP_PORT=$(UDP_PORT); \
-		export WEB_PORT=$(WEB_PORT); \
-		echo "egressgateway info"; \
-		export EGRESS_NAMESPACE=$(E2E_NAMESPACE); \
-		if [ "$(E2E_IP_FAMILY)" == "ipv4" ] ; then \
-			export E2E_IPV4_ENABLED=true ; export E2E_IPV6_ENABLED=false ; \
-		elif [ "$(E2E_IP_FAMILY)" == "ipv6" ] ; then \
-			export E2E_IPV4_ENABLED=false ; export E2E_IPV6_ENABLED=true ; \
-		else \
-			export E2E_IPV4_ENABLED=true ; export E2E_IPV6_ENABLED=true ; \
-		fi ; \
-		export E2E_KUBECONFIG_PATH=$(KIND_KUBECONFIG) ; [ -f "$(KIND_KUBECONFIG)" ] || { echo "error, does not exist KUBECONFIG $(E2E_KUBECONFIG)" ; exit 1 ; } ; \
-		rm -f $(E2E_LOG_FILE) || true ; \
+	@echo -e "\033[35mRun e2e testing on the cluster $(KIND_CLUSTER_NAME) \033[0m"
+	@echo -e "\033[35m label=$(E2E_GINKGO_LABELS)\n timeout=$(E2E_TIMEOUT) \n options=$(E2E_GINKGO_OPTION) \n egress_namespace=$(E2E_NAMESPACE) \033[0m"
+	@echo -e "\033[35m[STEP1]\033[0m check KUBECONFIG file path"; \
+		export KUBECONFIG=$(KIND_KUBECONFIG) ; [ -f "$(KIND_KUBECONFIG)" ] || { echo -e "error, does not exist KUBECONFIG $(E2E_KUBECONFIG)" ; exit 1 ; } ; \
+		echo -e "success" ; \
+		echo -e "\033[35m[STEP2]\033[0m clean old e2e log file"; \
+		[ -f "$(E2E_LOG_FILE)" ] && rm -f "$(E2E_LOG_FILE)"; \
+		echo -e "success" ; \
+		echo -e "\033[35m[STEP3]\033[0m run debugCluster.sh"; \
 		echo "=========== before test `date` ===========" >> $(E2E_LOG_FILE) ; \
-		./scripts/debugCluster.sh $(KIND_KUBECONFIG) "system" "$(E2E_LOG_FILE)" $(E2E_NAMESPACE) ; \
 		RESULT=0 ; \
+		echo -e "\033[35m[STEP4]\033[0m run ginkgo.sh"; \
+		export IMAGE=$(NETTOOLS_IMAGE); \
 		$(ROOT_DIR)/tools/golang/ginkgo.sh \
-			--race --timeout=$(E2E_TIMEOUT) --output-interceptor-mode=none  --slow-spec-threshold=15s \
+			--race --timeout=$(E2E_TIMEOUT) --output-interceptor-mode=none --poll-progress-after=20s \
 			--json-report e2ereport.json --output-dir $(ROOT_DIR) --procs $(E2E_GINKGO_PROCS) \
-			--label-filter="$(E2E_GINKGO_LABELS)" -randomize-suites -randomize-all  -vv --fail-fast  $(E2E_GINKGO_OPTION) \
-			-r e2e/*  || RESULT=1  ; \
+			--label-filter="$(E2E_GINKGO_LABELS)" -randomize-suites -randomize-all -vv --fail-fast  $(E2E_GINKGO_OPTION) \
+			-r e2e/* || RESULT=1 ; \
 		echo "=========== after test `date` ===========" >> $(E2E_LOG_FILE) ; \
 		./scripts/debugCluster.sh $(KIND_KUBECONFIG) "system" "$(E2E_LOG_FILE)" $(E2E_NAMESPACE) ; \
 		KIND_CLUSTER_NAME=$(KIND_CLUSTER_NAME) ./scripts/debugCluster.sh $(KIND_KUBECONFIG) "detail" "$(E2E_LOG_FILE)" $(E2E_NAMESPACE) ; \
