@@ -34,10 +34,12 @@ done
 helm repo add flannel https://flannel-io.github.io/flannel/
 helm repo update
 
+[ -z "${FLANNEL_VERSION}" ] && FLANNEL_VERSION=$(helm show chart flannel/flannel | awk '/version/ {print $2}')
+
 if [ "$E2E_IP_FAMILY" == "ipv4" ]; then
-  helm install flannel --set podCidr="172.40.0.0/16" --namespace kube-flannel flannel/flannel --wait --debug
+  helm install flannel --set podCidr=$E2E_KIND_IPV4_POD_CIDR --namespace kube-flannel flannel/flannel --wait --debug --version=${FLANNEL_VERSION}
 elif [ "$E2E_IP_FAMILY" == "ipv6" ]; then
-  helm install flannel --set podCidrv6="fd40::/48" --namespace kube-flannel flannel/flannel --wait --debug
+  helm install flannel --set podCidrv6=$E2E_KIND_IPV6_POD_CIDR --namespace kube-flannel flannel/flannel --wait --debug --version=${FLANNEL_VERSION}
 elif [ "$E2E_IP_FAMILY" == "dual" ]; then
-  helm install flannel --set podCidr="172.40.0.0/16" --set podCidrv6="fd40::/48" --namespace kube-flannel flannel/flannel --wait --debug
+  helm install flannel --set podCidr=$E2E_KIND_IPV4_POD_CIDR --set podCidrv6=$E2E_KIND_IPV6_POD_CIDR --namespace kube-flannel flannel/flannel --wait --debug --version=${FLANNEL_VERSION}
 fi

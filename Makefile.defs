@@ -212,3 +212,8 @@ E2E_CHINA_IMAGE_REGISTRY ?= false
 E2E_INSTALL_KWOK ?= true
 KWOK_VERSION ?= v0.4.0
 
+# flannel
+FLANNEL_VERSION ?=
+
+# weave
+WEAVE_VERSION ?=
