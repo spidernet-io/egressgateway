@@ -5,7 +5,7 @@ go 1.20
 require (
 	github.com/asaskevich/govalidator v0.0.0-20230301143203-a9d515a09cc2
 	github.com/cilium/ipam v0.0.0-20220824141044-46ef3d556735
-	github.com/go-faker/faker/v4 v4.1.1
+	github.com/go-faker/faker/v4 v4.2.0
 	github.com/go-kit/log v0.2.1
 	github.com/go-logr/logr v1.2.4
 	github.com/go-swagger/go-swagger v0.30.4
