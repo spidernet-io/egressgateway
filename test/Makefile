@@ -258,7 +258,7 @@ clean:
 	-@ rm -rf $(E2E_RUNTIME_DIR)
 	-@ docker stop $(PYROSCOPE_CONTAINER_NAME) &>/dev/null
 	-@ docker rm $(PYROSCOPE_CONTAINER_NAME) &>/dev/null
-
+	-@ docker images | grep egressgateway | awk '{print $$3}' | xargs -I {} docker rmi {}
 
 
 #============ e2e ====================
