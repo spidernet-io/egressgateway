@@ -7,7 +7,6 @@ import (
 	"context"
 	"fmt"
 	"reflect"
-	"sync"
 	"sync/atomic"
 	"time"
 
@@ -41,7 +40,6 @@ type eciReconciler struct {
 	eci                          *egressv1beta1.EgressClusterInfo
 	client                       client.Client
 	log                          logr.Logger
-	doOnce                       sync.Once
 	eciMutex                     lock.RWMutex
 	// stopCheckChan Stop the goroutine that detect the existence of the cni
 	stopCheckChan                 chan struct{}
@@ -71,7 +69,6 @@ func NewEgressClusterInfoController(mgr manager.Manager, log logr.Logger) error 
 		eci:           new(egressv1beta1.EgressClusterInfo),
 		client:        mgr.GetClient(),
 		log:           log,
-		doOnce:        sync.Once{},
 		k8sPodCidr:    make(map[string]egressv1beta1.IPListPair),
 		v4ClusterCidr: make([]string, 0),
 		v6ClusterCidr: make([]string, 0),
@@ -96,22 +93,6 @@ func (r *eciReconciler) Reconcile(ctx context.Context, req reconcile.Request) (r
 		return reconcile.Result{}, err
 	}
 	log := r.log.WithValues("kind", kind)
-
-	onceDone := false
-	r.doOnce.Do(func() {
-		r.log.Info("first reconcile of egressClusterInfo controller, init egressClusterInfo")
-	redo:
-		err := r.initEgressClusterInfo(ctx)
-		if err != nil {
-			r.log.Error(err, "failed init egressClusterInfo")
-			time.Sleep(time.Second)
-			goto redo
-		}
-		onceDone = true
-	})
-	if onceDone {
-		return reconcile.Result{}, nil
-	}
 
 	r.eciMutex.Lock()
 	defer r.eciMutex.Unlock()
@@ -329,103 +310,6 @@ func (r *eciReconciler) reconcileNode(ctx context.Context, req reconcile.Request
 	return nil
 }
 
-// initEgressClusterInfo create EgressClusterInfo cr when first reconcile
-func (r *eciReconciler) initEgressClusterInfo(ctx context.Context) error {
-	r.eciMutex.Lock()
-	defer r.eciMutex.Unlock()
-
-	r.log.Info("start init EgressClusterInfo", "name", defaultEgressClusterInfoName)
-
-	egci := r.eci.DeepCopy()
-
-	err := r.getEgressClusterInfo(ctx)
-	if err != nil {
-		if !errors.IsNotFound(err) {
-			return err
-		}
-		err = r.createEgressClusterInfo(ctx)
-		if err != nil {
-			return err
-		}
-	}
-
-	ignoreClusterIP := r.eci.Spec.AutoDetect.ClusterIP
-	ignoreNodeIP := r.eci.Spec.AutoDetect.NodeIP
-	cniType := r.eci.Spec.AutoDetect.PodCidrMode
-
-	if ignoreClusterIP {
-		// get service-cluster-ip-range
-		ipv4Range, ipv6Range, err := r.getServiceClusterIPRange()
-		if err != nil {
-			return err
-		}
-		r.v4ClusterCidr = ipv4Range
-		r.v6ClusterCidr = ipv6Range
-		if r.eci.Status.ClusterIP == nil {
-			r.eci.Status.ClusterIP = new(egressv1beta1.IPListPair)
-		}
-		r.eci.Status.ClusterIP.IPv4 = ipv4Range
-		r.eci.Status.ClusterIP.IPv6 = ipv6Range
-	}
-
-	if ignoreNodeIP {
-		nodesIP, err := r.listNodeIPs(ctx)
-		if err != nil {
-			return err
-		}
-		r.eci.Status.NodeIP = nodesIP
-	}
-
-	switch cniType {
-	case egressv1beta1.CniTypeK8s:
-		// get cluster-cidr
-		k8sCidr, err := r.getK8sPodCidr()
-		if err != nil {
-			return err
-		}
-		r.k8sPodCidr = k8sCidr
-		r.eci.Status.PodCIDR = k8sCidr
-	case egressv1beta1.CniTypeCalico:
-		if !r.isWatchingCalico && !r.isCheckCalicoGoroutineRunning.Load() {
-			if r.stopCheckChan == nil {
-				r.stopCheckChan = make(chan struct{})
-			}
-			r.startCheckCalico(r.stopCheckChan)
-		} else {
-			pools, err := r.listCalicoIPPools(ctx)
-			if err != nil {
-				return err
-			}
-			r.eci.Status.PodCIDR = pools
-			r.eci.Status.PodCidrMode = egressv1beta1.CniTypeCalico
-		}
-	case egressv1beta1.CniTypeEmpty:
-		r.eci.Status.PodCIDR = nil
-	case egressv1beta1.CniTypeAuto:
-		err := r.checkSomeCniExists()
-		if err != nil {
-			return err
-		}
-	default:
-		err = fmt.Errorf("invalid cniTyp")
-		return err
-	}
-
-	if r.eci.Spec.ExtraCidr != nil {
-		r.eci.Status.ExtraCidr = r.eci.Spec.ExtraCidr
-	}
-
-	if !reflect.DeepEqual(egci, r.eci) {
-		r.log.Info("first init egressClusterInfo, need update")
-		err = r.client.Status().Update(ctx, r.eci)
-		if err != nil {
-			r.eci = egci
-			return err
-		}
-	}
-	return nil
-}
-
 // listCalicoIPPools list all calico ippools
 func (r *eciReconciler) listCalicoIPPools(ctx context.Context) (map[string]egressv1beta1.IPListPair, error) {
 	ippoolList := new(calicov1.IPPoolList)
@@ -534,17 +418,6 @@ func (r *eciReconciler) getNodeIPs(ctx context.Context, nodeName string) (map[st
 	}
 	nodesIPMap[nodeName] = egressv1beta1.IPListPair{IPv4: ipv4s, IPv6: ipv6s}
 	return nodesIPMap, nil
-}
-
-// createEgressClusterInfo create EgressClusterInfo
-func (r *eciReconciler) createEgressClusterInfo(ctx context.Context) error {
-	r.eci.Name = defaultEgressClusterInfoName
-	r.log.Info("create EgressClusterInfo")
-	err := r.client.Create(ctx, r.eci)
-	if err != nil {
-		return err
-	}
-	return nil
 }
 
 // getEgressClusterInfo get EgressClusterInfo cr
