@@ -303,6 +303,43 @@ jobs:
       kind_node_image: ${{ needs.prepare.outputs.kindNodeImage }}
     secrets: inherit
 
+
+  e2e_dual-ubuntu-latest-flannel:
+    needs: [call_build_ci_image, prepare]
+    if: ${{ always() && needs.prepare.outputs.e2e_enabled == 'true' && needs.prepare.outputs.ipfamily_dual_e2e == 'true' }}
+    uses: ./.github/workflows/call-e2e.yaml
+    with:
+      ref: ${{ needs.prepare.outputs.ref }}
+      ipfamily: dual
+      e2e_labels: ${{ needs.prepare.outputs.e2e_labels }}
+      kind_node_image: ${{ needs.prepare.outputs.kindNodeImage }}
+      cni: flannel
+    secrets: inherit
+
+  e2e_ipv4-ubuntu-latest-flannel:
+    needs: [call_build_ci_image, prepare]
+    if: ${{ always() && needs.prepare.outputs.e2e_enabled == 'true' && needs.prepare.outputs.ipfamily_ipv4only_e2e == 'true' }}
+    uses: ./.github/workflows/call-e2e.yaml
+    with:
+      ref: ${{ needs.prepare.outputs.ref }}
+      ipfamily: ipv4
+      e2e_labels: ${{ needs.prepare.outputs.e2e_labels }}
+      kind_node_image: ${{ needs.prepare.outputs.kindNodeImage }}
+      cni: flannel
+    secrets: inherit
+
+  e2e_ipv4-ubuntu-latest-weave:
+    needs: [call_build_ci_image, prepare]
+    if: ${{ always() && needs.prepare.outputs.e2e_enabled == 'true' && needs.prepare.outputs.ipfamily_ipv4only_e2e == 'true' }}
+    uses: ./.github/workflows/call-e2e.yaml
+    with:
+      ref: ${{ needs.prepare.outputs.ref }}
+      ipfamily: ipv4
+      e2e_labels: ${{ needs.prepare.outputs.e2e_labels }}
+      kind_node_image: ${{ needs.prepare.outputs.kindNodeImage }}
+      cni: weave
+    secrets: inherit
+
   trivy_scan:
     needs: [call_build_ci_image, prepare]
     if: ${{ needs.prepare.outputs.JustE2E == 'false' }}

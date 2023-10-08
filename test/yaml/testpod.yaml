@@ -18,7 +18,7 @@ spec:
     spec:
       containers:
         - name: test
-          image: docker.m.daocloud.io/alpine:latest
+          image: ""
           imagePullPolicy: IfNotPresent
           command:
             - "/bin/sh"

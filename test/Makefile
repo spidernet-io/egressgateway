@@ -3,9 +3,16 @@ include ../Makefile.defs
 
 .PHONY: init_kind_env
 init_kind_env:
+	echo $(cni)
 	make init_one_kind -e KIND_CONFIG_PATH=./kindconfig/global-kind.yaml -e KIND_CLUSTER_NAME=$(E2E_KIND_CLUSTER_NAME) -e KIND_KUBECONFIG=$(E2E_KIND_KUBECONFIG_PATH)
 	make install_proscope
-	make install_calico
+	if [ "$(cni)" == "flannel" ] ; then \
+  		make install_flannel ; \
+  	elif [ "$(cni)" == "weave" ] ; then \
+  	    make install_weave ; \
+    else \
+    	make install_calico ; \
+    fi
 	make install_kwok
 	make run_nettool_server
 
@@ -91,6 +98,34 @@ install_calico:
 	export E2E_KIND_KUBECONFIG_PATH=$(E2E_KIND_KUBECONFIG_PATH); \
 	export KIND_CLUSTER_NAME=$(E2E_KIND_CLUSTER_NAME) ; \
 	bash ./scripts/installCalico.sh
+
+.PHONY: install_flannel
+install_flannel:
+	echo "install flannel"
+	export FLANNEL_VERSION=$(FLANNEL_VERSION); \
+	export HTTP_PROXY=$(HTTP_PROXY); \
+	export FLANNEL_REGISTRY=$(FLANNEL_REGISTRY); \
+	export INSTALL_TIME_OUT=$(INSTALL_TIME_OUT); \
+	export E2E_IP_FAMILY=$(E2E_IP_FAMILY); \
+	export KUBECONFIG=$(E2E_KIND_KUBECONFIG_PATH); \
+	export KIND_CLUSTER_NAME=$(E2E_KIND_CLUSTER_NAME) ; \
+	export E2E_KIND_IPV4_POD_CIDR=$(E2E_KIND_IPV4_POD_CIDR); \
+	export E2E_KIND_IPV6_POD_CIDR=$(E2E_KIND_IPV6_POD_CIDR); \
+	bash ./scripts/installFlannel.sh
+
+.PHONY: install_weave
+install_weave:
+	echo "install weave"
+	export WEAVE_VERSION=$(WEAVE_VERSION); \
+	export HTTP_PROXY=$(HTTP_PROXY); \
+	export FLANNEL_REGISTRY=$(FLANNEL_REGISTRY); \
+	export INSTALL_TIME_OUT=$(INSTALL_TIME_OUT); \
+	export E2E_IP_FAMILY=$(E2E_IP_FAMILY); \
+	export KUBECONFIG=$(E2E_KIND_KUBECONFIG_PATH); \
+	export KIND_CLUSTER_NAME=$(E2E_KIND_CLUSTER_NAME) ; \
+	export E2E_KIND_IPV4_POD_CIDR=$(E2E_KIND_IPV4_POD_CIDR); \
+	export E2E_KIND_IPV6_POD_CIDR=$(E2E_KIND_IPV6_POD_CIDR); \
+	bash ./scripts/installWeave.sh
 
 # install kwok
 .PHONY: install_kwok
@@ -238,6 +273,8 @@ install_example_app:
 	@echo "---------- debug local file: /etc/bash.bashrc"
 	@cat /etc/bash.bashrc
 	@echo "---------- install example app"
+	echo "NETTOOLS_IMAGE=$(NETTOOLS_IMAGE)"
+	export NETTOOLS_IMAGE=$(NETTOOLS_IMAGE) && yq -i '.spec.template.spec.containers[0].image = strenv(NETTOOLS_IMAGE)' yaml/testpod.yaml
 	kubectl --kubeconfig=$(KIND_KUBECONFIG) apply -f yaml/testpod.yaml
 	@ if ! kubectl rollout status  deployment/test --kubeconfig $(KIND_KUBECONFIG) -w --timeout=120s ; then \
 			echo "error, failed to create a test pod" ; \

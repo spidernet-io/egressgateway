@@ -21,6 +21,8 @@ EgressGateway 项目为 Kubernetes 提供 Egress 能力。
 ### 兼容性
 
 * Calico
+* Flannel
+* Weave
 
 ### CRDs
 
