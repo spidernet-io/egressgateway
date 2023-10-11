@@ -14,6 +14,8 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+
+	egressv1 "github.com/spidernet-io/egressgateway/pkg/k8s/apis/v1beta1"
 )
 
 func CheckDaemonSetEgressIP(
@@ -38,7 +40,7 @@ func CheckDaemonSetEgressIP(
 	for _, pod := range list.Items {
 		// check v4
 		if egressConfig.EnableIPv4 {
-			err = checkPodEgressIP(ctx, cfg, pod, ipv4, cfg.ServerAIPv4, expectUsedEip)
+			err = CheckPodEgressIP(ctx, cfg, pod, ipv4, cfg.ServerAIPv4, expectUsedEip)
 			if err != nil {
 				return err
 			}
@@ -46,7 +48,7 @@ func CheckDaemonSetEgressIP(
 
 		// check v6
 		if egressConfig.EnableIPv6 {
-			err = checkPodEgressIP(ctx, cfg, pod, ipv6, cfg.ServerAIPv6, expectUsedEip)
+			err = CheckPodEgressIP(ctx, cfg, pod, ipv6, cfg.ServerAIPv6, expectUsedEip)
 			if err != nil {
 				return err
 			}
@@ -86,7 +88,7 @@ func debugPodList(config *Config) string {
 	return string(raw)
 }
 
-func checkPodEgressIP(ctx context.Context, cfg *Config, pod corev1.Pod, egressIP string, serverIP string, expectUsedEip bool) error {
+func CheckPodEgressIP(ctx context.Context, cfg *Config, pod corev1.Pod, egressIP string, serverIP string, expectUsedEip bool) error {
 	cmd := generateCmd(ctx, cfg, pod, egressIP, serverIP, expectUsedEip)
 	raw, err := cmd.CombinedOutput()
 	if err != nil {
@@ -113,4 +115,23 @@ func generateCmd(ctx context.Context, config *Config, pod corev1.Pod, eip, serve
 	}
 	args := fmt.Sprintf("kubectl --kubeconfig %s exec %s -n %s -- %s", config.KubeConfigPath, pod.Name, pod.Namespace, curlServer)
 	return exec.CommandContext(ctx, "sh", "-c", args)
+}
+
+// CheckPodsEgressIP check pods egressIP my pod-egressPolicy-map
+func CheckPodsEgressIP(ctx context.Context, cfg *Config, p2p map[*corev1.Pod]*egressv1.EgressPolicy, checkv4, checkv6 bool, expectUsedEip bool) error {
+	for pod, egp := range p2p {
+		if checkv4 {
+			if len(egp.Status.Eip.Ipv4) == 0 {
+				return fmt.Errorf("failed get eipV4")
+			}
+			return CheckPodEgressIP(ctx, cfg, *pod, egp.Status.Eip.Ipv4, cfg.ServerAIPv4, expectUsedEip)
+		}
+		if checkv6 {
+			if len(egp.Status.Eip.Ipv6) == 0 {
+				return fmt.Errorf("failed get eipV6")
+			}
+			return CheckPodEgressIP(ctx, cfg, *pod, egp.Status.Eip.Ipv6, cfg.ServerAIPv6, expectUsedEip)
+		}
+	}
+	return nil
 }

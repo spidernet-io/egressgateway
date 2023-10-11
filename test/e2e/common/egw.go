@@ -16,6 +16,7 @@ import (
 
 	econfig "github.com/spidernet-io/egressgateway/pkg/config"
 	egressv1 "github.com/spidernet-io/egressgateway/pkg/k8s/apis/v1beta1"
+	e2eerr "github.com/spidernet-io/egressgateway/test/e2e/err"
 )
 
 func CreateGatewayNew(ctx context.Context, cli client.Client,
@@ -120,6 +121,109 @@ func UpdateEgressGateway(ctx context.Context, cli client.Client, gateway *egress
 				continue
 			}
 			return nil
+		}
+	}
+}
+
+// CheckEGWSyncedWithEGP check if egw status synced with egp status when egp's allocatorPolicy is "rr"
+func CheckEGWSyncedWithEGP(cli client.Client, egw *egressv1.EgressGateway, checkV4, checkV6 bool, IPNum int) (bool, error) {
+	eipV4s := make(map[string]struct{})
+	eipV6s := make(map[string]struct{})
+	for _, eipStatus := range egw.Status.NodeList {
+		if checkV4 {
+			for _, eip := range eipStatus.Eips {
+				if len(eip.IPv4) != 0 {
+					if _, ok := eipV4s[eip.IPv4]; ok {
+						return false, fmt.Errorf("ip reallocate, the egw yaml:\n%s\n", GetObjYAML(egw))
+					}
+					eipV4s[eip.IPv4] = struct{}{}
+				}
+			}
+		}
+		if checkV6 {
+			for _, eip := range eipStatus.Eips {
+				if len(eip.IPv6) != 0 {
+					if _, ok := eipV6s[eip.IPv6]; ok {
+						return false, fmt.Errorf("ip reallocate, the egw yaml:\n%s\n", GetObjYAML(egw))
+					}
+					eipV6s[eip.IPv6] = struct{}{}
+				}
+			}
+		}
+		// check egw status synced with egp status
+		for _, eips := range eipStatus.Eips {
+			for _, policy := range eips.Policies {
+				egp := new(egressv1.EgressPolicy)
+				err := cli.Get(context.TODO(), types.NamespacedName{Name: policy.Name, Namespace: policy.Namespace}, egp)
+				if err != nil {
+					return false, err
+				}
+				if egp.Status.Node != eipStatus.Name {
+					e := fmt.Errorf("Node is not synced, the egp is: %s, nodeName is: %s, but egw nodeName is: %s\nthe egw yaml:\n%s\n",
+						egp.Name, egp.Status.Node, eipStatus.Name, GetObjYAML(egw))
+					return false, e
+				}
+				if egp.Status.Eip.Ipv4 != eips.IPv4 {
+					e := fmt.Errorf("Eip.Ipv4 is not synced, the egp is: %s, eipV4 is: %s, but egw IPv4 is: %s\nthe egw yaml:\n%s\n",
+						egp.Name, egp.Status.Eip.Ipv4, eips.IPv4, GetObjYAML(egw))
+					return false, e
+				}
+				if egp.Status.Eip.Ipv6 != eips.IPv6 {
+					e := fmt.Errorf("Eip.Ipv6 is not synced, the egp is: %s, eipV6 is: %s, but egw IPv6 is: %s\nthe egw yaml:\n%s\n",
+						egp.Name, egp.Status.Eip.Ipv6, eips.IPv6, GetObjYAML(egw))
+					return false, e
+				}
+			}
+		}
+	}
+	if checkV4 && checkV6 {
+		if len(eipV4s) != IPNum || len(eipV6s) != IPNum {
+			e := fmt.Errorf("failed check ip number, expect num is %v but got eipV4s num: %v, eipV6s num: %v\n", IPNum, len(eipV4s), len(eipV6s))
+			return false, e
+		}
+		return true, nil
+	}
+	if checkV4 {
+		if len(eipV4s) != IPNum {
+			e := fmt.Errorf("failed check ip number, expect num is %v but got eipV4s num: %v\n", IPNum, len(eipV4s))
+			return false, e
+		}
+		return true, nil
+	}
+	if len(eipV6s) != IPNum {
+		e := fmt.Errorf("failed check ip number, expect num is %v but got eipV6s num: %v\n", IPNum, len(eipV6s))
+		return false, e
+	}
+	return true, nil
+}
+
+// WaitEGWSyncedWithEGP
+func WaitEGWSyncedWithEGP(cli client.Client, egw *egressv1.EgressGateway, checkV4, checkV6 bool, IPNum int, timeout time.Duration) error {
+	ctx, cancel := context.WithTimeout(context.TODO(), timeout)
+	defer cancel()
+	var e error
+	for {
+		select {
+		case <-ctx.Done():
+			if e == nil {
+				return e2eerr.ErrTimeout
+			}
+			return fmt.Errorf("egressGateway failed synced with egressPolicy, error: %v\n", e)
+		default:
+			err := cli.Get(ctx, types.NamespacedName{Name: egw.Name}, egw)
+			if err != nil {
+				time.Sleep(time.Second / 2)
+				continue
+			}
+			ok, err := CheckEGWSyncedWithEGP(cli, egw, checkV4, checkV6, IPNum)
+			if ok {
+				return nil
+			}
+			if err != nil {
+				e = err
+				time.Sleep(time.Second / 2)
+				continue
+			}
 		}
 	}
 }
