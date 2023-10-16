@@ -10,6 +10,7 @@ theme:
   navigation_depth: 2
   features:
     - content.code.annotate
+    - content.tabs.link
   palette:
     scheme: default
     primary: "#4478D1"

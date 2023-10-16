@@ -192,7 +192,7 @@ endif
 #====== nettools
 NODE_NAME=$(E2E_KIND_CLUSTER_NAME)-control-plane
 NETTOOLS_CLIENT=nettools-client
-NET_TOOLS_IMAGE_TAG="v1"
+NET_TOOLS_IMAGE_TAG=v1
 NETTOOLS_SERVER_A="nettools-server-a"
 NETTOOLS_SERVER_B="nettools-server-b"
 NETTOOLS_SERVER_BIN="nettools-server"
@@ -203,7 +203,6 @@ TCP_PORT="63380"
 UDP_PORT="63381"
 WEB_PORT="63382"
 
-
 # for pull chart and visit github
 HTTP_PROXY ?=
 E2E_CHINA_IMAGE_REGISTRY ?= false
@@ -212,3 +211,8 @@ E2E_CHINA_IMAGE_REGISTRY ?= false
 E2E_INSTALL_KWOK ?= true
 KWOK_VERSION ?= v0.4.0
 
+# flannel
+FLANNEL_VERSION ?=
+
+# weave
+WEAVE_VERSION ?=

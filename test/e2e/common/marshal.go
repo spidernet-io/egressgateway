@@ -4,12 +4,18 @@
 package common
 
 import (
-	. "github.com/onsi/gomega"
-	"gopkg.in/yaml.v2"
+	"k8s.io/apimachinery/pkg/api/meta"
+	"k8s.io/apimachinery/pkg/runtime"
+	"sigs.k8s.io/yaml"
 )
 
-func YamlMarshal(in interface{}) []byte {
-	out, err := yaml.Marshal(in)
-	Expect(err).NotTo(HaveOccurred())
-	return out
+func GetObjYAML(obj runtime.Object) string {
+	o := obj.DeepCopyObject()
+	a, err := meta.Accessor(o)
+	if err != nil {
+		return ""
+	}
+	a.SetManagedFields(nil)
+	res, _ := yaml.Marshal(o)
+	return string(res)
 }

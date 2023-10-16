@@ -5,39 +5,55 @@ package main
 
 import (
 	"bufio"
+	"context"
 	"fmt"
-	utils "github.com/spidernet-io/egressgateway/cmd/nettools"
 	"io"
 	"log"
 	"net"
+	"os"
 	"strings"
 	"sync"
 	"time"
 
 	"github.com/gorilla/websocket"
+
+	"github.com/spidernet-io/egressgateway/cmd/nettools/client/batch"
+	"github.com/spidernet-io/egressgateway/cmd/nettools/flag"
 )
 
 var wg sync.WaitGroup
 
 func main() {
-	config := utils.ParseFlag()
+	config := flag.ParseClientFlag()
 	if *config.Addr == "" {
 		log.Fatalln("err: server addr no provide")
+	}
+
+	if *config.Batch {
+		log.Println("batch mode")
+		err := batch.Batch(context.Background(), config)
+		if err != nil {
+			fmt.Println(err)
+			os.Exit(1)
+			return
+		}
+		os.Exit(0)
+		return
 	}
 
 	go func() {
 		protocol := strings.ToLower(*config.Proto)
 		switch protocol {
-		case utils.PROTOCOL_TCP:
+		case flag.ProtocolTcp:
 			wg.Add(1)
 			go tcpClient(config)
-		case utils.PROTOCOL_UDP:
+		case flag.ProtocolUdp:
 			wg.Add(1)
 			go udpClient(config)
-		case utils.PROTOCOL_WEB:
+		case flag.ProtocolWeb:
 			wg.Add(1)
 			go webClient(config)
-		case utils.PROTOCOL_ALL:
+		case flag.ProtocolAll:
 			wg.Add(3)
 			go tcpClient(config)
 			go udpClient(config)
@@ -52,14 +68,14 @@ func main() {
 	time.Sleep(time.Second * time.Duration(*config.Timeout))
 }
 
-func tcpClient(config utils.Config) {
+func tcpClient(config flag.Config) {
 	defer wg.Done()
 
 	var tcpAddr *net.TCPAddr
-	tcpAddr, _ = net.ResolveTCPAddr(utils.PROTOCOL_TCP, fmt.Sprintf("%s:%s", *config.Addr, *config.TcpPort))
+	tcpAddr, _ = net.ResolveTCPAddr(flag.ProtocolTcp, fmt.Sprintf("%s:%s", *config.Addr, *config.TcpPort))
 
 	log.Println("trying to connect tcpServer: ", fmt.Sprintf("%s:%s", *config.Addr, *config.TcpPort))
-	conn, err := net.DialTCP(utils.PROTOCOL_TCP, nil, tcpAddr)
+	conn, err := net.DialTCP(flag.ProtocolTcp, nil, tcpAddr)
 
 	if err != nil {
 		log.Fatalln("WEB: connect server failed: ", err)
@@ -72,14 +88,14 @@ func tcpClient(config utils.Config) {
 	onMessageReceived(conn)
 }
 
-func udpClient(config utils.Config) {
+func udpClient(config flag.Config) {
 	defer wg.Done()
 
 	var udpAddr *net.UDPAddr
-	udpAddr, _ = net.ResolveUDPAddr(utils.PROTOCOL_UDP, fmt.Sprintf("%s:%s", *config.Addr, *config.UdpPort))
+	udpAddr, _ = net.ResolveUDPAddr(flag.ProtocolUdp, fmt.Sprintf("%s:%s", *config.Addr, *config.UdpPort))
 
 	log.Println("trying to connect udpServer: ", fmt.Sprintf("%s:%s", *config.Addr, *config.UdpPort))
-	conn, err := net.DialUDP(utils.PROTOCOL_UDP, nil, udpAddr)
+	conn, err := net.DialUDP(flag.ProtocolUdp, nil, udpAddr)
 
 	if err != nil {
 		log.Fatalln("WEB: connect server failed: ", err)
@@ -92,7 +108,7 @@ func udpClient(config utils.Config) {
 	onMessageReceivedUDP(conn)
 }
 
-func webClient(config utils.Config) {
+func webClient(config flag.Config) {
 	defer wg.Done()
 
 	dialer := websocket.Dialer{}

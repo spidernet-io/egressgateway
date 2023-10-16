@@ -830,10 +830,10 @@ func newEgressTunnelController(mgr manager.Manager, cfg *config.Config, log logr
 		cfg:            cfg,
 		doOnce:         sync.Once{},
 		peerMap:        utils.NewSyncMap[string, vxlan.Peer](),
-		vxlan:          vxlan.New(),
 		ruleRoute:      ruleRoute,
 		ruleRouteCache: utils.NewSyncMap[string, []net.IP](),
 	}
+
 	netLink := vxlan.NetLink{
 		RouteListFiltered: netlink.RouteListFiltered,
 		LinkByIndex:       netlink.LinkByIndex,
@@ -846,6 +846,7 @@ func newEgressTunnelController(mgr manager.Manager, cfg *config.Config, log logr
 	} else {
 		r.getParent = vxlan.GetParentByDefaultRoute(netLink)
 	}
+	r.vxlan = vxlan.New(vxlan.WithCustomGetParent(r.getParent))
 
 	c, err := controller.New("vxlan", mgr, controller.Options{Reconciler: r})
 	if err != nil {

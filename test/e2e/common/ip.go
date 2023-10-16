@@ -5,6 +5,7 @@ package common
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"math/big"
@@ -15,8 +16,12 @@ import (
 
 	"github.com/spidernet-io/egressgateway/pkg/constant"
 	iputil "github.com/spidernet-io/egressgateway/pkg/utils/ip"
-	e "github.com/spidernet-io/egressgateway/test/e2e/err"
 	"github.com/spidernet-io/egressgateway/test/e2e/tools"
+)
+
+var (
+	ErrIPFormat  = errors.New("invalid ip format")
+	ErrIPVersion = errors.New("error, not IPv4 and IPv6")
 )
 
 func CheckEgressTunnelIP(nodeName string, ip string, duration time.Duration) bool {
@@ -120,7 +125,7 @@ func RandomIPPoolV6Range(start, end string) string {
 func CheckIPinCidr(ip, cidr string) (bool, error) {
 	IPip := net.ParseIP(ip)
 	if IPip == nil {
-		return false, e.IPVERSION_ERR
+		return false, ErrIPVersion
 	}
 	IPip2, IPnet, err := net.ParseCIDR(cidr)
 	if err != nil {
@@ -171,7 +176,7 @@ func CheckIPSlice(ipSlice []string) error {
 				i++
 			}
 			if i == 0 {
-				return ERR_IP_FORMAT
+				return ErrIPFormat
 			}
 		}
 	}
@@ -195,7 +200,7 @@ func IntToIP(i *big.Int) net.IP {
 func AddIP(ip string, x int64) (string, error) {
 	netIp := net.ParseIP(ip)
 	if netIp == nil {
-		return "", ERR_IP_FORMAT
+		return "", ErrIPFormat
 	}
 	intIp := IpToInt(netIp)
 	intIp.Add(intIp, big.NewInt(x))

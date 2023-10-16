@@ -6,7 +6,6 @@ package main
 import (
 	"bufio"
 	"fmt"
-	utils "github.com/spidernet-io/egressgateway/cmd/nettools"
 	"io"
 	"log"
 	"net"
@@ -16,6 +15,7 @@ import (
 	"time"
 
 	"github.com/gorilla/websocket"
+	"github.com/spidernet-io/egressgateway/cmd/nettools/flag"
 )
 
 var (
@@ -27,19 +27,19 @@ var (
 )
 
 func main() {
-	config := utils.ParseFlag()
+	config := flag.ParseServerFlag()
 	protocol := strings.ToLower(*config.Proto)
 	switch protocol {
-	case utils.PROTOCOL_TCP:
+	case flag.ProtocolTcp:
 		wg.Add(1)
 		go tcpServer(config)
-	case utils.PROTOCOL_UDP:
+	case flag.ProtocolUdp:
 		wg.Add(1)
 		go udpServer(config)
-	case utils.PROTOCOL_WEB:
+	case flag.ProtocolWeb:
 		wg.Add(1)
 		go websocketServer(config)
-	case utils.PROTOCOL_ALL:
+	case flag.ProtocolAll:
 		wg.Add(3)
 		go tcpServer(config)
 		go udpServer(config)
@@ -51,10 +51,10 @@ func main() {
 	wg.Wait()
 }
 
-func tcpServer(config utils.Config) {
+func tcpServer(config flag.ServerConfig) {
 	defer wg.Done()
 	var tcpAddr *net.TCPAddr
-	tcpAddr, _ = net.ResolveTCPAddr(utils.PROTOCOL_TCP, fmt.Sprintf("%s:%s", *config.Addr, *config.TcpPort))
+	tcpAddr, _ = net.ResolveTCPAddr(flag.ProtocolTcp, fmt.Sprintf("%s:%s", *config.Addr, *config.TcpPort))
 	tcpListener, err := net.ListenTCP("tcp", tcpAddr)
 	if err != nil {
 		log.Fatalf("tcpServer failed to start: %v", err)
@@ -110,9 +110,9 @@ func tcpPipe(conn *net.TCPConn) {
 	}
 }
 
-func udpServer(config utils.Config) {
+func udpServer(config flag.ServerConfig) {
 	defer wg.Done()
-	udpConn, err := net.ListenPacket(utils.PROTOCOL_UDP, fmt.Sprintf("%s:%s", *config.Addr, *config.UdpPort))
+	udpConn, err := net.ListenPacket(flag.ProtocolUdp, fmt.Sprintf("%s:%s", *config.Addr, *config.UdpPort))
 	if err != nil {
 		log.Fatalf("udpServer failed to start: %v", err)
 	}
@@ -139,7 +139,7 @@ func udpServer(config utils.Config) {
 	}
 }
 
-func websocketServer(config utils.Config) {
+func websocketServer(config flag.ServerConfig) {
 	defer wg.Done()
 
 	http.HandleFunc("/ws", func(w http.ResponseWriter, r *http.Request) {

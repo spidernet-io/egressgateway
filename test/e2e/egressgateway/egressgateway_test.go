@@ -4,25 +4,27 @@
 package egressgateway_test
 
 import (
-	"errors"
-	"time"
+	"context"
+	"fmt"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 
-	v1 "k8s.io/api/core/v1"
+	"github.com/go-faker/faker/v4"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/spidernet-io/egressgateway/pkg/constant"
-	egressv1beta1 "github.com/spidernet-io/egressgateway/pkg/k8s/apis/v1beta1"
+	egressv1 "github.com/spidernet-io/egressgateway/pkg/k8s/apis/v1beta1"
 	"github.com/spidernet-io/egressgateway/test/e2e/common"
 	"github.com/spidernet-io/egressgateway/test/e2e/tools"
 )
 
-var ErrNotNeed = errors.New("not need this case")
-var _ = Describe("Operate egressGateway", Label("egressGateway"), func() {
+var _ = Describe("Operate EgressGateway", Label("EgressGateway"), Ordered, func() {
 	var labels map[string]string
 	var name string
+	var egw *egressv1.EgressGateway
+	var ctx = context.Background()
+
 	var (
 		badDefaultIPv4, badDefaultIPv6 string
 		invalidIPv4, invalidIPv6       string
@@ -32,9 +34,9 @@ var _ = Describe("Operate egressGateway", Label("egressGateway"), func() {
 	)
 	var labelSelector *metav1.LabelSelector
 
-	//var notGatewayNodes, gatewayNodes []string
-
 	BeforeEach(func() {
+		egw = new(egressv1.EgressGateway)
+
 		// single Ippools
 		singleIpv4Pool, singleIpv6Pool = make([]string, 0), make([]string, 0)
 		// range Ippools
@@ -47,120 +49,132 @@ var _ = Describe("Operate egressGateway", Label("egressGateway"), func() {
 
 		labelSelector = &metav1.LabelSelector{MatchLabels: labels}
 
-		if enableV4 {
+		if egressConfig.EnableIPv4 {
 			badDefaultIPv4 = "11.10.0.1"
 			invalidIPv4 = "invalidIPv4"
 			singleIpv4Pool = []string{common.RandomIPV4()}
 			rangeIpv4Pool = []string{common.RandomIPPoolV4Range("10", "12")}
 			cidrIpv4Pool = []string{common.RandomIPPoolV4Cidr("24")}
+		} else {
+			fmt.Println("1")
 		}
-		if enableV6 {
+		if egressConfig.EnableIPv6 {
 			badDefaultIPv6 = "fdde:10::1"
 			invalidIPv6 = "invalidIPv6"
 			singleIpv6Pool = []string{common.RandomIPV6()}
 			rangeIpv6Pool = []string{common.RandomIPPoolV6Range("a", "c")}
 			cidrIpv6Pool = []string{common.RandomIPPoolV6Cidr("120")}
+		} else {
+			fmt.Println("1")
 		}
 
+		GinkgoWriter.Println(singleIpv4Pool, singleIpv6Pool)
+
 		DeferCleanup(func() {
-			// delete egressgateway if its exists
-			Expect(common.DeleteEgressGatewayIfExists(f, name, time.Second*10)).NotTo(HaveOccurred())
+			ctx := context.Background()
+			// delete EgressGateway
+			if egw != nil {
+				err := common.DeleteObj(ctx, cli, egw)
+				Expect(err).NotTo(HaveOccurred())
+			}
 		})
 	})
 
-	DescribeTable("Failed to create egressGateway", func(checkCreateEG func() error) {
-		Expect(checkCreateEG()).To(HaveOccurred())
+	GinkgoWriter.Println("85", singleIpv4Pool, singleIpv6Pool)
+
+	DescribeTable("Failed to create egressGateway", func(setUp func(*egressv1.EgressGateway)) {
+		var err error
+		egw, err = common.CreateGatewayCustom(ctx, cli, setUp)
+		Expect(err).To(HaveOccurred())
 	},
-		Entry("When `Ippools` is invalid", Label("G00001"), func() error {
-			return common.CreateEgressGateway(f, common.GenerateEgressGatewayYaml(name, egressv1beta1.Ippools{IPv4: []string{invalidIPv4}, IPv6: []string{invalidIPv6}}, egressv1beta1.NodeSelector{}))
+		Entry("When `Ippools` is invalid", Label("G00001"), func(egw *egressv1.EgressGateway) {
+			egw.Spec.Ippools = egressv1.Ippools{IPv4: []string{invalidIPv4}, IPv6: []string{invalidIPv6}}
 		}),
-		// todo bzsuni
-		PEntry("When `NodeSelector` is empty", Label("G00002"), func() error {
-			return common.CreateEgressGateway(f, common.GenerateEgressGatewayYaml(name, egressv1beta1.Ippools{IPv4: singleIpv4Pool, IPv6: singleIpv6Pool}, egressv1beta1.NodeSelector{}))
+		// TODO @bzsuni
+		PEntry("When `NodeSelector` is empty", Label("G00002"), func(egw *egressv1.EgressGateway) {
+			egw.Spec.Ippools = egressv1.Ippools{IPv4: singleIpv4Pool, IPv6: singleIpv6Pool}
 		}),
-		Entry("When `defaultEIP` is not in `Ippools`", Label("G00003"), func() error {
-			return common.CreateEgressGateway(f,
-				common.GenerateEgressGatewayYaml(name, egressv1beta1.Ippools{IPv4: singleIpv6Pool, IPv6: singleIpv6Pool, Ipv4DefaultEIP: badDefaultIPv4, Ipv6DefaultEIP: badDefaultIPv6},
-					egressv1beta1.NodeSelector{Policy: common.AVERAGE_SELECTION, Selector: labelSelector}))
-		}),
-		Entry("When the number of `Ippools.IPv4` is not same with `Ippools.IPv6` in dual cluster", Label("G00004"), func() error {
-			if enableV4 && enableV6 {
-				return common.CreateEgressGateway(f,
-					common.GenerateEgressGatewayYaml(name, egressv1beta1.Ippools{IPv4: singleIpv4Pool, IPv6: []string{}},
-						egressv1beta1.NodeSelector{Policy: common.AVERAGE_SELECTION, Selector: labelSelector}))
+		Entry("When `defaultEIP` is not in `Ippools`", Label("G00003"), func(egw *egressv1.EgressGateway) {
+			egw.Spec.Ippools = egressv1.Ippools{
+				IPv4:           singleIpv6Pool,
+				IPv6:           singleIpv6Pool,
+				Ipv4DefaultEIP: badDefaultIPv4,
+				Ipv6DefaultEIP: badDefaultIPv6,
 			}
-			return ErrNotNeed
+			egw.Spec.NodeSelector = egressv1.NodeSelector{
+				Policy:   common.AVERAGE_SELECTION,
+				Selector: labelSelector,
+			}
 		}),
 	)
 
-	DescribeTable("Succeeded to create egressGateway", func(createEG func() error) {
-		Expect(createEG()).NotTo(HaveOccurred())
+	if egressConfig.EnableIPv4 && egressConfig.EnableIPv6 {
+		DescribeTable("Failed to create egressGateway", func(setUp func(*egressv1.EgressGateway)) {
+			var err error
+			egw, err = common.CreateGatewayCustom(ctx, cli, setUp)
+			Expect(err).To(HaveOccurred())
+		},
+			Entry("When the count of pools.IPv4 differs from pools.IPv6 in a dual cluster.", Label("G00004"),
+				func(egw *egressv1.EgressGateway) {
+					egw.Spec.Ippools = egressv1.Ippools{IPv4: singleIpv4Pool, IPv6: []string{}}
+					egw.Spec.NodeSelector = egressv1.NodeSelector{Policy: common.AVERAGE_SELECTION, Selector: labelSelector}
+				}))
+	}
+
+	DescribeTable("Succeeded to create egressGateway", func(setUp func(*egressv1.EgressGateway)) {
+		var err error
+		egw, err = common.CreateGatewayCustom(ctx, cli, setUp)
+		Expect(err).NotTo(HaveOccurred())
 	},
-		Entry("when `Ippools` is a single IP", Label("G00006"), func() error {
-			GinkgoWriter.Printf("singleIpv4Pool: %v, singleIpv6Pool: %v\n", singleIpv4Pool, singleIpv6Pool)
-			return common.CreateEgressGateway(f,
-				common.GenerateEgressGatewayYaml(name, egressv1beta1.Ippools{IPv4: singleIpv4Pool, IPv6: singleIpv6Pool},
-					egressv1beta1.NodeSelector{Policy: common.AVERAGE_SELECTION, Selector: labelSelector}))
+		Entry("when `Ippools` is a single IP", Label("G00006"), func(egw *egressv1.EgressGateway) {
+			egw.Spec.Ippools = egressv1.Ippools{IPv4: singleIpv4Pool, IPv6: singleIpv6Pool}
+			egw.Spec.NodeSelector = egressv1.NodeSelector{Policy: common.AVERAGE_SELECTION, Selector: labelSelector}
 		}),
-		Entry("when `Ippools` is a IP range like `a-b`", Label("G00007"), func() error {
-			GinkgoWriter.Printf("rangeIpv4Pool: %v, rangeIpv6Pool: %v\n", rangeIpv4Pool, rangeIpv6Pool)
-			return common.CreateEgressGateway(f,
-				common.GenerateEgressGatewayYaml(name, egressv1beta1.Ippools{IPv4: rangeIpv4Pool, IPv6: rangeIpv6Pool},
-					egressv1beta1.NodeSelector{Policy: common.AVERAGE_SELECTION, Selector: labelSelector}))
+
+		Entry("when `Ippools` is a IP range like `a-b`", Label("G00007"), func(egw *egressv1.EgressGateway) {
+			egw.Spec.Ippools = egressv1.Ippools{IPv4: rangeIpv4Pool, IPv6: rangeIpv6Pool}
+			egw.Spec.NodeSelector = egressv1.NodeSelector{Policy: common.AVERAGE_SELECTION, Selector: labelSelector}
 		}),
-		// todo bzsuni
-		PEntry("when `Ippools` is a IP cidr", Label("G00008"), func() error {
-			GinkgoWriter.Printf("cidrIpv4Pool: %v, cidrIpv6Pool: %v\n", cidrIpv4Pool, cidrIpv6Pool)
-			return common.CreateEgressGateway(f,
-				common.GenerateEgressGatewayYaml(name, egressv1beta1.Ippools{IPv4: cidrIpv4Pool, IPv6: cidrIpv6Pool},
-					egressv1beta1.NodeSelector{Policy: common.AVERAGE_SELECTION, Selector: labelSelector}))
+		// TODO @bzsuni
+		PEntry("when `Ippools` is a IP CIDR", Label("G00008"), func(egw *egressv1.EgressGateway) {
+			egw.Spec.Ippools = egressv1.Ippools{IPv4: cidrIpv4Pool, IPv6: cidrIpv6Pool}
+			egw.Spec.NodeSelector = egressv1.NodeSelector{Policy: common.AVERAGE_SELECTION, Selector: labelSelector}
 		}),
 	)
 
 	Context("Edit egressGateway", func() {
-		var eg *egressv1beta1.EgressGateway
+		var egw *egressv1.EgressGateway
 		var v4DefaultEip, v6DefaultEip string
-		var nodeA, nodeB *v1.Node
-		var nodeAName, nodeBName string
-		var nodeALabel, nodeBLabel *metav1.LabelSelector
 
 		BeforeEach(func() {
-			// node
-			nodeA = nodeObjs[0]
-			nodeB = nodeObjs[1]
-			nodeAName = nodeA.Name
-			nodeBName = nodeB.Name
-			nodeALabel = &metav1.LabelSelector{MatchLabels: nodeA.Labels}
-			nodeBLabel = &metav1.LabelSelector{MatchLabels: nodeB.Labels}
-			GinkgoWriter.Printf("nodeA: %s, labels: %s\n", nodeAName, common.YamlMarshal(nodeALabel))
-			GinkgoWriter.Printf("nodeB: %s, labels: %s\n", nodeBName, common.YamlMarshal(nodeBLabel))
+			ctx := context.Background()
+			var err error
 
-			// generate egressGateway  yaml
-			GinkgoWriter.Println("GenerateEgressGatewayYaml")
-			eg = common.GenerateEgressGatewayYaml(name, egressv1beta1.Ippools{IPv4: rangeIpv4Pool, IPv6: rangeIpv6Pool}, egressv1beta1.NodeSelector{Policy: common.AVERAGE_SELECTION, Selector: nodeALabel})
-
-			// create egressGateway
-			GinkgoWriter.Println("CreateEgressGateway")
-			Expect(common.CreateEgressGateway(f, eg)).NotTo(HaveOccurred())
+			GinkgoWriter.Println("Create EgressGateway")
+			nodeSelector := egressv1.NodeSelector{Selector: &metav1.LabelSelector{MatchLabels: node1Label}}
+			egw, err = common.CreateGatewayNew(ctx, cli, "egw-"+faker.Word(), egressv1.Ippools{IPv4: rangeIpv4Pool, IPv6: rangeIpv6Pool}, nodeSelector)
+			Expect(err).NotTo(HaveOccurred())
 
 			// wait `DefaultEip` updated in egressGateway status
-			GinkgoWriter.Println("WaitEgressGatewayDefaultEIPUpdated")
-			v4DefaultEip, v6DefaultEip, err = common.WaitEgressGatewayDefaultEIPUpdated(f, name, enableV4, enableV6, time.Second*10)
+			GinkgoWriter.Println("Wait EgressGateway defaultEgressIP update")
+
+			v4DefaultEip, v6DefaultEip, err = common.GetGatewayDefaultIP(ctx, cli, egw, egressConfig)
 			Expect(err).NotTo(HaveOccurred())
 
 			DeferCleanup(func() {
-
+				err = common.DeleteObj(ctx, cli, egw)
+				Expect(err).NotTo(HaveOccurred())
 			})
 		})
 
 		It("`DefaultEip` will be assigned randomly from `Ippools` when the filed is empty", Label("G00005"), func() {
-			if enableV4 {
+			if egressConfig.EnableIPv4 {
 				GinkgoWriter.Printf("Check DefaultEip %s if within range %v\n", v4DefaultEip, rangeIpv4Pool)
 				included, err := common.CheckIPIncluded(constant.IPv4, v4DefaultEip, rangeIpv4Pool)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(included).To(BeTrue())
 			}
-			if enableV6 {
+			if egressConfig.EnableIPv6 {
 				GinkgoWriter.Printf("Check DefaultEip %s if within range %v\n", v6DefaultEip, rangeIpv6Pool)
 				included, err := common.CheckIPIncluded(constant.IPv6, v6DefaultEip, rangeIpv6Pool)
 				Expect(err).NotTo(HaveOccurred())
@@ -168,54 +182,66 @@ var _ = Describe("Operate egressGateway", Label("egressGateway"), func() {
 			}
 		})
 
-		DescribeTable("Test update egressGateway", func(expected bool, updateEG func() error) {
+		DescribeTable("Test update egressGateway", func(expectedErr bool, update func(egw *egressv1.EgressGateway)) {
 			// if not expected, error occurred
-			if !expected {
-				Expect(updateEG()).To(HaveOccurred())
+			GinkgoWriter.Printf("Update EgressGateway: %s\n", egw.Name)
+			update(egw)
+			err := common.UpdateEgressGateway(ctx, cli, egw)
+			if expectedErr {
+				if err == nil {
+					raw := common.GetObjYAML(egw)
+					GinkgoWriter.Println("EgressGateway YAML:")
+					GinkgoWriter.Println(raw)
+				}
+				Expect(err).To(HaveOccurred())
 			} else {
-				// if expected, error not occurred
-				Expect(updateEG()).NotTo(HaveOccurred())
+				if err != nil {
+					raw := common.GetObjYAML(egw)
+					GinkgoWriter.Println("EgressGateway YAML:")
+					GinkgoWriter.Println(raw)
+				}
+				Expect(err).NotTo(HaveOccurred())
 			}
 		},
-			Entry("Failed when add invalid `IP` to `Ippools`", Label("G00009"), false, func() error {
-				if enableV4 {
-					eg.Spec.Ippools.IPv4 = append(eg.Spec.Ippools.IPv4, invalidIPv4)
+			Entry("Failed when add invalid `IP` to `Ippools`", Label("G00009"), true, func(egw *egressv1.EgressGateway) {
+				raw := common.GetObjYAML(egw)
+				GinkgoWriter.Println("EgressGateway YAML, Update before:")
+				GinkgoWriter.Println(raw)
+				GinkgoWriter.Println("----------------------------------")
+
+				if egressConfig.EnableIPv4 {
+					egw.Spec.Ippools.IPv4 = append(egw.Spec.Ippools.IPv4, invalidIPv4)
 				}
-				if enableV6 {
-					eg.Spec.Ippools.IPv6 = append(eg.Spec.Ippools.IPv6, invalidIPv6)
+				if egressConfig.EnableIPv6 {
+					egw.Spec.Ippools.IPv6 = append(egw.Spec.Ippools.IPv6, invalidIPv6)
 				}
-				GinkgoWriter.Printf("UpdateEgressGateway: %s\n", eg.Name)
-				return common.UpdateEgressGateway(f, eg, time.Second*10)
 			}),
-			Entry("Succeeded when add valid `IP` to `Ippools`", Label("G00012", "G00013"), true, func() error {
-				if enableV4 {
-					eg.Spec.Ippools.IPv4 = append(eg.Spec.Ippools.IPv4, singleIpv4Pool...)
+			Entry("Succeeded when add valid `IP` to `Ippools`", Label("G00012", "G00013"), false, func(egw *egressv1.EgressGateway) {
+				if egressConfig.EnableIPv4 {
+					egw.Spec.Ippools.IPv4 = append(egw.Spec.Ippools.IPv4, singleIpv4Pool...)
 				}
-				if enableV6 {
-					eg.Spec.Ippools.IPv6 = append(eg.Spec.Ippools.IPv6, singleIpv6Pool...)
+				if egressConfig.EnableIPv6 {
+					egw.Spec.Ippools.IPv6 = append(egw.Spec.Ippools.IPv6, singleIpv6Pool...)
 				}
-				GinkgoWriter.Printf("UpdateEgressGateway: %s\n", eg.Name)
-				return common.UpdateEgressGateway(f, eg, time.Second*10)
 			}),
-			Entry("Failed when delete `IP` that being used", Label("G00010"), false, func() error {
-				if enableV4 {
-					eg.Spec.Ippools.IPv4 = tools.RemoveValueFromSlice(eg.Spec.Ippools.IPv4, v4DefaultEip)
+			PEntry("Failed when delete `IP` that being used", Label("G00010"), true, func(egw *egressv1.EgressGateway) {
+				raw := common.GetObjYAML(egw)
+				GinkgoWriter.Println("EgressGateway YAML, Update before:")
+				GinkgoWriter.Println(raw)
+
+				if egressConfig.EnableIPv4 {
+					egw.Spec.Ippools.IPv4 = tools.RemoveValueFromSlice(egw.Spec.Ippools.IPv4, v4DefaultEip)
 				}
-				if enableV6 {
-					eg.Spec.Ippools.IPv6 = tools.RemoveValueFromSlice(eg.Spec.Ippools.IPv6, v6DefaultEip)
+				if egressConfig.EnableIPv6 {
+					egw.Spec.Ippools.IPv6 = tools.RemoveValueFromSlice(egw.Spec.Ippools.IPv6, v6DefaultEip)
 				}
-				GinkgoWriter.Printf("UpdateEgressGateway: %s\n", eg.Name)
-				return common.UpdateEgressGateway(f, eg, time.Second*10)
 			}),
-			Entry("Failed when add different number of ip to `Ippools.IPv4` and `Ippools.IPv6`", Label("G00011"), false, func() error {
-				if enableV4 && enableV6 {
-					eg.Spec.Ippools.IPv4 = append(eg.Spec.Ippools.IPv4, singleIpv4Pool...)
-					GinkgoWriter.Printf("UpdateEgressGateway: %s\n", eg.Name)
-					return common.UpdateEgressGateway(f, eg, time.Second*10)
-				}
-				return ErrNotNeed
-			}),
+			PEntry("Failed when add different number of ip to `Ippools.IPv4` and `Ippools.IPv6`",
+				Label("G00011"), egressConfig.EnableIPv4 && egressConfig.EnableIPv6, func(egw *egressv1.EgressGateway) {
+					if egressConfig.EnableIPv4 && egressConfig.EnableIPv6 {
+						egw.Spec.Ippools.IPv4 = append(egw.Spec.Ippools.IPv4, singleIpv4Pool...)
+					}
+				}),
 		)
 	})
-
 })

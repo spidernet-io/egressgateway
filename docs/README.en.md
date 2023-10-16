@@ -21,6 +21,8 @@ There are two clusters A and B. Cluster A is VMWare-based and runs mainly Databa
 ### Compatibility
 
 * Calico
+* Flannel
+* Weave
 
 ### CRDs
 
