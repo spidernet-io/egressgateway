@@ -44,8 +44,8 @@ feature:
     port: 7789
     ## @param feature.vxlan.id VXLAN ID
     id: 100
-    ## @param feature.vxlan.disableChecksumOffload Disable checksum offload
-    disableChecksumOffload: true
+    ## @param feature.vxlan.disableChecksumOffload Disable checksum offload, set to true only when facing network connectivity issues. Please note that setting it to true may result in decreased network performance.
+    disableChecksumOffload: false
   clusterCIDR:
     autoDetect:
       ## @param feature.clusterCIDR.autoDetect.podCidrMode cni cluster used, it can be specified as `k8s`, `calico`, `auto` or `""`. The default value is `auto`.
