@@ -107,13 +107,13 @@ func (r *vxlanReconciler) reconcileEgressClusterEndpointSlice(ctx context.Contex
 
 func (r *vxlanReconciler) syncReplayRoute(log logr.Logger) error {
 
-	if !r.cfg.FileConfig.EnableReplyRoute {
-		log.Info("EnableReplyRoute=false")
+	if !r.cfg.FileConfig.EnableGatewayReplyRoute {
+		log.Info("EnableGatewayReplyRoute=false")
 		return nil
 	}
 
-	table := r.cfg.FileConfig.ReplyRouteTable
-	mark := r.cfg.FileConfig.ReplyRouteMark
+	table := r.cfg.FileConfig.GatewayReplyRouteTable
+	mark := r.cfg.FileConfig.GatewayReplyRouteMark
 	ipv4RouteMap := make(map[string]replyRoute, 0)
 	ipv6RouteMap := make(map[string]replyRoute, 0)
 	hostIPV4RouteMap := make(map[string]replyRoute, 0)
@@ -796,8 +796,8 @@ func (r *vxlanReconciler) initTunnelPeerMap() error {
 
 func (r *vxlanReconciler) keepReplayRoute() {
 	log := r.log.WithValues("type", "daemon")
-	if !r.cfg.FileConfig.EnableReplyRoute {
-		log.Info("EnableReplyRoute=false")
+	if !r.cfg.FileConfig.EnableGatewayReplyRoute {
+		log.Info("EnableGatewayReplyRoute=false")
 		return
 	}
 

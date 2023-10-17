@@ -37,6 +37,7 @@ The gateway provides network egress capabilities for Kubernetes clusters.
 * Calico
 * Flannel
 * Weave
+* Spiderpool
 
 ### CRDs
 

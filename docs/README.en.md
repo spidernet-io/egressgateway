@@ -23,6 +23,7 @@ There are two clusters A and B. Cluster A is VMWare-based and runs mainly Databa
 * Calico
 * Flannel
 * Weave
+* Spiderpool
 
 ### CRDs
 

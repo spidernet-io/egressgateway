@@ -192,13 +192,14 @@ func (r *policeReconciler) initApplyPolicy() error {
 		}
 	}
 
-	if isEgressNode && r.cfg.FileConfig.EnableReplyRoute {
-		replyRouteMark := r.cfg.FileConfig.ReplyRouteMark
+	// add forward rules for replay packet on gateway node, which should be enabled for spiderpool
+	if isEgressNode && r.cfg.FileConfig.EnableGatewayReplyRoute {
+		gatewayReplyRouteMark := r.cfg.FileConfig.GatewayReplyRouteMark
 		dev := r.cfg.FileConfig.VXLAN.Name
 
 		for _, table := range r.mangleTables {
 			table.UpdateChain(&iptables.Chain{Name: "EGRESSGATEWAY-REPLY-ROUTING"})
-			chainMapRules := buildReplyRouteIptables(uint32(replyRouteMark), dev)
+			chainMapRules := buildReplyRouteIptables(uint32(gatewayReplyRouteMark), dev)
 			for chain, rules := range chainMapRules {
 				table.InsertOrAppendRules(chain, rules)
 			}
@@ -773,32 +774,32 @@ func buildReplyRouteIptables(base uint32, dev string) map[string][]iptables.Rule
 		"PREROUTING": {
 			{
 				Match:  iptables.MatchCriteria{},
-				Action: iptables.JumpAction{Target: "EEGRESSGATEWAY-REPLY-ROUTING"},
+				Action: iptables.JumpAction{Target: "EGRESSGATEWAY-REPLY-ROUTING"},
 				Comment: []string{
-					"It's from EgressGetaway",
+					"egressGateway Reply datapath rule, rule is from the EgressGateway",
 				},
 			},
 		},
-		"EEGRESSGATEWAY-REPLY-ROUTING": {
+		"EGRESSGATEWAY-REPLY-ROUTING": {
 			{
 				Match:  iptables.MatchCriteria{}.InInterface(dev),
 				Action: iptables.SetMaskedMarkAction{Mark: base, Mask: 0xffffffff},
 				Comment: []string{
-					"It's from EgressGetaway",
+					"mark the traffic from the EgressGateway tunnel, rule is from the EgressGateway",
 				},
 			},
 			{
 				Match:  iptables.MatchCriteria{}.MarkMatchesWithMask(base, 0xffffffff),
 				Action: iptables.SaveConnMarkAction{SaveMask: base},
 				Comment: []string{
-					"It's from EgressGetaway",
+					"save mark to the connection, rule is from the EgressGateway",
 				},
 			},
 			{
 				Match:  iptables.MatchCriteria{}.ConntrackState("ESTABLISHED"),
 				Action: iptables.RestoreConnMarkAction{RestoreMask: 0},
 				Comment: []string{
-					"It's from EgressGetaway",
+					"label for restoring connections, rule is from the EgressGateway",
 				},
 			},
 		},
@@ -806,7 +807,7 @@ func buildReplyRouteIptables(base uint32, dev string) map[string][]iptables.Rule
 			Match:  iptables.MatchCriteria{}.MarkMatchesWithMask(base, 0xffffffff),
 			Action: iptables.SetMaskedMarkAction{Mark: 0x00000000, Mask: 0xffffffff},
 			Comment: []string{
-				"It's from EgressGetaway",
+				"clear the Mark of the inner package, rule is from the EgressGateway",
 			},
 		}},
 	}

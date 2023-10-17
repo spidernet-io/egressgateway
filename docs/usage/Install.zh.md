@@ -12,7 +12,7 @@
 
 3. 目前 EgressGateway 支持如下 CNI。
 
-=== "Calico"
+* "Calico"
 
       如果您的集群使用 [Calico](https://www.tigera.io/project-calico/) CNI，请执行如下命令，该命令确保 EgressGateway 的 iptables 规则不会被 Calico 规则覆盖，否则 EgressGateway 将不能工作。
       
@@ -36,13 +36,25 @@
 
       > `spec.chainInsertMode` 的意义可参考 [Calico 文档](https://projectcalico.docs.tigera.io/reference/resources/felixconfig)
 
-=== "Flannel"
+* "Flannel"
 
       [Flannel](https://github.com/flannel-io/flannel) CNI 不需要任何配置，您可以跳过此步骤。
 
-=== "Weave"
+* "Weave"
 
       [Weave](https://github.com/flannel-io/flannel) CNI 不需要任何配置，您可以跳过此步骤。
+
+* "Spiderpool"
+
+      如果您的集群使用 [Spiderpool](https://github.com/spidernet-io/spiderpool) 搭配其他CNI，需要进行如下操作。
+
+      将集群外的服务地址添加到 spiderpool.spidercoordinators 的 'default' 对象的 'hijackCIDR' 中，使 Pod 访问这些外部服务时，流量先经过 Pod 所在的主机，从而被 EgressGateway 规则匹配。
+
+      ```
+        # "1.1.1.1/32", "2.2.2.2/32" 为外部服务地址。对于已经运行的 Pod，需要重启 Pod，这些路由规则才会在 Pod 中生效。
+        kubectl patch spidercoordinators default  --type='merge' -p '{"spec": {"hijackCIDR": ["1.1.1.1/32", "2.2.2.2/32"]}}'
+      ```
+
 
 ## 安装 EgressGateway
 
@@ -70,6 +82,7 @@ helm repo update
    * 可使用选项 `--set feature.tunnelDetectMethod="interface=eth0"` 来定制 EgressGateway 隧道的承载网卡，否则，默认使用默认路由的网卡。
    * 如果希望使用 IPv6 ，可使用选项 `--set feature.enableIPv6=true` 开启，并设置 `feature.tunnelIpv6Subnet`。
    * EgressGateway Controller 支持高可用，可通过 `--set controller.replicas=2` 设置。
+   * 开启网关节点上的返回路由规则，可通过设置 `--set feature.enableGatewayReplyRoute=true` 开启，如果要搭配 Spiderpool 支持 underlay CNI，则必须开启该选项。
 
 2. 确认所有的 EgressGateway Pod 运行正常。
 
