@@ -25,16 +25,16 @@ CALICO_NODE=${DEST_CALICO_YAML_DIR}/calico_node.yaml
 
 # CALICO_VERSION
 if [ -z "${CALICO_VERSION}" ]; then
-  [ -n "${HTTP_PROXY}" ] && calico_tag=$(curl -x "${HTTP_PROXY}" -s https://api.github.com/repos/projectcalico/calico/releases/latest | jq -r '.tag_name')
-  [ -z "${HTTP_PROXY}" ] && calico_tag=$(curl -s https://api.github.com/repos/projectcalico/calico/releases/latest | jq -r '.tag_name')
-  [ -z "${calico_tag}" ] && { echo "failed get calico version"; exit 1; }
+  [ -n "${HTTP_PROXY}" ] && calico_tag=$(curl --retry 3 -x "${HTTP_PROXY}" -s https://api.github.com/repos/projectcalico/calico/releases/latest | jq -r '.tag_name')
+  [ -z "${HTTP_PROXY}" ] && calico_tag=$(curl --retry 3 -s https://api.github.com/repos/projectcalico/calico/releases/latest | jq -r '.tag_name')
+  [ "${calico_tag}" == "null" ] && { echo "failed get calico version"; exit 1; }
 else
   calico_tag=${CALICO_VERSION}
 fi
 echo "install calico version ${calico_tag}"
 
-[ -n "${HTTP_PROXY}" ] && curl -x "${HTTP_PROXY}" -Lo ${CALICO_YAML}  https://raw.githubusercontent.com/projectcalico/calico/${calico_tag}/manifests/calico.yaml
-[ -z "${HTTP_PROXY}" ] && curl -Lo ${CALICO_YAML}  https://raw.githubusercontent.com/projectcalico/calico/${calico_tag}/manifests/calico.yaml
+[ -n "${HTTP_PROXY}" ] && curl --retry 3 -x "${HTTP_PROXY}" -Lo ${CALICO_YAML}  https://raw.githubusercontent.com/projectcalico/calico/${calico_tag}/manifests/calico.yaml
+[ -z "${HTTP_PROXY}" ] && curl --retry 3 -Lo ${CALICO_YAML}  https://raw.githubusercontent.com/projectcalico/calico/${calico_tag}/manifests/calico.yaml
 
 # set registry
 if [ -n "${CALICO_REGISTRY}" ]; then
