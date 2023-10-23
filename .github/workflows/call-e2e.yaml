@@ -195,7 +195,7 @@ jobs:
 
       - name: Update Badge
         if: ${{ env.RUN_PERFORMANCE_RESULT != '' && inputs.ipfamily == 'dual' && env.PERFORMANCE_BADGE_ID != '' }}
-        uses: schneegans/dynamic-badges-action@v1.6.0
+        uses: schneegans/dynamic-badges-action@v1.7.0
         with:
           auth: ${{ secrets.WELAN_PAT }}
           gistID: ${{ env.PERFORMANCE_BADGE_ID }}
