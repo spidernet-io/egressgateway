@@ -43,7 +43,7 @@ jobs:
 
       - name: Create Lines-of-Code-Badge
         if: ${{ env.BADGE_CODELINE_ID != '' }}
-        uses: schneegans/dynamic-badges-action@v1.6.0
+        uses: schneegans/dynamic-badges-action@v1.7.0
         with:
           auth: ${{ secrets.WELAN_PAT }}
           gistID: ${{ env.BADGE_CODELINE_ID }}
@@ -54,7 +54,7 @@ jobs:
 
       - name: Create Comments-Badge
         if: ${{ env.BADGE_COMMENT_LINE != '' }}
-        uses: schneegans/dynamic-badges-action@v1.6.0
+        uses: schneegans/dynamic-badges-action@v1.7.0
         with:
           auth: ${{ secrets.WELAN_PAT }}
           gistID: ${{ env.BADGE_COMMENT_LINE }}
@@ -67,7 +67,7 @@ jobs:
 
       - name: Create E2E-Badge
         if: ${{ env.BADGE_E2ECOVER_ID != '' }}
-        uses: schneegans/dynamic-badges-action@v1.6.0
+        uses: schneegans/dynamic-badges-action@v1.7.0
         with:
           auth: ${{ secrets.GET_GIST }}
           gistID: ${{ env.BADGE_E2ECOVER_ID }}
