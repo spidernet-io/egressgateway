@@ -133,7 +133,7 @@ func CreateEgressPolicyCustom(ctx context.Context, cli client.Client, setUp func
 
 	err := cli.Create(ctx, res)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error:\n%w\npolicy yaml:\n%s\n", err, GetObjYAML(res))
 	}
 	return res, nil
 }

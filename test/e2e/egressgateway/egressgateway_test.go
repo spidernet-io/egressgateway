@@ -12,6 +12,8 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 
+	"github.com/google/uuid"
+
 	"github.com/go-faker/faker/v4"
 	appsv1 "k8s.io/api/apps/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -191,7 +193,7 @@ var _ = Describe("Operate EgressGateway", Label("EgressGateway"), Ordered, func(
 			nodeSelector := egressv1.NodeSelector{
 				Selector: nodeLabelSelector,
 			}
-			egw, err = common.CreateGatewayNew(ctx, cli, "egw-"+strings.ToLower(faker.FirstName())+faker.Word(), egressv1.Ippools{}, nodeSelector)
+			egw, err = common.CreateGatewayNew(ctx, cli, "egw-"+uuid.NewString(), egressv1.Ippools{}, nodeSelector)
 			Expect(err).NotTo(HaveOccurred())
 			GinkgoWriter.Printf("Succeeded to create egw:\n%s\n", common.GetObjYAML(egw))
 
