@@ -14,9 +14,9 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-func CreateEgressGatewayAndPodsBeforeEach(ctx context.Context, cli client.Client, nodeNameList []string, podImg string, IPNum int64, increase uint8) (*egressv1.EgressGateway, []*corev1.Pod, error) {
+func CreateEgressGatewayAndPodsBeforeEach(ctx context.Context, cli client.Client, enableIPv4, enableIPv6 bool, nodeNameList []string, podImg string, IPNum int64, increase uint8) (*egressv1.EgressGateway, []*corev1.Pod, error) {
 	// create egressGateway
-	pool, err := GenIPPools(ctx, cli, IPNum, increase)
+	pool, err := GenIPPools(ctx, cli, enableIPv4, enableIPv6, IPNum, increase)
 	if err != nil {
 		return nil, nil, err
 	}

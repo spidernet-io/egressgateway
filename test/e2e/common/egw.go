@@ -6,6 +6,7 @@ package common
 import (
 	"context"
 	"fmt"
+	"reflect"
 	"time"
 
 	"github.com/go-faker/faker/v4"
@@ -224,6 +225,29 @@ func WaitEGWSyncedWithEGP(cli client.Client, egw *egressv1.EgressGateway, checkV
 				time.Sleep(time.Second / 2)
 				continue
 			}
+		}
+	}
+}
+
+// CheckEgressGatewayStatusSynced after some operations that affect the gateway, do a final verification of EgressGatewayStatus
+func CheckEgressGatewayStatusSynced(ctx context.Context, cli client.Client, egw *egressv1.EgressGateway, expectStatus *egressv1.EgressGatewayStatus, timeout time.Duration) error {
+	ctx, cancel := context.WithTimeout(ctx, timeout)
+	defer cancel()
+
+	for {
+		select {
+		case <-ctx.Done():
+			return fmt.Errorf("check EgressGatewayStatus synced timeout")
+		default:
+			key := types.NamespacedName{Name: egw.Name}
+			err := cli.Get(ctx, key, egw)
+			if err != nil {
+				return nil
+			}
+			if reflect.DeepEqual(*expectStatus, egw.Status) {
+				return nil
+			}
+			time.Sleep(time.Second)
 		}
 	}
 }

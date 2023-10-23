@@ -6,6 +6,7 @@ package common
 import (
 	"context"
 	"fmt"
+	"net"
 	"time"
 
 	. "github.com/onsi/ginkgo/v2"
@@ -95,4 +96,20 @@ func PowerOnNodesUntilClusterReady(f *framework.Framework, nodes []string, timeo
 	ctx, cancel := context.WithTimeout(context.TODO(), timeout)
 	defer cancel()
 	return f.WaitAllPodUntilRunning(ctx)
+}
+
+func GetNodeIP(node *corev1.Node) (string, string) {
+	var ipv4, ipv6 string
+	for _, address := range node.Status.Addresses {
+		if address.Type == corev1.NodeInternalIP {
+			if ip := net.ParseIP(address.Address); ip != nil {
+				if ip.To4() != nil {
+					ipv4 = address.Address
+				} else if ip.To16() != nil {
+					ipv6 = address.Address
+				}
+			}
+		}
+	}
+	return ipv4, ipv6
 }

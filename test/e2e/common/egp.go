@@ -6,6 +6,7 @@ package common
 import (
 	"context"
 	"fmt"
+	"reflect"
 	"strings"
 	"time"
 
@@ -76,7 +77,7 @@ func CreateEgressClusterPolicy(ctx context.Context, cli client.Client, cfg econf
 	defer cancel()
 
 	res := &egressv1.EgressClusterPolicy{
-		ObjectMeta: metav1.ObjectMeta{GenerateName: "policy-" + faker.Word()},
+		ObjectMeta: metav1.ObjectMeta{GenerateName: "cluster-policy-" + faker.Word()},
 		Spec: egressv1.EgressClusterPolicySpec{
 			EgressGatewayName: egw,
 			AppliedTo: egressv1.ClusterAppliedTo{PodSelector: &metav1.LabelSelector{
@@ -152,10 +153,65 @@ func CreateEgressClusterPolicyCustom(ctx context.Context, cli client.Client, set
 	return res, nil
 }
 
+func CheckEgressPolicyStatusSynced(ctx context.Context, cli client.Client, egp *egressv1.EgressPolicy, expectStatus *egressv1.EgressPolicyStatus, timeout time.Duration) error {
+	ctx, cancel := context.WithTimeout(ctx, timeout)
+	defer cancel()
+
+	for {
+		select {
+		case <-ctx.Done():
+			return fmt.Errorf("check EgressPolicyStatus synced timeout")
+		default:
+			key := types.NamespacedName{Name: egp.Name, Namespace: egp.Namespace}
+			err := cli.Get(ctx, key, egp)
+			if err != nil {
+				return nil
+			}
+			if reflect.DeepEqual(*expectStatus, egp.Status) {
+				return nil
+			}
+			time.Sleep(time.Second)
+		}
+	}
+}
+
+func CheckEgressClusterPolicyStatusSynced(ctx context.Context, cli client.Client, egcp *egressv1.EgressClusterPolicy, expectStatus *egressv1.EgressPolicyStatus, timeout time.Duration) error {
+	ctx, cancel := context.WithTimeout(ctx, timeout)
+	defer cancel()
+
+	for {
+		select {
+		case <-ctx.Done():
+			return fmt.Errorf("check EgressPolicyStatus synced timeout")
+		default:
+			key := types.NamespacedName{Name: egcp.Name}
+			err := cli.Get(ctx, key, egcp)
+			if err != nil {
+				return nil
+			}
+			if reflect.DeepEqual(*expectStatus, egcp.Status) {
+				return nil
+			}
+			time.Sleep(time.Second)
+		}
+	}
+}
+
 // DeleteEgressPolicies delete egressPolicies
 func DeleteEgressPolicies(ctx context.Context, cli client.Client, egps []*egressv1.EgressPolicy) error {
 	for _, egp := range egps {
 		err := DeleteObj(ctx, cli, egp)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// DeleteEgressClusterPolicies delete egressClusterPolicies
+func DeleteEgressClusterPolicies(ctx context.Context, cli client.Client, egcps []*egressv1.EgressClusterPolicy) error {
+	for _, egcp := range egcps {
+		err := DeleteObj(ctx, cli, egcp)
 		if err != nil {
 			return err
 		}
@@ -179,6 +235,32 @@ func WaitEgressPoliciesDeleted(ctx context.Context, cli client.Client, egps []*e
 			}
 			for _, egp := range egps {
 				err := cli.Get(ctx, types.NamespacedName{Name: egp.Name, Namespace: egp.Namespace}, egp)
+				if err == nil {
+					time.Sleep(time.Second / 2)
+					continue
+				}
+			}
+			return nil
+		}
+	}
+}
+
+func WaitEgressClusterPoliciesDeleted(ctx context.Context, cli client.Client, egcps []*egressv1.EgressClusterPolicy, timeout time.Duration) error {
+	ctx, cancel := context.WithTimeout(ctx, timeout)
+	defer cancel()
+
+	for {
+		select {
+		case <-ctx.Done():
+			return fmt.Errorf("timeout to wait egressPolicies deleted")
+		default:
+			err := DeleteEgressClusterPolicies(ctx, cli, egcps)
+			if err != nil {
+				time.Sleep(time.Second / 2)
+				continue
+			}
+			for _, egcp := range egcps {
+				err := cli.Get(ctx, types.NamespacedName{Name: egcp.Name}, egcp)
 				if err == nil {
 					time.Sleep(time.Second / 2)
 					continue
