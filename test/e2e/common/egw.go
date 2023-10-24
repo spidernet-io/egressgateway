@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 	"reflect"
+	"strings"
 	"time"
 
 	"github.com/go-faker/faker/v4"
@@ -34,7 +35,7 @@ func CreateGatewayNew(ctx context.Context, cli client.Client,
 }
 
 func CreateGatewayCustom(ctx context.Context, cli client.Client, setUp func(egw *egressv1.EgressGateway)) (*egressv1.EgressGateway, error) {
-	name := "egw-" + faker.Word()
+	name := "egw-" + strings.ToLower(faker.FirstName()) + "-" + faker.Word()
 	res := &egressv1.EgressGateway{
 		ObjectMeta: metav1.ObjectMeta{Name: name},
 	}

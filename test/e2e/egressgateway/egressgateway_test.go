@@ -433,6 +433,93 @@ var _ = Describe("Operate EgressGateway", Label("EgressGateway"), Ordered, func(
 		})
 
 	})
+
+	/*
+		This test case verifies that deleting a gateway will fail if it is referenced by a policy or clusterPolicy.
+
+		Create a gateway and use it to create a policy. Deleting the gateway will fail. After deleting the policy, deleting the gateway will now succeed.
+		Create a gateway and use it to create a clusterPolicy. Deleting the gateway will fail. After deleting the clusterPolicy, deleting the gateway will now succeed.
+	*/
+
+	// todo @bzsuni waiting for the bug to be fixed
+	PContext("Delete egressGateway", Label("G00015", "G00016"), func() {
+		var err error
+		var ctx context.Context
+		// --- gateway ---
+		var egw *egressv1.EgressGateway
+
+		// --- policy ---
+		var egp *egressv1.EgressPolicy
+		var egcp *egressv1.EgressClusterPolicy
+
+		// label
+		var labels map[string]string
+
+		BeforeEach(func() {
+			ctx = context.Background()
+			labels = map[string]string{"test-kay": ""}
+
+			egw = new(egressv1.EgressGateway)
+			egp = new(egressv1.EgressPolicy)
+			egcp = new(egressv1.EgressClusterPolicy)
+
+			// create gateway
+			egw = createEgressGateway(ctx)
+
+			DeferCleanup(func() {
+				// delete egp
+				GinkgoWriter.Printf("Delete egp: %s\n", egp.Name)
+				Expect(common.DeleteObj(ctx, cli, egp)).NotTo(HaveOccurred())
+
+				// delete egcp
+				GinkgoWriter.Printf("Delete egcp: %s\n", egcp.Name)
+				Expect(common.DeleteObj(ctx, cli, egcp)).NotTo(HaveOccurred())
+
+				// delete egw
+				time.Sleep(time.Second)
+				GinkgoWriter.Printf("Delete egw: %s\n", egw.Name)
+				Expect(common.DeleteObj(ctx, cli, egw)).NotTo(HaveOccurred())
+			})
+		})
+
+		It("Failed delete egressGateway when a egressPolicy using it", func() {
+			// create egressPolicy
+			egp, err = common.CreateEgressPolicyNew(ctx, cli, egressConfig, egw.Name, labels)
+			Expect(err).NotTo(HaveOccurred())
+			GinkgoWriter.Printf("Succeeded create EgressPolicy: %s\n", egp.Name)
+
+			// delete egressGateway we expect its failed
+			GinkgoWriter.Printf("Delete egressGateway: %s, we expect its failed\n", egw.Name)
+			Expect(common.DeleteObj(ctx, cli, egw)).To(HaveOccurred())
+
+			// delete egressPolicy
+			GinkgoWriter.Printf("Delete egressPolicy: %s\n", egp.Name)
+			Expect(common.WaitEgressPoliciesDeleted(ctx, cli, []*egressv1.EgressPolicy{egp}, time.Second*5)).NotTo(HaveOccurred())
+
+			// delete egw
+			GinkgoWriter.Printf("Delete egressGateway: %s with no policies using it\n", egw.Name)
+			Expect(common.DeleteObj(ctx, cli, egw)).NotTo(HaveOccurred())
+		})
+
+		It("Failed delete egressGateway when a egressClusterPolicy using it", func() {
+			// create egressClusterPolicy
+			egcp, err = common.CreateEgressClusterPolicy(ctx, cli, egressConfig, egw.Name, labels)
+			Expect(err).NotTo(HaveOccurred())
+			GinkgoWriter.Printf("Succeeded create EgressClusterPolicy: %s\n", egcp.Name)
+
+			// delete egressGateway we expect its failed
+			GinkgoWriter.Printf("Delete egressGateway: %s, we expect its failed\n", egw.Name)
+			Expect(common.DeleteObj(ctx, cli, egw)).To(HaveOccurred())
+
+			// delete egressClusterPolicy
+			GinkgoWriter.Printf("Delete egressClusterPolicy: %s\n", egcp.Name)
+			Expect(common.WaitEgressClusterPoliciesDeleted(ctx, cli, []*egressv1.EgressClusterPolicy{egcp}, time.Second*5)).NotTo(HaveOccurred())
+
+			// delete egw
+			GinkgoWriter.Printf("Delete egressGateway: %s with no policies using it\n", egw.Name)
+			Expect(common.DeleteObj(ctx, cli, egw)).NotTo(HaveOccurred())
+		})
+	})
 })
 
 func createEgressGateway(ctx context.Context) (egw *egressv1.EgressGateway) {

@@ -5,6 +5,7 @@ package egresspolicy_test
 
 import (
 	"context"
+	"strings"
 	"time"
 
 	. "github.com/onsi/ginkgo/v2"
@@ -29,7 +30,7 @@ var _ = Describe("EgressPolicy", Ordered, func() {
 		Expect(err).NotTo(HaveOccurred())
 		nodeSelector := egressv1.NodeSelector{Selector: &metav1.LabelSelector{MatchLabels: nodeLabel}}
 
-		egw, err = common.CreateGatewayNew(ctx, cli, "egw-"+faker.Word(), pool, nodeSelector)
+		egw, err = common.CreateGatewayNew(ctx, cli, "egw-"+strings.ToLower(faker.FirstName())+faker.Word(), pool, nodeSelector)
 		Expect(err).NotTo(HaveOccurred())
 		GinkgoWriter.Printf("Create EgressGateway: %s\n", egw.Name)
 
