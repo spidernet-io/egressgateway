@@ -251,3 +251,36 @@ func CheckEgressGatewayStatusSynced(ctx context.Context, cli client.Client, egw 
 		}
 	}
 }
+
+// DeleteEgressGateway delete egressgateway
+func DeleteEgressGateway(ctx context.Context, cli client.Client, egw *egressv1.EgressGateway) error {
+	err := DeleteObj(ctx, cli, egw)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func WaitEgressGatewayDeleted(ctx context.Context, cli client.Client, egw *egressv1.EgressGateway, timeout time.Duration) error {
+	ctx, cancel := context.WithTimeout(ctx, timeout)
+	defer cancel()
+
+	for {
+		select {
+		case <-ctx.Done():
+			return fmt.Errorf("timeout waiting for the egressgateway to be deleted, the gateway yaml is:\n%s\n", GetObjYAML(egw))
+		default:
+			err := DeleteEgressGateway(ctx, cli, egw)
+			if err != nil {
+				time.Sleep(time.Second / 2)
+				continue
+			}
+			err = cli.Get(ctx, types.NamespacedName{Name: egw.Name}, egw)
+			if err == nil {
+				time.Sleep(time.Second / 2)
+				continue
+			}
+			return nil
+		}
+	}
+}

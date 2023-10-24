@@ -67,13 +67,13 @@ var _ = Describe("Operate EgressGateway", Label("EgressGateway"), Ordered, func(
 
 			GinkgoWriter.Printf("singleIpv4Pool: %s, singleIpv6Pool: %s\n", singleIpv4Pool, singleIpv6Pool)
 
-			// DeferCleanup(func() {
-			// 	// delete EgressGateway
-			// 	if egw != nil {
-			// 		err := common.DeleteObj(ctx, cli, egw)
-			// 		Expect(err).NotTo(HaveOccurred())
-			// 	}
-			// })
+			DeferCleanup(func() {
+				// delete EgressGateway
+				if egw != nil {
+					err := common.WaitEgressGatewayDeleted(ctx, cli, egw, time.Second*5)
+					Expect(err).NotTo(HaveOccurred())
+				}
+			})
 		})
 
 		/*
@@ -216,7 +216,7 @@ var _ = Describe("Operate EgressGateway", Label("EgressGateway"), Ordered, func(
 				// delete egw
 				if egw != nil {
 					GinkgoWriter.Printf("Delete egw: %s\n", egw.Name)
-					Expect(common.DeleteObj(ctx, cli, egw)).NotTo(HaveOccurred())
+					Expect(common.WaitEgressGatewayDeleted(ctx, cli, egw, time.Second*5)).NotTo(HaveOccurred())
 				}
 			})
 		})
@@ -349,7 +349,7 @@ var _ = Describe("Operate EgressGateway", Label("EgressGateway"), Ordered, func(
 			DeferCleanup(func() {
 				// delete EgressGateway
 				if egw != nil {
-					err := common.DeleteObj(ctx, cli, egw)
+					err := common.WaitEgressGatewayDeleted(ctx, cli, egw, time.Second*5)
 					Expect(err).NotTo(HaveOccurred())
 				}
 			})
