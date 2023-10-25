@@ -216,3 +216,12 @@ FLANNEL_VERSION ?=
 
 # weave
 WEAVE_VERSION ?=
+
+# spiderpool
+SPIDERPOOL_VERSION ?=
+
+ifeq ($(E2E_CHINA_IMAGE_REGISTRY),true)
+    SPIDERPOOL_REGISTRY ?= ghcr.m.daocloud.io
+else
+    SPIDERPOOL_REGISTRY ?= ghcr.io
+endif

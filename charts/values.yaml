@@ -34,6 +34,12 @@ feature:
   tunnelIpv6Subnet: "fd11::/112"
   ## @param feature.tunnelDetectMethod Tunnel base on which interface [`defaultRouteInterface`, `interface=eth0`]
   tunnelDetectMethod: "defaultRouteInterface"
+  ## @param feature.enableGatewayReplyRoute  the gateway node reply route is enabled, which should be enabled for spiderpool
+  enableGatewayReplyRoute: false
+  ## @param feature.gatewayReplyRouteTable  host Reply routing table number on gateway node
+  gatewayReplyRouteTable: 600
+  ## @param feature.gatewayReplyRouteMark  host iptables mark for reply packet on gateway node
+  gatewayReplyRouteMark: 39
   iptables:
     ## @param feature.iptables.backendMode Iptables mode can be specified as `nft` or `legacy`, with `auto` meaning automatic detection. The default value is `auto`.
     backendMode: "auto"

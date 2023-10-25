@@ -6,15 +6,17 @@ init_kind_env:
 	echo $(cni)
 	make init_one_kind -e KIND_CONFIG_PATH=./kindconfig/global-kind.yaml -e KIND_CLUSTER_NAME=$(E2E_KIND_CLUSTER_NAME) -e KIND_KUBECONFIG=$(E2E_KIND_KUBECONFIG_PATH)
 	make install_proscope
+	make run_nettool_server
 	if [ "$(cni)" == "flannel" ] ; then \
   		make install_flannel ; \
   	elif [ "$(cni)" == "weave" ] ; then \
   	    make install_weave ; \
+	elif [ "$(cni)" == "spiderpool" ] ; then \
+  	    make install_spiderpool ; \
     else \
     	make install_calico ; \
     fi
 	make install_kwok
-	make run_nettool_server
 
 
 .PHONY: init_one_kind
@@ -126,6 +128,20 @@ install_weave:
 	export E2E_KIND_IPV4_POD_CIDR=$(E2E_KIND_IPV4_POD_CIDR); \
 	export E2E_KIND_IPV6_POD_CIDR=$(E2E_KIND_IPV6_POD_CIDR); \
 	bash ./scripts/installWeave.sh
+
+.PHONY: install_spiderpool
+install_spiderpool:
+	echo "install spiderpool"
+	export SPIDERPOOL_VERSION=$(SPIDERPOOL_VERSION); \
+	export HTTP_PROXY=$(HTTP_PROXY); \
+	export SPIDERPOOL_REGISTRY=$(SPIDERPOOL_REGISTRY); \
+	export INSTALL_TIME_OUT=$(INSTALL_TIME_OUT); \
+	export E2E_IP_FAMILY=$(E2E_IP_FAMILY); \
+	export KUBECONFIG=$(E2E_KIND_KUBECONFIG_PATH); \
+	export KIND_CLUSTER_NAME=$(E2E_KIND_CLUSTER_NAME) ; \
+	export E2E_KIND_IPV4_POD_CIDR=$(E2E_KIND_IPV4_POD_CIDR); \
+	export E2E_KIND_IPV6_POD_CIDR=$(E2E_KIND_IPV6_POD_CIDR); \
+	bash ./scripts/installSpiderpool.sh
 
 # install kwok
 .PHONY: install_kwok

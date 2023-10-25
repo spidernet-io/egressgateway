@@ -23,7 +23,7 @@
 | Support CNI      | calico                                                                                   |          | doing  |
 |                  | flannel                                                                                  |          | doing  |
 |                  | weave                                                                                    |          | doing  |
-|                  | macvlan+spiderpool                                                                       |          | doing  |
+|                  | macvlan+spiderpool                                                                       |          | v0.3.0 |
 | IP Stack         | ipv4-only                                                                                |          | doing  |
 |                  | ipv6-only                                                                                |          | doing  |
 |                  | dual stack                                                                               |          | doing  |
