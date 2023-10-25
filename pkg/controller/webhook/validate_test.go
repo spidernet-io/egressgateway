@@ -512,3 +512,179 @@ func TestValidateEgressTunnel(t *testing.T) {
 		})
 	}
 }
+
+func TestValidateEgressClusterPolicy(t *testing.T) {
+	ctx := context.Background()
+
+	cases := map[string]struct {
+		existingResources []client.Object
+		spec              v1beta1.EgressClusterPolicySpec
+		expAllow          bool
+		expErrMessage     string
+	}{
+		"case, valid": {
+			existingResources: []client.Object{
+				&v1beta1.EgressGateway{
+					ObjectMeta: metav1.ObjectMeta{Name: "test"},
+					Spec: v1beta1.EgressGatewaySpec{
+						Ippools: v1beta1.Ippools{
+							IPv4: []string{"172.18.1.2-172.18.1.5"},
+							IPv6: []string{"fc00:f853:ccd:e793:a::3-fc00:f853:ccd:e793:a::6"},
+						},
+					},
+				},
+			},
+			spec: v1beta1.EgressClusterPolicySpec{
+				EgressGatewayName: "test",
+				EgressIP: v1beta1.EgressIP{
+					UseNodeIP: false,
+					IPv4:      "",
+					IPv6:      "",
+				},
+				AppliedTo: v1beta1.ClusterAppliedTo{
+					PodSelector: &metav1.LabelSelector{
+						MatchLabels: map[string]string{"app": "test"},
+					},
+				},
+				DestSubnet: []string{
+					"192.168.1.1/24",
+					"1.1.1.1/32",
+					"10.0.6.1/16",
+					"fd00::21/112",
+				},
+			},
+			expAllow: true,
+		},
+		"case1: Not valid when both PodSelector and DestSubnet exist": {
+			existingResources: nil,
+			spec: v1beta1.EgressClusterPolicySpec{
+				EgressGatewayName: "test",
+				EgressIP: v1beta1.EgressIP{
+					UseNodeIP: false,
+					IPv4:      "",
+					IPv6:      "",
+				},
+				AppliedTo: v1beta1.ClusterAppliedTo{
+					PodSelector: &metav1.LabelSelector{
+						MatchLabels: map[string]string{"app": "test"},
+					},
+					PodSubnet: &[]string{"10.10.0.0/16"},
+				},
+				DestSubnet: []string{
+					"192.12.0.0/16",
+				},
+			},
+			expAllow: false,
+		},
+		"case2: Not valid when DestSubnet format is invalid": {
+			existingResources: nil,
+			spec: v1beta1.EgressClusterPolicySpec{
+				EgressGatewayName: "test",
+				EgressIP: v1beta1.EgressIP{
+					UseNodeIP: false,
+					IPv4:      "",
+					IPv6:      "",
+				},
+				AppliedTo: v1beta1.ClusterAppliedTo{
+					PodSelector: &metav1.LabelSelector{
+						MatchLabels: map[string]string{"app": "test"},
+					},
+				},
+				DestSubnet: []string{
+					"1.1.1.1999/24",
+				},
+			},
+			expAllow: false,
+		},
+		"case3: Not valid when empty EgressGatewayName": {
+			existingResources: nil,
+			spec: v1beta1.EgressClusterPolicySpec{
+				EgressGatewayName: "",
+				EgressIP:          v1beta1.EgressIP{},
+				AppliedTo: v1beta1.ClusterAppliedTo{
+					PodSelector: &metav1.LabelSelector{
+						MatchLabels: map[string]string{"app": "test"},
+					},
+				},
+				DestSubnet: []string{},
+			},
+			expAllow: false,
+		},
+		"case4: create with eip": {
+			existingResources: []client.Object{
+				&v1beta1.EgressGateway{
+					TypeMeta: metav1.TypeMeta{},
+					ObjectMeta: metav1.ObjectMeta{
+						Name: "test",
+					},
+					Spec: v1beta1.EgressGatewaySpec{
+						Ippools: v1beta1.Ippools{
+							IPv4: []string{"10.6.1.21"},
+							IPv6: []string{"fd00::1"},
+						},
+						NodeSelector: v1beta1.NodeSelector{},
+					},
+					Status: v1beta1.EgressGatewayStatus{},
+				},
+			},
+			spec: v1beta1.EgressClusterPolicySpec{
+				EgressGatewayName: "test",
+				EgressIP: v1beta1.EgressIP{
+					IPv4: "10.6.1.21",
+					IPv6: "fd00::1",
+				},
+				AppliedTo: v1beta1.ClusterAppliedTo{
+					PodSelector: &metav1.LabelSelector{
+						MatchLabels: map[string]string{"app": "test"},
+					},
+				}, DestSubnet: []string{},
+			},
+			expAllow: true,
+		},
+	}
+	for name, c := range cases {
+		t.Run(name, func(t *testing.T) {
+
+			policy := &v1beta1.EgressClusterPolicy{
+				ObjectMeta: metav1.ObjectMeta{
+					Name: "policy",
+				},
+				Spec: c.spec,
+			}
+
+			marshalledRequestObject, err := json.Marshal(policy)
+			assert.NoError(t, err)
+
+			builder := fake.NewClientBuilder()
+			builder.WithScheme(schema.GetScheme())
+			builder.WithObjects(c.existingResources...)
+			builder.WithStatusSubresource(c.existingResources...)
+			cli := builder.Build()
+			conf := &config.Config{
+				FileConfig: config.FileConfig{
+					EnableIPv4: true,
+					EnableIPv6: true,
+				},
+			}
+
+			validator := ValidateHook(cli, conf)
+			resp := validator.Handle(ctx, admission.Request{
+				AdmissionRequest: admissionv1.AdmissionRequest{
+					Name: policy.Name,
+					Kind: metav1.GroupVersionKind{
+						Kind: "EgressClusterPolicy",
+					},
+					Operation: admissionv1.Create,
+					Object: runtime.RawExtension{
+						Raw: marshalledRequestObject,
+					},
+				},
+			})
+
+			assert.Equal(t, c.expAllow, resp.Allowed)
+			if c.expErrMessage != "" {
+				assert.Equal(t, c.expErrMessage, resp.AdmissionResponse.Result.Message)
+			}
+		})
+	}
+}
