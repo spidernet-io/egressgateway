@@ -61,7 +61,8 @@ func ValidateHook(client client.Client, cfg *config.Config) *webhook.Admission {
 					}
 				}
 
-				if len(egcp.Spec.AppliedTo.PodSelector.MatchLabels) != 0 && len(*egcp.Spec.AppliedTo.PodSubnet) != 0 {
+				if (egcp.Spec.AppliedTo.PodSelector != nil && len(egcp.Spec.AppliedTo.PodSelector.MatchLabels) != 0) &&
+					(egcp.Spec.AppliedTo.PodSubnet != nil && len(*egcp.Spec.AppliedTo.PodSubnet) != 0) {
 					return webhook.Denied("podSelector and podSubnet cannot be used together")
 				}
 
@@ -130,7 +131,7 @@ func ValidateHook(client client.Client, cfg *config.Config) *webhook.Admission {
 					}
 				}
 
-				if len(egp.Spec.AppliedTo.PodSelector.MatchLabels) != 0 && len(egp.Spec.AppliedTo.PodSubnet) != 0 {
+				if egp.Spec.AppliedTo.PodSelector != nil && len(egp.Spec.AppliedTo.PodSelector.MatchLabels) != 0 && len(egp.Spec.AppliedTo.PodSubnet) != 0 {
 					return webhook.Denied("podSelector and podSubnet cannot be used together")
 				}
 

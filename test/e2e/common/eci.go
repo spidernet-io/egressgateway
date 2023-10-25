@@ -87,6 +87,9 @@ func CheckEgressClusterInfoStatusSynced(
 				if err != nil {
 					return err
 				}
+				if eci.Status.ClusterIP == nil {
+					return fmt.Errorf("error: empty  eci.Status.ClusterIP")
+				}
 				err1 := diffTwoSlice(eci.Status.ClusterIP.IPv4, clusterIPv4CIDRs)
 				err2 := diffTwoSlice(eci.Status.ClusterIP.IPv6, clusterIPv6CIDRs)
 				if err1 == nil && err2 == nil {
