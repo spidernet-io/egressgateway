@@ -348,5 +348,195 @@ var _ = Describe("EgressPolicy", Ordered, func() {
 					}
 				}),
 		)
+
+		/*
+			This test case tests some validations after updating the gateway when EgressIP.UseNodeIP is set to true when creating a policy. The test steps are as follows:
+			1. Create a gateway and specify the nodeSelector as node1
+			2. Create a policy and set EgressIP.UseNodeIP to true
+			3. Validate the status of the gateway and policy, verify the pod's egress IP should be the IP of node1
+			4. Update the gateway to change the match from node1 to node2
+			5. Validate the status of the gateway and policy, verify the pod's egress IP should be the IP of node2
+		*/
+		PContext("Create policy with setting EgressIP.UseNodeIP to be true", Label("P00015", "P00016"), func() {
+			var egw *egressv1.EgressGateway
+			var egp *egressv1.EgressPolicy
+			var egcp *egressv1.EgressClusterPolicy
+			var ctx context.Context
+			var err error
+
+			var podLabelSelector *metav1.LabelSelector
+			var node2Selector egressv1.NodeSelector
+
+			var node1IPv4, node1IPv6 string
+			var node2IPv4, node2IPv6 string
+
+			var ds *appsv1.DaemonSet
+
+			BeforeEach(func() {
+				ctx = context.Background()
+
+				// create DaemonSet
+				ds, err = common.CreateDaemonSet(ctx, cli, "ds-"+uuid.NewString(), config.Image)
+				Expect(err).NotTo(HaveOccurred())
+				GinkgoWriter.Printf("succeeded to create DaemonSet: %s\n", ds.Name)
+				podLabelSelector = &metav1.LabelSelector{MatchLabels: ds.Labels}
+
+				// get nodeIP
+				node1IPv4, node1IPv6 = common.GetNodeIP(node1)
+				GinkgoWriter.Printf("node: %s, ipv4: %s, ipv6: %s\n", node1.Name, node1IPv4, node1IPv6)
+
+				node2IPv4, node2IPv6 = common.GetNodeIP(node2)
+				GinkgoWriter.Printf("node: %s, ipv4: %s, ipv6: %s\n", node2.Name, node2IPv4, node2IPv6)
+
+				node1LabelSelector := &metav1.LabelSelector{MatchLabels: node1.Labels}
+				node2LabelSelector := &metav1.LabelSelector{MatchLabels: node2.Labels}
+
+				node1Selector := egressv1.NodeSelector{
+					Selector: node1LabelSelector,
+				}
+				node2Selector = egressv1.NodeSelector{
+					Selector: node2LabelSelector,
+				}
+
+				// create gateway with empty ippools
+				egw, err = common.CreateGatewayNew(ctx, cli, "egw-"+uuid.NewString(), egressv1.Ippools{}, node1Selector)
+				Expect(err).NotTo(HaveOccurred())
+				GinkgoWriter.Printf("Succeeded to create egw:\n%s\n", common.GetObjYAML(egw))
+
+				DeferCleanup(func() {
+					// delete daemonset
+					Expect(common.DeleteObj(ctx, cli, ds)).NotTo(HaveOccurred())
+
+					// delete egresspolicy
+					if egp != nil {
+						GinkgoWriter.Printf("Delete egp: %s\n", egp.Name)
+						err = common.WaitEgressPoliciesDeleted(ctx, cli, []*egressv1.EgressPolicy{egp}, time.Second*5)
+						Expect(err).NotTo(HaveOccurred())
+					}
+
+					// delete egressclusterpolicy
+					if egcp != nil {
+						GinkgoWriter.Printf("Delete egcp: %s\n", egcp.Name)
+						err = common.WaitEgressClusterPoliciesDeleted(ctx, cli, []*egressv1.EgressClusterPolicy{egcp}, time.Second*5)
+						Expect(err).NotTo(HaveOccurred())
+					}
+
+					// delete egw
+					if egw != nil {
+						GinkgoWriter.Printf("Delete egw: %s\n", egw.Name)
+						Expect(common.DeleteObj(ctx, cli, egw)).NotTo(HaveOccurred())
+					}
+				})
+			})
+
+			It("namespace-level policy", func() {
+				egp, err = common.CreateEgressPolicyCustom(ctx, cli,
+					func(egp *egressv1.EgressPolicy) {
+						egp.Spec.EgressGatewayName = egw.Name
+						egp.Spec.EgressIP.UseNodeIP = true
+						egp.Spec.AppliedTo.PodSelector = podLabelSelector
+					})
+
+				Expect(err).NotTo(HaveOccurred(), fmt.Sprintf("egp:\n%s\n", common.GetObjYAML(egp)))
+				// check if the egressgateway synced successfully
+				expectStatus := &egressv1.EgressGatewayStatus{
+					NodeList: []egressv1.EgressIPStatus{
+						{
+							Name: node1.Name,
+							Eips: []egressv1.Eips{
+								{Policies: []egressv1.Policy{
+									{Name: egp.Name, Namespace: egp.Namespace},
+								}},
+							},
+							Status: string(egressv1.EgressTunnelReady),
+						},
+					},
+				}
+				err = common.CheckEgressGatewayStatusSynced(ctx, cli, egw, expectStatus, time.Second*3)
+				Expect(err).NotTo(HaveOccurred(), fmt.Sprintf("failed CheckEgressGatewayStatusSynced, egressgateway:\n%s\n", common.GetObjYAML(egw)))
+				// check the pod export IP
+				err = common.CheckDaemonSetEgressIP(ctx, cli, config, egressConfig, ds, node1IPv4, node1IPv6, true)
+				Expect(err).NotTo(HaveOccurred())
+
+				// update the `NodeSelector` of the gateway to change the match from node1 to node2
+				GinkgoWriter.Printf("update the gateway: %s, to change the match from node: %s to node: %s\n", egw.Name, node1.Name, node2.Name)
+				egw.Spec.NodeSelector = node2Selector
+				// todo @bzsuni waiting for the bug to be fixed
+				Expect(cli.Update(ctx, egw)).NotTo(HaveOccurred(), fmt.Sprintf("failed to update gateway:\n%s\n", common.GetObjYAML(egw)))
+				// check if the egressgateway synced successfully
+				expectStatus = &egressv1.EgressGatewayStatus{
+					NodeList: []egressv1.EgressIPStatus{
+						{
+							Name: node2.Name,
+							Eips: []egressv1.Eips{
+								{Policies: []egressv1.Policy{
+									{Name: egp.Name, Namespace: egp.Namespace},
+								}},
+							},
+							Status: string(egressv1.EgressTunnelReady),
+						},
+					},
+				}
+				err = common.CheckEgressGatewayStatusSynced(ctx, cli, egw, expectStatus, time.Second*3)
+				Expect(err).NotTo(HaveOccurred(), fmt.Sprintf("failed CheckEgressGatewayStatusSynced, egressgateway:\n%s\n", common.GetObjYAML(egw)))
+				// check the pod export IP
+				err = common.CheckDaemonSetEgressIP(ctx, cli, config, egressConfig, ds, node2IPv4, node2IPv6, true)
+				Expect(err).NotTo(HaveOccurred())
+			})
+
+			It("cluster-level policy", func() {
+				egcp, err = common.CreateEgressClusterPolicyCustom(ctx, cli,
+					func(egcp *egressv1.EgressClusterPolicy) {
+						egcp.Spec.EgressGatewayName = egw.Name
+						egcp.Spec.EgressIP.UseNodeIP = true
+						egcp.Spec.AppliedTo.PodSelector = podLabelSelector
+					})
+				Expect(err).NotTo(HaveOccurred(), fmt.Sprintf("egcp:\n%s\n", common.GetObjYAML(egcp)))
+				// check if the egressgateway synced successfully
+				expectStatus := &egressv1.EgressGatewayStatus{
+					NodeList: []egressv1.EgressIPStatus{
+						{
+							Name: node1.Name,
+							Eips: []egressv1.Eips{
+								{Policies: []egressv1.Policy{
+									{Name: egcp.Name},
+								}},
+							},
+							Status: string(egressv1.EgressTunnelReady),
+						},
+					},
+				}
+				err = common.CheckEgressGatewayStatusSynced(ctx, cli, egw, expectStatus, time.Second*3)
+				Expect(err).NotTo(HaveOccurred(), fmt.Sprintf("failed CheckEgressGatewayStatusSynced, egressgateway:\n%s\n", common.GetObjYAML(egw)))
+				// check the pod export IP
+				err = common.CheckDaemonSetEgressIP(ctx, cli, config, egressConfig, ds, node1IPv4, node1IPv6, true)
+				Expect(err).NotTo(HaveOccurred())
+
+				// update the `NodeSelector` of the gateway to change the match from node1 to node2
+				GinkgoWriter.Printf("update the gateway: %s, to change the match from node: %s to node: %s\n", egw.Name, node1.Name, node2.Name)
+				egw.Spec.NodeSelector = node2Selector
+				// todo @bzsuni waiting for the bug to be fixed
+				Expect(cli.Update(ctx, egw)).NotTo(HaveOccurred(), fmt.Sprintf("failed to update gateway:\n%s\n", common.GetObjYAML(egw)))
+				// check if the egressgateway synced successfully
+				expectStatus = &egressv1.EgressGatewayStatus{
+					NodeList: []egressv1.EgressIPStatus{
+						{
+							Name: node2.Name,
+							Eips: []egressv1.Eips{
+								{Policies: []egressv1.Policy{
+									{Name: egcp.Name},
+								}},
+							},
+							Status: string(egressv1.EgressTunnelReady),
+						},
+					},
+				}
+				err = common.CheckEgressGatewayStatusSynced(ctx, cli, egw, expectStatus, time.Second*3)
+				Expect(err).NotTo(HaveOccurred(), fmt.Sprintf("failed CheckEgressGatewayStatusSynced, egressgateway:\n%s\n", common.GetObjYAML(egw)))
+				// check the pod export IP
+				err = common.CheckDaemonSetEgressIP(ctx, cli, config, egressConfig, ds, node2IPv4, node2IPv6, true)
+				Expect(err).NotTo(HaveOccurred())
+			})
+		})
 	})
 })
