@@ -436,6 +436,206 @@ var _ = Describe("Operate EgressGateway", Label("EgressGateway"), Ordered, func(
 		})
 
 	})
+
+	Context("Update egressGateway", func() {
+		var ctx context.Context
+		// --- gateway ---
+		var egw *egressv1.EgressGateway
+		var v4DefaultEip, v6DefaultEip string
+		var expectGatewayStatus *egressv1.EgressGatewayStatus
+
+		// --- policy ---
+		var egp *egressv1.EgressPolicy
+		// var egcp *egressv1.EgressClusterPolicy
+		var expectPolicyStatus *egressv1.EgressPolicyStatus
+
+		// --- pod ---
+		var ds *appsv1.DaemonSet
+
+		BeforeEach(func() {
+			ctx = context.Background()
+			var err error
+
+			// create ds for eip test
+			ds, err = common.CreateDaemonSet(ctx, cli, "ds-"+faker.Word(), config.Image)
+			Expect(err).NotTo(HaveOccurred())
+			GinkgoWriter.Printf("Create DaemonSet: %s\n", ds.Name)
+
+			// create gateway
+			egw = createEgressGateway(ctx)
+			v4DefaultEip = egw.Spec.Ippools.Ipv4DefaultEIP
+			v6DefaultEip = egw.Spec.Ippools.Ipv6DefaultEIP
+
+			// create egressPolicy
+			egp, err = common.CreateEgressPolicyNew(ctx, cli, egressConfig, egw.Name, ds.Labels)
+			Expect(err).NotTo(HaveOccurred())
+			GinkgoWriter.Printf("Succeeded create EgressPolicy: %s\n", egp.Name)
+
+			// check egressPolicy status
+			GinkgoWriter.Println("CheckEgressPolicyStatusSynced")
+			expectPolicyStatus = &egressv1.EgressPolicyStatus{
+				Eip: egressv1.Eip{
+					Ipv4: v4DefaultEip,
+					Ipv6: v6DefaultEip,
+				},
+				Node: node1.Name,
+			}
+			Expect(common.CheckEgressPolicyStatusSynced(ctx, cli, egp, expectPolicyStatus, time.Second*5)).NotTo(HaveOccurred(),
+				fmt.Sprintf("expect: %v, \nbut: %v\n", expectPolicyStatus, egp.Status))
+
+			// check egressGatewayStatus
+			GinkgoWriter.Println("CheckEgressGatewayStatusSynced")
+			expectGatewayStatus = &egressv1.EgressGatewayStatus{
+				NodeList: []egressv1.EgressIPStatus{
+					{
+						Name: node1.Name,
+						Eips: []egressv1.Eips{
+							{IPv4: v4DefaultEip, IPv6: v6DefaultEip, Policies: []egressv1.Policy{
+								{Name: egp.Name, Namespace: egp.Namespace},
+							}},
+						},
+						Status: string(egressv1.EgressTunnelReady),
+					},
+				},
+			}
+			Expect(common.CheckEgressGatewayStatusSynced(ctx, cli, egw, expectGatewayStatus, time.Second*10)).NotTo(HaveOccurred(),
+				fmt.Sprintf("expect: %v, \nbut: %v\n", *expectGatewayStatus, egw.Status))
+
+			// todo @bzsuni
+			// // create egressClusterPolicy
+			// egcp, err = common.CreateEgressClusterPolicy(ctx, cli, egressConfig, egw.Name, ds.Labels)
+			// Expect(err).NotTo(HaveOccurred())
+			// GinkgoWriter.Printf("Succeeded create egressClusterPolicy: %s\n", egcp.Name)
+
+			// todo @bzsuni
+			// // check egressClusterPolicy status
+			// GinkgoWriter.Println("CheckEgressClusterPolicyStatusSynced")
+			// Expect(common.CheckEgressClusterPolicyStatusSynced(ctx, cli, egcp, expectPolicyStatus, time.Second*5)).NotTo(HaveOccurred(),
+			// 	fmt.Sprintf("expect: %v, \nbut: %v\n", *expectPolicyStatus, egcp.Status))
+
+			// todo @bzsuni
+			// // check egressGatewayStatus
+			// GinkgoWriter.Println("CheckEgressGatewayStatusSynced")
+			// expectGatewayStatus.NodeList[0].Eips[0].Policies = append(expectGatewayStatus.NodeList[0].Eips[0].Policies, egressv1.Policy{Name: egcp.Name})
+
+			// todo @bzsuni
+			// // todo @bzsuni bug -- check failed, waiting fixed
+			// // Expect(common.CheckEgressGatewayStatusSynced(ctx, cli, egw, expectGatewayStatus, time.Second*5)).NotTo(HaveOccurred(),
+			// // 	fmt.Sprintf("expect: %v, \nbut: %v\n", *expectGatewayStatus, egw.Status))
+
+			// check eip in pod
+			GinkgoWriter.Printf("Check eip in ds: %s after create policy\n", ds.Name)
+			err = common.CheckDaemonSetEgressIP(ctx, cli, config, egressConfig, ds, egp.Status.Eip.Ipv4, egp.Status.Eip.Ipv6, true)
+			Expect(err).NotTo(HaveOccurred())
+
+			DeferCleanup(func() {
+				// delete ds
+				GinkgoWriter.Printf("Delete ds: %s\n", ds.Name)
+				Expect(common.DeleteObj(ctx, cli, ds)).NotTo(HaveOccurred())
+
+				// delete egp
+				GinkgoWriter.Printf("Delete egp: %s\n", egp.Name)
+				Expect(common.DeleteObj(ctx, cli, egp)).NotTo(HaveOccurred())
+
+				// todo @bzsuni
+				// GinkgoWriter.Printf("Delete egcp: %s\n", egcp.Name)
+				// Expect(common.DeleteObj(ctx, cli, egcp)).NotTo(HaveOccurred())
+
+				// delete egw
+				time.Sleep(time.Second)
+				GinkgoWriter.Printf("Delete egw: %s\n", egw.Name)
+				Expect(common.DeleteObj(ctx, cli, egw)).NotTo(HaveOccurred())
+			})
+		})
+
+		/*
+			Test editing egressGatewaySpec.NodeSelector and check the synchronization status of gateway and policy, and pod egress IP:
+
+			1. In beforeeach, create an egressGateway, specify NodeSelector as node1, create policy, clusterPolicy and daemonset
+			2. Update egressGatewaySpec.NodeSelector from node1 to node2, check status of gateway, policy and clusterPolicy, check pod egress IP
+			3. Update egressGatewaySpec.NodeSelector from node2 to not matching any node, check status of gateway, policy and clusterPolicy, check pod egress IP
+			4. Update egressGatewaySpec.NodeSelector from not matching any node to node2, check status of gateway, policy and clusterPolicy, check pod egress IP
+		*/
+
+		// todo @bzsuni waiting for the bug be fixed
+		PIt("Update egressGatewaySpec.NodeSelector", Label("G00014"), func() {
+			var err error
+
+			By("Change egressGatewaySpec.NodeSelector form node1 to node2")
+			GinkgoWriter.Printf("Before update nodeSelector form node1 to node2, egw: %s\n", common.GetObjYAML(egw))
+			egw.Spec.NodeSelector.Selector = metav1.SetAsLabelSelector(node2.Labels)
+			Expect(cli.Update(ctx, egw)).NotTo(HaveOccurred())
+
+			// check egressGatewayStatus
+			GinkgoWriter.Printf("We expect EgressGatewy: %s update successfully\n", egw.Name)
+			expectGatewayStatus.NodeList[0].Name = node2.Name
+			Expect(common.CheckEgressGatewayStatusSynced(ctx, cli, egw, expectGatewayStatus, time.Second*5)).NotTo(HaveOccurred(),
+				fmt.Sprintf("expect: %v, \nbut: %v\n", expectGatewayStatus, egw.Status))
+
+			// check expectPolicyStatus
+			expectPolicyStatus.Node = node2.Name
+			// // todo @bzsuni
+			// GinkgoWriter.Printf("We expect clusterPolicy: %s update successfully\n", egcp.Name)
+			// Expect(common.CheckEgressClusterPolicyStatus(f, clusterPolicyName, expectPolicyStatus, time.Second*5)).NotTo(HaveOccurred())
+
+			GinkgoWriter.Printf("We expect policy: %s update successfully\n", egp.Name)
+			Expect(common.CheckEgressPolicyStatusSynced(ctx, cli, egp, expectPolicyStatus, time.Second*5)).NotTo(HaveOccurred(),
+				fmt.Sprintf("expect: %v, \nbut: %v\n", expectPolicyStatus, egp.Status))
+
+			// check eip in pod
+			GinkgoWriter.Printf("Check eip in ds: %s after update egressGateway nodeSelector from node1 to node2\n", ds.Name)
+			err = common.CheckDaemonSetEgressIP(ctx, cli, config, egressConfig, ds, egp.Status.Eip.Ipv4, egp.Status.Eip.Ipv6, true)
+			Expect(err).NotTo(HaveOccurred())
+
+			By("Change egressGatewaySpec.NodeSelector to not match any nodes")
+			egw.Spec.NodeSelector.Selector = metav1.SetAsLabelSelector(map[string]string{"not-match": ""})
+			Expect(cli.Update(ctx, egw)).NotTo(HaveOccurred())
+
+			// check egressGatewayStatus
+			emptyGatewayStatus := &egressv1.EgressGatewayStatus{}
+			GinkgoWriter.Println("We expect the EgressGatewayStatus is emtpty")
+			Expect(common.CheckEgressGatewayStatusSynced(ctx, cli, egw, emptyGatewayStatus, time.Second*5)).NotTo(HaveOccurred(),
+				fmt.Sprintf("expect: %v, \nbut: %v\n", *emptyGatewayStatus, egw.Status))
+
+			// check expectPolicyStatus
+			emptyPolicyStatus := &egressv1.EgressPolicyStatus{}
+			GinkgoWriter.Printf("We expect policy: %s update successfully\n", egp.Name)
+			Expect(common.CheckEgressPolicyStatusSynced(ctx, cli, egp, emptyPolicyStatus, time.Second*5)).NotTo(HaveOccurred(),
+				fmt.Sprintf("expect: %v, \nbut: %v\n", emptyPolicyStatus, egp.Status))
+
+			// todo @bzsuni
+			// 	GinkgoWriter.Printf("We expect ClusterPolicy: %s update successfully\n", egcp.Name)
+			// Expect(common.CheckEgressClusterPolicyStatus(ctx, cli, egcp, emptyPolicyStatus, time.Second*5)).NotTo(HaveOccurred(),
+			// fmt.Sprintf("expect: %v, \nbut: %v\n", emptyPolicyStatus, egcp.Status))
+
+			// check eip in pod
+			GinkgoWriter.Printf("Check eip in ds: %s after update egressGateway nodeSelector to not match any nodes\n", ds.Name)
+			Expect(common.CheckDaemonSetEgressIP(ctx, cli, config, egressConfig, ds, v4DefaultEip, v6DefaultEip, false)).NotTo(HaveOccurred())
+
+			By("Change egressGatewaySpec.NodeSelector form notMatchedLabel to nodeBLable")
+			egw.Spec.NodeSelector.Selector = metav1.SetAsLabelSelector(node2.Labels)
+			Expect(cli.Update(ctx, egw)).NotTo(HaveOccurred())
+
+			// check egressGatewayStatus
+			GinkgoWriter.Printf("We expect EgressGatewy: %s update successfully\n", egw.Name)
+			Expect(common.CheckEgressGatewayStatusSynced(ctx, cli, egw, expectGatewayStatus, time.Second*5)).NotTo(HaveOccurred(),
+				fmt.Sprintf("expect: %v, \nbut: %v\n", expectGatewayStatus, egw.Status))
+
+			// check expectPolicyStatus
+			GinkgoWriter.Printf("We expect policy: %s update successfully\n", egp.Name)
+			Expect(common.CheckEgressPolicyStatusSynced(ctx, cli, egp, expectPolicyStatus, time.Second*5)).NotTo(HaveOccurred(),
+				fmt.Sprintf("expect: %v, \nbut: %v\n", expectPolicyStatus, egp.Status))
+
+			// todo @bzsuni
+			// 	GinkgoWriter.Printf("We expect clusterPolicy: %s update successfully\n", egcp.Name)
+			// Expect(common.CheckEgressClusterPolicyStatus(ctx, cli, egcp, emptyPolicyStatus, time.Second*5)).NotTo(HaveOccurred(),
+			// fmt.Sprintf("expect: %v, \nbut: %v\n", emptyPolicyStatus, egcp.Status))
+
+			// check eip in pod
+			GinkgoWriter.Printf("Check eip in ds: %s after update egressGateway nodeSelector form not match any nodes to node2\n", ds.Name)
+			Expect(common.CheckDaemonSetEgressIP(ctx, cli, config, egressConfig, ds, egp.Status.Eip.Ipv4, egp.Status.Eip.Ipv6, true)).NotTo(HaveOccurred())
+		})
+	})
 })
 
 func createEgressGateway(ctx context.Context) (egw *egressv1.EgressGateway) {
