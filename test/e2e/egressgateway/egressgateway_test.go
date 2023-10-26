@@ -217,6 +217,7 @@ var _ = Describe("Operate EgressGateway", Label("EgressGateway"), Ordered, func(
 
 				// delete egw
 				if egw != nil {
+					time.Sleep(time.Second * 3)
 					GinkgoWriter.Printf("Delete egw: %s\n", egw.Name)
 					Expect(common.DeleteObj(ctx, cli, egw)).NotTo(HaveOccurred())
 				}

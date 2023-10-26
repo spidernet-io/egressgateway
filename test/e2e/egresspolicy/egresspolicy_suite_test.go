@@ -32,6 +32,8 @@ var (
 	cli client.Client
 
 	nodeLabel map[string]string
+
+	node1, node2 *corev1.Node
 )
 
 var _ = BeforeSuite(func() {
@@ -54,6 +56,8 @@ var _ = BeforeSuite(func() {
 
 	//
 	nodeLabel = nodes.Items[0].Labels
+	node1 = &nodes.Items[0]
+	node2 = &nodes.Items[1]
 
 	// get egressgateway config
 	configMap := &corev1.ConfigMap{}
