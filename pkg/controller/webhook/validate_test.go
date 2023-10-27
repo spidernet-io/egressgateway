@@ -688,3 +688,186 @@ func TestValidateEgressClusterPolicy(t *testing.T) {
 		})
 	}
 }
+
+func TestUpdateEgressClusterPolicy(t *testing.T) {
+	ctx := context.Background()
+
+	cases := map[string]struct {
+		existingResources []runtime.Object
+		old               v1beta1.EgressClusterPolicySpec
+		new               v1beta1.EgressClusterPolicySpec
+		expAllow          bool
+		expErrMessage     string
+	}{
+		"test change ipv4": {
+			existingResources: nil,
+			old: v1beta1.EgressClusterPolicySpec{
+				EgressGatewayName: "a",
+				EgressIP: v1beta1.EgressIP{
+					IPv4:      "10.6.1.21",
+					IPv6:      "",
+					UseNodeIP: false,
+				},
+				AppliedTo: v1beta1.ClusterAppliedTo{
+					PodSelector: &metav1.LabelSelector{
+						MatchLabels: map[string]string{"app": "test"},
+					},
+				}, DestSubnet: nil,
+				Priority: 0,
+			},
+			new: v1beta1.EgressClusterPolicySpec{
+				EgressGatewayName: "a",
+				EgressIP: v1beta1.EgressIP{
+					IPv4:            "10.6.1.22",
+					IPv6:            "",
+					UseNodeIP:       false,
+					AllocatorPolicy: "",
+				},
+				AppliedTo: v1beta1.ClusterAppliedTo{
+					PodSelector: &metav1.LabelSelector{
+						MatchLabels: map[string]string{"app": "test"},
+					},
+				}, DestSubnet: nil,
+				Priority: 0,
+			},
+			expAllow:      false,
+			expErrMessage: "",
+		},
+		"change useNodeIP": {
+			existingResources: nil,
+			old: v1beta1.EgressClusterPolicySpec{
+				EgressGatewayName: "a",
+				EgressIP: v1beta1.EgressIP{
+					UseNodeIP: true,
+				},
+				AppliedTo: v1beta1.ClusterAppliedTo{
+					PodSelector: &metav1.LabelSelector{
+						MatchLabels: map[string]string{"app": "test"},
+					},
+				}, DestSubnet: nil,
+			},
+			new: v1beta1.EgressClusterPolicySpec{
+				EgressGatewayName: "a",
+				EgressIP: v1beta1.EgressIP{
+					UseNodeIP: false,
+				},
+				AppliedTo: v1beta1.ClusterAppliedTo{
+					PodSelector: &metav1.LabelSelector{
+						MatchLabels: map[string]string{"app": "test"},
+					},
+				}, DestSubnet: nil,
+			},
+			expAllow:      false,
+			expErrMessage: "",
+		},
+		"change egress gateway name": {
+			existingResources: nil,
+			old: v1beta1.EgressClusterPolicySpec{
+				EgressGatewayName: "a",
+				EgressIP: v1beta1.EgressIP{
+					UseNodeIP: true,
+				},
+				AppliedTo: v1beta1.ClusterAppliedTo{
+					PodSelector: &metav1.LabelSelector{
+						MatchLabels: map[string]string{"app": "test"},
+					},
+				}, DestSubnet: nil,
+			},
+			new: v1beta1.EgressClusterPolicySpec{
+				EgressGatewayName: "b",
+				EgressIP: v1beta1.EgressIP{
+					UseNodeIP: true,
+				},
+				AppliedTo: v1beta1.ClusterAppliedTo{
+					PodSelector: &metav1.LabelSelector{
+						MatchLabels: map[string]string{"app": "test"},
+					},
+				}, DestSubnet: nil,
+			},
+			expAllow:      false,
+			expErrMessage: "",
+		},
+		"change ipv6": {
+			existingResources: nil,
+			old: v1beta1.EgressClusterPolicySpec{
+				EgressGatewayName: "a",
+				EgressIP: v1beta1.EgressIP{
+					IPv6: "fd00::1",
+				},
+				AppliedTo: v1beta1.ClusterAppliedTo{
+					PodSelector: &metav1.LabelSelector{
+						MatchLabels: map[string]string{"app": "test"},
+					},
+				}, DestSubnet: nil,
+			},
+			new: v1beta1.EgressClusterPolicySpec{
+				EgressGatewayName: "a",
+				EgressIP: v1beta1.EgressIP{
+					IPv6: "fd00::2",
+				},
+				AppliedTo: v1beta1.ClusterAppliedTo{
+					PodSelector: &metav1.LabelSelector{
+						MatchLabels: map[string]string{"app": "test"},
+					},
+				}, DestSubnet: nil,
+			},
+			expAllow:      false,
+			expErrMessage: "",
+		},
+	}
+	for name, c := range cases {
+		t.Run(name, func(t *testing.T) {
+			oldPolicy := &v1beta1.EgressClusterPolicy{
+				ObjectMeta: metav1.ObjectMeta{
+					Name: "policy",
+				},
+				Spec: c.old,
+			}
+
+			newPolicy := &v1beta1.EgressClusterPolicy{
+				ObjectMeta: metav1.ObjectMeta{
+					Name: "policy",
+				},
+				Spec: c.new,
+			}
+
+			oldObj, err := json.Marshal(oldPolicy)
+			assert.NoError(t, err)
+
+			newObj, err := json.Marshal(newPolicy)
+			assert.NoError(t, err)
+
+			builder := fake.NewClientBuilder()
+			builder.WithScheme(schema.GetScheme())
+			cli := builder.Build()
+			conf := &config.Config{
+				FileConfig: config.FileConfig{
+					EnableIPv4: true,
+					EnableIPv6: true,
+				},
+			}
+
+			validator := ValidateHook(cli, conf)
+			resp := validator.Handle(ctx, admission.Request{
+				AdmissionRequest: admissionv1.AdmissionRequest{
+					Name: oldPolicy.Name,
+					Kind: metav1.GroupVersionKind{
+						Kind: "EgressClusterPolicy",
+					},
+					Operation: admissionv1.Update,
+					OldObject: runtime.RawExtension{
+						Raw: oldObj,
+					},
+					Object: runtime.RawExtension{
+						Raw: newObj,
+					},
+				},
+			})
+
+			assert.Equal(t, c.expAllow, resp.Allowed)
+			if c.expErrMessage != "" {
+				assert.Equal(t, c.expErrMessage, resp.AdmissionResponse.Result.Message)
+			}
+		})
+	}
+}
