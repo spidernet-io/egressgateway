@@ -46,8 +46,6 @@
 | G00012 | 向 `Ippools.IPv4` 和 `Ippools.IPv6` 添加相同数量的 IP 时，更新 EgressGateway 会成功                                    | p2  | false |    |    |
 | G00013 | 向 `Ippools` 中添加合法的 IP 地址，更新 EgressGateway 成功                                                           | p2  | false |    |    |
 | G00014 | 编辑 `NodeSelector` 使其匹配另一个节点，`Status.NodeList` 更新为新匹配的节点，使用该 EgressGateway 的 policy `Status.Node` 更新为新匹配的节点, `pod` 的出口 `ip` 为 `eip`<br>编辑 `NodeSelector` 使其不匹配任何节点，`Status.NodeList` 为空，用该 EgressGateway 的 policy `Status.Node` 为空, `pod` 使用访问外部 IP 会报错<br>编辑 `NodeSelector` 使其匹配一个节点，`Status.NodeList` 为所匹配的节点，使用该 EgressGateway 的 policy `Status.Node` 更新为新匹配的节点，`pod` 的出口 `ip` 为 `eip`                           | p2  | false |      |     |
-| G00015 | 当存在 Policy （包括命名空间级别和集群级别）正在使用 EgressGateway 时，删除 EgressGateway 会失败                                    | p2  | false |    |    |
-| G00016 | 当没有 Policy 使用 EgressGateway 时，删除 EgressGateway 成功                                                      | p2  | false |    |    |
 | G00017 | 创建 `EgressCluster` 或者 `EgressClusterPolicy` 时使用未指定 `spec.egressGatewayName` 时，可以使用自动设置租户或者集群默认网关，并创建成功 | p2  | false |    |    |
 | G00018 | 当 `Ippools.IPv4` 和 `Ippools.IPv6` 为空时，创建 EgressGateway 成功 | p2  | false |    |    |
 | G00019 | 当 `Ippools.IPv4` 和 `Ippools.IPv6` 为空时，创建 `EgressCluster` 或者 `EgressClusterPolicy`，未指定 `spec.egressIP.useNodeIP` 时，policy 创建失败，`spec.egressIP.useNodeIP` 为 true 时，policy 创建成功 | p2  | false |    |    |
