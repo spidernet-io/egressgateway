@@ -10,7 +10,7 @@ require (
 	github.com/go-logr/logr v1.3.0
 	github.com/go-swagger/go-swagger v0.30.4
 	github.com/google/gops v0.3.27
-	github.com/google/uuid v1.3.1
+	github.com/google/uuid v1.4.0
 	github.com/gorilla/websocket v1.5.0
 	github.com/mdlayher/arp v0.0.0-20220221190821-c37aaafac7f9
 	github.com/mdlayher/ethernet v0.0.0-20220221185849-529eae5b6118
