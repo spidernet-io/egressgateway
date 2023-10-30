@@ -29,11 +29,13 @@ type Agent struct {
 func New(cfg *config.Config) (types.Service, error) {
 	syncPeriod := time.Second * 15
 	log := logger.NewLogger(cfg.EnvConfig.Logger)
+	t := time.Duration(0)
 	mgrOpts := manager.Options{
-		Scheme:                 schema.GetScheme(),
-		Logger:                 log,
-		HealthProbeBindAddress: cfg.HealthProbeBindAddress,
-		SyncPeriod:             &syncPeriod,
+		Scheme:                  schema.GetScheme(),
+		Logger:                  log,
+		HealthProbeBindAddress:  cfg.HealthProbeBindAddress,
+		SyncPeriod:              &syncPeriod,
+		GracefulShutdownTimeout: &t,
 	}
 
 	if cfg.MetricsBindAddress != "" {

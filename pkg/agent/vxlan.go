@@ -5,6 +5,7 @@ package agent
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net"
 	"strconv"
@@ -14,7 +15,7 @@ import (
 
 	"github.com/go-logr/logr"
 	"github.com/vishvananda/netlink"
-	"k8s.io/apimachinery/pkg/api/errors"
+	k8sErr "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -31,6 +32,8 @@ import (
 	"github.com/spidernet-io/egressgateway/pkg/utils"
 )
 
+var ErrHeartbeatTime = errors.New("heartbeat time")
+
 type vxlanReconciler struct {
 	client client.Client
 	log    logr.Logger
@@ -44,6 +47,8 @@ type vxlanReconciler struct {
 
 	ruleRoute      *route.RuleRoute
 	ruleRouteCache *utils.SyncMap[string, []net.IP]
+
+	updateTimer *time.Timer
 }
 
 type VTEP struct {
@@ -380,7 +385,7 @@ func (r *vxlanReconciler) reconcileEgressTunnel(ctx context.Context, req reconci
 	deleted := false
 	err := r.client.Get(ctx, req.NamespacedName, node)
 	if err != nil {
-		if !errors.IsNotFound(err) {
+		if !k8sErr.IsNotFound(err) {
 			return reconcile.Result{}, err
 		}
 		deleted = true
@@ -472,7 +477,7 @@ func (r *vxlanReconciler) getEgressTunnelByEgressGateway(ctx context.Context, na
 	egw := &egressv1.EgressGateway{}
 	err := r.client.Get(ctx, types.NamespacedName{Name: name}, egw)
 	if err != nil {
-		if errors.IsNotFound(err) {
+		if k8sErr.IsNotFound(err) {
 			return res, nil
 		}
 		return nil, err
@@ -535,7 +540,7 @@ func (r *vxlanReconciler) updateEgressTunnelStatus(node *egressv1.EgressTunnel, 
 		ctx := context.Background()
 		err = r.client.Get(ctx, types.NamespacedName{Name: r.cfg.NodeName}, node)
 		if err != nil {
-			if errors.IsNotFound(err) {
+			if k8sErr.IsNotFound(err) {
 				return nil
 			}
 			return err
@@ -579,22 +584,46 @@ func (r *vxlanReconciler) updateEgressTunnelStatus(node *egressv1.EgressTunnel, 
 	}
 
 	if needUpdate {
-		r.log.Info("update node status",
-			"phase", node.Status.Phase,
-			"tunnelIPv4", node.Status.Tunnel.IPv4,
-			"tunnelIPv6", node.Status.Tunnel.IPv6,
-			"parentName", node.Status.Tunnel.Parent.Name,
-			"parentIPv4", node.Status.Tunnel.Parent.IPv4,
-			"parentIPv6", node.Status.Tunnel.Parent.IPv6,
-		)
-		ctx := context.Background()
-		err = r.client.Status().Update(ctx, node)
+		err := r.updateTunnelStatus(node)
 		if err != nil {
 			return err
 		}
 	}
 
 	return nil
+}
+
+func (r *vxlanReconciler) syncLastHeartbeatTime(ctx context.Context) error {
+	r.log.Info("start sync heartbeat")
+	for {
+		select {
+		case <-ctx.Done():
+			r.log.Info("heartbeat context done")
+			return nil
+		case <-r.updateTimer.C:
+			ctx := context.Background()
+			tunnel := new(egressv1.EgressTunnel)
+			err := r.client.Get(ctx, types.NamespacedName{Name: r.cfg.NodeName}, tunnel)
+			if err != nil {
+				if k8sErr.IsNotFound(err) {
+					break
+				}
+				r.log.Error(err, "update tunnel status")
+				r.updateTimer.Reset(time.Second)
+				break
+			}
+			r.log.V(1).Info("update tunnel last heartbeat time")
+			err = r.updateTunnelStatus(tunnel)
+			if err != nil {
+				if strings.Contains(err.Error(), "context deadline exceeded") {
+					return ErrHeartbeatTime
+				}
+				r.log.Error(err, "update tunnel status")
+				r.updateTimer.Reset(time.Second)
+				break
+			}
+		}
+	}
 }
 
 func (r *vxlanReconciler) parseVTEP(status egressv1.EgressTunnelStatus) *vxlan.Peer {
@@ -624,7 +653,6 @@ func (r *vxlanReconciler) parseVTEP(status egressv1.EgressTunnelStatus) *vxlan.P
 			ipv6 = &ip
 		}
 	}
-
 	mac, err := net.ParseMAC(status.Tunnel.MAC)
 	if err != nil {
 		ready = false
@@ -735,6 +763,27 @@ func (r *vxlanReconciler) keepVXLAN() {
 	}
 }
 
+func (r *vxlanReconciler) updateTunnelStatus(node *egressv1.EgressTunnel) error {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(r.cfg.FileConfig.GatewayFailover.EipEvictionTimeout)*time.Second)
+	defer cancel()
+
+	node.Status.LastHeartbeatTime = metav1.Now()
+	r.log.Info("update tunnel status",
+		"phase", node.Status.Phase,
+		"tunnelIPv4", node.Status.Tunnel.IPv4,
+		"tunnelIPv6", node.Status.Tunnel.IPv6,
+		"parentName", node.Status.Tunnel.Parent.Name,
+		"parentIPv4", node.Status.Tunnel.Parent.IPv4,
+		"parentIPv6", node.Status.Tunnel.Parent.IPv6,
+	)
+	err := r.client.Status().Update(ctx, node)
+	if err != nil {
+		return err
+	}
+	r.updateTimer.Reset(time.Second * time.Duration(r.cfg.FileConfig.GatewayFailover.TunnelUpdatePeriod))
+	return nil
+}
+
 func (r *vxlanReconciler) ensureRoute() error {
 	neighList, err := r.vxlan.ListNeigh()
 	if err != nil {
@@ -811,6 +860,10 @@ func (r *vxlanReconciler) keepReplayRoute() {
 	}
 }
 
+func (r *vxlanReconciler) Start(ctx context.Context) error {
+	return r.syncLastHeartbeatTime(ctx)
+}
+
 func parseMarkToInt(mark string) (int, error) {
 	tmp := strings.ReplaceAll(mark, "0x", "")
 	i64, err := strconv.ParseInt(tmp, 16, 32)
@@ -832,6 +885,7 @@ func newEgressTunnelController(mgr manager.Manager, cfg *config.Config, log logr
 		peerMap:        utils.NewSyncMap[string, vxlan.Peer](),
 		ruleRoute:      ruleRoute,
 		ruleRouteCache: utils.NewSyncMap[string, []net.IP](),
+		updateTimer:    time.NewTimer(time.Second * time.Duration(cfg.FileConfig.GatewayFailover.TunnelUpdatePeriod)),
 	}
 
 	netLink := vxlan.NetLink{
@@ -849,6 +903,10 @@ func newEgressTunnelController(mgr manager.Manager, cfg *config.Config, log logr
 	r.vxlan = vxlan.New(vxlan.WithCustomGetParent(r.getParent))
 
 	c, err := controller.New("vxlan", mgr, controller.Options{Reconciler: r})
+	if err != nil {
+		return err
+	}
+	err = mgr.Add(r)
 	if err != nil {
 		return err
 	}

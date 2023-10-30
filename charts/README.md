@@ -46,6 +46,15 @@ helm install egressgateway egressgateway/egressgateway --namespace kube-system
 | `feature.maxNumberEndpointPerSlice`          | max number of endpoints per slice                                                                                          | `100`                   |
 | `feature.announcedInterfacesToExclude`       | The list of network interface excluded for announcing Egress IP.                                                           | `["^cali.*","br-*"]`    |
 
+### feature.gatewayFailover Enable gateway failover.
+
+| Name                                          | Description                                                                                                                                                 | Value   |
+| --------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- |
+| `feature.gatewayFailover.enable`              | Enable gateway failover, default `false`.                                                                                                                   | `false` |
+| `feature.gatewayFailover.tunnelMonitorPeriod` | The egress controller check tunnel last update status at an interval set in seconds, default `5`.                                                           | `5`     |
+| `feature.gatewayFailover.tunnelUpdatePeriod`  | The egress agent updates the tunnel status at an interval set in seconds, default `5`.                                                                      | `5`     |
+| `feature.gatewayFailover.eipEvictionTimeout`  | If the last updated time of the egress tunnel exceeds this time, move the Egress IP of the node to an available node, the unit is seconds, default is `15`. | `15`    |
+
 ### Egressgateway agent parameters
 
 | Name                                                 | Description                                                                                                     | Value                              |
