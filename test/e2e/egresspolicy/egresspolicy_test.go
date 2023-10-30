@@ -15,7 +15,10 @@ import (
 
 	"github.com/go-faker/faker/v4"
 	appsv1 "k8s.io/api/apps/v1"
+	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/types"
 
 	egressv1 "github.com/spidernet-io/egressgateway/pkg/k8s/apis/v1beta1"
 	"github.com/spidernet-io/egressgateway/test/e2e/common"
@@ -39,6 +42,8 @@ var _ = Describe("EgressPolicy", Ordered, func() {
 		DeferCleanup(func() {
 			// delete EgressGateway
 			if egw != nil {
+				// todo @bzsuni waiting finalizer-feature to be done
+				time.Sleep(time.Second * 3)
 				err = common.DeleteObj(ctx, cli, egw)
 				Expect(err).NotTo(HaveOccurred())
 			}
@@ -660,6 +665,106 @@ var _ = Describe("EgressPolicy", Ordered, func() {
 			cpEgcp.Spec.EgressGatewayName = egw.Name
 			// update policy
 			Expect(cli.Update(ctx, cpEgcp)).To(HaveOccurred())
+		})
+	})
+
+	/*
+	   namespace-level policy only takes effect in its specified namespace
+	    1. Create namespace test-ns
+	    2. Create pods with the same name in default and test-ns namespaces respectively
+	    3. Create a policy in default namespace, with PodSelector matching the labels of the above pods
+	    4. Check the egress IP of the pod in default namespace should be the eip of the policy
+	    5. Check the egress IP of the pod in test-ns namespace should NOT be the eip of the policy
+	*/
+	Context("namespace-level policy", Label("P00021"), func() {
+		var ctx context.Context
+		var testNs *corev1.Namespace
+		var podName string
+		var podObj, podObjNs *corev1.Pod
+		var podLabel map[string]string
+		var err error
+		var egp *egressv1.EgressPolicy
+
+		BeforeEach(func() {
+			ctx = context.Background()
+			podName = "pod-" + uuid.NewString()
+			podLabel = map[string]string{"app": podName}
+
+			DeferCleanup(func() {
+				// delete ns
+				if testNs != nil {
+					Expect(common.DeleteObj(ctx, cli, testNs)).NotTo(HaveOccurred())
+					Eventually(ctx, func(ctx context.Context) bool {
+						e := cli.Get(ctx, types.NamespacedName{Name: testNs.Name}, testNs)
+						return errors.IsNotFound(e)
+					}).WithTimeout(time.Second * 10).WithPolling(time.Second).Should(BeTrue())
+				}
+				// delete pods
+				if podObj != nil {
+					Expect(common.DeleteObj(ctx, cli, podObj)).NotTo(HaveOccurred())
+				}
+
+				// delete egresspolicy
+				if egp != nil {
+					// Expect(common.DeleteObj(ctx, cli, egp)).NotTo(HaveOccurred())
+					err = common.WaitEgressPoliciesDeleted(ctx, cli, []*egressv1.EgressPolicy{egp}, time.Second*5)
+					Expect(err).NotTo(HaveOccurred())
+					time.Sleep(time.Second * 2)
+				}
+			})
+		})
+
+		It("test the scope of policy", func() {
+			// create ns test-ns
+			testNs = &corev1.Namespace{
+				ObjectMeta: metav1.ObjectMeta{
+					Name: "test-ns",
+				},
+			}
+			Expect(cli.Create(ctx, testNs)).NotTo(HaveOccurred())
+
+			// create a pod in default namespace
+			podObj, err = common.CreatePodCustom(ctx, cli, podName, config.Image, func(pod *corev1.Pod) {
+				pod.Namespace = "default"
+				pod.Labels = podLabel
+			})
+			Expect(err).NotTo(HaveOccurred())
+
+			// create a name-same pod in namespace test-ns
+			podObjNs, err = common.CreatePodCustom(ctx, cli, podName, config.Image, func(pod *corev1.Pod) {
+				pod.Namespace = testNs.Name
+				pod.Labels = podLabel
+			})
+			Expect(err).NotTo(HaveOccurred())
+
+			// waiting for the pod to be created
+			Expect(common.WaitPodRunning(ctx, cli, podObj, time.Second*5)).NotTo(HaveOccurred())
+
+			// create a policy in default namespace
+			egp, err = common.CreateEgressPolicyNew(ctx, cli, egressConfig, egw.Name, podLabel)
+			Expect(err).NotTo(HaveOccurred())
+			err = common.WaitEgressPolicyStatusReady(ctx, cli, egp, egressConfig.EnableIPv4, egressConfig.EnableIPv6, time.Second*3)
+			Expect(err).NotTo(HaveOccurred())
+
+			// check the eip of the pod in default namespace
+			if egressConfig.EnableIPv4 {
+				err = common.CheckPodEgressIP(ctx, config, *podObj, egp.Status.Eip.Ipv4, config.ServerAIPv4, true)
+				Expect(err).NotTo(HaveOccurred())
+			}
+			if egressConfig.EnableIPv6 {
+				err = common.CheckPodEgressIP(ctx, config, *podObj, egp.Status.Eip.Ipv6, config.ServerAIPv6, true)
+				Expect(err).NotTo(HaveOccurred())
+			}
+
+			// check the eip of the pod in the namespace `test-ns`
+			if egressConfig.EnableIPv4 {
+				err = common.CheckPodEgressIP(ctx, config, *podObjNs, egp.Status.Eip.Ipv4, config.ServerAIPv4, false)
+				Expect(err).NotTo(HaveOccurred())
+			}
+			if egressConfig.EnableIPv6 {
+				err = common.CheckPodEgressIP(ctx, config, *podObjNs, egp.Status.Eip.Ipv6, config.ServerAIPv6, false)
+				Expect(err).NotTo(HaveOccurred())
+			}
 		})
 	})
 })
