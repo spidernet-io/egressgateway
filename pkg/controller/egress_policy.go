@@ -44,9 +44,9 @@ func (r *egpReconciler) Reconcile(ctx context.Context, req reconcile.Request) (r
 	}
 }
 
-// reconcileEN reconcile egressgateway
+// reconcileEN reconcile EgressGateway
 // goal:
-// - update egresspolicy
+// - update EgressPolicy
 func (r *egpReconciler) reconcileEGW(ctx context.Context, req reconcile.Request, log logr.Logger) (reconcile.Result, error) {
 	deleted := false
 	egw := new(v1beta1.EgressGateway)

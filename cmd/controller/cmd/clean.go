@@ -13,6 +13,7 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
+	egressv1 "github.com/spidernet-io/egressgateway/pkg/k8s/apis/v1beta1"
 	"github.com/spidernet-io/egressgateway/pkg/schema"
 )
 
@@ -72,5 +73,22 @@ func clean(validate, mutating string) error {
 			return err
 		}
 	}
+
+	list := new(egressv1.EgressTunnelList)
+	err = cli.List(ctx, list)
+	if err == nil {
+		for _, item := range list.Items {
+			item.Finalizers = make([]string, 0)
+			err := cli.Update(ctx, &item)
+			if err != nil {
+				return err
+			}
+			err = cli.Delete(ctx, &item)
+			if err != nil {
+				return err
+			}
+		}
+	}
+
 	return nil
 }

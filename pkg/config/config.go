@@ -66,23 +66,31 @@ type EnvConfig struct {
 }
 
 type FileConfig struct {
-	EnableIPv4                   bool           `yaml:"enableIPv4"`
-	EnableIPv6                   bool           `yaml:"enableIPv6"`
-	IPTables                     IPTables       `yaml:"iptables"`
-	DatapathMode                 string         `yaml:"datapathMode"`
-	TunnelIpv4Subnet             string         `yaml:"tunnelIpv4Subnet"`
-	TunnelIpv6Subnet             string         `yaml:"tunnelIpv6Subnet"`
-	TunnelIPv4Net                *net.IPNet     `json:"-"`
-	TunnelIPv6Net                *net.IPNet     `json:"-"`
-	TunnelDetectMethod           string         `yaml:"tunnelDetectMethod"`
-	VXLAN                        VXLAN          `yaml:"vxlan"`
-	MaxNumberEndpointPerSlice    int            `yaml:"maxNumberEndpointPerSlice"`
-	Mark                         string         `yaml:"mark"`
-	AnnouncedInterfacesToExclude []string       `yaml:"announcedInterfacesToExclude"`
-	AnnounceExcludeRegexp        *regexp.Regexp `json:"-"`
-	EnableGatewayReplyRoute      bool           `yaml:"enableGatewayReplyRoute"`
-	GatewayReplyRouteTable       int            `yaml:"gatewayReplyRouteTable"`
-	GatewayReplyRouteMark        int            `yaml:"gatewayReplyRouteMark"`
+	EnableIPv4                   bool            `yaml:"enableIPv4"`
+	EnableIPv6                   bool            `yaml:"enableIPv6"`
+	IPTables                     IPTables        `yaml:"iptables"`
+	DatapathMode                 string          `yaml:"datapathMode"`
+	TunnelIpv4Subnet             string          `yaml:"tunnelIpv4Subnet"`
+	TunnelIpv6Subnet             string          `yaml:"tunnelIpv6Subnet"`
+	TunnelIPv4Net                *net.IPNet      `json:"-"`
+	TunnelIPv6Net                *net.IPNet      `json:"-"`
+	TunnelDetectMethod           string          `yaml:"tunnelDetectMethod"`
+	VXLAN                        VXLAN           `yaml:"vxlan"`
+	MaxNumberEndpointPerSlice    int             `yaml:"maxNumberEndpointPerSlice"`
+	Mark                         string          `yaml:"mark"`
+	AnnouncedInterfacesToExclude []string        `yaml:"announcedInterfacesToExclude"`
+	AnnounceExcludeRegexp        *regexp.Regexp  `json:"-"`
+	EnableGatewayReplyRoute      bool            `yaml:"enableGatewayReplyRoute"`
+	GatewayReplyRouteTable       int             `yaml:"gatewayReplyRouteTable"`
+	GatewayReplyRouteMark        int             `yaml:"gatewayReplyRouteMark"`
+	GatewayFailover              GatewayFailover `yaml:"gatewayFailover"`
+}
+
+type GatewayFailover struct {
+	Enable              bool `yaml:"enable"`
+	TunnelMonitorPeriod int  `yaml:"tunnelMonitorPeriod"`
+	TunnelUpdatePeriod  int  `yaml:"tunnelUpdatePeriod"`
+	EipEvictionTimeout  int  `yaml:"eipEvictionTimeout"`
 }
 
 const TunnelInterfaceDefaultRoute = "defaultRouteInterface"
@@ -149,6 +157,12 @@ func LoadConfig(isAgent bool) (*Config, error) {
 				RestoreSupportsLock:     restoreSupportsLock,
 			},
 			Mark: "0x26000000",
+			GatewayFailover: GatewayFailover{
+				Enable:              true,
+				TunnelMonitorPeriod: 5,
+				TunnelUpdatePeriod:  5,
+				EipEvictionTimeout:  15,
+			},
 		},
 	}
 
@@ -230,6 +244,15 @@ func LoadConfig(isAgent bool) (*Config, error) {
 	config.KubeConfig, err = ctrl.GetConfig()
 	if err != nil {
 		return nil, fmt.Errorf("failed to load kubeconfig, error: %v", config)
+	}
+
+	// validate config
+	if config.FileConfig.GatewayFailover.Enable {
+		if config.FileConfig.GatewayFailover.EipEvictionTimeout <
+			(config.FileConfig.GatewayFailover.TunnelUpdatePeriod +
+				config.FileConfig.GatewayFailover.TunnelMonitorPeriod) {
+			return nil, fmt.Errorf("eipEvictionTimeout should be greater than the sum of tunnelUpdatePeriod and tunnelMonitorPeriod")
+		}
 	}
 
 	return config, nil

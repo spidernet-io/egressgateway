@@ -60,6 +60,9 @@ spec:
             type: object
           status:
             properties:
+              lastHeartbeatTime:
+                format: date-time
+                type: string
               mark:
                 type: string
               phase:
@@ -68,7 +71,7 @@ spec:
                 - Init
                 - Failed
                 - Ready
-                - ""
+                - HeartbeatTimeout
                 type: string
               tunnel:
                 properties:

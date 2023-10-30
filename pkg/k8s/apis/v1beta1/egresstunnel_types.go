@@ -38,10 +38,12 @@ type EgressTunnelSpec struct{}
 type EgressTunnelStatus struct {
 	// +kubebuilder:validation:Optional
 	Tunnel Tunnel `json:"tunnel,omitempty"`
-	// +kubebuilder:validation:Enum=Pending;Init;Failed;Ready;""
+	// +kubebuilder:validation:Enum=Pending;Init;Failed;Ready;HeartbeatTimeout
 	Phase EgressTunnelPhase `json:"phase,omitempty"`
 	// +kubebuilder:validation:Optional
 	Mark string `json:"mark,omitempty"`
+	// +kubebuilder:validation:Optional
+	LastHeartbeatTime metav1.Time `json:"lastHeartbeatTime,omitempty"`
 }
 
 type Tunnel struct {
@@ -73,6 +75,8 @@ const (
 	EgressTunnelInit EgressTunnelPhase = "Init"
 	// EgressTunnelFailed allocate tunnel address failed
 	EgressTunnelFailed EgressTunnelPhase = "Failed"
+	// EgressTunnelHeartbeatTimeout tunnel heartbeat timeout
+	EgressTunnelHeartbeatTimeout EgressTunnelPhase = "HeartbeatTimeout"
 	// EgressTunnelReady tunnel is available
 	EgressTunnelReady EgressTunnelPhase = "Ready"
 )

@@ -68,6 +68,16 @@ feature:
   announcedInterfacesToExclude:
     - "^cali.*"
     - "br-*"
+  ## @section feature.gatewayFailover Enable gateway failover.
+  gatewayFailover:
+    ## @param feature.gatewayFailover.enable Enable gateway failover, default `false`.
+    enable: false
+    ## @param feature.gatewayFailover.tunnelMonitorPeriod The egress controller check tunnel last update status at an interval set in seconds, default `5`.
+    tunnelMonitorPeriod: 5
+    ## @param feature.gatewayFailover.tunnelUpdatePeriod The egress agent updates the tunnel status at an interval set in seconds, default `5`.
+    tunnelUpdatePeriod: 5
+    ## @param feature.gatewayFailover.eipEvictionTimeout If the last updated time of the egress tunnel exceeds this time, move the Egress IP of the node to an available node, the unit is seconds, default is `15`.
+    eipEvictionTimeout: 15
 
 ## @section Egressgateway agent parameters
 ##

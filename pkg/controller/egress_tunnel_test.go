@@ -70,6 +70,7 @@ func TestEgressTunnelCtrlForEgressTunnel(t *testing.T) {
 		mark:        mark,
 		allocatorV4: allocatorV4,
 		allocatorV6: nil,
+		initDone:    make(chan struct{}, 1),
 	}
 
 	reqs := []TestNodeReq{
@@ -143,6 +144,7 @@ func TestEgressTunnelCtrlForNode(t *testing.T) {
 		mark:        mark,
 		allocatorV4: allocatorV4,
 		allocatorV6: allocatorV6,
+		initDone:    make(chan struct{}, 1),
 	}
 
 	reqs := []TestNodeReq{

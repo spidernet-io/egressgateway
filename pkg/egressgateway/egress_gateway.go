@@ -10,8 +10,6 @@ import (
 	"net"
 	"time"
 
-	"github.com/spidernet-io/egressgateway/pkg/utils/ip"
-
 	"github.com/go-logr/logr"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -29,6 +27,7 @@ import (
 	"github.com/spidernet-io/egressgateway/pkg/constant"
 	egress "github.com/spidernet-io/egressgateway/pkg/k8s/apis/v1beta1"
 	"github.com/spidernet-io/egressgateway/pkg/utils"
+	"github.com/spidernet-io/egressgateway/pkg/utils/ip"
 )
 
 type egnReconciler struct {
@@ -192,7 +191,7 @@ func (r egnReconciler) reconcileEGW(ctx context.Context, req reconcile.Request, 
 		delete(delNodeMap, newNode.Name)
 	}
 
-	perNodeMap := make(map[string]egress.EgressIPStatus, 0)
+	perNodeMap := make(map[string]egress.EgressIPStatus)
 	for _, node := range egw.Status.NodeList {
 		_, ok := delNodeMap[node.Name]
 		if !ok {
@@ -334,7 +333,7 @@ func (r egnReconciler) reconcileEGT(ctx context.Context, req reconcile.Request, 
 	for _, item := range egwList.Items {
 		policies, isExist := GetPoliciesByNode(egt.Name, item)
 		if isExist {
-			perNodeMap := make(map[string]egress.EgressIPStatus, 0)
+			perNodeMap := make(map[string]egress.EgressIPStatus)
 			egw := item.DeepCopy()
 
 			// If the node is not in success state, the policy on the node is reassigned
@@ -405,6 +404,7 @@ func (r egnReconciler) reconcileEGT(ctx context.Context, req reconcile.Request, 
 							}
 							break
 						}
+						return reconcile.Result{Requeue: false}, nil
 					}
 				}
 			}
@@ -539,7 +539,7 @@ func (r egnReconciler) reconcileEGP(ctx context.Context, req reconcile.Request, 
 	// Assigned if the policy does not have a gateway node
 	eipStatus, isExist := GetEIPStatusByPolicy(policy, *egw)
 	if !isExist {
-		perNodeMap := make(map[string]egress.EgressIPStatus, 0)
+		perNodeMap := make(map[string]egress.EgressIPStatus)
 		for _, item := range egw.Status.NodeList {
 			perNodeMap[item.Name] = item
 		}
@@ -572,7 +572,7 @@ func (r egnReconciler) reconcileEGP(ctx context.Context, req reconcile.Request, 
 					}
 					if isReAllocatorPolicy {
 						eipStatus.Eips[i].Policies = append(eipStatus.Eips[i].Policies[:j], eipStatus.Eips[i].Policies[j+1:]...)
-						perNodeMap := make(map[string]egress.EgressIPStatus, 0)
+						perNodeMap := make(map[string]egress.EgressIPStatus)
 						for _, node := range egw.Status.NodeList {
 							if node.Name == eipStatus.Name {
 								perNodeMap[node.Name] = eipStatus
@@ -640,7 +640,7 @@ func (r egnReconciler) deleteNodeFromEG(ctx context.Context, nodeName string, eg
 	policies, isExist := GetPoliciesByNode(nodeName, egw)
 
 	if isExist {
-		perNodeMap := make(map[string]egress.EgressIPStatus, 0)
+		perNodeMap := make(map[string]egress.EgressIPStatus)
 		for _, item := range egw.Status.NodeList {
 			if nodeName != item.Name {
 				perNodeMap[item.Name] = item

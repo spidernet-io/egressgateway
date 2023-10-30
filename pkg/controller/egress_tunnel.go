@@ -6,6 +6,7 @@ package controller
 import (
 	"context"
 	"crypto/sha1"
+	"errors"
 	"fmt"
 	"net"
 	"sync"
@@ -15,8 +16,9 @@ import (
 	"github.com/go-logr/logr"
 	"github.com/prometheus/client_golang/prometheus"
 	corev1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/api/errors"
+	k8serr "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
@@ -78,6 +80,7 @@ type egReconciler struct {
 	mark        markallocator.Interface
 	allocatorV4 *ipallocator.Range
 	allocatorV6 *ipallocator.Range
+	initDone    chan struct{}
 }
 
 func (r *egReconciler) Reconcile(ctx context.Context, req reconcile.Request) (reconcile.Result, error) {
@@ -95,6 +98,7 @@ func (r *egReconciler) Reconcile(ctx context.Context, req reconcile.Request) (re
 			time.Sleep(time.Second)
 			goto redo
 		}
+		r.initDone <- struct{}{}
 	})
 
 	log := r.log.WithValues("name", newReq.Name, "kind", kind)
@@ -117,7 +121,7 @@ func (r *egReconciler) reconcileEGN(ctx context.Context, req reconcile.Request, 
 	egresstunnel := new(egressv1.EgressTunnel)
 	err := r.client.Get(ctx, req.NamespacedName, egresstunnel)
 	if err != nil {
-		if !errors.IsNotFound(err) {
+		if !k8serr.IsNotFound(err) {
 			return reconcile.Result{Requeue: true}, err
 		}
 		deleted = true
@@ -169,7 +173,7 @@ func (r *egReconciler) reconcileNode(ctx context.Context, req reconcile.Request,
 	node := new(corev1.Node)
 	err := r.client.Get(ctx, req.NamespacedName, node)
 	if err != nil {
-		if !errors.IsNotFound(err) {
+		if !k8serr.IsNotFound(err) {
 			return reconcile.Result{Requeue: true}, err
 		}
 		deleted = true
@@ -180,7 +184,7 @@ func (r *egReconciler) reconcileNode(ctx context.Context, req reconcile.Request,
 		egressTunnel := new(egressv1.EgressTunnel)
 		err := r.client.Get(ctx, req.NamespacedName, egressTunnel)
 		if err != nil {
-			if !errors.IsNotFound(err) {
+			if !k8serr.IsNotFound(err) {
 				return reconcile.Result{Requeue: true}, err
 			}
 			return reconcile.Result{}, nil
@@ -196,7 +200,7 @@ func (r *egReconciler) reconcileNode(ctx context.Context, req reconcile.Request,
 	err = r.client.Get(ctx, req.NamespacedName, en)
 	if err != nil {
 		log.Info("create egress tunnel")
-		if !errors.IsNotFound(err) {
+		if !k8serr.IsNotFound(err) {
 			return reconcile.Result{Requeue: true}, err
 		}
 		err := r.createEgressTunnel(ctx, node.Name, log)
@@ -361,7 +365,7 @@ func (r *egReconciler) reBuildCache(node egressv1.EgressTunnel, log logr.Logger)
 		if ipv6 := ip.To16(); ipv6 != nil {
 			err := r.allocatorV6.Allocate(ipv6)
 			if err != nil {
-				if err == ipallocator.ErrAllocated {
+				if errors.Is(err, ipallocator.ErrAllocated) {
 					log.Error(err, "can't reused ipv6", "ipv6", ipv6)
 					newNode.Status.Tunnel.IPv6 = ""
 					needUpdate = true
@@ -544,6 +548,81 @@ func (r *egReconciler) initEgressTunnel() error {
 	return nil
 }
 
+func (r *egReconciler) healthCheck(ctx context.Context) {
+	r.log.Info("health check", "second", r.config.FileConfig.GatewayFailover.TunnelMonitorPeriod)
+	period := time.Second * time.Duration(r.config.FileConfig.GatewayFailover.TunnelMonitorPeriod)
+	t := time.NewTimer(period)
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case <-t.C:
+			err := r.tunnelListCheck(ctx)
+			if err != nil {
+				r.log.Error(err, "tunnel list check")
+				t.Reset(time.Second)
+				continue
+			}
+			t.Reset(period)
+		}
+	}
+}
+
+func (r *egReconciler) tunnelListCheck(ctx context.Context) error {
+	timeout := time.Second * time.Duration(r.config.FileConfig.GatewayFailover.EipEvictionTimeout)
+
+	startTime := time.Now()
+	r.log.V(1).Info("start tunnel list health check", "time", startTime)
+	defer func() {
+		endTime := time.Now()
+		elapsedTime := endTime.Sub(startTime)
+		r.log.V(1).Info("end tunnel list health check", "time", endTime, "spend_time", elapsedTime)
+	}()
+
+	tunnels := new(egressv1.EgressTunnelList)
+	if err := r.client.List(ctx, tunnels); err != nil {
+		return err
+	}
+
+	for _, item := range tunnels.Items {
+		tunnel := new(egressv1.EgressTunnel)
+		key := types.NamespacedName{Name: item.Name}
+		err := r.client.Get(ctx, key, tunnel)
+		if err != nil {
+			r.log.Error(err, "get tunnel")
+			continue
+		}
+
+		if time.Now().After(tunnel.Status.LastHeartbeatTime.Add(timeout)) {
+			if tunnel.Status.Phase == egressv1.EgressTunnelHeartbeatTimeout {
+				continue
+			}
+			tunnel.Status.Phase = egressv1.EgressTunnelHeartbeatTimeout
+			r.log.Info("update tunnel status to HeartbeatTimeout", "tunnel", tunnel.Name)
+			err := r.client.Status().Update(ctx, tunnel)
+			if err != nil {
+				r.log.Error(err, "update tunnel status to TunnelHeartbeatTimeout")
+				continue
+			}
+		}
+	}
+	return nil
+}
+
+func (r *egReconciler) Start(ctx context.Context) error {
+	if r.config.FileConfig.GatewayFailover.Enable {
+		go func() {
+			select {
+			case <-ctx.Done():
+				return
+			case <-r.initDone:
+				go r.healthCheck(ctx)
+			}
+		}()
+	}
+	return nil
+}
+
 func newEgressTunnelController(mgr manager.Manager, log logr.Logger, cfg *config.Config) error {
 	if cfg == nil {
 		return fmt.Errorf("cfg can not be nil")
@@ -555,11 +634,12 @@ func newEgressTunnelController(mgr manager.Manager, log logr.Logger, cfg *config
 	}
 
 	r := &egReconciler{
-		client: mgr.GetClient(),
-		log:    log,
-		config: cfg,
-		doOnce: sync.Once{},
-		mark:   mark,
+		client:   mgr.GetClient(),
+		log:      log,
+		config:   cfg,
+		doOnce:   sync.Once{},
+		mark:     mark,
+		initDone: make(chan struct{}, 1),
 	}
 
 	if cfg.FileConfig.EnableIPv4 {
@@ -585,6 +665,10 @@ func newEgressTunnelController(mgr manager.Manager, log logr.Logger, cfg *config
 
 	log.Info("new egresstunnel controller")
 	c, err := controller.New("egresstunnel", mgr, controller.Options{Reconciler: r})
+	if err != nil {
+		return err
+	}
+	err = mgr.Add(r)
 	if err != nil {
 		return err
 	}
