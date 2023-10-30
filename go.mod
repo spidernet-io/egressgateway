@@ -7,7 +7,7 @@ require (
 	github.com/cilium/ipam v0.0.0-20220824141044-46ef3d556735
 	github.com/go-faker/faker/v4 v4.2.0
 	github.com/go-kit/log v0.2.1
-	github.com/go-logr/logr v1.2.4
+	github.com/go-logr/logr v1.3.0
 	github.com/go-swagger/go-swagger v0.30.4
 	github.com/google/gops v0.3.27
 	github.com/google/uuid v1.3.1
