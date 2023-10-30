@@ -861,6 +861,9 @@ func (r *vxlanReconciler) keepReplayRoute() {
 }
 
 func (r *vxlanReconciler) Start(ctx context.Context) error {
+	if !r.cfg.FileConfig.GatewayFailover.Enable {
+		return nil
+	}
 	return r.syncLastHeartbeatTime(ctx)
 }
 
