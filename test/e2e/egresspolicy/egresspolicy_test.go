@@ -539,4 +539,127 @@ var _ = Describe("EgressPolicy", Ordered, func() {
 			})
 		})
 	})
+
+	/*
+		This test case is used to verify that the policy does not allow editing of the fields Spec.EgressIP.IP and Spec.EgressGatewayName
+		We expect that when these two fields are edited, the request will be rejected
+	*/
+	PContext("Edit policy", Label("P00018", "P00019"), func() {
+		var egw1 *egressv1.EgressGateway
+		var egp *egressv1.EgressPolicy
+		var egcp *egressv1.EgressClusterPolicy
+		var ctx context.Context
+		var err error
+		var pool egressv1.Ippools
+
+		BeforeEach(func() {
+			ctx = context.Background()
+
+			// create EgressGateway
+			if egressConfig.EnableIPv4 {
+				pool.IPv4 = []string{"10.10.10.1", "10.10.10.2"}
+			}
+			if egressConfig.EnableIPv6 {
+				pool.IPv6 = []string{"fddd:10::1", "fddd:10::2"}
+			}
+
+			nodeSelector := egressv1.NodeSelector{Selector: &metav1.LabelSelector{MatchLabels: nodeLabel}}
+
+			egw1, err = common.CreateGatewayNew(ctx, cli, "egw1-"+uuid.NewString(), pool, nodeSelector)
+			Expect(err).NotTo(HaveOccurred())
+			GinkgoWriter.Printf("Create EgressGateway: %s\n", egw1.Name)
+
+			DeferCleanup(func() {
+
+				// delete egresspolicy
+				if egp != nil {
+					GinkgoWriter.Printf("Delete egp: %s\n", egp.Name)
+					err = common.WaitEgressPoliciesDeleted(ctx, cli, []*egressv1.EgressPolicy{egp}, time.Second*5)
+					Expect(err).NotTo(HaveOccurred())
+				}
+
+				// delete egressclusterpolicy
+				if egcp != nil {
+					GinkgoWriter.Printf("Delete egcp: %s\n", egcp.Name)
+					err = common.WaitEgressClusterPoliciesDeleted(ctx, cli, []*egressv1.EgressClusterPolicy{egcp}, time.Second*5)
+					Expect(err).NotTo(HaveOccurred())
+				}
+
+				// delete egw
+				if egw1 != nil {
+					// todo @bzsuni waiting for the finalizer-feature to be done
+					time.Sleep(time.Second * 2)
+					GinkgoWriter.Printf("Delete egw: %s\n", egw1.Name)
+					Expect(common.DeleteObj(ctx, cli, egw1)).NotTo(HaveOccurred())
+				}
+			})
+		})
+
+		It("namespace-level policy", func() {
+			// create egresspolicy
+			egp, err = common.CreateEgressPolicyCustom(ctx, cli,
+				func(egp *egressv1.EgressPolicy) {
+					egp.Spec.EgressGatewayName = egw1.Name
+					if egressConfig.EnableIPv4 {
+						egp.Spec.EgressIP.IPv4 = pool.IPv4[0]
+					}
+					if egressConfig.EnableIPv6 {
+						egp.Spec.EgressIP.IPv6 = pool.IPv6[0]
+					}
+					egp.Spec.AppliedTo.PodSubnet = []string{"10.10.0.0/18"}
+				})
+			Expect(err).NotTo(HaveOccurred())
+			GinkgoWriter.Printf("the policy yaml:\n%s\n", common.GetObjYAML(egp))
+
+			cpEgp := egp.DeepCopy()
+			// edit policy Spec.EgressIP.IPv4 and Spec.EgressIP.IPv6
+			if egressConfig.EnableIPv4 {
+				egp.Spec.EgressIP.IPv4 = pool.IPv4[1]
+			}
+			if egressConfig.EnableIPv6 {
+				egp.Spec.EgressIP.IPv6 = pool.IPv6[1]
+			}
+			// update policy EgressIP.IPv4 or EgressIP.IPv6
+			Expect(cli.Update(ctx, egp)).To(HaveOccurred())
+
+			// edit policy Spec.
+			cpEgp.Spec.EgressGatewayName = egw.Name
+			// update policy
+			Expect(cli.Update(ctx, cpEgp)).To(HaveOccurred())
+		})
+
+		// todo @bzsuni waiting for the bug to be fixed
+		PIt("cluster-level policy", func() {
+			// create egressclusterpolicy
+			egcp, err = common.CreateEgressClusterPolicyCustom(ctx, cli,
+				func(egcp *egressv1.EgressClusterPolicy) {
+					egcp.Spec.EgressGatewayName = egw1.Name
+					if egressConfig.EnableIPv4 {
+						egcp.Spec.EgressIP.IPv4 = pool.IPv4[0]
+					}
+					if egressConfig.EnableIPv6 {
+						egcp.Spec.EgressIP.IPv6 = pool.IPv6[0]
+					}
+					egcp.Spec.AppliedTo.PodSubnet = &[]string{"10.10.0.0/18"}
+				})
+			Expect(err).NotTo(HaveOccurred())
+			GinkgoWriter.Printf("the cluster policy yaml:\n%s\n", common.GetObjYAML(egcp))
+
+			cpEgcp := egcp.DeepCopy()
+			// edit policy Spec.EgressIP.IPv4 and Spec.EgressIP.IPv6
+			if egressConfig.EnableIPv4 {
+				egcp.Spec.EgressIP.IPv4 = pool.IPv4[1]
+			}
+			if egressConfig.EnableIPv6 {
+				egcp.Spec.EgressIP.IPv6 = pool.IPv6[1]
+			}
+			// update policy EgressIP.IPv4 or EgressIP.IPv6
+			Expect(cli.Update(ctx, egcp)).To(HaveOccurred())
+
+			// edit policy Spec.
+			cpEgcp.Spec.EgressGatewayName = egw.Name
+			// update policy
+			Expect(cli.Update(ctx, cpEgcp)).To(HaveOccurred())
+		})
+	})
 })
