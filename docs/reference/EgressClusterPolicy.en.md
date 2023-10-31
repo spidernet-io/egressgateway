@@ -1,5 +1,3 @@
-[**简体中文**](./EgressClusterPolicy.zh.md)|**English**
-
 The EgressClusterPolicy CRD is used to define cluster-level Egress policy rules, similar to the [EgressPolicy](EgressPolicy.en.md) CRD, but with the added `spec.appliedTo.namespaceSelector` attribute.
 
 ```yaml

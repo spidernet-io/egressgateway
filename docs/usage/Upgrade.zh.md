@@ -1,5 +1,3 @@
-**简体中文**|[**English**](./Upgrade.en.md)
-
 本文档将指导你如何使用 `helm upgrade` 命令完成 EgressGateway 的升级。
 
 ### 基本命令格式

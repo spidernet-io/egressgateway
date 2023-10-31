@@ -1,5 +1,3 @@
-**简体中文**|[**English**](./Architecture.en.md)
-
 EgressGateway 由控制面和数据面 2 部分组成，控制面由 4 个控制循环组成，数据面由 3 个控制循环组成。控制面以 Deployment 方式部署，支持多副本高可用，数据面以 DaemonSet 的方式部署。控制循环具体如下图：
 
 ![arch](../proposal/03-egress-ip/arch.png)

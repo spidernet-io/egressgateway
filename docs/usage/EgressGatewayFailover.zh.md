@@ -1,7 +1,5 @@
 # EgressGateway Failover
 
-**简体中文**|[**English**](./EgressGatewayFailover.en.md)
-
 ## Controller Failover
 
 EgressGateway 控制面故障转移时，可以通过在安装时指定 `controller.replicas` 参数来控制 Controller 的副本数量。在多个 Controller 副本中的一个发生故障时，系统会自动选择另一个副本作为主要控制器，以确保服务的持续提供。

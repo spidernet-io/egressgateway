@@ -1,7 +1,5 @@
 ## EgressTunnel CRD
 
-**简体中文**|[**English**](./EgressTunnel-en.md)
-
 ```yaml
 apiVersion: egressgateway.spidernet.io/v1
 kind: EgressTunnel

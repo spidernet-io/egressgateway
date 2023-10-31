@@ -1,7 +1,5 @@
 # 集群级默认 EgressGateway
 
-**简体中文**|[**English**](./ClusterDefaultEgressGateway.en.md)
-
 ## 介绍
 
 为整个集群设置默认 EgressGateway，可以简化在租户下使用 EgressPolicy 或在集群级使用 EgressClusterPolicy 时，每次指定 EgressGateway 名称的步骤。注意集群默认 EgressGateway 只能设置一个。

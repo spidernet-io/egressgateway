@@ -1,5 +1,3 @@
-[**简体中文**](./README.zh.md)|**English**
-
 The gateway provides network egress capabilities for Kubernetes clusters.
 
 <img src="./proposal/01-egress-gateway/Egress Gateway.png" width="76%"></img>

@@ -1,7 +1,5 @@
 ## Requirement
 
-[**简体中文**](./Install.zh.md)|**English**
-
 Egressgateway currently supports collaboration with Calico CNI and will support collaboration with more CNIs in the future.
 Below are the configuration methods for different CNIs:
 

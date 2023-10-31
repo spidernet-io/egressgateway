@@ -1,7 +1,5 @@
 # Upgrade
 
-[**简体中文**](./Upgrade.zh.md)|**English**
-
 This document will guide you on how to use the `helm upgrade` command to upgrade EgressGateway.
 
 ### Basic command format

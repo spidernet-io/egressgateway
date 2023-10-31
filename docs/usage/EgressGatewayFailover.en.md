@@ -1,7 +1,5 @@
 # EgressGateway Failover
 
-[**简体中文**](./EgressGatewayFailover.zh.md)|**English**
-
 ## Controller Failover
 
 When the EgressGateway controller fails over, you can control the number of Controller replicas by specifying the `controller.replicas` parameter during installation. If one of the replicas in multiple Controller replicas fails, the system will automatically elect another replica as the primary controller to ensure service continuity.

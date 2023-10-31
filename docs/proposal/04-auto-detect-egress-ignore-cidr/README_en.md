@@ -1,7 +1,5 @@
 # Egress ignore CIDR
 
-[**简体中文**](./README_zh-CN.md)|**English**
-
 ## Motivation
 
 To simplify the configuration of the Egress policy, the Egress Ignore CIDR feature is introduced to allow manual and automatic acquisition of the cluster's CIDR. when the `destSubnet` field of the EgressGatewayPolicy is empty, the data plane automatically matches the EgressClusterInfo CR with traffic outside of the CIDR and forwards it to the Egress gateway. CIDR in the EgressClusterInfo CR and forwards it to the Egress gateway.

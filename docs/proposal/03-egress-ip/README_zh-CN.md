@@ -1,7 +1,5 @@
 # Egress IP
 
-**简体中文**|[**English**](./README_en.md)
-
 ## 概要
 
 更新 EgressGateway CRD 字段以支持设置 EIP 范围，调整 EgressGatewayEgressPolicy 为租户级，可以选择引用的 EgressGateway，EgressGateway CRD 增加字段限制被引用的租户。以上调整可以允许不同的 EgressGatewayPolicy 分配到不同的 EIP，可以根据不同需求灵活规划服务灵活规划集群出口网络，租户级的资源可以让不同的角色进行出口策略管理。增加 EgressEndpointSlice CRD 聚合集群策略匹配中的工作负载，提升 EgressGateway 的扩展性与性能。

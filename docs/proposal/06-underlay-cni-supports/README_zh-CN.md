@@ -1,7 +1,5 @@
 # underlay CNI supports
 
-**简体中文**|[**English**](./README_en.md)
-
 ## 动机
 
 EgressGateway 在 Underlay CNI 环境下不适用

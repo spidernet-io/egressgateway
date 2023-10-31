@@ -1,7 +1,5 @@
 # EgressGatewayPolicyCluster
 
-**简体中文**|[**English**](./README_en.md)
-
 ## 动机
 
 补充没有集群级别 policy 的功能

@@ -1,5 +1,3 @@
-[**简体中文**](./EgressPolicy.zh.md)|**English**
-
 The EgressPolicy CRD is used to specify which Pods access which target CIDRs using Egress policies, as well as the IP addresses used by Egress. Namespaced resource.
 
 ```yaml
