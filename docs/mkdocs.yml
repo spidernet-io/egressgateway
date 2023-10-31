@@ -89,7 +89,7 @@ nav:
   - Concepts:
       - Architecture: concepts/Architecture.md
       - Datapath: concepts/Datapath.md
-  - reference:
+  - Reference:
       - CRD EgressTunnel: reference/EgressTunnel.md
       - CRD EgressGateway: reference/EgressGateway.md
       - CRD EgressPolicy: reference/EgressPolicy.md
@@ -98,7 +98,7 @@ nav:
       - CRD EgressClusterEndpointSlice: reference/EgressClusterEndpointSlice.md
       - CRD EgressClusterInfo: reference/EgressClusterInfo.md
   - Troubleshooting: Troubleshooting.md
-  - Develop:
+  - Development:
       - DataFlow: develop/Dataflow.md
       - Contribute: develop/Contribute.md
       - Release: develop/Release.md

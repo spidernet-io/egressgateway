@@ -10,7 +10,7 @@
 
 ## Background
 
-<img src="./docs/proposal/01-egress-gateway/Egress Gateway.png" width="76%"></img>
+<img src="docs/proposal/01-egress-gateway/Egress-Gateway.png" width="76%"></img>
 
 Starting with 2021, we received some feedback as follows.
 
