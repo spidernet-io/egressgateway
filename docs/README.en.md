@@ -1,6 +1,6 @@
 The gateway provides network egress capabilities for Kubernetes clusters.
 
-<img src="./proposal/01-egress-gateway/Egress Gateway.png" width="76%"></img>
+<img src="./proposal/01-egress-gateway/Egress-Gateway.png" width="76%"></img>
 
 Starting with 2021, we received some feedback as follows.
 
@@ -15,7 +15,7 @@ There are two clusters A and B. Cluster A is VMWare-based and runs mainly Databa
 * Can be used in low kernel version.
 * Support multiple egress gateways instance.
 * Support namespaced egress IP.
-* Supports automatic detection of cluster traffic for egress gateways policies.
+* Support automatic detection of cluster traffic for egress gateways policies.
 * Support namespace default egress instances.
 
 ### Compatibility
