@@ -1,3 +1,5 @@
+# Upgrade
+
 This document will guide you on how to use the `helm upgrade` command to upgrade EgressGateway.
 
 ### Basic command format
