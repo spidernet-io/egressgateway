@@ -1,25 +1,11 @@
 # EgressGateway
 
-EgressGateway 是用于 Kubernetes 集群的网络管理工具，专注于管理 Pods 对外部网络的出口流量，解决多集群通信、出口策略控制和高可用性问题，同时支持多种网络解决方案和自定义资源定义，使用户能够更灵活地配置和管理出口策略。
+EgressGateway 是用于 Kubernetes 集群的网络管理工具，专注于管理 Pods 对外部网络的出口流量，解决多集群通信、出口策略控制和高可用性问题，同时支持多种网络解决方案和自定义资源定义 (CRDs)，使用户能够更灵活地配置和管理出口策略。
 
-<img src="./proposal/01-egress-gateway/Egress Gateway.png" width="76%"></img>
-
-
-## 特性
-
-* 解决 IPv4/IPv6 双栈连接问题
-* 解决 Egress 节点的高可用性问题
-* 允许过滤 Pods 的 Egress 策略（_目标 CIDR_）
-* 允许过滤 Egress 应用（_Pods_）
-* 可用于较低内核版本
-* 支持多个出口网关实例
-* 支持租户级别的 Egress IP
-* 支持自动检测集群流量的 Egress 网关策略
-* 支持命名空间默认 Egress 实例
 
 ## 为什么选择 EgressGateway
 
-### 功能特性
+### EgressGateway 提供了一系列功能和优势
 
 * **解决 IPv4 和 IPv6 双栈连接问题**，确保网络通信在不同协议栈下的无缝连接。
   
@@ -39,31 +25,26 @@ EgressGateway 是用于 Kubernetes 集群的网络管理工具，专注于管理
   
 * **支持命名空间默认 Egress 实例**。
 
-
-### 兼容性
+### 兼容以下网络解决方案
 
 * Calico
 * Flannel
 * Weave
 * Spiderpool
 
-### CRDs
-
-* EgressTunnel
-* EgressGateway
-* EgressPolicy
-* EgressClusterPolicy
-* EgressEndpointSlice
-* EgressClusterEndpointSlice
-* EgressClusterInfo
-
-你可以跟随[起步](https://spidernet-io.github.io/egressgateway/zh/usage/Install)指南搭建你自己的测试环境～
+你可以跟随[起步](https://spidernet-io.github.io/egressgateway/zh/usage/Install)指南搭建你自己的测试环境。
 
 ## 架构
 
 <img src="./proposal/03-egress-ip/arch.png" width="100%"></img>
 
-参考[开发](develop/Develop.en.md)文档。
+架构包含：控制面和数据面 2 部分组成，控制面由 4 个控制循环组成，数据面由 3 个控制循环组成。控制面以 Deployment 方式部署，支持多副本高可用，数据面以 DaemonSet 的方式部署。控制循环具体如上图。
+
+参考[开发](develop/Develop.en.md)文档
+
+## 社区
+
+我们欢迎任何形式的贡献。如果您有任何有关贡献方面的疑问，请参阅[贡献指南](https://github.com/spidernet-io/egressgateway/blob/main/docs/develop/Contribute.en.md)。
 
 ## License
 
