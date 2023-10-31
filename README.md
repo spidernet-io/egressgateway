@@ -8,54 +8,54 @@
 ![badge](https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/bzsuni/cc6d42eb27d8ee4c3d19c936eff2c478/raw/egressgatewaye2e.json)
 [![OpenSSF Best Practices](https://bestpractices.coreinfrastructure.org/projects/7410/badge)](https://bestpractices.coreinfrastructure.org/projects/7410)
 
-## Background
+## About
 
-<img src="./docs/proposal/01-egress-gateway/Egress Gateway.png" width="76%"></img>
+EgressGateway is a network management tool designed for Kubernetes clusters, with a primary focus on managing the egress traffic of Pods to external networks. It addresses challenges related to inter-cluster communication, egress policy control, and high availability. Additionally, it offers support for various network solutions and custom resource definitions (CRDs), enabling users to configure and manage egress policies with flexibility.
 
-Starting with 2021, we received some feedback as follows.
+## Why EgressGateway
 
-There are two clusters A and B. Cluster A is VMWare-based and runs mainly Database workloads, and Cluster B is a Kubernetes cluster. Some applications in Cluster B need to access the database in Cluster A, and the network administrator wants the cluster Pods to be managed through an egress gateway.
+### Support a range of features and advantages
 
-## Summary
+* Address IPv4 and IPv6 dual-stack connectivity issues, ensuring seamless communication across different protocol stacks.
+  
+* Resolve high availability concerns for Egress nodes, ensuring network connectivity remains unaffected by single-point failures.
 
-The gateway provides network egress capabilities for Kubernetes clusters.
+* Provide finer-grained policy control, allowing flexible filtering of Pods' Egress policies, including Destination CIDR.
 
-### Features
+* Support application-level control, allowing EgressGateway to filter Egress applications (Pods) for precise management of specific application outbound traffic.
 
-* Solve IPv4 IPv6 dual-stack connectivity.
-* Solve the high availability of Egress Nodes.
-* Allow filtering Pods Egress Policy (_Destination CIDR_).
-* Allow filtering of egress Applications (_Pods_).
-* Can be used in low kernel version.
-* Support multiple egress gateways instance.
-* Support namespaced egress IP.
-* Supports automatic detection of cluster traffic for egress gateways policies.
-* Support namespace default egress instances.
+* Compatible with lower kernel versions, making EgressGateway suitable for various Kubernetes deployment environments.
 
-### Compatibility
+* Support multiple Egress gateway instances, capable of handling communication between multiple network partitions or clusters.
+
+* Offer namespace-level Egress IP support.
+
+* Enable automatic detection of Egress gateway policies for cluster traffic, simplifying traffic management and configuration.
+
+* Provide namespace default Egress instances.
+
+### Compatible with the following network solutions
 
 * Calico
 * Flannel
 * Weave
 * Spiderpool
 
-### CRDs
-
-* EgressTunnel
-* EgressGateway
-* EgressPolicy
-* EgressClusterPolicy
-* EgressEndpointSlice
-* EgressClusterEndpointSlice
-* EgressClusterInfo
-
 You can follow the [Get Started](https://spidernet-io.github.io/egressgateway/usage/Install) to set up your own playground!
 
-## Develop
+## Architecture
 
 <img src="./docs/proposal/03-egress-ip/arch.png" width="100%"></img>
 
-Refer to [develop](docs/develop/Develop.en.md).
+The architecture consists of two parts: the control plane and the data plane. The control plane comprises four control loops, while the data plane consists of three control loops. The control plane is deployed using the Deployment method, supporting high availability with multiple replicas, and the data plane is deployed using DaemonSet.
+
+## To start using EgressGateway
+
+Please refer to the [development documentation](https://spidernet-io.github.io/egressgateway/v0.2/reference/EgressTunnel/).
+Please refer to the [installation guide](https://spidernet-io.github.io/egressgateway/v0.2/usage/Install/).
+
+## Join the EgressGateway Community
+We welcome contributions in any kind. If you have any questions about contributions, please consult the [contribution documentation](https://github.com/spidernet-io/egressgateway/blob/main/docs/develop/Contribute.en.md).
 
 ## License
 
