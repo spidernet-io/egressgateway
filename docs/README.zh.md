@@ -1,3 +1,5 @@
+**简体中文**|[**English**](./README.en.md)
+
 EgressGateway 项目为 Kubernetes 提供 Egress 能力。
 
 <img src="./proposal/01-egress-gateway/Egress Gateway.png" width="76%"></img>

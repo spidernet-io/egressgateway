@@ -1,3 +1,5 @@
+**简体中文**|[**English**](./Uninstall.en.md)
+
 为了确保在卸载 EgressGateway 之前不影响正在使用的业务应用，建议执行以下步骤：
 
 1. 检查与 EgressGateway 相关的资源数量是否为 0。执行以下命令：

@@ -1,5 +1,7 @@
 # Egress ignore CIDR
 
+**简体中文**|[**English**](./README_en.md)
+
 ## 动机
 
 为了简化 Egress 策略的配置，引入 Egress Ignore CIDR 功能，允许以手动和自动的方式获取集群的 CIDR。当 EgressGatewayPolicy 的 `destSubnet` 字段为空时，数据面将会自动匹配 EgressClusterInfo CR 中的 CIDR 之外的流量，并将其转发到 Egress 网关。

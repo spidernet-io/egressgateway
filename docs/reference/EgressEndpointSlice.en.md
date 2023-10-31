@@ -1,3 +1,5 @@
+[**简体中文**](./EgressEndpointSlice.zh.md)|**English**
+
 The EgressEndpointSlice CRD is used to aggregate address information of Pods matched by EgressPolicy. This resource is for internal use only, aiming to improve the performance of the control plane.
 
 ```yaml

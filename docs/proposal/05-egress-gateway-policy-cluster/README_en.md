@@ -1,5 +1,7 @@
 # EgressGatewayPolicyCluster
 
+[**简体中文**](./README_zh-CN.md)|**English**
+
 ## Motivation
 
 Complementing the lack of cluster-level policy

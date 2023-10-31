@@ -1,5 +1,7 @@
 # Namespace level Default EgressGateway
 
+[**简体中文**](./NamespaceDefaultEgressGateway.zh.md)|**English**
+
 ## Introduction
 
 Setting a default EgressGateway for a namespace simplifies the process of specifying the EgressGateway name when using EgressPolicy under the namespace. The priority of the namespace level default EgressGateway is higher than the cluster level default EgressGateway. In other words, when a namespace level default gateway is specified, the tenant's default settings will be used first. If the namespace does not have a default gateway set, the cluster's default settings will be used.

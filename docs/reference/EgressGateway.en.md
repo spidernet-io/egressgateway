@@ -1,3 +1,5 @@
+[**简体中文**](./EgressGateway.zh.md)|**English**
+
 The EgressGateway CRD is used to select a group of nodes as the Egress nodes of the cluster and configure the Egress IP pool for this group of nodes. The Egress IP can float within this range. Cluster scope resource.
 
 ```yaml

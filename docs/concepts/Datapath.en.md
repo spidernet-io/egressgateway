@@ -1,5 +1,7 @@
 # Datapath
 
+[**简体中文**](./Datapath.zh.md)|**English**
+
 Rules that need to take effect are categorized into three categories: all nodes, "gateway nodes" relative to the EgressGatewayPolicy, and "non-gateway nodes". Rules on a Non-Grid Node will only take effect if it is a Non-Grid Node that the Service Pod is dispatched to.
 
 ## All nodes

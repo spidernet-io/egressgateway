@@ -1,3 +1,5 @@
+[**简体中文**](./EgressTunnel.zh.md)|**English**
+
 The EgressTunnel CRD is used to record tunnel network interface information for cross-node communication. It is a cluster scope resource that corresponds one-to-one with the Kubernetes Node resource name.
 
 ```yaml

@@ -1,3 +1,5 @@
+[**简体中文**](./EgressClusterInfo.zh.md)|**English**
+
 The EgressClusterInfo CRD introduces the Egress Ignore CIDR feature to simplify the configuration of Egress policies and allows automatic acquisition of the cluster's CIDR. When the `destSubnet` field of the EgressGatewayPolicy is empty, the data plane will automatically match traffic outside the CIDR in the EgressClusterStatus CR and forward it to the Egress gateway.
 
 ```yaml

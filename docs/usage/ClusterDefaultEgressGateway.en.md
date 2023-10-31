@@ -1,5 +1,7 @@
 # Cluster level Default EgressGateway
 
+[**简体中文**](./ClusterDefaultEgressGateway.zh.md)|**English**
+
 ## Introduction
 
 Setting a default EgressGateway for the entire cluster can simplify the process of using EgressPolicy under a namespace or using EgressClusterPolicy at the cluster level, as it eliminates the need to specify the EgressGateway name each time. Please note that only one default EgressGateway can be set for the cluster.

@@ -1,5 +1,7 @@
 # 自建集群安装 EgressGateway
 
+**简体中文**|[**English**](./Install.en.md)
+
 ## 介绍
 
 本文将演示在一个自建集群上快速安装 EgressGateway。

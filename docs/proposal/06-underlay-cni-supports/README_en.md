@@ -1,5 +1,7 @@
 # Underlay CNI supports
 
+[**简体中文**](./README_zh-CN.md)|**English**
+
 ## Motivation
 
 EgressGateway is not available in an Underlay CNI environment.

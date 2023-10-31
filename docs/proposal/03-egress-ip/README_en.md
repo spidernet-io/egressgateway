@@ -1,5 +1,7 @@
 # Egress IP
 
+[**简体中文**](./README_zh-CN.md)|**English**
+
 ## Summary
 
 Updated EgressGateway CRD field to support setting EIP ranges, adjusted EgressGatewayEgressPolicy to tenant level, can select referenced EgressGateway, EgressGateway CRD added field to limit referenced tenants. The above adjustments allow different EgressGatewayPolicy to be assigned to different EIPs, which allows flexible planning of services according to different needs and flexible planning of cluster egress networks, and tenant-level resources allow different roles to carry out egress policy management. Add EgressEndpointSlice CRD to aggregate workloads in cluster policy matching to improve the scalability and performance of EgressGateway.

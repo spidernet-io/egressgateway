@@ -1,3 +1,5 @@
+**简体中文**|[**English**](./NamespaceDefaultEgressGateway.en.md)
+
 # 租户级默认 EgressGateway
 
 ## 介绍

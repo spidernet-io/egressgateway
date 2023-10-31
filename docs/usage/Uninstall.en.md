@@ -1,3 +1,5 @@
+[**简体中文**](./Uninstall.zh.md)|**English**
+
 To ensure that the running applications are not affected before uninstalling EgressGateway, it is recommended to perform the following steps:
 
 1. Check if the number of resources related to EgressGateway is 0. Run the following commands:
