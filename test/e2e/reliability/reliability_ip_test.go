@@ -69,7 +69,7 @@ var _ = Describe("IP Allocation", Label("Reliability_IP"), func() {
 	// (9) Delete all policies (start timing).
 	// (10) Verify that the gateway status has synchronized successfully, and all IPs have been released (after deletion is complete, calculate the time spent).
 	// (11) Check pod egress IPs again; they should no longer match the previous EIPs.
-	PIt("test IP allocation", Label("R00008", "P00009"), Serial, func() {
+	It("test IP allocation", Label("R00008", "P00009"), Serial, func() {
 		// create egresspolicies
 		By("create egressPolicies by gaven pods")
 		egps, _, err = common.CreateEgressPoliciesForPods(ctx, cli, egw, pods, egressConfig.EnableIPv4, egressConfig.EnableIPv6, time.Second*5)
