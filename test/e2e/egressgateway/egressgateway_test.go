@@ -225,7 +225,7 @@ var _ = Describe("Operate EgressGateway", Label("EgressGateway"), Ordered, func(
 		})
 
 		// create egressPolicy
-		DescribeTable("createpolicy", func(expect bool, setup func(*egressv1.EgressPolicy)) {
+		DescribeTable("createPolicy", func(expect bool, setup func(*egressv1.EgressPolicy)) {
 			egp, err = common.CreateEgressPolicyCustom(ctx, cli, setup)
 			if expect {
 				Expect(err).NotTo(HaveOccurred(), fmt.Sprintf("egp:\n%s\n", common.GetObjYAML(egp)))
@@ -266,7 +266,7 @@ var _ = Describe("Operate EgressGateway", Label("EgressGateway"), Ordered, func(
 		)
 
 		// create egressClusterPolicy
-		DescribeTable("createclusterPolicy", func(expect bool, setup func(*egressv1.EgressClusterPolicy)) {
+		DescribeTable("createClusterPolicy", func(expect bool, setup func(*egressv1.EgressClusterPolicy)) {
 			egcp, err = common.CreateEgressClusterPolicyCustom(ctx, cli, setup)
 			if expect {
 				Expect(err).NotTo(HaveOccurred(), fmt.Sprintf("egcp:\n%s\n", common.GetObjYAML(egcp)))
@@ -293,8 +293,7 @@ var _ = Describe("Operate EgressGateway", Label("EgressGateway"), Ordered, func(
 				Expect(err).To(HaveOccurred(), fmt.Sprintf("egcp:\n%s\n", common.GetObjYAML(egcp)))
 			}
 		},
-			// todo @bzsuni waiting for the bug to be fixed
-			PEntry("should be failed when spec.egressIP.useNodeIP is false", false, func(egcp *egressv1.EgressClusterPolicy) {
+			Entry("should be failed when spec.egressIP.useNodeIP is false", false, func(egcp *egressv1.EgressClusterPolicy) {
 				egcp.Spec.EgressGatewayName = egw.Name
 				egcp.Spec.EgressIP.UseNodeIP = false
 				egcp.Spec.AppliedTo.PodSelector = podLabelSelector
@@ -593,7 +592,7 @@ var _ = Describe("Operate EgressGateway", Label("EgressGateway"), Ordered, func(
 
 			// check egressGatewayStatus
 			emptyGatewayStatus := &egressv1.EgressGatewayStatus{}
-			GinkgoWriter.Println("We expect the EgressGatewayStatus is emtpty")
+			GinkgoWriter.Println("We expect the EgressGatewayStatus is empty")
 			Expect(common.CheckEgressGatewayStatusSynced(ctx, cli, egw, emptyGatewayStatus, time.Second*5)).NotTo(HaveOccurred(),
 				fmt.Sprintf("expect: %v, \nbut: %v\n", *emptyGatewayStatus, egw.Status))
 

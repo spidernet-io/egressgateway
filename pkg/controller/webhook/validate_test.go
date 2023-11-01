@@ -8,17 +8,17 @@ import (
 	"encoding/json"
 	"testing"
 
-	"sigs.k8s.io/controller-runtime/pkg/client"
-
 	"github.com/stretchr/testify/assert"
 	admissionv1 "k8s.io/api/admission/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
 
 	"github.com/spidernet-io/egressgateway/pkg/config"
 	"github.com/spidernet-io/egressgateway/pkg/k8s/apis/v1beta1"
+	egressv1 "github.com/spidernet-io/egressgateway/pkg/k8s/apis/v1beta1"
 	"github.com/spidernet-io/egressgateway/pkg/schema"
 )
 
@@ -867,6 +867,79 @@ func TestUpdateEgressClusterPolicy(t *testing.T) {
 			assert.Equal(t, c.expAllow, resp.Allowed)
 			if c.expErrMessage != "" {
 				assert.Equal(t, c.expErrMessage, resp.AdmissionResponse.Result.Message)
+			}
+		})
+	}
+}
+
+func TestCountAvailableIP(t *testing.T) {
+	tests := []struct {
+		name  string
+		args  *egressv1.EgressGateway
+		want4 int
+		want6 int
+	}{
+		{
+			name: "case1-ipv4",
+			args: &egressv1.EgressGateway{
+				Spec: egressv1.EgressGatewaySpec{
+					Ippools: egressv1.Ippools{
+						IPv4: []string{
+							"10.6.1.21-10.6.1.30",
+						},
+						IPv6: []string{},
+					},
+				},
+				Status: v1beta1.EgressGatewayStatus{
+					NodeList: []egressv1.EgressIPStatus{
+						{
+							Name: "node1",
+							Eips: []egressv1.Eips{{IPv4: "10.6.1.21"}},
+						},
+					},
+				},
+			},
+			want4: 9,
+			want6: 0,
+		},
+		{
+			name: "case2-dual",
+			args: &egressv1.EgressGateway{
+				Spec: egressv1.EgressGatewaySpec{
+					Ippools: egressv1.Ippools{
+						IPv4: []string{
+							"10.6.1.21",
+							"10.6.1.22",
+						},
+						IPv6: []string{
+							"fd00::1-fd00::2",
+						},
+					},
+				},
+				Status: v1beta1.EgressGatewayStatus{
+					NodeList: []egressv1.EgressIPStatus{
+						{
+							Name: "node1",
+							Eips: []egressv1.Eips{{IPv4: "10.6.1.21", IPv6: "fd00::1"}},
+						},
+					},
+				},
+			},
+			want4: 1,
+			want6: 1,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got4, got6, err := countGatewayAvailableIP(tt.args)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if got4 != tt.want4 {
+				t.Fatalf("got4 %d, want4 %d", got4, tt.want4)
+			}
+			if got6 != tt.want6 {
+				t.Fatalf("got6 %d, want6 %d", got6, tt.want6)
 			}
 		})
 	}
