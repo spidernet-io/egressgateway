@@ -30,17 +30,6 @@ webhooks:
       - apiGroups:
           - egressgateway.spidernet.io
         apiVersions:
-          - v1
-        operations:
-          - CREATE
-          - UPDATE
-          - DELETE
-        resources:
-        - egressgateways
-        - egressgatewaypolicies
-      - apiGroups:
-          - egressgateway.spidernet.io
-        apiVersions:
           - v1beta1
         operations:
           - CREATE
@@ -49,6 +38,7 @@ webhooks:
         resources:
         - egressgateways
         - egresspolicies
+        - egressclusterpolicies
       - apiGroups:
           - egressgateway.spidernet.io
         apiVersions:
@@ -84,15 +74,6 @@ webhooks:
     failurePolicy: Fail
     name: egressgateway.egressgateway.spidernet.io
     rules:
-      - apiGroups:
-          - egressgateway.spidernet.io
-        apiVersions:
-          - v1
-        operations:
-          - CREATE
-          - UPDATE
-        resources:
-        - egressgateways
       - apiGroups:
           - egressgateway.spidernet.io
         apiVersions:
