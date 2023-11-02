@@ -1,0 +1,64 @@
+name: Build and Deploy to Netlify
+on:
+  push:
+    paths:
+      - 'docs/**'
+  pull_request:
+    paths:
+      - 'docs/**'
+env:
+  MERGE_BRANCH: github_pages
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Build doc site
+        run: |
+          # install deps
+          pip install mkdocs==1.5.2 mike==1.1.2 mkdocs-material==9.2.8 mkdocs-static-i18n==1.0.2
+          
+          # read current version
+          DOCS_VERSION=` cat VERSION  | tr -d ' ' | tr -d '\n' | grep -Eo "v[0-9]+\.[0-9]+" `
+
+          git fetch
+          git config user.email "robot@example.com"
+          git config user.name "robot"          
+          # check is latest version
+          git checkout -f ${{ env.MERGE_BRANCH }}
+          
+          
+          if [ -e "$DOCS_VERSION" ]; then
+              export SET_LATEST=false
+          else
+              export SET_LATEST=true
+          fi
+          echo "SET_LATEST=$SET_LATEST"
+
+          # build docs
+          git checkout -
+          cp ./docs/mkdocs.yml ./
+          
+          if [ "$SET_LATEST" = "true" ]; then
+              mike deploy --rebase -b ${{ env.MERGE_BRANCH }} --update-aliases $SET_LATEST latest
+              mike set-default -b ${{ env.MERGE_BRANCH }} latest
+          else
+              mike deploy --rebase -b ${{ env.MERGE_BRANCH }} $SET_LATEST
+          fi
+
+      - name: Deploy to Netlify
+        uses: nwtgck/actions-netlify@v2.0
+        with:
+          publish-dir: './site'
+          production-branch: master
+          github-token: ${{ secrets.WELAN_PAT }}
+          deploy-message: "Deploy from GitHub Actions"
+          enable-pull-request-comment: true
+          enable-commit-comment: true
+          overwrites-pull-request-comment: true
+        env:
+          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+          NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
+        timeout-minutes: 1
