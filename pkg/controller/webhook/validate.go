@@ -87,7 +87,7 @@ func validateEgressPolicy(ctx context.Context, client client.Client, req webhook
 		}
 
 		if egp.Spec.EgressGatewayName != oldEgp.Spec.EgressGatewayName {
-			return webhook.Denied("the bound EgressGateway cannot be modified")
+			return webhook.Denied("'spec.EgressGatewayName' field is immutable")
 		}
 
 		if egp.Spec.EgressIP.UseNodeIP != oldEgp.Spec.EgressIP.UseNodeIP {
@@ -158,7 +158,7 @@ func validateEgressClusterPolicy(ctx context.Context, client client.Client, req 
 		}
 
 		if policy.Spec.EgressGatewayName != oldPolicy.Spec.EgressGatewayName {
-			return webhook.Denied("the bound EgressClusterPolicy cannot be modified")
+			return webhook.Denied("'spec.EgressGatewayName' field is immutable")
 		}
 
 		if policy.Spec.EgressIP.UseNodeIP != oldPolicy.Spec.EgressIP.UseNodeIP {
