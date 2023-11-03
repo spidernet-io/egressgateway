@@ -6,7 +6,6 @@ package egressgateway_test
 import (
 	"context"
 	"fmt"
-	"strings"
 	"time"
 
 	. "github.com/onsi/ginkgo/v2"
@@ -643,7 +642,7 @@ func createEgressGateway(ctx context.Context) (egw *egressv1.EgressGateway) {
 	pool, err := common.GenIPPools(ctx, cli, egressConfig.EnableIPv4, egressConfig.EnableIPv6, 3, 1)
 	Expect(err).NotTo(HaveOccurred())
 	nodeSelector := egressv1.NodeSelector{Selector: &metav1.LabelSelector{MatchLabels: node1.Labels}}
-	egw, err = common.CreateGatewayNew(ctx, cli, "egw-"+strings.ToLower(faker.FirstName())+faker.Word(), pool, nodeSelector)
+	egw, err = common.CreateGatewayNew(ctx, cli, "egw-"+uuid.NewString(), pool, nodeSelector)
 	Expect(err).NotTo(HaveOccurred())
 
 	// get defaultEip
