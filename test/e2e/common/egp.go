@@ -291,7 +291,7 @@ func WaitEgressPolicyStatusReady(ctx context.Context, cli client.Client, egp *eg
 				time.Sleep(time.Second / 2)
 				continue
 			}
-			if egp.Spec.EgressIP.UseNodeIP {
+			if !egp.Spec.EgressIP.UseNodeIP {
 				if v4Enabled && len(egp.Status.Eip.Ipv4) != 0 {
 					v4Ok = true
 				}
