@@ -16,6 +16,11 @@ import (
 	"time"
 
 	"github.com/go-logr/logr"
+	"github.com/spidernet-io/egressgateway/pkg/config"
+	"github.com/spidernet-io/egressgateway/pkg/ipset"
+	"github.com/spidernet-io/egressgateway/pkg/iptables"
+	egressv1 "github.com/spidernet-io/egressgateway/pkg/k8s/apis/v1beta1"
+	"github.com/spidernet-io/egressgateway/pkg/utils"
 	apierr "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
@@ -28,12 +33,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 	"sigs.k8s.io/controller-runtime/pkg/source"
-
-	"github.com/spidernet-io/egressgateway/pkg/config"
-	"github.com/spidernet-io/egressgateway/pkg/ipset"
-	"github.com/spidernet-io/egressgateway/pkg/iptables"
-	egressv1 "github.com/spidernet-io/egressgateway/pkg/k8s/apis/v1beta1"
-	"github.com/spidernet-io/egressgateway/pkg/utils"
 )
 
 const (
@@ -632,14 +631,14 @@ func (r *policeReconciler) reconcileClusterInfo(ctx context.Context, req reconci
 		got := sets.NewString(gotList...)
 		exp := sets.NewString(expList...)
 
-		for _, key := range got.List() {
+		for _, key := range gotList {
 			if exp.Has(key) {
 				exp.Delete(key)
 			}
 		}
-		for _, key := range exp.List() {
+		for _, key := range expList {
 			if got.Has(key) {
-				exp.Delete(key)
+				got.Delete(key)
 			}
 		}
 		for _, key := range exp.List() {
