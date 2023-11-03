@@ -9,6 +9,8 @@ import (
 	corev1 "k8s.io/api/core/v1"
 
 	"github.com/go-faker/faker/v4"
+	"github.com/google/uuid"
+
 	egressv1 "github.com/spidernet-io/egressgateway/pkg/k8s/apis/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -28,7 +30,7 @@ func CreateEgressGatewayAndPodsBeforeEach(ctx context.Context, cli client.Client
 	}
 	nodeSelector := egressv1.NodeSelector{Selector: &metav1.LabelSelector{MatchLabels: labels}}
 
-	egw, err := CreateGatewayNew(ctx, cli, "egw-"+faker.Word(), pool, nodeSelector)
+	egw, err := CreateGatewayNew(ctx, cli, "egw-"+uuid.NewString(), pool, nodeSelector)
 	if err != nil {
 		return nil, nil, err
 	}

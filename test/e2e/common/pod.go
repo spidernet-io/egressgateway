@@ -6,10 +6,9 @@ package common
 import (
 	"context"
 	"fmt"
-	"strings"
 	"time"
 
-	"github.com/go-faker/faker/v4"
+	"github.com/google/uuid"
 
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -23,7 +22,7 @@ func CreatePod(ctx context.Context, cli client.Client, image string) (*corev1.Po
 
 	var terminationGracePeriodSeconds int64 = 0
 
-	name := faker.Word() + "-" + strings.ToLower(faker.FirstName()) + "-" + strings.ToLower(faker.FirstName())
+	name := "pod-" + uuid.NewString()
 	label := map[string]string{"app": name}
 	res := &corev1.Pod{
 		ObjectMeta: metav1.ObjectMeta{
