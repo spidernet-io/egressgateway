@@ -61,6 +61,17 @@ func (egw *EgressGatewayWebhook) EgressGatewayValidate(ctx context.Context, req 
 		return webhook.Denied(fmt.Sprintf("json unmarshal EgressGateway with error: %v", err))
 	}
 
+	if egw.Config.FileConfig.EnableIPv4 && !egw.Config.FileConfig.EnableIPv6 {
+		if len(newEg.Spec.Ippools.IPv6) != 0 {
+			return webhook.Denied("Please do not configure spec.ippools.ipv6, as the current installation settings have not enabled IPv6")
+		}
+	}
+	if !egw.Config.FileConfig.EnableIPv4 && egw.Config.FileConfig.EnableIPv6 {
+		if len(newEg.Spec.Ippools.IPv4) != 0 {
+			return webhook.Denied("Please do not configure spec.ippools.ipv4, as the current installation settings have not enabled IPv4")
+		}
+	}
+
 	if newEg.Spec.ClusterDefault {
 		egwList := new(egress.EgressGatewayList)
 		for _, item := range egwList.Items {

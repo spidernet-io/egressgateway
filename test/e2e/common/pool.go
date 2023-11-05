@@ -5,6 +5,7 @@ package common
 
 import (
 	"context"
+	"fmt"
 	"net"
 
 	corev1 "k8s.io/api/core/v1"
@@ -15,23 +16,35 @@ import (
 
 func GenIPPools(ctx context.Context, cli client.Client, enableIPv4, enableIPv6 bool, num int64, increase uint8) (egressv1.Ippools, error) {
 	res := egressv1.Ippools{}
+	if num < 1 {
+		return res, fmt.Errorf("the parameter `num` cannot be less then 1")
+	}
+	num = num - 1
 	ipv4, ipv6, err := getRandomEgressIPByNode(ctx, cli, increase)
 	if err != nil {
 		return res, err
 	}
 	if len(ipv4) != 0 && enableIPv4 {
-		end, err := AddIP(ipv4, num)
-		if err != nil {
-			return res, err
+		if num == 0 {
+			res.IPv4 = []string{ipv4}
+		} else {
+			end, err := AddIP(ipv4, num)
+			if err != nil {
+				return res, err
+			}
+			res.IPv4 = append(res.IPv4, ipv4+"-"+end)
 		}
-		res.IPv4 = append(res.IPv4, ipv4+"-"+end)
 	}
 	if len(ipv6) != 0 && enableIPv6 {
-		end, err := AddIP(ipv6, num)
-		if err != nil {
-			return res, err
+		if num == 0 {
+			res.IPv6 = []string{ipv6}
+		} else {
+			end, err := AddIP(ipv6, num)
+			if err != nil {
+				return res, err
+			}
+			res.IPv6 = append(res.IPv6, ipv6+"-"+end)
 		}
-		res.IPv6 = append(res.IPv6, ipv6+"-"+end)
 	}
 	return res, nil
 }

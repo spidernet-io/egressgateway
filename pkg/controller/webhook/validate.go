@@ -17,8 +17,10 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
 
 	"github.com/spidernet-io/egressgateway/pkg/config"
+	"github.com/spidernet-io/egressgateway/pkg/constant"
 	"github.com/spidernet-io/egressgateway/pkg/egressgateway"
 	egressv1 "github.com/spidernet-io/egressgateway/pkg/k8s/apis/v1beta1"
+	"github.com/spidernet-io/egressgateway/pkg/utils/ip"
 )
 
 const (
@@ -42,143 +44,9 @@ func ValidateHook(client client.Client, cfg *config.Config) *webhook.Admission {
 			case EgressGateway:
 				return (&egressgateway.EgressGatewayWebhook{Client: client, Config: cfg}).EgressGatewayValidate(ctx, req)
 			case EgressClusterPolicy:
-				if req.Operation == v1.Delete {
-					return webhook.Allowed("checked")
-				}
-				egcp := new(egressv1.EgressClusterPolicy)
-				err := json.Unmarshal(req.Object.Raw, egcp)
-				if err != nil {
-					return webhook.Denied(fmt.Sprintf("json unmarshal EgressClusterPolicy with error: %v", err))
-				}
-
-				if len(egcp.Spec.EgressGatewayName) == 0 {
-					return webhook.Denied("egressGatewayName cannot be empty")
-				}
-
-				if egcp.Spec.EgressIP.UseNodeIP {
-					if len(egcp.Spec.EgressIP.IPv4) != 0 || len(egcp.Spec.EgressIP.IPv6) != 0 {
-						return webhook.Denied("useNodeIP cannot be used with egressIP.ipv4 or egressIP.ipv6 at the same time")
-					}
-				}
-
-				if (egcp.Spec.AppliedTo.PodSelector != nil && len(egcp.Spec.AppliedTo.PodSelector.MatchLabels) != 0) &&
-					(egcp.Spec.AppliedTo.PodSubnet != nil && len(*egcp.Spec.AppliedTo.PodSubnet) != 0) {
-					return webhook.Denied("podSelector and podSubnet cannot be used together")
-				}
-
-				if req.Operation == v1.Update {
-					oldEgcp := new(egressv1.EgressClusterPolicy)
-					err := json.Unmarshal(req.OldObject.Raw, oldEgcp)
-					if err != nil {
-						return webhook.Denied(fmt.Sprintf("json unmarshal EgressClusterPolicy with error: %v", err))
-					}
-
-					if egcp.Spec.EgressGatewayName != oldEgcp.Spec.EgressGatewayName {
-						return webhook.Denied("the bound EgressClusterPolicy cannot be modified")
-					}
-
-					if egcp.Spec.EgressIP.UseNodeIP != oldEgcp.Spec.EgressIP.UseNodeIP {
-						return webhook.Denied("the UseNodeIP field cannot be modified")
-					}
-
-					if egcp.Spec.EgressIP.IPv4 != oldEgcp.Spec.EgressIP.IPv4 {
-						return webhook.Denied("the EgressIP.IPv4 field cannot be modified")
-					}
-
-					if egcp.Spec.EgressIP.IPv6 != oldEgcp.Spec.EgressIP.IPv6 {
-						return webhook.Denied("the EgressIP.IPv6 field cannot be modified")
-					}
-
-					if egcp.Spec.EgressIP.AllocatorPolicy != oldEgcp.Spec.EgressIP.AllocatorPolicy {
-						return webhook.Denied("the EgressIP.AllocatorPolicy field cannot be modified")
-					}
-				}
-
-				if req.Operation == v1.Create {
-					if cfg.FileConfig.EnableIPv4 || cfg.FileConfig.EnableIPv6 {
-						if ok, err := checkEIP(client, ctx, egcp.Spec.EgressIP.IPv4, egcp.Spec.EgressIP.IPv6, egcp.Name); !ok {
-							return webhook.Denied(err.Error())
-						}
-
-						if !egcp.Spec.EgressIP.UseNodeIP {
-							err := checkEGWIppools(client, cfg, ctx, egcp.Spec.EgressGatewayName)
-							if err != nil {
-								return webhook.Denied(fmt.Sprintf("when egcp(%v) UseNodeIP is false, %v", egcp.Name, err))
-							}
-						}
-					}
-				}
-
-				return validateSubnet(egcp.Spec.DestSubnet)
+				return validateEgressClusterPolicy(ctx, client, req, cfg)
 			case EgressPolicy:
-				if req.Operation == v1.Delete {
-					return webhook.Allowed("checked")
-				}
-
-				egp := new(egressv1.EgressPolicy)
-				err := json.Unmarshal(req.Object.Raw, egp)
-				if err != nil {
-					return webhook.Denied(fmt.Sprintf("json unmarshal EgressPolicy with error: %v", err))
-				}
-
-				if len(egp.Spec.EgressGatewayName) == 0 {
-					return webhook.Denied("egressGatewayName cannot be empty")
-				}
-
-				if egp.Spec.EgressIP.UseNodeIP {
-					if len(egp.Spec.EgressIP.IPv4) != 0 || len(egp.Spec.EgressIP.IPv6) != 0 {
-						return webhook.Denied("useNodeIP cannot be used with egressIP.ipv4 or egressIP.ipv6 at the same time")
-					}
-				}
-
-				if egp.Spec.AppliedTo.PodSelector != nil && len(egp.Spec.AppliedTo.PodSelector.MatchLabels) != 0 && len(egp.Spec.AppliedTo.PodSubnet) != 0 {
-					return webhook.Denied("podSelector and podSubnet cannot be used together")
-				}
-
-				if req.Operation == v1.Update {
-					oldEgp := new(egressv1.EgressPolicy)
-					err := json.Unmarshal(req.OldObject.Raw, oldEgp)
-					if err != nil {
-						return webhook.Denied(fmt.Sprintf("json unmarshal EgressPolicy with error: %v", err))
-					}
-
-					if egp.Spec.EgressGatewayName != oldEgp.Spec.EgressGatewayName {
-						return webhook.Denied("the bound EgressGateway cannot be modified")
-					}
-
-					if egp.Spec.EgressIP.UseNodeIP != oldEgp.Spec.EgressIP.UseNodeIP {
-						return webhook.Denied("the UseNodeIP field cannot be modified")
-					}
-
-					if egp.Spec.EgressIP.IPv4 != oldEgp.Spec.EgressIP.IPv4 {
-						return webhook.Denied("the EgressIP.IPv4 field cannot be modified")
-					}
-
-					if egp.Spec.EgressIP.IPv6 != oldEgp.Spec.EgressIP.IPv6 {
-						return webhook.Denied("the EgressIP.IPv6 field cannot be modified")
-					}
-
-					if egp.Spec.EgressIP.AllocatorPolicy != oldEgp.Spec.EgressIP.AllocatorPolicy {
-						return webhook.Denied("the EgressIP.AllocatorPolicy field cannot be modified")
-					}
-				}
-
-				if req.Operation == v1.Create {
-					if cfg.FileConfig.EnableIPv4 || cfg.FileConfig.EnableIPv6 {
-						if ok, err := checkEIP(client, ctx, egp.Spec.EgressIP.IPv4, egp.Spec.EgressIP.IPv6, egp.Name); !ok {
-							return webhook.Denied(err.Error())
-						}
-
-						if !egp.Spec.EgressIP.UseNodeIP {
-							err := checkEGWIppools(client, cfg, ctx, egp.Spec.EgressGatewayName)
-							if err != nil {
-								return webhook.Denied(fmt.Sprintf("when egp(%v) UseNodeIP is false, %v", egp.Name, err))
-							}
-						}
-					}
-				}
-
-				return validateSubnet(egp.Spec.DestSubnet)
+				return validateEgressPolicy(ctx, client, req, cfg)
 			}
 
 			return webhook.Allowed("checked")
@@ -186,7 +54,150 @@ func ValidateHook(client client.Client, cfg *config.Config) *webhook.Admission {
 	}
 }
 
-func checkEGWIppools(client client.Client, cfg *config.Config, ctx context.Context, name string) error {
+func validateEgressPolicy(ctx context.Context, client client.Client, req webhook.AdmissionRequest, cfg *config.Config) webhook.AdmissionResponse {
+	if req.Operation == v1.Delete {
+		return webhook.Allowed("checked")
+	}
+
+	egp := new(egressv1.EgressPolicy)
+	err := json.Unmarshal(req.Object.Raw, egp)
+	if err != nil {
+		return webhook.Denied(fmt.Sprintf("json unmarshal EgressPolicy with error: %v", err))
+	}
+
+	if len(egp.Spec.EgressGatewayName) == 0 {
+		return webhook.Denied("egressGatewayName cannot be empty")
+	}
+
+	if egp.Spec.EgressIP.UseNodeIP {
+		if len(egp.Spec.EgressIP.IPv4) != 0 || len(egp.Spec.EgressIP.IPv6) != 0 {
+			return webhook.Denied("useNodeIP cannot be used with egressIP.ipv4 or egressIP.ipv6 at the same time")
+		}
+	}
+
+	if egp.Spec.AppliedTo.PodSelector != nil && len(egp.Spec.AppliedTo.PodSelector.MatchLabels) != 0 && len(egp.Spec.AppliedTo.PodSubnet) != 0 {
+		return webhook.Denied("podSelector and podSubnet cannot be used together")
+	}
+
+	if req.Operation == v1.Update {
+		oldEgp := new(egressv1.EgressPolicy)
+		err := json.Unmarshal(req.OldObject.Raw, oldEgp)
+		if err != nil {
+			return webhook.Denied(fmt.Sprintf("json unmarshal EgressPolicy with error: %v", err))
+		}
+
+		if egp.Spec.EgressGatewayName != oldEgp.Spec.EgressGatewayName {
+			return webhook.Denied("'spec.EgressGatewayName' field is immutable")
+		}
+
+		if egp.Spec.EgressIP.UseNodeIP != oldEgp.Spec.EgressIP.UseNodeIP {
+			return webhook.Denied("the UseNodeIP field cannot be modified")
+		}
+
+		if egp.Spec.EgressIP.IPv4 != oldEgp.Spec.EgressIP.IPv4 {
+			return webhook.Denied("the EgressIP.IPv4 field cannot be modified")
+		}
+
+		if egp.Spec.EgressIP.IPv6 != oldEgp.Spec.EgressIP.IPv6 {
+			return webhook.Denied("the EgressIP.IPv6 field cannot be modified")
+		}
+
+		if egp.Spec.EgressIP.AllocatorPolicy != oldEgp.Spec.EgressIP.AllocatorPolicy {
+			return webhook.Denied("the EgressIP.AllocatorPolicy field cannot be modified")
+		}
+	}
+
+	if req.Operation == v1.Create {
+		if cfg.FileConfig.EnableIPv4 || cfg.FileConfig.EnableIPv6 {
+			if ok, err := checkEIP(client, ctx, egp.Spec.EgressIP.IPv4, egp.Spec.EgressIP.IPv6, egp.Name); !ok {
+				return webhook.Denied(err.Error())
+			}
+
+			if !egp.Spec.EgressIP.UseNodeIP {
+				err := checkEGWIppools(client, cfg, ctx, egp.Spec.EgressGatewayName, egp.Spec.EgressIP.AllocatorPolicy)
+				if err != nil {
+					return webhook.Denied(fmt.Sprintf("when egp(%v) UseNodeIP is false, %v", egp.Name, err))
+				}
+			}
+		}
+	}
+
+	return validateSubnet(egp.Spec.DestSubnet)
+}
+
+func validateEgressClusterPolicy(ctx context.Context, client client.Client, req webhook.AdmissionRequest, cfg *config.Config) webhook.AdmissionResponse {
+	if req.Operation == v1.Delete {
+		return webhook.Allowed("checked")
+	}
+	policy := new(egressv1.EgressClusterPolicy)
+	err := json.Unmarshal(req.Object.Raw, policy)
+	if err != nil {
+		return webhook.Denied(fmt.Sprintf("json unmarshal EgressClusterPolicy with error: %v", err))
+	}
+
+	if len(policy.Spec.EgressGatewayName) == 0 {
+		return webhook.Denied("egressGatewayName cannot be empty")
+	}
+
+	if policy.Spec.EgressIP.UseNodeIP {
+		if len(policy.Spec.EgressIP.IPv4) != 0 || len(policy.Spec.EgressIP.IPv6) != 0 {
+			return webhook.Denied("useNodeIP cannot be used with egressIP.ipv4 or egressIP.ipv6 at the same time")
+		}
+	}
+
+	if (policy.Spec.AppliedTo.PodSelector != nil && len(policy.Spec.AppliedTo.PodSelector.MatchLabels) != 0) &&
+		(policy.Spec.AppliedTo.PodSubnet != nil && len(*policy.Spec.AppliedTo.PodSubnet) != 0) {
+		return webhook.Denied("podSelector and podSubnet cannot be used together")
+	}
+
+	if req.Operation == v1.Update {
+		oldPolicy := new(egressv1.EgressClusterPolicy)
+		err := json.Unmarshal(req.OldObject.Raw, oldPolicy)
+		if err != nil {
+			return webhook.Denied(fmt.Sprintf("json unmarshal EgressClusterPolicy with error: %v", err))
+		}
+
+		if policy.Spec.EgressGatewayName != oldPolicy.Spec.EgressGatewayName {
+			return webhook.Denied("'spec.EgressGatewayName' field is immutable")
+		}
+
+		if policy.Spec.EgressIP.UseNodeIP != oldPolicy.Spec.EgressIP.UseNodeIP {
+			return webhook.Denied("the UseNodeIP field cannot be modified")
+		}
+
+		if policy.Spec.EgressIP.IPv4 != oldPolicy.Spec.EgressIP.IPv4 {
+			return webhook.Denied("the EgressIP.IPv4 field cannot be modified")
+		}
+
+		if policy.Spec.EgressIP.IPv6 != oldPolicy.Spec.EgressIP.IPv6 {
+			return webhook.Denied("the EgressIP.IPv6 field cannot be modified")
+		}
+
+		if policy.Spec.EgressIP.AllocatorPolicy != oldPolicy.Spec.EgressIP.AllocatorPolicy {
+			return webhook.Denied("the EgressIP.AllocatorPolicy field cannot be modified")
+		}
+	}
+
+	if req.Operation == v1.Create {
+		if cfg.FileConfig.EnableIPv4 || cfg.FileConfig.EnableIPv6 {
+			if ok, err := checkEIP(client, ctx, policy.Spec.EgressIP.IPv4, policy.Spec.EgressIP.IPv6, policy.Name); !ok {
+				return webhook.Denied(err.Error())
+			}
+
+			if !policy.Spec.EgressIP.UseNodeIP {
+				err := checkEGWIppools(client, cfg, ctx, policy.Spec.EgressGatewayName, policy.Spec.EgressIP.AllocatorPolicy)
+				if err != nil {
+					return webhook.Denied(fmt.Sprintf("when policy(%v) UseNodeIP is false, %v", policy.Name, err))
+				}
+
+			}
+		}
+	}
+
+	return validateSubnet(policy.Spec.DestSubnet)
+}
+
+func checkEGWIppools(client client.Client, cfg *config.Config, ctx context.Context, name, allocatorPolicy string) error {
 
 	egw := new(egressv1.EgressGateway)
 	egw.Name = name
@@ -196,11 +207,24 @@ func checkEGWIppools(client client.Client, cfg *config.Config, ctx context.Conte
 	}
 
 	if cfg.FileConfig.EnableIPv4 && len(egw.Spec.Ippools.IPv4) == 0 {
-		return fmt.Errorf("referenced egw(%v) pec.Ippools.IPv4 cannot be empty", egw.Name)
+		return fmt.Errorf("referenced egw(%v) spec.Ippools.IPv4 cannot be empty", egw.Name)
 	}
 
 	if cfg.FileConfig.EnableIPv6 && len(egw.Spec.Ippools.IPv6) == 0 {
-		return fmt.Errorf("referenced egw(%v) pec.Ippools.IPv6 cannot be empty", egw.Name)
+		return fmt.Errorf("referenced egw(%v) spec.Ippools.IPv6 cannot be empty", egw.Name)
+	}
+
+	if allocatorPolicy == egressv1.EipAllocatorRR {
+		ipv4, ipv6, err := countGatewayAvailableIP(egw)
+		if err != nil {
+			return fmt.Errorf("parse egress gateway ippool with error: %s", err)
+		}
+		if cfg.FileConfig.EnableIPv4 && ipv4 < 1 {
+			return fmt.Errorf("the current allocation method is round-robin (rr), and there are no unused egress IPv4")
+		}
+		if cfg.FileConfig.EnableIPv6 && ipv6 < 1 {
+			return fmt.Errorf("the current allocation method is round-robin (rr), and there are no unused egress IPv6")
+		}
 	}
 
 	return nil
@@ -244,6 +268,42 @@ func checkEIP(client client.Client, ctx context.Context, ipv4, ipv6, egwName str
 	}
 
 	return true, nil
+}
+
+func countGatewayAvailableIP(egw *egressv1.EgressGateway) (int, int, error) {
+	// check has free egress ip
+	ipv4Ranges, err := ip.MergeIPRanges(constant.IPv4, egw.Spec.Ippools.IPv4)
+	if err != nil {
+		return 0, 0, err
+	}
+	ipv6Ranges, err := ip.MergeIPRanges(constant.IPv6, egw.Spec.Ippools.IPv6)
+	if err != nil {
+		return 0, 0, err
+	}
+	useIpv4s := make([]net.IP, 0)
+	useIpv6s := make([]net.IP, 0)
+	for _, node := range egw.Status.NodeList {
+		for _, eip := range node.Eips {
+			if len(eip.IPv4) != 0 {
+				useIpv4s = append(useIpv4s, net.ParseIP(eip.IPv4))
+			}
+			if len(eip.IPv6) != 0 {
+				useIpv6s = append(useIpv6s, net.ParseIP(eip.IPv6))
+			}
+		}
+	}
+	ipv4s, err := ip.ParseIPRanges(constant.IPv4, ipv4Ranges)
+	if err != nil {
+		return 0, 0, err
+	}
+	ipv6s, err := ip.ParseIPRanges(constant.IPv6, ipv6Ranges)
+	if err != nil {
+		return 0, 0, err
+	}
+	freeIpv4s := ip.IPsDiffSet(ipv4s, useIpv4s, false)
+	freeIpv6s := ip.IPsDiffSet(ipv6s, useIpv6s, false)
+
+	return len(freeIpv4s), len(freeIpv6s), nil
 }
 
 func validateSubnet(subnet []string) webhook.AdmissionResponse {

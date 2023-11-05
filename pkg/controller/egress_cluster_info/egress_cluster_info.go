@@ -33,19 +33,15 @@ import (
 type eciReconciler struct {
 	mgr                          manager.Manager
 	c                            controller.Controller
-	isWatchingCalico             bool // whether controller is watching calico
-	isWatchingNode               bool
+	isWatchCalico                atomic.Bool // whether controller need to watch calico
+	isWatchingCalico             atomic.Bool // whether controller is watching calico
+	isWatchingNode               atomic.Bool // whether controller need to watch node
 	k8sPodCidr                   map[string]egressv1beta1.IPListPair
 	v4ClusterCidr, v6ClusterCidr []string
 	eci                          *egressv1beta1.EgressClusterInfo
 	client                       client.Client
 	log                          logr.Logger
 	eciMutex                     lock.RWMutex
-	// stopCheckChan Stop the goroutine that detect the existence of the cni
-	stopCheckChan                 chan struct{}
-	isCheckCalicoGoroutineRunning atomic.Bool
-	// taskToken Avoid multiple goroutines in the program that detect the existence of a cni
-	taskToken atomic.Bool
 }
 
 const (
@@ -144,12 +140,12 @@ func (r *eciReconciler) reconcileEgressClusterInfo(ctx context.Context, req reco
 
 	// ignore nodeIP
 	if r.eci.Spec.AutoDetect.NodeIP {
-		if !r.isWatchingNode {
+		if !r.isWatchingNode.Load() {
 			// need watch node
 			if err := watchSource(r.c, source.Kind(r.mgr.GetCache(), &corev1.Node{}), kindNode); err != nil {
 				return err
 			}
-			r.isWatchingNode = true
+			r.isWatchingNode.Store(true)
 			// need to list all node
 			nodesIP, err := r.listNodeIPs(ctx)
 			if err != nil {
@@ -162,6 +158,11 @@ func (r *eciReconciler) reconcileEgressClusterInfo(ctx context.Context, req reco
 	}
 
 	// ignore podCidr
+	// if r.eci.Spec.AutoDetect.PodCidrMode is not Calico, stop checking for the existence of Calico
+	if r.eci.Spec.AutoDetect.PodCidrMode != egressv1beta1.CniTypeCalico && r.isWatchCalico.Load() {
+		r.stopCheckCalico()
+	}
+
 	switch r.eci.Spec.AutoDetect.PodCidrMode {
 	case egressv1beta1.CniTypeAuto:
 		err := r.checkSomeCniExists()
@@ -169,16 +170,13 @@ func (r *eciReconciler) reconcileEgressClusterInfo(ctx context.Context, req reco
 			return err
 		}
 	case egressv1beta1.CniTypeCalico:
-		if !r.isWatchingCalico && !r.isCheckCalicoGoroutineRunning.Load() {
-			if r.stopCheckChan == nil {
-				r.stopCheckChan = make(chan struct{})
-			}
+		if !r.isWatchingCalico.Load() {
 			// set empty before check calico
 			r.eci.Status.PodCIDR = nil
 			r.eci.Status.PodCidrMode = egressv1beta1.CniTypeEmpty
 
 			// check if calico is exists
-			r.startCheckCalico(r.stopCheckChan)
+			r.startCheckCalico()
 		} else {
 			pools, err := r.listCalicoIPPools(ctx)
 			if err != nil {
@@ -188,9 +186,6 @@ func (r *eciReconciler) reconcileEgressClusterInfo(ctx context.Context, req reco
 			r.eci.Status.PodCidrMode = egressv1beta1.CniTypeCalico
 		}
 	case egressv1beta1.CniTypeK8s:
-		// close all check goroutine
-		r.stopAllCheckGoroutine()
-
 		if _, ok := r.k8sPodCidr[k8s]; !ok {
 			cidr, err := r.getK8sPodCidr()
 			if err != nil {
@@ -201,9 +196,6 @@ func (r *eciReconciler) reconcileEgressClusterInfo(ctx context.Context, req reco
 		r.eci.Status.PodCIDR = r.k8sPodCidr
 		r.eci.Status.PodCidrMode = egressv1beta1.CniTypeK8s
 	case egressv1beta1.CniTypeEmpty:
-		// close all check goroutine
-		r.stopAllCheckGoroutine()
-
 		r.eci.Status.PodCIDR = nil
 		r.eci.Status.PodCidrMode = ""
 	default:
@@ -446,92 +438,50 @@ func (r *eciReconciler) getK8sPodCidr() (map[string]egressv1beta1.IPListPair, er
 }
 
 // checkCalicoExists once calico is detected, start watch
-func (r *eciReconciler) checkCalicoExists(stopChan <-chan struct{}) {
+func (r *eciReconciler) checkCalicoExists() {
 	r.log.V(1).Info("checkCalicoExists...")
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-	defer r.taskToken.Store(false)
-	defer r.isCheckCalicoGoroutineRunning.Store(false)
-
 	for {
-		select {
-		case <-stopChan:
-			r.log.V(1).Info("succeeded to stop check calico exists", "goroutine", "checkCalicoExists")
-			return
-		default:
-			// check if other check-goroutine taken the token
-			r.log.V(1).Info("Check if other check-goroutine taken the token")
-			if r.taskToken.Load() {
-				r.log.V(1).Info("Find other cni, so stop this check goroutine")
-				return
-			}
-
-		TASK:
-			pools, err := r.listCalicoIPPools(ctx)
-			if err != nil {
-				r.log.V(1).Info("failed listCalicoIPPools when checkCalicoExists, try again", "details", err)
-				time.Sleep(time.Second * 3)
-				continue
-			}
-			// find calico ippool, take the token, to do task
-			if !r.taskToken.Load() {
-				r.taskToken.Store(true)
-			}
-
-			if !r.isWatchingCalico {
-			RETRY:
-				r.log.V(1).Info("find calico ippool, egressClusterInfo controller begin to watch calico ippool")
-				if err = watchSource(r.c, source.Kind(r.mgr.GetCache(), &calicov1.IPPool{}), kindCalicoIPPool); err != nil {
-					r.log.V(1).Info("failed watch calico ippool, try again", "details", err)
-					time.Sleep(time.Second)
-					goto RETRY
-				}
-				r.log.V(1).Info("egressClusterInfo controller succeeded to watch calico ippool")
-				r.isWatchingCalico = true
-			}
-			// find calico update the egci
-			r.eciMutex.Lock()
-			r.eci.Status.PodCIDR = pools
-			r.eci.Status.PodCidrMode = egressv1beta1.CniTypeCalico
-			err = r.client.Status().Update(ctx, r.eci)
-			r.eciMutex.Unlock()
-			if err != nil {
-				r.log.V(1).Info("failed update egressClusterInfo, try again", "details", err)
-				time.Sleep(time.Second)
-				goto TASK
-			}
-			// finish task
-			//  if here to set false, when the goroutine stopped by other process, the value is not set successfully, so it should set defer
-			//r.isCheckCalicoGoroutineRunning.Store(false)
-			//r.taskToken.Store(false)
+		if !r.isWatchCalico.Load() {
+			r.log.V(1).Info("the podCidrMode changed, need not to watch calico")
 			return
 		}
+		pools, err := r.listCalicoIPPools(context.Background())
+		if err != nil {
+			r.log.V(1).Info("failed listCalicoIPPools when checkCalicoExists, try again", "details", err)
+			time.Sleep(time.Second * 3)
+			continue
+		}
+
+		r.log.V(1).Info("find calico ippool, egressClusterInfo controller begin to watch calico ippool")
+		if err = watchSource(r.c, source.Kind(r.mgr.GetCache(), &calicov1.IPPool{}), kindCalicoIPPool); err != nil {
+			r.log.V(1).Info("failed watch calico ippool, try again", "details", err)
+			time.Sleep(time.Second)
+			continue
+		}
+		r.log.V(1).Info("egressClusterInfo controller succeeded to watch calico ippool")
+		r.isWatchingCalico.Store(true)
+
+		// find calico update the egci
+		r.eciMutex.Lock()
+		r.eci.Status.PodCIDR = pools
+		r.eci.Status.PodCidrMode = egressv1beta1.CniTypeCalico
+		_ = r.client.Status().Update(context.Background(), r.eci)
+		r.eciMutex.Unlock()
+		return
 	}
 }
 
 // startCheckCalico start a goroutine to check calico exists
-func (r *eciReconciler) startCheckCalico(stopChan <-chan struct{}) {
+func (r *eciReconciler) startCheckCalico() {
 	r.log.V(1).Info("startCheckCalico...")
-	r.isCheckCalicoGoroutineRunning.Store(true)
-	go r.checkCalicoExists(stopChan)
+	r.isWatchCalico.Store(true)
+	go r.checkCalicoExists()
 }
 
 // stopCheckCalico close the goroutine that check calico exists
 func (r *eciReconciler) stopCheckCalico() {
-	if r.isCheckCalicoGoroutineRunning.Load() {
-		r.log.V(1).Info("stopCheckCalico...")
-		close(r.stopCheckChan)
-		r.isCheckCalicoGoroutineRunning.Store(false)
-	}
-}
-
-// stopAllCheckGoroutine close all check-goroutine
-func (r *eciReconciler) stopAllCheckGoroutine() {
-	if r.taskToken.Load() {
-		r.log.V(1).Info("stopAllCheckGoroutine...")
-		close(r.stopCheckChan)
-		r.taskToken.Store(false)
-	}
+	r.log.V(1).Info("stopCheckCalico...")
+	r.isWatchCalico.Store(false)
 }
 
 // checkSomeCniExists

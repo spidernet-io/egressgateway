@@ -7,12 +7,12 @@ import (
 	"context"
 	"fmt"
 	"reflect"
-	"strings"
 	"time"
 
 	corev1 "k8s.io/api/core/v1"
 
-	"github.com/go-faker/faker/v4"
+	"github.com/google/uuid"
+
 	econfig "github.com/spidernet-io/egressgateway/pkg/config"
 	egressv1 "github.com/spidernet-io/egressgateway/pkg/k8s/apis/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -26,7 +26,7 @@ func CreateEgressPolicyNew(ctx context.Context, cli client.Client, cfg econfig.F
 	defer cancel()
 
 	res := &egressv1.EgressPolicy{
-		ObjectMeta: metav1.ObjectMeta{GenerateName: "policy-" + faker.Word(), Namespace: "default"},
+		ObjectMeta: metav1.ObjectMeta{GenerateName: "policy-" + uuid.NewString(), Namespace: "default"},
 		Spec: egressv1.EgressPolicySpec{
 			EgressGatewayName: egw,
 			AppliedTo: egressv1.AppliedTo{PodSelector: &metav1.LabelSelector{
@@ -77,7 +77,7 @@ func CreateEgressClusterPolicy(ctx context.Context, cli client.Client, cfg econf
 	defer cancel()
 
 	res := &egressv1.EgressClusterPolicy{
-		ObjectMeta: metav1.ObjectMeta{GenerateName: "cluster-policy-" + faker.Word()},
+		ObjectMeta: metav1.ObjectMeta{GenerateName: "cluster-policy-" + uuid.NewString()},
 		Spec: egressv1.EgressClusterPolicySpec{
 			EgressGatewayName: egw,
 			AppliedTo: egressv1.ClusterAppliedTo{PodSelector: &metav1.LabelSelector{
@@ -123,7 +123,7 @@ func CreateEgressClusterPolicy(ctx context.Context, cli client.Client, cfg econf
 }
 
 func CreateEgressPolicyCustom(ctx context.Context, cli client.Client, setUp func(egp *egressv1.EgressPolicy)) (*egressv1.EgressPolicy, error) {
-	name := "egp-" + strings.ToLower(faker.FirstName()) + "-" + faker.Word()
+	name := "egp-" + uuid.NewString()
 	ns := "default"
 	res := &egressv1.EgressPolicy{
 		ObjectMeta: metav1.ObjectMeta{Name: name, Namespace: ns},
@@ -139,7 +139,7 @@ func CreateEgressPolicyCustom(ctx context.Context, cli client.Client, setUp func
 }
 
 func CreateEgressClusterPolicyCustom(ctx context.Context, cli client.Client, setUp func(egcp *egressv1.EgressClusterPolicy)) (*egressv1.EgressClusterPolicy, error) {
-	name := "egcp-" + faker.Word()
+	name := "egcp-" + uuid.NewString()
 	res := &egressv1.EgressClusterPolicy{
 		ObjectMeta: metav1.ObjectMeta{Name: name},
 	}
@@ -291,7 +291,7 @@ func WaitEgressPolicyStatusReady(ctx context.Context, cli client.Client, egp *eg
 				time.Sleep(time.Second / 2)
 				continue
 			}
-			if egp.Spec.EgressIP.UseNodeIP {
+			if !egp.Spec.EgressIP.UseNodeIP {
 				if v4Enabled && len(egp.Status.Eip.Ipv4) != 0 {
 					v4Ok = true
 				}

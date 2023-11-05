@@ -9,7 +9,7 @@ import (
 	"reflect"
 	"time"
 
-	"github.com/go-faker/faker/v4"
+	"github.com/google/uuid"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
@@ -34,7 +34,7 @@ func CreateGatewayNew(ctx context.Context, cli client.Client,
 }
 
 func CreateGatewayCustom(ctx context.Context, cli client.Client, setUp func(egw *egressv1.EgressGateway)) (*egressv1.EgressGateway, error) {
-	name := "egw-" + faker.Word()
+	name := "egw-" + uuid.NewString()
 	res := &egressv1.EgressGateway{
 		ObjectMeta: metav1.ObjectMeta{Name: name},
 	}

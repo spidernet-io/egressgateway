@@ -228,7 +228,7 @@ var _ = Describe("EgressClusterInfo", Serial, Label("EgressClusterInfo UT"), fun
 			// when egci.Spec.AutoDetect.NodeIP is true
 			egci.Spec.AutoDetect.NodeIP = true
 			// when isWatchingNode is true
-			r.isWatchingNode = true
+			r.isWatchingNode.Store(true)
 
 			// set client
 			objs = append(objs, egci)
@@ -258,7 +258,7 @@ var _ = Describe("EgressClusterInfo", Serial, Label("EgressClusterInfo UT"), fun
 				egci.Spec.AutoDetect.PodCidrMode = egressv1beta1.CniTypeCalico
 
 				// set eciReconciler
-				r.isWatchingCalico = true
+				r.isWatchingCalico.Store(true)
 				objs = append(objs, egci)
 				builder.WithObjects(objs...)
 				builder.WithStatusSubresource(objs...)
@@ -422,14 +422,7 @@ var _ = Describe("EgressClusterInfo", Serial, Label("EgressClusterInfo UT"), fun
 			_, _ = r.listCalicoIPPools(ctx)
 
 			// test method stopCheckCalico
-			r.isCheckCalicoGoroutineRunning.Store(true)
-			r.stopCheckChan = make(chan struct{})
 			r.stopCheckCalico()
-
-			// test method stopAllCheckGoroutine
-			r.taskToken.Store(true)
-			r.stopCheckChan = make(chan struct{})
-			r.stopAllCheckGoroutine()
 
 		})
 

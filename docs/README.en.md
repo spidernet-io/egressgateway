@@ -18,7 +18,7 @@ EgressGateway is a network management tool designed for Kubernetes clusters, wit
 * Support application-level control, allowing EgressGateway to filter Egress applications (Pods) for precise management of specific application outbound traffic.
 * Support multiple egress gateways instance,capable of handling communication between multiple network partitions or clusters.
 * Support namespaced egress IP.
-* Supports automatic detection of cluster traffic for egress gateways policies.
+* Support automatic detection of cluster traffic for egress gateways policies.
 * Support namespace default egress instances.
 * Can be used in low kernel version, making EgressGateway suitable for various Kubernetes deployment environments.
 

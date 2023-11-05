@@ -10,6 +10,9 @@ import (
 	"time"
 
 	"github.com/go-logr/logr"
+	"github.com/spidernet-io/egressgateway/pkg/coalescing"
+	"github.com/spidernet-io/egressgateway/pkg/config"
+	"github.com/spidernet-io/egressgateway/pkg/k8s/apis/v1beta1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -24,10 +27,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 	"sigs.k8s.io/controller-runtime/pkg/source"
-
-	"github.com/spidernet-io/egressgateway/pkg/coalescing"
-	"github.com/spidernet-io/egressgateway/pkg/config"
-	"github.com/spidernet-io/egressgateway/pkg/k8s/apis/v1beta1"
 )
 
 type endpointClusterReconciler struct {
@@ -138,12 +137,13 @@ func (r *endpointClusterReconciler) Reconcile(ctx context.Context, req reconcile
 				if count < len(needToCreateEp) {
 					slice.Endpoints = append(slice.Endpoints, needToCreateEp[:count]...)
 					needToCreateEp = needToCreateEp[count:]
+					slicesToUpdate = append(slicesToUpdate, slice)
 				} else {
 					slice.Endpoints = append(slice.Endpoints, needToCreateEp...)
 					needToCreateEp = make([]v1beta1.EgressEndpoint, 0)
+					slicesToUpdate = append(slicesToUpdate, slice)
 					break
 				}
-				slicesToUpdate = append(slicesToUpdate, slice)
 			}
 		}
 	}
