@@ -4,6 +4,8 @@ EgressGateway 是用于 Kubernetes 集群的出口网关策略解决方案，专
 
 ## 架构
 
+![Architecture](images/architecture01.png)
+
 ## 为什么选择 EgressGateway
 
 ### 提供了一系列功能和优势
@@ -27,11 +29,11 @@ EgressGateway 是用于 Kubernetes 集群的出口网关策略解决方案，专
 
 ## 开始使用 EgressGateway
 
-参考[安装指南](https://spidernet-io.github.io/egressgateway/v0.2/usage/Install/)
+参考[安装指南](usage/Install.zh.md)
 
 ## 社区
 
-我们欢迎任何形式的贡献。如果您有任何有关贡献方面的疑问，请参阅[贡献指南](https://github.com/spidernet-io/egressgateway/blob/main/docs/develop/Contribute.en.md)。
+我们欢迎任何形式的贡献。如果您有任何有关贡献方面的疑问，请参阅[贡献指南](develop/Contribute.en.md)。
 
 ## License
 

@@ -16,6 +16,8 @@ EgressGateway is a egress policy solution designed for Kubernetes clusters, with
 
 ## Architecture
 
+![Architecture](images/architecture01.png)
+
 ## Why EgressGateway
 
 ### Support a range of features and advantages
@@ -39,11 +41,11 @@ EgressGateway is a egress policy solution designed for Kubernetes clusters, with
 
 ## Getting started using EgressGateway
 
-Please refer to the [installation guide](https://github.com/spidernet-io/egressgateway/blob/main/docs/usage/Install.en.md).
+Please refer to the [installation guide](docs/usage/Install.en.md).
 
 ## Join the EgressGateway Community
 
-We welcome contributions in any kind. If you have any questions about contributions, please consult the [contribution documentation](https://github.com/spidernet-io/egressgateway/blob/main/docs/develop/Contribute.en.md).
+We welcome contributions in any kind. If you have any questions about contributions, please consult the [contribution documentation](docs/develop/Contribute.en.md).
 
 ## License
 
