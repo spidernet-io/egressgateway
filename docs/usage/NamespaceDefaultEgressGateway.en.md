@@ -1,10 +1,10 @@
-# Namespace level Default EgressGateway
+# Namespace Level Default EgressGateway
 
 ## Introduction
 
-Setting a default EgressGateway for a namespace simplifies the process of specifying the EgressGateway name when using EgressPolicy under the namespace. The priority of the namespace level default EgressGateway is higher than the cluster level default EgressGateway. In other words, when a namespace level default gateway is specified, the tenant's default settings will be used first. If the namespace does not have a default gateway set, the cluster's default settings will be used.
+Setting a default EgressGateway for a namespace simplifies the process of specifying the EgressGateway name when using EgressPolicy under the namespace. The priority of the namespace level default EgressGateway is higher than that of the cluster level. In other words, when a namespace level default gateway is specified, the tenant's default settings will be used first. Otherwise, the cluster's default settings will be used.
 
-## Requirements
+## Prerequisites
 
 - EgressGateway component is installed.
 - An EgressGateway CR has been created.

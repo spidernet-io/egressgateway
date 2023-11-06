@@ -2,7 +2,7 @@
 
 This document will guide you on how to use the `helm upgrade` command to upgrade EgressGateway.
 
-### Basic command format
+### Basic Command Format
 
 ```shell
 helm upgrade [RELEASE] [CHART] [flags]
@@ -10,7 +10,7 @@ helm upgrade [RELEASE] [CHART] [flags]
 
 Here, `[RELEASE]` represents the application name set during installation, `[CHART]` refers to the chart, and `[flags]` can specify additional parameters. To learn more about the parameters for `helm upgrade`, please refer to the [helm upgrade](https://helm.sh/docs/helm/helm_upgrade/) page.
 
-### Version upgrade
+### Version Upgrade
 
 Follow these steps to perform a version upgrade:
 
