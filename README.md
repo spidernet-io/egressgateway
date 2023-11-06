@@ -8,54 +8,44 @@
 ![badge](https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/bzsuni/cc6d42eb27d8ee4c3d19c936eff2c478/raw/egressgatewaye2e.json)
 [![OpenSSF Best Practices](https://bestpractices.coreinfrastructure.org/projects/7410/badge)](https://bestpractices.coreinfrastructure.org/projects/7410)
 
-## Background
+English | [简体中文](docs/README.zh.md)
 
-<img src="docs/proposal/01-egress-gateway/Egress-Gateway.png" width="76%"></img>
+## About
 
-Starting with 2021, we received some feedback as follows.
+EgressGateway is a egress policy solution designed for Kubernetes clusters, with a primary focus on managing the egress traffic of Pods to external networks. It addresses challenges related to inter-cluster communication, egress policy control, and high availability. Additionally, it offers support for various network solutions and custom resource definitions (CRDs), enabling users to configure and manage egress policies with flexibility.
 
-There are two clusters A and B. Cluster A is VMWare-based and runs mainly Database workloads, and Cluster B is a Kubernetes cluster. Some applications in Cluster B need to access the database in Cluster A, and the network administrator wants the cluster Pods to be managed through an egress gateway.
+## Architecture
 
-## Summary
+![Architecture](images/architecture01.png)
 
-The gateway provides network egress capabilities for Kubernetes clusters.
+## Why EgressGateway
 
-### Features
+### Support a range of features and advantages
 
-* Solve IPv4 IPv6 dual-stack connectivity.
-* Solve the high availability of Egress Nodes.
-* Allow filtering Pods Egress Policy (_Destination CIDR_).
-* Allow filtering of egress Applications (_Pods_).
-* Can be used in low kernel version.
-* Support multiple egress gateways instance.
+* Solve IPv4 IPv6 dual-stack connectivity,ensuring seamless communication across different protocol stacks.
+* Solve the high availability of Egress Nodes, ensuring network connectivity remains unaffected by single-point failures.
+* Support finer-grained policy control, allowing flexible filtering of Pods' Egress policies, including Destination CIDR.
+* Support application-level control, allowing EgressGateway to filter Egress applications (Pods) for precise management of specific application outbound traffic.
+* Support multiple egress gateways instance,capable of handling communication between multiple network partitions or clusters.
 * Support namespaced egress IP.
 * Supports automatic detection of cluster traffic for egress gateways policies.
 * Support namespace default egress instances.
+* Can be used in low kernel version, making EgressGateway suitable for various Kubernetes deployment environments.
+  
+### Compatible with the following network solutions
 
-### Compatibility
+* [Calico](https://github.com/projectcalico/calico)
+* [Flannel](https://github.com/flannel-io/flannel)
+* [Weave](https://github.com/weaveworks/weave)
+* [Spiderpool](https://github.com/spidernet-io/spiderpool)
 
-* Calico
-* Flannel
-* Weave
-* Spiderpool
+## Getting started using EgressGateway
 
-### CRDs
+Please refer to the [installation guide](docs/usage/Install.en.md).
 
-* EgressTunnel
-* EgressGateway
-* EgressPolicy
-* EgressClusterPolicy
-* EgressEndpointSlice
-* EgressClusterEndpointSlice
-* EgressClusterInfo
+## Join the EgressGateway Community
 
-You can follow the [Get Started](https://spidernet-io.github.io/egressgateway/usage/Install) to set up your own playground!
-
-## Develop
-
-<img src="./docs/proposal/03-egress-ip/arch.png" width="100%"></img>
-
-Refer to [develop](docs/develop/Develop.en.md).
+We welcome contributions in any kind. If you have any questions about contributions, please consult the [contribution documentation](docs/develop/Contribute.en.md).
 
 ## License
 

@@ -1,47 +1,39 @@
-EgressGateway 项目为 Kubernetes 提供 Egress 能力。
+# EgressGateway
 
-<img src="./proposal/01-egress-gateway/Egress-Gateway.png" width="76%"></img>
+EgressGateway 是用于 Kubernetes 集群的出口网关策略解决方案，专注于管理 Pods 对外部网络的出口流量，解决多集群通信、出口策略控制和高可用性问题，同时支持多种网络解决方案和自定义资源定义 (CRDs)，使用户能够更灵活地配置和管理出口策略。
 
-从2021年开始，我们收到了以下反馈。
+## 架构
 
-有两个集群 A 和 B。集群 A 基于 VMWare 并主要运行数据库负载，集群 B 是一个 Kubernetes 集群。集群 B 中的某些应用需要访问集群 A 中的数据库，而网络管理员希望通过出口网关管理集群的 Pod。
+![Architecture](images/architecture01.png)
 
-## 特性
+## 为什么选择 EgressGateway
 
-* 解决 IPv4/IPv6 双栈连接问题
-* 解决 Egress 节点的高可用性问题
-* 允许过滤 Pod 的 Egress 策略（_目标 CIDR_）
-* 允许过滤 Egress 应用（_Pod_）
-* 可用于较低内核版本
-* 支持多个出口网关实例
-* 支持租户级别的 Egress IP
-* 支持自动检测集群流量的 Egress 网关策略
-* 支持命名空间默认 Egress 实例
+### 提供了一系列功能和优势
 
-### 兼容性
+* 解决 IPv4/IPv6 双栈连接问题，确保网络通信在不同协议栈下的无缝连接。
+* 解决 Egress 节点的高可用性问题，确保网络连通性不受单点故障的干扰。
+* 允许更精细的策略控制，可以通过 EgressGateway 灵活地过滤 Pods 的 Egress 策略，包括 Destination CIDR。
+* 允许过滤 Egress 应用（Pod），能够更精确地管理特定应用的出口流量。
+* 支持多个出口网关实例，能够处理多个网络分区或集群之间的通信。
+* 支持租户级别的 Egress IP。
+* 支持自动检测集群流量的 Egress 网关策略。
+* 支持命名空间默认 Egress 实例。
+* 可用于较低内核版本，适用于各种 Kubernetes 部署环境。
 
-* Calico
-* Flannel
-* Weave
-* Spiderpool
+### 兼容以下网络解决方案
 
-### CRDs
+* [Calico](https://github.com/projectcalico/calico)
+* [Flannel](https://github.com/flannel-io/flannel)
+* [Weave](https://github.com/weaveworks/weave)
+* [Spiderpool](https://github.com/spidernet-io/spiderpool)
 
-* EgressTunnel
-* EgressGateway
-* EgressPolicy
-* EgressClusterPolicy
-* EgressEndpointSlice
-* EgressClusterEndpointSlice
-* EgressClusterInfo
+## 开始使用 EgressGateway
 
-你可以跟随[起步](https://spidernet-io.github.io/egressgateway/zh/usage/Install)指南搭建你自己的测试环境～
+参考[安装指南](usage/Install.zh.md)
 
-## Develop
+## 社区
 
-<img src="./proposal/03-egress-ip/arch.png" width="100%"></img>
-
-参考[开发](develop/Develop.en.md)文档。
+我们欢迎任何形式的贡献。如果您有任何有关贡献方面的疑问，请参阅[贡献指南](develop/Contribute.en.md)。
 
 ## License
 
