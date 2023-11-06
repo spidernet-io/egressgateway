@@ -48,7 +48,7 @@ This page provides instructions for quickly installing EgressGateway on a self-m
 
     If your cluster is using [Spiderpool](https://github.com/spidernet-io/spiderpool) in conjunction with another CNI, follow these steps:
 
-    将集群外的服务地址添加到 spiderpool.spidercoordinators 的 'default' 对象的 'hijackCIDR' 中，使 Pod 访问这些外部服务时，流量先经过 Pod 所在的主机，从而被 EgressGateway 规则匹配。Add the service addresses outside the cluster to the 'hijackCIDR' field in the 'default' object of spiderpool.spidercoordinators. This ensures that when Pods access these external services, the traffic is routed through the host where the Pod is located, allowing the EgressGateway rules to match.
+    Add the service addresses outside the cluster to the 'hijackCIDR' field in the 'default' object of spiderpool.spidercoordinators. This ensures that when Pods access these external services, the traffic is routed through the host where the Pod is located, allowing the EgressGateway rules to match.
 
     ```
     # For running Pods, you need to restart them for these routing rules to take effect within the Pods.
