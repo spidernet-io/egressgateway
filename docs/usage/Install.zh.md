@@ -12,7 +12,7 @@
 
 3. 目前 EgressGateway 支持如下 CNI。
 
-* "Calico"
+===  "Calico"
 
     如果您的集群使用 [Calico](https://www.tigera.io/project-calico/) CNI，请执行如下命令，该命令确保 EgressGateway 的 iptables 规则不会被 Calico 规则覆盖，否则 EgressGateway 将不能工作。
 
@@ -36,15 +36,15 @@
 
     > `spec.chainInsertMode` 的意义可参考 [Calico 文档](https://projectcalico.docs.tigera.io/reference/resources/felixconfig)
 
-* "Flannel"
+===  "Flannel"
 
     [Flannel](https://github.com/flannel-io/flannel) CNI 不需要任何配置，您可以跳过此步骤。
 
-* "Weave"
+===  "Weave"
 
     [Weave](https://github.com/flannel-io/flannel) CNI 不需要任何配置，您可以跳过此步骤。
 
-* "Spiderpool"
+===  "Spiderpool"
 
     如果您的集群使用 [Spiderpool](https://github.com/spidernet-io/spiderpool) 搭配其他 CNI，需要进行如下操作。
 
@@ -76,7 +76,7 @@ helm repo update
 			--wait --debug
     ```
 
-    在安装命令中，有如下注意点：
+   在安装命令中，有如下注意点：
 
     * 安装命令中，需要提供用于 EgressGateway 隧道节点的 IPv4 和 IPv6 网段，要求该网段和集群内的其他地址不冲突。
     * 可使用选项 `--set feature.tunnelDetectMethod="interface=eth0"` 来定制 EgressGateway 隧道的承载网卡，否则，默认使用默认路由的网卡。
@@ -117,7 +117,7 @@ helm repo update
     EOF
     ```
 
-    创建命令中：
+   创建命令中：
 
     * 如上 YAML 例子中，`spec.ippools.ipv4` 定义了一组 egress 的 出口 IP 地址，需要根据具体环境的实际情况调整。
     * 其中，`spec.ippools.ipv4` 的 CIDR 应该是与网关节点上的出口网卡（一般情况下是默认路由的网卡）的子网相同，否则，极有可能导致 egress 访问不通。
@@ -156,7 +156,7 @@ helm repo update
         status: Ready
     ```
 
-    在如上输出中：
+   在如上输出中：
 
     * `status.nodeList` 字段已经识别到了符合 `spec.nodeSelector` 的节点及该节点对应的 EgressTunnel 对象的状态
     * `spec.ippools.ipv4DefaultEIP` 字段会从 `spec.ippools.ipv4` 中随机选择一个 IP 地址作为该组 EgressGateway 的默认 VIP，它的作用是：当为应用创建 EgressPolicy 对象时，如果未指定 VIP 地址，则默认分配使用该默认 VIP
@@ -170,9 +170,10 @@ helm repo update
     ```
 
 2. 为应用创建 EgressPolicy CR 对象。
-    EgressPolicy 实例用于定义哪些 Pod 的出口流量要经过 EgressGateway 节点转发，以及其它的配置细节。
-    可创建如下例子，当匹配的 Pod 访问任意集群外部的地址（任意不是 Node IP、CNI Pod CIDR、ClusterIP 的地址）时，都会被 EgressGateway Node 转发。注意的是，
-    EgressPolicy 对象是租户级别的，因此，它务必创建在 selected 应用的租户下
+
+   EgressPolicy 实例用于定义哪些 Pod 的出口流量要经过 EgressGateway 节点转发，以及其它的配置细节。
+   可创建如下例子，当匹配的 Pod 访问任意集群外部的地址（任意不是 Node IP、CNI Pod CIDR、ClusterIP 的地址）时，都会被 EgressGateway Node 转发。注意的是，
+   EgressPolicy 对象是租户级别的，因此，它务必创建在 selected 应用的租户下
 
     ```shell
     cat <<EOF | kubectl apply -f -
@@ -194,8 +195,8 @@ helm repo update
     * `spec.egressGatewayName` 指定了使用哪一组 EgressGateway 的名字。
     * `spec.appliedTo.podSelector` 指定了本策略生效在集群内的哪些 Pod。
     * 集群的 egress 流量的源 IP 地址有两种选择：
-      * 可使用网关节点的 IP。它可适用于公有云和传统网络等环境，缺点是，随着网关节点的故障，出口源 IP 可能会发生变化。可设置 `spec.egressIP.useNodeIP=true` 来生效。
-      * 可使用独立的 VIP，因为 EgressGateway 是基于 ARP 原理生效 VIP，所以它适用于传统网络，而不适用于公有云等环境，它的优点是，出口源 IP 永久是固定的。在 EgressPolicy 中不做任何设置，则默认使用 egressGatewayName 的缺省 VIP，或者可单独手动指定 `spec.egressIP.ipv4` ，其 IP 值务必是符合 EgressGateway 中的 IP 池。
+        * 可使用网关节点的 IP。它可适用于公有云和传统网络等环境，缺点是，随着网关节点的故障，出口源 IP 可能会发生变化。可设置 `spec.egressIP.useNodeIP=true` 来生效。
+        * 可使用独立的 VIP，因为 EgressGateway 是基于 ARP 原理生效 VIP，所以它适用于传统网络，而不适用于公有云等环境，它的优点是，出口源 IP 永久是固定的。在 EgressPolicy 中不做任何设置，则默认使用 egressGatewayName 的缺省 VIP，或者可单独手动指定 `spec.egressIP.ipv4` ，其 IP 值务必是符合 EgressGateway 中的 IP 池。
 
 3. 查看 EgressPolicy 的状态
 
@@ -224,14 +225,14 @@ helm repo update
       node: egressgateway-worker2
     ```
 
-    如上输出中：
+   如上输出中：
 
     * `status.eip` 展示了该组应用出集群时使用的出口 IP 地址。
     * `status.node` 展示了哪一个 EgressGateway 的节点在实时的负责出口流量的转发。注：EgressGateway 节点支持高可用，当存在多个 EgressGateway 节点时，所有的 EgressPolicy 会均摊到不同的 EgressGateway 节点上实施。
 
 4. 查看 EgressEndpointSlices 的状态
 
-    每个 EgressPolicy 对象，都有一个对应的 EgressEndpointSlices 对象，其中存储了 EgressPolicy select 的 Pod 的 IP 地址集合。当应用无法出口访问时，可排查该对象中的 IP 地址是否正常。
+   每个 EgressPolicy 对象，都有一个对应的 EgressEndpointSlices 对象，其中存储了 EgressPolicy select 的 Pod 的 IP 地址集合。当应用无法出口访问时，可排查该对象中的 IP 地址是否正常。
 
     ```shell
     $ kubectl get egressendpointslices -A

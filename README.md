@@ -16,7 +16,7 @@ EgressGateway is a egress policy solution designed for Kubernetes clusters, with
 
 ## Architecture
 
-![Architecture](images/architecture01.png)
+![Architecture](docs/architecture.png)
 
 ## Why EgressGateway
 
