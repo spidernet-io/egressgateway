@@ -3,9 +3,9 @@ EgressGateway 由控制面和数据面 2 部分组成，控制面由 4 个控制
 ![arch](../proposal/03-egress-ip/arch.png)
 
 
-## Controller
+## 控制器
 
-### EgressTunnel reconcile loop (a) 
+### EgressTunnel 调谐循环 (a) 
 
 #### 初始化
 
@@ -30,13 +30,13 @@ EgressGateway 由控制面和数据面 2 部分组成，控制面由 4 个控制
   - 隧道 IP 合法，校验 IP 是否分配给本节点，不是则设置 phase 为 `Pending`
   - 隧道 IP 是分配给本节点，phase 状态不为 `Ready` 则设置 phase 为 `Init`
 
-### EgressGateway reconcile loop (b)
+### EgressGateway 调谐循环 (b)
 
 #### EgressGateway Event
 
 - Del：
   * Webhook 判断是否还被其他 Policy 引用，如果存在则不允许删除。
-  * 通过了 Webhook 的校验说明没有被引用，所以的规则也被清理，则可以直接删除。
+  * 通过了 Webhook 的校验说明没有被引用，所有的规则也被清理，则可以直接删除。
 
 - Other：
   * EIP 减少，如果 EIP 被引用，禁止修改。分配 IPV4 与 IPV6 时，要求一一对应，所以两者的个数需要一致。
@@ -81,13 +81,13 @@ EgressGateway 由控制面和数据面 2 部分组成，控制面由 4 个控制
 当一个 EIP 没有被使用时，则回收该 EIP，回收就是在 `eips` 中将该 EIP 字段删除。
 
 
-### EgressClusterInfo reconcile loop (d)
+### EgressClusterInfo 调协循环 (d)
 
 #### Node Event
 
-- Create：node 创建时，将 node 的 ip 自动添加到 egressclusterinfos CR `status.egressIgnoreCIDR.nodeIP` 中。
-- Update：node ip 有更新时，将 node 的 ip 自动更新到 egressclusterinfos CR `status.egressIgnoreCIDR.nodeIP` 中。
-- Delete：node 被删除时，将 node 的 ip 从 egressclusterinfos CR `status.egressIgnoreCIDR.nodeIP` 中删除。
+- Create：node 创建时，将 node 的 IP 自动添加到 egressclusterinfos CR `status.egressIgnoreCIDR.nodeIP` 中。
+- Update：node IP 有更新时，将 node 的 IP 自动更新到 egressclusterinfos CR `status.egressIgnoreCIDR.nodeIP` 中。
+- Delete：node 被删除时，将 node 的 IP 从 egressclusterinfos CR `status.egressIgnoreCIDR.nodeIP` 中删除。
 
 #### Calico IPPool Event
 

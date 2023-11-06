@@ -25,8 +25,8 @@ status:
 5. Tunnel parent network interface IPv4 address
 6. Tunnel parent network interface IPv6 address
 7. Current tunnel status
-    - `Pending`: Waiting for IP allocation
-    - `Init`: Tunnel IP allocation successful
-    - `Ready`: Tunnel IP allocated and tunnel established
-    - `Failed`: Tunnel IP allocation failed
-8. Packet mark value, one for each node. For example, if node A has egress traffic that needs to be forwarded to gateway node B, the traffic of node A will be marked with a mark.
+    - `Pending`: wait for IP allocation
+    - `Init`: successful tunnel IP allocation
+    - `Ready`: the tunnel IP is allocated and tunnel is established
+    - `Failed`: tunnel IP allocation fails
+8. Packet mark value, one for each node. For example, if node A has egress traffic that needs to be forwarded to gateway node B, the traffic of node A will be marked with a mark.Each node is assigned a unique packet mark value. For instance, if Node A needs to forward Egress traffic to the gateway node B, it applies a specific mark to the packets originating from Node A.
