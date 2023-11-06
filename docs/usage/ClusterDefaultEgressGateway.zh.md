@@ -10,7 +10,7 @@
 
 ## 步骤
 
-1. 创建 EgressGateway 时可以通过指定 `spec.clusterDefault` 为 `true` 会被作为集群默认 EgressGateway，在 EgressClusterPolicy 没有指定 `spec.egressGatewayName` 时，以及 EgressPolicy 没有指定 指定 `spec.egressGatewayName` 且租户没有配置默认 EgressGateway 时，自动使用集群默认的 EgressGateway。
+1. 创建 EgressGateway 时可以通过设置 `spec.clusterDefault` 为 `true`，将其指定为集群的默认 EgressGateway，在 EgressClusterPolicy 没有指定 `spec.egressGatewayName` 时，以及 EgressPolicy 没有指定 `spec.egressGatewayName` 且租户没有配置默认 EgressGateway 时，自动使用集群默认的 EgressGateway。
 
     ```yaml
     apiVersion: egressgateway.spidernet.io/v1beta1
