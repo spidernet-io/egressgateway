@@ -6,7 +6,7 @@ EgressGateway is a network management tool designed for Kubernetes clusters, wit
 
 ## Architecture
 
-![Architecture](images/architecture01.png)
+![Architecture](./architecture.png)
 
 ## Why EgressGateway
 

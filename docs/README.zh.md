@@ -4,7 +4,7 @@ EgressGateway 是用于 Kubernetes 集群的出口网关策略解决方案，专
 
 ## 架构
 
-![Architecture](images/architecture01.png)
+![Architecture](./architecture.png)
 
 ## 为什么选择 EgressGateway
 

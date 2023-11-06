@@ -2,7 +2,7 @@
 
 ## Background
 
-![egressgateway](../images/Egress-Gateway.png)
+![egressgateway](./Egress-Gateway.png)
 
 Starting with 2021, we received some feedback as follows.
 
