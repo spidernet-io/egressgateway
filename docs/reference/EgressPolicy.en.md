@@ -1,4 +1,4 @@
-The EgressPolicy CRD is used to specify which Pods access which target CIDRs using Egress policies, as well as the IP addresses used by Egress. Namespaced resource.
+The EgressPolicy CRD is used to specify the Pods and its destination CIDRs for which an Egress strategy should be applied, along with the corresponding IP addresses to be used for Egress.
 
 ```yaml
 apiVersion: egressgateway.spidernet.io/v1beta1
@@ -31,9 +31,9 @@ spec:
     * If `ipv4` or `ipv6` addresses are not defined and `useNodeIP` is true, the Egress address will be the Node IP of the referenced EgressGateway.
     * If `ipv4` or `ipv6` addresses are not defined when creating and `useNodeIP` is `false`, an IP address will be automatically allocated from the EgressGateway's `.ranges` (when IPv6 is enabled, both an IPv4 and IPv6 address will be requested).
     * `egressGatewayName` must not be empty.
-3. Supports using the Node IP as the Egress IP (only one option can be chosen).
+3. Support using the Node IP as the Egress IP (only one option can be chosen).
 4. Select the Pods to which the EgressPolicy should be applied.
-   a. Select by using Label
-   b. Specify the Pod subnet directly (options a and b cannot be used simultaneously)
-5. Specify the target addresses for accessing Egress. If no target addresses are specified, the effective policy will forward all traffic to Egress nodes when the destination is outside the cluster CIDR.
+    1. Select by using Label
+    2. Specify the Pod subnet directly (options a and b cannot be used simultaneously)
+5. When specifying the destination addresses for Egress access, if no specific destination address is provided, the following policy will be enforced: requests with destination addresses outside of the cluster's internal CIDR range will be forwarded to the Egress node.
 6. Priority of the policy.

@@ -49,13 +49,13 @@ status:
   podCidrMode: calico # 10
 ```
 
-1. The name is `default`, only one can be created by the system maintenance;
-2. `clusterIP`, if set to `true`, `Service CIDR` will be detected automatically
-3. `nodeIP`, if it is set to `true`, it will automatically detect changes related to `nodeIP` and dynamically update it to `status.nodeIP` of `EgressClusterInfo`
+1. The name is `default`.Only one can be created by the system maintenance;
+2. `clusterIP`. If it is set to `true`, `Service CIDR` will be detected automatically
+3. `nodeIP`. If it is set to `true`, it will automatically detect changes related to `nodeIP` and dynamically update it to `status.nodeIP` of `EgressClusterInfo`
 4. `podCidrMode` currently supports `k8s`, `calico`, `auto`, and `""`. It indicates whether to automatically detect the corresponding `podCidr` setting. The default value is `auto`. When set to `auto`, it means that the cluster's used CNI (Container Network Interface) will be automatically detected. If detection fails, the cluster's `podCidr` will be used. If set to `""`, it signifies no detection.
-5. `extraCidr`, you can manually fill in the `IP` set to be ignored
-6. `status.clusterIP`, if `spec.autoDetect.clusterIP` is `true`, then automatically detect the cluster `Service CIDR`, and update here
+5. `extraCidr`. You can manually fill in the `IP` set to be ignored
+6. `status.clusterIP`. If `spec.autoDetect.clusterIP` is `true`, then automatically detect the cluster `Service CIDR`, and update
 7. `status.extraCidr`, corresponding to `spec.extraCidr`
-8. `status.nodeIP`, if `spec.autoDetect.nodeIP` is `true`, then automatically detect cluster `nodeIP`, and update here
-9. `status.podCIDR`, corresponding to `spec.autoDetect.podCidrMode`, update related `podCidr`
+8. `status.nodeIP`. If `spec.autoDetect.nodeIP` is `true`, then automatically detect cluster `nodeIP`, and update
+9. `status.podCIDR`, corresponding to `spec.autoDetect.podCidrMode`, and then update related `podCidr`
 10. `status.podCidrMode` corresponding to `spec.autoDetect.podCidrMode` being set to `auto`

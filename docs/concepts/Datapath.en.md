@@ -1,11 +1,11 @@
 # Datapath
 
-Rules that need to take effect are categorized into three categories: all nodes, "gateway nodes" relative to the EgressGatewayPolicy, and "non-gateway nodes". Rules on a Non-Grid Node will only take effect if it is a Non-Grid Node that the Service Pod is dispatched to.
+Rules that need to take effect are categorized into three categories: all nodes, "gateway nodes" relative to the EgressGatewayPolicy, and "non-gateway nodes". The rules on a node will only take effect when the Pod is scheduled to a "Non-Gateway Node."
 
 ## All nodes
 
-1. The rules for tunneling between nodes will not be expanded. 2;
-2. relabel the traffic that the policy hits. This is done when the node first becomes a gateway node, or once when the node joins, but not later;
+1. Detailed tunnel requirements between nodes are not  listed.
+2. Traffic matching the policy is retagged. This update occurs when a node becomes a gateway node for the first time or during node join, but it is not updated thereafter.
 
    ```shell
    iptables -t mangle -N EGRESSGATEWAY-RESET-MARK
@@ -17,7 +17,7 @@ Rules that need to take effect are categorized into three categories: all nodes,
        -m comment --comment "egress gateway: change mark"
    \ -m -comment "egress gateway: change mark
 
-3. keep policy hit traffic labeled. Create it once directly, without updating it;
+3. Preserve the labels for traffic matching the policy. Create them once without requiring updates.
 
    ```shell
    iptables -t filter -I FORWARD 1 -m mark --mark 0x12000000 -j ACCEPT -m comment --comment "egress gateway: keep mark"
@@ -27,7 +27,7 @@ Rules that need to take effect are categorized into three categories: all nodes,
    iptables -t mangle -I POSTROUTING 1 -m mark --mark 0x12000000 -j ACCEPT -m comment --comment "egress gateway: keep mark"
    ```
 
-4. aggregation policy hit traffic labeled chain. It is created directly once and does not need to be updated;
+4. Aggregate chains for tagging policy-matched traffic. Create them once without needing updates.
 
    ```shell
    iptables -t mangle -N EGRESSGATEWAY-MARK-REQUEST
@@ -35,7 +35,7 @@ Rules that need to take effect are categorized into three categories: all nodes,
    iptables -t mangle -I PREROUTING 1 -j EGRESSGATEWAY-MARK-REQUEST -m comment --comment "egress gateway: mark egress packet"
    ```
 
-5. aggregates chains that do not need to do SNAT rules. It is created directly once and does not need to be updated;
+5. Aggregate chains that do not need to do SNAT rules. It is created directly once and does not need to be updated;
 
    ```shell
    iptables -t nat -N EGRESSGATEWAY-NO-SNAT
@@ -45,7 +45,7 @@ Rules that need to take effect are categorized into three categories: all nodes,
    iptables -t nat -A EGRESSGATEWAY-NO-SNAT -m mark --mark 0x12000000 -j ACCEPT -m comment --comment "egress gateway: no snat"
    ```
 
-6. aggregating chains that need to do SNAT rules. It is created directly once and does not need to be updated.
+6. Aggregate chains that need to do SNAT rules. It is created directly once and does not need to be updated.
 
    ```shell
    iptables -t nat -N EGRESSGATEWAY-SNAT-EIP
@@ -66,9 +66,9 @@ Rules that need to take effect are categorized into three categories: all nodes,
    ipset add $IPSET_RULE_DEST_NAME 10.6.105.150/32
    ```
 
-## Non-Egress Gateway node relative to EIP
+## Non-Egress Gateway node Relative to EIP
 
-1. policy hit source IP, destination IP for ipset;
+1. ipsets for policy-matched source and destination IPs.
 
    ```shell
    IPSET_RULE_DEST_NAME=egress-dest-uuid
@@ -89,7 +89,7 @@ Rules that need to take effect are categorized into three categories: all nodes,
    ipset add $IPSET_RULE_SRC_NAME 172.29.234.173/32
    ```
 
-2. policy Hit traffic is labeled to ensure that it can go through the tunnel. The value of NODE_MARK is based on the node of the policy's corresponding EIP.
+2. Tag policy-matched traffic to ensure it goes through the tunnel. The NODE_MARK value depends on the node where the corresponding EIP resides.
 
    ```shell
    iptables -A EGRESSGATEWAY-MARK-REQUEST -t mangle -m conntrack --ctdir ORIGINAL \
@@ -104,7 +104,7 @@ Rules that need to take effect are categorized into three categories: all nodes,
    ip rule add fwmark $NODE_MARK table $TABLE_NUM
    ```
 
-4. adapting Weave to avoid SNAT into IPs for Egress tunnels. make a switch
+4. Adapt Weave to avoiding SNAT into IPs for Egress tunnels. Make a switch
 
    ```shell
    iptables -t nat -A EGRESSGATEWAY-NO-SNAT \ \
@@ -113,9 +113,9 @@ Rules that need to take effect are categorized into three categories: all nodes,
    -j ACCEPT -m comment --comment "egress gateway: weave does not do SNAT"
    ```
 
-## Egress Gateway node relative to EIP
+## Egress Gateway Node Relative to EIP
 
-1. policy hit source IP, destination IP for ipset;
+1. ipsets for policy-matched source and destination IPs.
 
    ```shell
    IPSET_RULE_DEST_NAME=egress-dest-uuid
@@ -136,7 +136,7 @@ Rules that need to take effect are categorized into three categories: all nodes,
    ipset add $IPSET_RULE_SRC_NAME 172.29.234.173/32
    ```
 
-2. policy hit traffic. Do SNAT on the way out of the gateway. real-time updates.
+2. Apply SNAT to policy-matched traffic during egress. Keep this rule updated in real-time.
 
    ```shell
    iptables -t nat -A EGRESSGATEWAY-SNAT-EIP \
@@ -146,11 +146,11 @@ Rules that need to take effect are categorized into three categories: all nodes,
    ðŸñ'ðŸñ'ðŸñ'ðŸñ'ðŸñ'ñ
     ```
 
-## Other
+## Others
 
-1. NODE_MARK: Each node corresponds to one, globally unique label. The label is generated by prefix + unique identifier. The label format is `NODE_MARK = 0x26 + value + 0000`, `value` is 16-bit, and the total number of supported nodes is `2^16`. 2.
+1. NODE_MARK: each node corresponds to a globally unique label. The label is generated by combining a prefix and a unique identifier. The format of the label is as follows: `NODE_MARK = 0x26 + value + 0000`, where `value` is a 16-bit number. The total number of supported nodes is `2^16`.
 
 2. TABLE_NUM:
 
-* Since each host can only have [0, 255] routing tables (of which 0, 253, 254, 255 are already used by the system), exceeding the number of tables will result in node routes not being calculated, and the nodes will be disconnected. Moreover, the table name matches the ID of the table, and if it doesn't, the kernel will randomly assign it. Therefore, to be on the safe side, the number of tables (n, default value is 100), which is the maximum number of gateway nodes, can be set by a variable.
-* TABLE_NUM algorithm: user can set a starting value (s, default value is 3000), the table name range is [s, (s+n)], user needs to ensure that the table name of [s, (s+n)] is not occupied. Randomly take a starting value from [s, (s+n)], and then increase the value in a circular manner until it gets a table name that is not used by this node, or report an error if it is not found.
+  * Since each host can have [0, 255] routing tables (where 0, 253, 254, and 255 are already used by the system), exceeding the maximum number of tables will result in the inability to calculate routes for nodes, leading to node disconnection. Additionally, table names must match the table ID, and if there is no match, the kernel will assign a random name. To be on the safe side, the number of controlled tables (represented by variable n with a default value of 100) is limited, which also serves as the upper limit for gateway nodes.
+  * TABLE_NUM algorithm: users can set a starting value (represented by variable s with a default value of 3000), and the range of table names will be [s, (s+n)]. Users need to ensure that the table names within this range are not occupied. Start with a randomly selected value from [s, (s+n)] and increment it circularly until an unused table name for the current node is obtained. If none is found, an error is reported.
