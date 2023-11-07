@@ -2,11 +2,13 @@
 
 ## About
 
-EgressGateway is a network management tool designed for Kubernetes clusters, with a primary focus on managing the egress traffic of Pods to external networks. It addresses challenges related to inter-cluster communication, egress policy control, and high availability. Additionally, it offers support for various network solutions and custom resource definitions (CRDs), enabling users to configure and manage egress policies with flexibility.
+In a Kubernetes (k8s) cluster, when Pods access external services, their Egress IP addresses are not fixed. In the Overlay network, the Egress IP address is determined by the node where the Pod resides. While in the Underlay network, Pods directly use their own IP addresses for external communication. Consequently, when Pods are rescheduled, regardless of the network mode, their IP addresses for external communication change. This instability poses a challenge for system administrators in managing IP addresses, especially as the cluster scales and during network fault diagnostics. Controlling egress traffic based on a Pod's original egress IP outside the cluster becomes difficult.
+
+To solve this problem, EgressGateway has been introduced into the k8s cluster. It is an open-source EgressGateway designed to resolve egress egress IP address issues across various CNI network modes, such as Calico, Flannel, Weave, and Spiderpool. Through flexible configuration and management of egress policies, EgressGateway allows setting egress IP addresses for tenant-level or cluster-level workloads. When Pods need to access the external network, the system consistently uses the configured Egress IP as the egress address, providing a stable solution for egress traffic management.
 
 ## Architecture
 
-![Architecture](./architecture.png)
+![Architecture](./architecture02.png)
 
 ## Why EgressGateway
 

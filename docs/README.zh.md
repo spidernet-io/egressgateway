@@ -5,7 +5,7 @@
 
 ## 架构
 
-![Architecture](../docs/architecture02.png)
+![Architecture](./architecture02.png)
 
 ## 为什么选择 EgressGateway
 
