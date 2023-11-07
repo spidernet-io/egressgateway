@@ -226,6 +226,15 @@ func TestValidateEgressPolicy(t *testing.T) {
 			},
 			expAllow: true,
 		},
+		"case6 empty AppliedTo": {
+			existingResources: nil,
+			spec: v1beta1.EgressPolicySpec{
+				EgressGatewayName: "test",
+				AppliedTo:         v1beta1.AppliedTo{},
+				DestSubnet:        []string{},
+			},
+			expAllow: false,
+		},
 	}
 	for name, c := range cases {
 		t.Run(name, func(t *testing.T) {
@@ -640,6 +649,15 @@ func TestValidateEgressClusterPolicy(t *testing.T) {
 				}, DestSubnet: []string{},
 			},
 			expAllow: true,
+		},
+		"case5 empty AppliedTo": {
+			existingResources: nil,
+			spec: v1beta1.EgressClusterPolicySpec{
+				EgressGatewayName: "test",
+				AppliedTo:         v1beta1.ClusterAppliedTo{},
+				DestSubnet:        []string{},
+			},
+			expAllow: false,
 		},
 	}
 	for name, c := range cases {
