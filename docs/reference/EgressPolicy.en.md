@@ -12,17 +12,17 @@ spec:
     ipv4: ""                            
     ipv6: ""
     useNodeIP: false        # (3)
-  appliedTo:                # (4)
-    podSelector:            # (4-1 
+  appliedTo:                
+    podSelector:            # (4) 
       matchLabels:    
         app: "shopping"
-    podSubnet:              # (4-2)
+    podSubnet:              # (5)
     - "172.29.16.0/24"
     - 'fd00:1/126'
-  destSubnet:               # (5)
+  destSubnet:               # (6)
     - "10.6.1.92/32"
     - "fd00::92/128"
-  priority: 100             # (6)
+  priority: 100             # (7)
 ```
 
 1. Select the EgressGateway referenced by the EgressPolicy.
@@ -32,8 +32,7 @@ spec:
     * If `ipv4` or `ipv6` addresses are not defined when creating and `useNodeIP` is `false`, an IP address will be automatically allocated from the EgressGateway's `.ranges` (when IPv6 is enabled, both an IPv4 and IPv6 address will be requested).
     * `egressGatewayName` must not be empty.
 3. Support using the Node IP as the Egress IP (only one option can be chosen).
-4. Select the Pods to which the EgressPolicy should be applied.
-    1. Select by using Label
-    2. Specify the Pod subnet directly (options a and b cannot be used simultaneously)
-5. When specifying the destination addresses for Egress access, if no specific destination address is provided, the following policy will be enforced: requests with destination addresses outside of the cluster's internal CIDR range will be forwarded to the Egress node.
-6. Priority of the policy.
+4. Select the Pods to which the EgressPolicy should be applied by using Label.
+5. Select the Pods to which the EgressPolicy should be applied by specifying the Pod subnet directly (options 4 and 5 cannot be used simultaneously)
+6. When specifying the destination addresses for Egress access, if no specific destination address is provided, the following policy will be enforced: requests with destination addresses outside of the cluster's internal CIDR range will be forwarded to the Egress node.
+7. Priority of the policy.
