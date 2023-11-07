@@ -19,7 +19,7 @@ spec:
     podSubnet:
       - "172.29.16.0/24"
       - 'fd00:1/126'
-    namespaceSelector:   # 1
+    namespaceSelector:   # (1)
       matchLabels:
         app: "shopping"
   destSubnet:

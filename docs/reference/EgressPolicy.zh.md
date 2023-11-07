@@ -7,22 +7,22 @@ metadata:
   namespace: "default"
   name: "policy-test"
 spec:
-  egressGatewayName: "eg1"  # 1
-  egressIP:                 # 2
+  egressGatewayName: "eg1"  # (1)
+  egressIP:                 # (2)
     ipv4: ""                            
     ipv6: ""
-    useNodeIP: false        # 3
-  appliedTo:                # 4
-    podSelector:            # 4-a 
+    useNodeIP: false        # (3)
+  appliedTo:                # (4)
+    podSelector:            # (4-1 
       matchLabels:    
         app: "shopping"
-    podSubnet:              # 4-b
+    podSubnet:              # (4-2)
     - "172.29.16.0/24"
     - 'fd00:1/126'
-  destSubnet:               # 5
+  destSubnet:               # (5)
     - "10.6.1.92/32"
     - "fd00::92/128"
-  priority: 100             # 6
+  priority: 100             # (6)
 ```
 
 1. 选择 EgressPolicy 引用的 EgressGateway：
