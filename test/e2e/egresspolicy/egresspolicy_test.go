@@ -267,8 +267,7 @@ var _ = Describe("EgressPolicy", Ordered, func() {
 						egp.Spec.EgressIP.IPv6 = "fddd:10::2"
 					}
 				}),
-			// todo @bzsuni waiting for the bug be fixed
-			PEntry("should fail when Spec.AppliedTo is empty", Label("P00005"), true,
+			Entry("should fail when Spec.AppliedTo is empty", Label("P00005"), true,
 				func(egp *egressv1.EgressPolicy) {
 					egp.Spec.EgressGatewayName = egw.Name
 					egp.Spec.AppliedTo = egressv1.AppliedTo{}
@@ -323,15 +322,12 @@ var _ = Describe("EgressPolicy", Ordered, func() {
 						egcp.Spec.EgressIP.IPv6 = "fddd:10::2"
 					}
 				}),
-
-			// todo @bzsuni waiting for the bug be fixed
-			PEntry("should fail when Spec.AppliedTo is empty", Label("P00005"), true,
+			Entry("should fail when Spec.AppliedTo is empty", Label("P00005"), true,
 				func(egcp *egressv1.EgressClusterPolicy) {
 					egcp.Spec.EgressGatewayName = egw.Name
 					egcp.Spec.AppliedTo = egressv1.ClusterAppliedTo{}
 				}),
-			// todo @bzsuni waiting for the bug be fixed
-			PEntry("should fail when the cluster-policy set with both Spec.AppliedTo.PodSubnet and Spec.AppliedTo.PodSelector", Label("P00006"), true,
+			Entry("should fail when the cluster-policy set with both Spec.AppliedTo.PodSubnet and Spec.AppliedTo.PodSelector", Label("P00006"), true,
 				func(egcp *egressv1.EgressClusterPolicy) {
 					egcp.Spec.EgressGatewayName = egw.Name
 					egcp.Spec.AppliedTo.PodSubnet = &[]string{"10.10.0.0/16"}

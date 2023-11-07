@@ -86,6 +86,13 @@ func validateEgressPolicy(ctx context.Context, client client.Client, req webhook
 		return webhook.Denied("podSelector and podSubnet cannot be used together")
 	}
 
+	// denied when both PodSelector and PodSubnet are empty
+	if egp.Spec.AppliedTo.PodSubnet == nil || len(egp.Spec.AppliedTo.PodSubnet) == 0 {
+		if egp.Spec.AppliedTo.PodSelector == nil || (len(egp.Spec.AppliedTo.PodSelector.MatchLabels) == 0 && len(egp.Spec.AppliedTo.PodSelector.MatchExpressions) == 0) {
+			return webhook.Denied("invalid EgressPolicy, spec.appliedTo field requires at least one of spec.appliedTo.podSubnet, .spec.appliedTo.podSelector.matchLabels or .spec.appliedTo.podSelector.matchExpressions to be specified.")
+		}
+	}
+
 	if req.Operation == v1.Update {
 		oldEgp := new(egressv1.EgressPolicy)
 		err := json.Unmarshal(req.OldObject.Raw, oldEgp)
@@ -162,6 +169,13 @@ func validateEgressClusterPolicy(ctx context.Context, client client.Client, req 
 	if (policy.Spec.AppliedTo.PodSelector != nil && len(policy.Spec.AppliedTo.PodSelector.MatchLabels) != 0) &&
 		(policy.Spec.AppliedTo.PodSubnet != nil && len(*policy.Spec.AppliedTo.PodSubnet) != 0) {
 		return webhook.Denied("podSelector and podSubnet cannot be used together")
+	}
+
+	// denied when both PodSelector and PodSubnet are empty
+	if policy.Spec.AppliedTo.PodSubnet == nil || len(*policy.Spec.AppliedTo.PodSubnet) == 0 {
+		if policy.Spec.AppliedTo.PodSelector == nil || (len(policy.Spec.AppliedTo.PodSelector.MatchLabels) == 0 && len(policy.Spec.AppliedTo.PodSelector.MatchExpressions) == 0) {
+			return webhook.Denied("invalid EgressClusterPolicy, spec.appliedTo field requires at least one of spec.appliedTo.podSubnet, .spec.appliedTo.podSelector.matchLabels or .spec.appliedTo.podSelector.matchExpressions to be specified.")
+		}
 	}
 
 	if req.Operation == v1.Update {
