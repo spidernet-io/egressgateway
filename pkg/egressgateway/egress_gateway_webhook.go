@@ -61,6 +61,11 @@ func (egw *EgressGatewayWebhook) EgressGatewayValidate(ctx context.Context, req 
 		return webhook.Denied(fmt.Sprintf("json unmarshal EgressGateway with error: %v", err))
 	}
 
+	if newEg.Spec.NodeSelector.Selector == nil ||
+		(len(newEg.Spec.NodeSelector.Selector.MatchLabels) == 0 && len(newEg.Spec.NodeSelector.Selector.MatchExpressions) == 0) {
+		return webhook.Denied("The field spec.nodeSelector.selector is not set")
+	}
+
 	if egw.Config.FileConfig.EnableIPv4 && !egw.Config.FileConfig.EnableIPv6 {
 		if len(newEg.Spec.Ippools.IPv6) != 0 {
 			return webhook.Denied("Please do not configure spec.ippools.ipv6, as the current installation settings have not enabled IPv6")
