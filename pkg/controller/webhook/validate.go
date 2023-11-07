@@ -75,6 +75,13 @@ func validateEgressPolicy(ctx context.Context, client client.Client, req webhook
 		}
 	}
 
+	if len(egp.Spec.EgressIP.IPv4) != 0 && !isIPv4(egp.Spec.EgressIP.IPv4) {
+		return webhook.Denied("invalid ipv4 format")
+	}
+	if len(egp.Spec.EgressIP.IPv6) != 0 && !isIPv6(egp.Spec.EgressIP.IPv6) {
+		return webhook.Denied("invalid ipv6 format")
+	}
+
 	if egp.Spec.AppliedTo.PodSelector != nil && len(egp.Spec.AppliedTo.PodSelector.MatchLabels) != 0 && len(egp.Spec.AppliedTo.PodSubnet) != 0 {
 		return webhook.Denied("podSelector and podSubnet cannot be used together")
 	}
@@ -143,6 +150,13 @@ func validateEgressClusterPolicy(ctx context.Context, client client.Client, req 
 		if len(policy.Spec.EgressIP.IPv4) != 0 || len(policy.Spec.EgressIP.IPv6) != 0 {
 			return webhook.Denied("useNodeIP cannot be used with egressIP.ipv4 or egressIP.ipv6 at the same time")
 		}
+	}
+
+	if len(policy.Spec.EgressIP.IPv4) != 0 && !isIPv4(policy.Spec.EgressIP.IPv4) {
+		return webhook.Denied("invalid ipv4 format")
+	}
+	if len(policy.Spec.EgressIP.IPv6) != 0 && !isIPv6(policy.Spec.EgressIP.IPv6) {
+		return webhook.Denied("invalid ipv6 format")
 	}
 
 	if (policy.Spec.AppliedTo.PodSelector != nil && len(policy.Spec.AppliedTo.PodSelector.MatchLabels) != 0) &&
@@ -322,4 +336,18 @@ func validateSubnet(subnet []string) webhook.AdmissionResponse {
 		return webhook.Denied(fmt.Sprintf("invalid destSubnet list: %v", invalidList))
 	}
 	return webhook.Allowed("checked")
+}
+
+func isIPv4(ip string) bool {
+	if netIP := net.ParseIP(ip); netIP != nil && netIP.To4() != nil {
+		return true
+	}
+	return false
+}
+
+func isIPv6(ip string) bool {
+	if netIP := net.ParseIP(ip); netIP != nil && netIP.To4() == nil && netIP.To16() != nil {
+		return true
+	}
+	return false
 }

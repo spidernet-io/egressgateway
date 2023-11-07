@@ -245,8 +245,7 @@ var _ = Describe("EgressPolicy", Ordered, func() {
 				Expect(err).NotTo(HaveOccurred())
 			}
 		},
-			// todo @bzsuni waiting for the bug be fixed
-			PEntry("should fail when the policy is set with invalid `EgressIP`", Label("P00001"), true, func(egp *egressv1.EgressPolicy) {
+			Entry("should fail when the policy is set with invalid `EgressIP`", Label("P00001"), true, func(egp *egressv1.EgressPolicy) {
 				egp.Spec.EgressGatewayName = egw.Name
 				egp.Spec.AppliedTo.PodSubnet = []string{"10.10.0.0/16"}
 				if egressConfig.EnableIPv4 {
@@ -302,8 +301,7 @@ var _ = Describe("EgressPolicy", Ordered, func() {
 				Expect(err).NotTo(HaveOccurred())
 			}
 		},
-			// todo @bzsuni waiting for the bug be fixed
-			PEntry("should fail when the cluster-policy is set with invalid `EgressIP`", Label("P00001"), true, func(egcp *egressv1.EgressClusterPolicy) {
+			Entry("should fail when the cluster-policy is set with invalid `EgressIP`", Label("P00001"), true, func(egcp *egressv1.EgressClusterPolicy) {
 				egcp.Spec.EgressGatewayName = egw.Name
 				egcp.Spec.AppliedTo.PodSubnet = &[]string{"10.10.0.0/16"}
 				if egressConfig.EnableIPv4 {
