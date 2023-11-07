@@ -6,30 +6,30 @@ kind: EgressGateway
 metadata:
   name: "eg1"
 spec:
-  ippools:                      # 1
-    ipv4:                       # 2
+  ippools:                      # (1)
+    ipv4:                       # (2)
       - "10.6.1.55"
       - "10.6.1.60-10.6.1.65"
       - "10.6.1.70/28"
-    ipv6:                       # 3
+    ipv6:                       # (3)
       - ""
-    ipv4DefaultEIP: ""          # 4
-    ipv6DefaultEIP: ""          # 5
-  nodeSelector:                 # 6
-    selector:                   # 7
+    ipv4DefaultEIP: ""          # (4)
+    ipv6DefaultEIP: ""          # (5)
+  nodeSelector:                 # (6)
+    selector:                   # (7)
       matchLabels:
         egress: "true"
-    policy: "doing"             # 8
+    policy: "doing"             # (8)
 status:                         
-  nodeList:                     # 9
-    - name: "node1"             # 10
-      status: "Ready"           # 11
-      epis:                     # 12
-        - ipv4: "10.6.1.55"     # 13
-          ipv6: "fd00::55"      # 14
-          policies:             # 15
-            - name: "app"         # 16
-              namespace: "default"  # 17
+  nodeList:                     # (9)
+    - name: "node1"             # (10)
+      status: "Ready"           # (11)
+      epis:                     # (12)
+        - ipv4: "10.6.1.55"     # (13)
+          ipv6: "fd00::55"      # (14)
+          policies:             # (15)
+            - name: "app"         # (16)
+              namespace: "default"  # (17)
 ```
 
 1. 设置 EgressGateway 可使用的 Egress IP 池的范围；

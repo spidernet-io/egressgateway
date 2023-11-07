@@ -4,23 +4,23 @@ The EgressClusterInfo CRD introduces the Egress Ignore CIDR feature to simplify 
 apiVersion: egressgateway.spidernet.io/v1beta1
 kind: EgressClusterInfo
 metadata:
-  name: default  # 1
+  name: default  # (1)
 spec:
   autoDetect:
-    clusterIP: true # 2
-    nodeIP: true # 3
-    podCidrMode: auto # 4
-  extraCidr: # 5
+    clusterIP: true # (2)
+    nodeIP: true # (3)
+    podCidrMode: auto # (4)
+  extraCidr: # (5)
   - 10.10.10.1
 status:
-  clusterIP: # 6
+  clusterIP: # (6)
     ipv4:
     - 172.41.0.0/16
     ipv6:
     - fd41::/108
-  extraCidr: # 7
+  extraCidr: # (7)
   - 10.10.10.1
-  nodeIP: # 8
+  nodeIP: # (8)
     egressgateway-control-plane:
       ipv4:
       - 172.18.0.3
@@ -36,7 +36,7 @@ status:
       - 172.18.0.4
       ipv6:
       - fc00:f853:ccd:e793::4
-  podCIDR: # 9
+  podCIDR: # (9)
     default-ipv4-ippool:
       ipv4:
       - 172.40.0.0/16
@@ -46,7 +46,7 @@ status:
     test-ippool:
       ipv4:
       - 177.70.0.0/16
-  podCidrMode: calico # 10
+  podCidrMode: calico # (10)
 ```
 
 1. The name is `default`.Only one can be created by the system maintenance;

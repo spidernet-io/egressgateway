@@ -7,22 +7,22 @@ metadata:
   namespace: "default"
   name: "policy-test"
 spec:
-  egressGatewayName: "eg1"  # 1
-  egressIP:                 # 2
+  egressGatewayName: "eg1"  # (1)
+  egressIP:                 # (2)
     ipv4: ""                            
     ipv6: ""
-    useNodeIP: false        # 3
-  appliedTo:                # 4
-    podSelector:            # 4-a 
+    useNodeIP: false        # (3)
+  appliedTo:                
+    podSelector:            # (4) 
       matchLabels:    
         app: "shopping"
-    podSubnet:              # 4-b
+    podSubnet:              # (5)
     - "172.29.16.0/24"
     - 'fd00:1/126'
-  destSubnet:               # 5
+  destSubnet:               # (6)
     - "10.6.1.92/32"
     - "fd00::92/128"
-  priority: 100             # 6
+  priority: 100             # (7)
 ```
 
 1. 选择 EgressPolicy 引用的 EgressGateway：
@@ -33,8 +33,7 @@ spec:
         * 则自动从 EgressGateway 的 `.ranges` 中分配一个 IP 地址（开启 IPv6 时，请求分配一个 IPv4 和 一个 IPv6 地址）。
     * `egressGatewayName` 不能为空。
 3. 支持使用节点 IP 作为 Egress IP（只允许选择一种）；
-4. 选择需要应用 EgressPolicy 的 Pod；
-    1. 以 Label 的方式进行选择
-    2. 直接指定 Pod 的网段 （a 和 b 不能同时使用）
-5. 指定访问 Egress 的目标地址，若未指定目标地址，则以下策略将生效：对于那些目标地址不属于集群内部 CIDR 的请求，将全部转发到 Egress 节点。
-6. 策略的优先级。
+4. 以 Label 的方式选择需要应用 EgressPolicy 的 Pod；
+5. 通过直接指定 Pod 的网段选择需要应用 EgressPolicy 的 Pod（4 和 5 不能同时使用）
+6. 指定访问 Egress 的目标地址，若未指定目标地址，则以下策略将生效：对于那些目标地址不属于集群内部 CIDR 的请求，将全部转发到 Egress 节点。
+7. 策略的优先级。

@@ -7,15 +7,15 @@ metadata:
    name: "node1"
 status:
    tunnel:
-      ipv4: "192.200.222.157"  # 1
-      ipv6: "fd01::f2"         # 2        
-      mac: "66:50:85:cb:b2:bf" # 3
+      ipv4: "192.200.222.157"  # (1)
+      ipv6: "fd01::f2"         # (2)        
+      mac: "66:50:85:cb:b2:bf" # (3)
       parent:
-         name: "ens160"        # 4
-         ipv4: "10.6.1.21/16"  # 5
-         ipv6: "fd00::21/112"  # 6
-   phase: "Ready"              # 7
-   mark: "0x26000000"          # 8
+         name: "ens160"        # (4)
+         ipv4: "10.6.1.21/16"  # (5)
+         ipv6: "fd00::21/112"  # (6)
+   phase: "Ready"              # (7)
+   mark: "0x26000000"          # (8)
 ```
 
 1. 隧道 IPv4 地址
