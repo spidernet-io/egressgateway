@@ -230,7 +230,7 @@ helm repo update
 
 4. Check the status of EgressEndpointSlices.
 
-   Each EgressPolicy object has a corresponding EgressEndpointSlices that stores the IP  collection of Pods selected by the EgressPolicy. If your application is unable to access external resources, you can check if the IP addresses in this object are correct.
+    Each EgressPolicy object has a corresponding EgressEndpointSlices that stores the IP  collection of Pods selected by the EgressPolicy. If your application is unable to access external resources, you can check if the IP addresses in this object are correct.
 
     ```shell
     $ kubectl get egressendpointslices -A
