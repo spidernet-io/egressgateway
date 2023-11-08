@@ -103,7 +103,8 @@ func (egw *EgressGatewayWebhook) EgressGatewayValidate(ctx context.Context, req 
 	}
 
 	if egw.Config.FileConfig.EnableIPv4 && egw.Config.FileConfig.EnableIPv6 {
-		if len(ipv4s) != len(ipv6s) {
+		// allowed single ipv4 or ipv6 when both ipv4 and ipv6 are enabled
+		if len(newEg.Spec.Ippools.IPv4) > 0 && len(newEg.Spec.Ippools.IPv6) > 0 && len(ipv4s) != len(ipv6s) {
 			return webhook.Denied("The number of ipv4 and ipv6 is not equal")
 		}
 	}
@@ -113,6 +114,16 @@ func (egw *EgressGatewayWebhook) EgressGatewayValidate(ctx context.Context, req 
 	if err != nil {
 		if !errors.IsNotFound(err) {
 			return webhook.Denied(fmt.Sprintf("failed to obtain the EgressGateway: %v", err))
+		}
+	}
+
+	// it should be denied when the single IPv4 or IPv6 is updated to the other type
+	if req.Operation == v1.Update {
+		if len(eg.Spec.Ippools.IPv4) == 0 && len(newEg.Spec.Ippools.IPv4) > 0 {
+			return webhook.Denied("the 'spec.Ippools.IPv4' field cannot to be modified when it is empty")
+		}
+		if len(eg.Spec.Ippools.IPv6) == 0 && len(newEg.Spec.Ippools.IPv6) > 0 {
+			return webhook.Denied("the 'spec.Ippools.IPv6' field cannot to be modified when it is empty")
 		}
 	}
 

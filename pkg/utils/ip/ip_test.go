@@ -4,11 +4,12 @@
 package ip_test
 
 import (
-	"github.com/spidernet-io/egressgateway/pkg/constant"
-	"github.com/spidernet-io/egressgateway/pkg/utils/ip"
 	"net"
 	"reflect"
 	"testing"
+
+	"github.com/spidernet-io/egressgateway/pkg/constant"
+	"github.com/spidernet-io/egressgateway/pkg/utils/ip"
 )
 
 func TestCmp(t *testing.T) {
@@ -688,6 +689,114 @@ func TestGetIPV4V6Cidr(t *testing.T) {
 			}
 			if !reflect.DeepEqual(gotIPV6Cidrs, tt.wantIPV6Cidrs) {
 				t.Errorf("GetIPV4V6Cidr() gotIPV6Cidrs = %v, want %v", gotIPV6Cidrs, tt.wantIPV6Cidrs)
+			}
+		})
+	}
+}
+
+func TestCheckIPIncluded(t *testing.T) {
+	type args struct {
+		ip  string
+		ips []string
+	}
+	tests := []struct {
+		name    string
+		args    args
+		wantErr bool
+		wantOk  bool
+	}{
+		{
+			name: "invalid ip",
+			args: args{
+				ip:  "bad-ip",
+				ips: []string{"10.6.1.0/24", "10.6.1.1-10.6.1.10", "10.6.1.0"},
+			},
+			wantOk:  false,
+			wantErr: true,
+		},
+		{
+			name: "ipv4 not in range",
+			args: args{
+				ip:  "10.7.1.0",
+				ips: []string{"10.6.1.0/24", "10.6.1.1-10.6.1.10", "10.6.1.0"},
+			},
+			wantOk:  false,
+			wantErr: false,
+		},
+		{
+			name: "ipv6 not in range",
+			args: args{
+				ip:  "fddd:10:7::1",
+				ips: []string{"10.6.1.0/24", "10.6.1.1-10.6.1.10", "10.6.1.0"},
+			},
+			wantOk:  false,
+			wantErr: false,
+		},
+		{
+			name: "ipv4 in single ip",
+			args: args{
+				ip:  "10.6.1.0",
+				ips: []string{"10.6.1.0"},
+			},
+			wantOk:  true,
+			wantErr: false,
+		},
+		{
+			name: "ipv4 in cidr",
+			args: args{
+				ip:  "10.6.1.0",
+				ips: []string{"10.6.1.0/24"},
+			},
+			wantOk:  true,
+			wantErr: false,
+		},
+		{
+			name: "ipv4 in ip range",
+			args: args{
+				ip:  "10.6.1.9",
+				ips: []string{"10.6.1.1-10.6.1.10"},
+			},
+			wantOk:  true,
+			wantErr: false,
+		},
+		{
+			name: "ipv6 in single ip",
+			args: args{
+				ip:  "fddd:10::0",
+				ips: []string{"fddd:10::0"},
+			},
+			wantOk:  true,
+			wantErr: false,
+		},
+		{
+			name: "ipv6 in cidr",
+			args: args{
+				ip:  "fddd:10::0",
+				ips: []string{"fdde:10::1-fdde:10::a", "fddd:10::/120"},
+			},
+			wantOk:  true,
+			wantErr: false,
+		},
+		{
+			name: "ipv6 in ipRange",
+			args: args{
+				ip:  "fdde:10::2",
+				ips: []string{"fddd:10::/120", "fdde:10::1-fdde:10::a"},
+			},
+			wantOk:  true,
+			wantErr: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ok, err := ip.CheckIPIncluded(tt.args.ip, tt.args.ips)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("CheckIPIncluded() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if ok != tt.wantOk {
+				t.Errorf("CheckIPIncluded() isIncluded = %v, wantOk %v", ok, tt.wantOk)
+				return
 			}
 		})
 	}
