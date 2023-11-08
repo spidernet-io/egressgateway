@@ -172,9 +172,9 @@ helm repo update
 
 2. Create an EgressPolicy CR object for your application.
 
-   An EgressPolicy instance is used to define which Pods' egress traffic should be forwarded through EgressGateway nodes, along with other configuration details.
-   You can create an example as follows. When a matching Pod accesses any external address in the cluster (excluding Node IP, CNI Pod CIDR, ClusterIP), it will be forwarded through EgressGateway nodes.
-   Note that EgressPolicy objects are tenant-level, so they must be created under the tenant of the selected application.
+    An EgressPolicy instance is used to define which Pods' egress traffic should be forwarded through EgressGateway nodes, along with other configuration details.
+    You can create an example as follows. When a matching Pod accesses any external address in the cluster (excluding Node IP, CNI Pod CIDR, ClusterIP), it will be forwarded through EgressGateway nodes.
+    Note that EgressPolicy objects are tenant-level, so they must be created under the tenant of the selected application.
 
     ```shell
     cat <<EOF | kubectl apply -f -
