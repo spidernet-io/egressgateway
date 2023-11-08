@@ -1265,36 +1265,34 @@
 </li>
 <li>
 <p>Create an EgressPolicy CR object for your application.</p>
-</li>
-</ol>
 <p>An EgressPolicy instance is used to define which Pods' egress traffic should be forwarded through EgressGateway nodes, along with other configuration details.
-   You can create an example as follows. When a matching Pod accesses any external address in the cluster (excluding Node IP, CNI Pod CIDR, ClusterIP), it will be forwarded through EgressGateway nodes.
-   Note that EgressPolicy objects are tenant-level, so they must be created under the tenant of the selected application.</p>
-<div class="language-text highlight"><pre><span></span><code>```shell
-cat &lt;&lt;EOF | kubectl apply -f -
-apiVersion: egressgateway.spidernet.io/v1beta1
-kind: EgressPolicy
-metadata:
- name: test
- namespace: default
-spec:
- egressGatewayName: default
- appliedTo:
-  podSelector:
-   matchLabels:
-    app: &quot;visitor&quot;
-EOF
-```
-
-Descriptions:
-
-* `spec.egressGatewayName` specifies the name of the EgressGateway group to use.
-* `spec.appliedTo.podSelector` determines which Pods within the cluster this policy should apply to.
-* There are two options for the source IP address of egress traffic in the cluster:
-    * You can use the IP address of the gateway nodes. This is suitable for public clouds and traditional networks but has the downside of potential IP changes if a gateway node fails. You can enable this by setting `spec.egressIP.useNodeIP=true`.
-    * You can use a dedicated VIP. EgressGateway uses ARP principles for VIP implementation, making it suitable for traditional networks rather than public clouds. The advantage is that the egress source IP remains fixed. If no settings are specified in the EgressPolicy, the default VIP of the egressGatewayName will be used, or you can manually specify `spec.egressIP.ipv4` , which must match the IP pool configured in the EgressGateway.
-</code></pre></div>
-<ol>
+You can create an example as follows. When a matching Pod accesses any external address in the cluster (excluding Node IP, CNI Pod CIDR, ClusterIP), it will be forwarded through EgressGateway nodes.
+Note that EgressPolicy objects are tenant-level, so they must be created under the tenant of the selected application.</p>
+<div class="language-shell highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>cat<span class="w"> </span><span class="s">&lt;&lt;EOF | kubectl apply -f -</span>
+</span><span id="__span-9-2"><a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a><span class="s">apiVersion: egressgateway.spidernet.io/v1beta1</span>
+</span><span id="__span-9-3"><a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a><span class="s">kind: EgressPolicy</span>
+</span><span id="__span-9-4"><a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a><span class="s">metadata:</span>
+</span><span id="__span-9-5"><a id="__codelineno-9-5" name="__codelineno-9-5" href="#__codelineno-9-5"></a><span class="s"> name: test</span>
+</span><span id="__span-9-6"><a id="__codelineno-9-6" name="__codelineno-9-6" href="#__codelineno-9-6"></a><span class="s"> namespace: default</span>
+</span><span id="__span-9-7"><a id="__codelineno-9-7" name="__codelineno-9-7" href="#__codelineno-9-7"></a><span class="s">spec:</span>
+</span><span id="__span-9-8"><a id="__codelineno-9-8" name="__codelineno-9-8" href="#__codelineno-9-8"></a><span class="s"> egressGatewayName: default</span>
+</span><span id="__span-9-9"><a id="__codelineno-9-9" name="__codelineno-9-9" href="#__codelineno-9-9"></a><span class="s"> appliedTo:</span>
+</span><span id="__span-9-10"><a id="__codelineno-9-10" name="__codelineno-9-10" href="#__codelineno-9-10"></a><span class="s">  podSelector:</span>
+</span><span id="__span-9-11"><a id="__codelineno-9-11" name="__codelineno-9-11" href="#__codelineno-9-11"></a><span class="s">   matchLabels:</span>
+</span><span id="__span-9-12"><a id="__codelineno-9-12" name="__codelineno-9-12" href="#__codelineno-9-12"></a><span class="s">    app: &quot;visitor&quot;</span>
+</span><span id="__span-9-13"><a id="__codelineno-9-13" name="__codelineno-9-13" href="#__codelineno-9-13"></a><span class="s">EOF</span>
+</span></code></pre></div>
+<p>Descriptions:</p>
+<ul>
+<li><code>spec.egressGatewayName</code> specifies the name of the EgressGateway group to use.</li>
+<li><code>spec.appliedTo.podSelector</code> determines which Pods within the cluster this policy should apply to.</li>
+<li>There are two options for the source IP address of egress traffic in the cluster:<ul>
+<li>You can use the IP address of the gateway nodes. This is suitable for public clouds and traditional networks but has the downside of potential IP changes if a gateway node fails. You can enable this by setting <code>spec.egressIP.useNodeIP=true</code>.</li>
+<li>You can use a dedicated VIP. EgressGateway uses ARP principles for VIP implementation, making it suitable for traditional networks rather than public clouds. The advantage is that the egress source IP remains fixed. If no settings are specified in the EgressPolicy, the default VIP of the egressGatewayName will be used, or you can manually specify <code>spec.egressIP.ipv4</code> , which must match the IP pool configured in the EgressGateway.</li>
+</ul>
+</li>
+</ul>
+</li>
 <li>
 <p>Check the status of the EgressPolicy</p>
 <div class="language-shell highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a>$<span class="w"> </span>kubectl<span class="w"> </span>get<span class="w"> </span>EgressPolicy<span class="w"> </span>-A
