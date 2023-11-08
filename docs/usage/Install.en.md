@@ -76,13 +76,13 @@ helm repo update
 			--wait --debug
     ```
 
-   In the installation command, please consider the following points:
+    In the installation command, please consider the following points:
 
-   * Make sure to provide the IPv4 and IPv6 subnets for the EgressGateway tunnel nodes in the installation command. These subnets should not conflict with other addresses within the cluster.
-   * You can customize the network interface used for EgressGateway tunnels by using the `--set feature.tunnelDetectMethod="interface=eth0"` option. By default, it uses the network interface associated with the default route.
-   * If you want to enable IPv6 support, set the `--set feature.enableIPv6=true` option and also `feature.tunnelIpv6Subnet`.
-   * The EgressGateway Controller supports high availability and can be configured using `--set controller.replicas=2`.
-   * To enable return routing rules on the gateway nodes, use `--set feature.enableGatewayReplyRoute=true`. This option is required when using Spiderpool to work with underlay CNI.
+    * Make sure to provide the IPv4 and IPv6 subnets for the EgressGateway tunnel nodes in the installation command. These subnets should not conflict with other addresses within the cluster.
+    * You can customize the network interface used for EgressGateway tunnels by using the `--set feature.tunnelDetectMethod="interface=eth0"` option. By default, it uses the network interface associated with the default route.
+    * If you want to enable IPv6 support, set the `--set feature.enableIPv6=true` option and also `feature.tunnelIpv6Subnet`.
+    * The EgressGateway Controller supports high availability and can be configured using `--set controller.replicas=2`.
+    * To enable return routing rules on the gateway nodes, use `--set feature.enableGatewayReplyRoute=true`. This option is required when using Spiderpool to work with underlay CNI.
 
 2. Verify that all EgressGateway Pods are running properly.
 
@@ -117,11 +117,11 @@ helm repo update
     EOF
     ```
 
-   Descriptions:
+    Descriptions:
 
-   * In the provided YAML example, adjust `spec.ippools.ipv4` to define egress exit IP addresses based on your specific environment.
-   * Ensure that the CIDR of `spec.ippools.ipv4` matches the subnet of the egress interface on the gateway nodes (usually the interface associated with the default route). Mismatched subnets can cause connectivity issues for egress traffic.
-   * Use `spec.nodeSelector` in the EgressGateway to select a group of nodes as the egress gateway. You can select multiple nodes to achieve high availability.
+    * In the provided YAML example, adjust `spec.ippools.ipv4` to define egress exit IP addresses based on your specific environment.
+    * Ensure that the CIDR of `spec.ippools.ipv4` matches the subnet of the egress interface on the gateway nodes (usually the interface associated with the default route). Mismatched subnets can cause connectivity issues for egress traffic.
+    * Use `spec.nodeSelector` in the EgressGateway to select a group of nodes as the egress gateway. You can select multiple nodes to achieve high availability.
 
 2. Label the egress gateway nodes by applying labels to them. For production environments, it is recommended to label at least 2 nodes. For POC environments, label 1 node.
 
@@ -156,10 +156,10 @@ helm repo update
         status: Ready
     ```
 
-   Descriptions:
+    Descriptions:
 
-   * The `status.nodeList` field indicates the nodes that match the `spec.nodeSelector`, along with the status of their corresponding EgressTunnel objects.
-   * The `spec.ippools.ipv4DefaultEIP` field randomly selects one IP address from `spec.ippools.ipv4` as the default VIP for this group of EgressGateways. This default VIP is used when creating EgressPolicy objects for applications that do not specify a VIP address.
+    * The `status.nodeList` field indicates the nodes that match the `spec.nodeSelector`, along with the status of their corresponding EgressTunnel objects.
+    * The `spec.ippools.ipv4DefaultEIP` field randomly selects one IP address from `spec.ippools.ipv4` as the default VIP for this group of EgressGateways. This default VIP is used when creating EgressPolicy objects for applications that do not specify a VIP address.
 
 ## Create Applications and Egress Policies
 
@@ -189,13 +189,14 @@ helm repo update
     EOF
     ```
 
-   Descriptions:
+    Descriptions:
 
-   * `spec.egressGatewayName` specifies the name of the EgressGateway group to use.
-   * `spec.appliedTo.podSelector` determines which Pods within the cluster this policy should apply to.
-   * There are two options for the source IP address of egress traffic in the cluster:
-      * You can use the IP address of the gateway nodes. This is suitable for public clouds and traditional networks but has the downside of potential IP changes if a gateway node fails. You can enable this by setting `spec.egressIP.useNodeIP=true`.
-      * You can use a dedicated VIP. EgressGateway uses ARP principles for VIP implementation, making it suitable for traditional networks rather than public clouds. The advantage is that the egress source IP remains fixed. If no settings are specified in the EgressPolicy, the default VIP of the egressGatewayName will be used, or you can manually specify `spec.egressIP.ipv4` , which must match the IP pool configured in the EgressGateway.
+    * `spec.egressGatewayName` specifies the name of the EgressGateway group to use.
+    * `spec.appliedTo.podSelector` determines which Pods within the cluster this policy should apply to.
+    * There are two options for the source IP address of egress traffic in the cluster:
+        * You can use the IP address of the gateway nodes. This is suitable for public clouds and traditional networks but has the downside of potential IP changes if a gateway node fails. You can enable this by setting `spec.egressIP.useNodeIP=true`.
+        * You can use a dedicated VIP. EgressGateway uses ARP principles for VIP implementation, making it suitable for traditional networks rather than public clouds. The advantage is that the egress source IP remains fixed. If no settings are specified in the EgressPolicy, the default VIP of the egressGatewayName will be used, or you can manually specify `spec.egressIP.ipv4` , which must match the IP pool configured in the EgressGateway.
+
 3. Check the status of the EgressPolicy
 
     ```shell
@@ -223,10 +224,10 @@ helm repo update
       node: egressgateway-worker2
     ```
 
-   Descriptions:
+    Descriptions:
 
-   * `status.eip` displays the egress IP address used by the group of applications.
-   * `status.node` shows which EgressGateway node is responsible for real-time egress traffic forwarding. EgressGateway nodes support high availability. When multiple EgressGateway nodes exist, all EgressPolicy instances will be evenly distributed among them.
+    * `status.eip` displays the egress IP address used by the group of applications.
+    * `status.node` shows which EgressGateway node is responsible for real-time egress traffic forwarding. EgressGateway nodes support high availability. When multiple EgressGateway nodes exist, all EgressPolicy instances will be evenly distributed among them.
 
 4. Check the status of EgressEndpointSlices.
 
