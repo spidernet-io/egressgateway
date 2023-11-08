@@ -171,6 +171,7 @@ helm repo update
     ```
 
 2. Create an EgressPolicy CR object for your application.
+
    An EgressPolicy instance is used to define which Pods' egress traffic should be forwarded through EgressGateway nodes, along with other configuration details.
    You can create an example as follows. When a matching Pod accesses any external address in the cluster (excluding Node IP, CNI Pod CIDR, ClusterIP), it will be forwarded through EgressGateway nodes.
    Note that EgressPolicy objects are tenant-level, so they must be created under the tenant of the selected application.
@@ -200,7 +201,7 @@ helm repo update
         * You can use a dedicated VIP. EgressGateway uses ARP principles for VIP implementation, making it suitable for traditional networks rather than public clouds. The advantage is that the egress source IP remains fixed. If no settings are specified in the EgressPolicy, the default VIP of the egressGatewayName will be used, or you can manually specify `spec.egressIP.ipv4` , which must match the IP pool configured in the EgressGateway.
 
 3. Check the status of the EgressPolicy
-
+   
     ```shell
     $ kubectl get EgressPolicy -A
     NAMESPACE   NAME   GATEWAY   IPV4           IPV6   EGRESSTUNNEL
