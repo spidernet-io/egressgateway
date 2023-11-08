@@ -104,9 +104,9 @@ EgressGateway 由控制面和数据面 2 部分组成，控制面由 4 个控制
 feature:
   egressIgnoreCIDR:
     autoDetect:
-      podCIDR: ""      # 1
-      clusterIP: true  # 2
-      nodeIP: true     # 3
+      podCIDR: ""      # (1)
+      clusterIP: true  # (2)
+      nodeIP: true     # (3)
     custom:
       - "10.6.1.0/24"
 ```

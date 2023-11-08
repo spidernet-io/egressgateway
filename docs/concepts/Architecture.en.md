@@ -103,9 +103,9 @@ Modify the configuration file to add the following configuration:
 feature.
   egressIgnoreCIDR.
     autoDetect.
-      podCIDR: "" # 1
-      clusterIP: true # 2
-      nodeIP: true # 3
+      podCIDR: "" # (1)
+      clusterIP: true # (2)
+      nodeIP: true # (3)
     custom.
       - "10.6.1.0/24"
 ```
