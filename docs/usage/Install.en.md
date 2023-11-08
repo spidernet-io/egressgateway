@@ -18,7 +18,7 @@ This page provides instructions for quickly installing EgressGateway on a self-m
 
     ```shell
     # set chainInsertMode
-    $ kubectl patch FelixConfiguration default --patch '{"spec": {"chainInsertMode": "Append"}}'
+    $ kubectl patch felixconfigurations  default --type='merge' -p '{"spec":{"chainInsertMode":"Append"}}'
       
     # check status
     $ kubectl get FelixConfiguration default -o yaml
@@ -126,6 +126,7 @@ helm repo update
 2. Label the egress gateway nodes by applying labels to them. For production environments, it is recommended to label at least 2 nodes. For POC environments, label 1 node.
 
     ```shell
+    kubectl get node
     kubectl label node $NodeName egressgateway="true"
     ```
 
@@ -179,13 +180,14 @@ helm repo update
     apiVersion: egressgateway.spidernet.io/v1beta1
     kind: EgressPolicy
     metadata:
-      name: test
-      namespace: default
+     name: test
+     namespace: default
     spec:
-      appliedTo:
-        podSelector:
-          matchLabels:
-            app: "visitor"
+     egressGatewayName: default
+     appliedTo:
+      podSelector:
+       matchLabels:
+        app: "visitor"
     EOF
     ```
 

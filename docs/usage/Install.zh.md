@@ -18,7 +18,8 @@
 
     ```shell
     # set chainInsertMode
-    $ kubectl patch FelixConfiguration default --patch '{"spec": {"chainInsertMode": "Append"}}'
+    $ kubectl patch felixconfigurations  default --type='merge' -p '{"spec":{"chainInsertMode":"Append"}}'
+    
       
     # check status
     $ kubectl get FelixConfiguration default -o yaml
@@ -126,6 +127,7 @@ helm repo update
 2. 给出口网关节点打上 label，可以给多个 node 打上 label，作为生产环境，建议 2 个节点，作为 POC 环境， 建议 1 个节点即可
 
     ```shell
+    kubectl get node
     kubectl label node $NodeName egressgateway="true"
     ```
 
@@ -180,13 +182,14 @@ helm repo update
     apiVersion: egressgateway.spidernet.io/v1beta1
     kind: EgressPolicy
     metadata:
-      name: test
-      namespace: default
+     name: test
+     namespace: default
     spec:
-      appliedTo:
-        podSelector:
-          matchLabels:
-            app: "visitor"
+     egressGatewayName: default
+     appliedTo:
+      podSelector:
+       matchLabels:
+        app: "visitor"
     EOF
     ```
 
