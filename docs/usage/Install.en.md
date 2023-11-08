@@ -109,7 +109,7 @@ helm repo update
     spec:
       ippools:
         ipv4:
-        - "10.6.1.60-10.6.1.66"
+        - "172.22.0.100-172.22.0.110"
       nodeSelector:
         selector:
           matchLabels:
@@ -170,6 +170,7 @@ helm repo update
     ```
 
 2. Create an EgressPolicy CR object for your application.
+
    An EgressPolicy instance is used to define which Pods' egress traffic should be forwarded through EgressGateway nodes, along with other configuration details.
    You can create an example as follows. When a matching Pod accesses any external address in the cluster (excluding Node IP, CNI Pod CIDR, ClusterIP), it will be forwarded through EgressGateway nodes.
    Note that EgressPolicy objects are tenant-level, so they must be created under the tenant of the selected application.
@@ -196,6 +197,7 @@ helm repo update
    * There are two options for the source IP address of egress traffic in the cluster:
       * You can use the IP address of the gateway nodes. This is suitable for public clouds and traditional networks but has the downside of potential IP changes if a gateway node fails. You can enable this by setting `spec.egressIP.useNodeIP=true`.
       * You can use a dedicated VIP. EgressGateway uses ARP principles for VIP implementation, making it suitable for traditional networks rather than public clouds. The advantage is that the egress source IP remains fixed. If no settings are specified in the EgressPolicy, the default VIP of the egressGatewayName will be used, or you can manually specify `spec.egressIP.ipv4` , which must match the IP pool configured in the EgressGateway.
+
 3. Check the status of the EgressPolicy
 
     ```shell
@@ -268,5 +270,5 @@ helm repo update
 
     $ kubectl exec -it visitor-6764bb48cc-29vq9 bash
     $ curl 10.6.1.92:8080
-    Remote IP: 10.6.1.60
+    Remote IP: 172.22.0.110
     ```
