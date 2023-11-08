@@ -23,6 +23,11 @@ spec:
     - "10.6.1.92/32"
     - "fd00::92/128"
   priority: 100             # (7)
+status:
+  eip:                      # (8)
+    ipv4: 172.18.1.2
+    ipv6: fc00:f853:ccd:e793::9
+  node: egressgateway-worker    # (9)
 ```
 
 1. 选择 EgressPolicy 引用的 EgressGateway：
@@ -37,3 +42,5 @@ spec:
 5. 通过直接指定 Pod 的网段选择需要应用 EgressPolicy 的 Pod（4 和 5 不能同时使用）
 6. 指定访问 Egress 的目标地址，若未指定目标地址，则以下策略将生效：对于那些目标地址不属于集群内部 CIDR 的请求，将全部转发到 Egress 节点。
 7. 策略的优先级。
+8. 该 EgressPolicy 所分配到的 EgressIP
+9. 该 EgressPolicy 的 EgressIP 所在的节点，同时也是该 EgressPolicy 的网关节点
