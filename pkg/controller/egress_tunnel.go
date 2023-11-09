@@ -196,8 +196,8 @@ func (r *egReconciler) reconcileNode(ctx context.Context, req reconcile.Request,
 		return reconcile.Result{Requeue: false}, nil
 	}
 
-	en := new(egressv1.EgressTunnel)
-	err = r.client.Get(ctx, req.NamespacedName, en)
+	egressTunnel := new(egressv1.EgressTunnel)
+	err = r.client.Get(ctx, req.NamespacedName, egressTunnel)
 	if err != nil {
 		log.Info("create egress tunnel")
 		if !k8serr.IsNotFound(err) {
@@ -208,6 +208,30 @@ func (r *egReconciler) reconcileNode(ctx context.Context, req reconcile.Request,
 			return reconcile.Result{Requeue: true}, err
 		}
 		return reconcile.Result{}, nil
+	}
+
+	// If GatewayFailover is not enabled, we watch the health status of the node,
+	// and switch the active node of the egress IP based on the status of the node.
+	if !r.config.FileConfig.GatewayFailover.Enable {
+		phase := egressv1.EgressTunnelReady
+		for _, condition := range node.Status.Conditions {
+			if condition.Type == corev1.NodeReady {
+				if condition.Status != corev1.ConditionTrue {
+					phase = egressv1.EgressTunnelNodeNotReady
+				}
+			}
+		}
+		// don't overwrite the EgressTunnelHeartbeatTimeout status
+		if egressTunnel.Status.Phase != egressv1.EgressTunnelHeartbeatTimeout {
+			if egressTunnel.Status.Phase != phase {
+				log.Info("update egress tunnel", "status", egressTunnel.Status)
+				egressTunnel.Status.Phase = phase
+				err := r.updateEgressTunnel(*egressTunnel)
+				if err != nil {
+					return reconcile.Result{Requeue: true}, err
+				}
+			}
+		}
 	}
 
 	return reconcile.Result{Requeue: false}, nil
@@ -479,23 +503,24 @@ func (r *egReconciler) keepEgressTunnel(node egressv1.EgressTunnel, log logr.Log
 }
 
 func (r *egReconciler) updateEgressTunnel(node egressv1.EgressTunnel) error {
-	phase := egressv1.EgressTunnelInit
+	if node.Status.Phase == "" {
+		node.Status.Phase = egressv1.EgressTunnelInit
+	}
 	if node.Status.Tunnel.Parent.Name == "" {
-		phase = egressv1.EgressTunnelInit
+		node.Status.Phase = egressv1.EgressTunnelInit
 	}
 	if node.Status.Mark == "" {
-		phase = egressv1.EgressTunnelPending
+		node.Status.Phase = egressv1.EgressTunnelPending
 	}
 	if node.Status.Tunnel.IPv4 == "" && r.allocatorV4 != nil {
-		phase = egressv1.EgressTunnelPending
+		node.Status.Phase = egressv1.EgressTunnelPending
 	}
 	if node.Status.Tunnel.IPv6 == "" && r.allocatorV6 != nil {
-		phase = egressv1.EgressTunnelPending
+		node.Status.Phase = egressv1.EgressTunnelPending
 	}
 	if node.Status.Tunnel.MAC == "" {
-		phase = egressv1.EgressTunnelPending
+		node.Status.Phase = egressv1.EgressTunnelPending
 	}
-	node.Status.Phase = phase
 
 	err := r.client.Status().Update(context.Background(), &node)
 	if err != nil {

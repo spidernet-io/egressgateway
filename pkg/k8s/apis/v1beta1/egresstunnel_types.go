@@ -38,7 +38,7 @@ type EgressTunnelSpec struct{}
 type EgressTunnelStatus struct {
 	// +kubebuilder:validation:Optional
 	Tunnel Tunnel `json:"tunnel,omitempty"`
-	// +kubebuilder:validation:Enum=Pending;Init;Failed;Ready;HeartbeatTimeout
+	// +kubebuilder:validation:Enum=Pending;Init;Failed;Ready;HeartbeatTimeout;NodeNotReady
 	Phase EgressTunnelPhase `json:"phase,omitempty"`
 	// +kubebuilder:validation:Optional
 	Mark string `json:"mark,omitempty"`
@@ -77,6 +77,8 @@ const (
 	EgressTunnelFailed EgressTunnelPhase = "Failed"
 	// EgressTunnelHeartbeatTimeout tunnel heartbeat timeout
 	EgressTunnelHeartbeatTimeout EgressTunnelPhase = "HeartbeatTimeout"
+	// EgressTunnelNodeNotReady node not ready
+	EgressTunnelNodeNotReady EgressTunnelPhase = "NodeNotReady"
 	// EgressTunnelReady tunnel is available
 	EgressTunnelReady EgressTunnelPhase = "Ready"
 )

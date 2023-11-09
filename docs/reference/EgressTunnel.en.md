@@ -29,4 +29,6 @@ status:
     - `Init`: successful tunnel IP allocation
     - `Ready`: the tunnel IP is allocated and tunnel is established
     - `Failed`: tunnel IP allocation fails
+    - `HeartbeatTimeout` heartbeat Timeout for Agent
+    - `NodeNotReady` Node Status is NotReady
 8. Packet mark value, one for each node. For example, if node A has egress traffic that needs to be forwarded to gateway node B, the traffic of node A will be marked with a mark.Each node is assigned a unique packet mark value. For instance, if Node A needs to forward Egress traffic to the gateway node B, it applies a specific mark to the packets originating from Node A.

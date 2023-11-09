@@ -29,4 +29,6 @@ status:
     - `Init`：分配隧道 IP 成功
     - `Ready`：隧道 IP 已分配，且隧道已建成
     - `Failed`：隧道 IP 分配失败
+    - `HeartbeatTimeout` Agent 心跳超时
+    - `NodeNotReady` Node 状态处于 NotReady
 8. 数据包 mark 值，每个节点对应一个。例如节点 A 有 Egress 流量需要转发到网关节点 B，会对 A 节点的流量打 mark 进行标记。

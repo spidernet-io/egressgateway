@@ -529,16 +529,16 @@ func (r *vxlanReconciler) ensureEgressTunnelStatus(node *egressv1.EgressTunnel) 
 	return nil
 }
 
-func (r *vxlanReconciler) updateEgressTunnelStatus(node *egressv1.EgressTunnel, version int) error {
+func (r *vxlanReconciler) updateEgressTunnelStatus(tunnel *egressv1.EgressTunnel, version int) error {
 	parent, err := r.getParent(version)
 	if err != nil {
 		return err
 	}
 
-	if node == nil {
-		node = new(egressv1.EgressTunnel)
+	if tunnel == nil {
+		tunnel = new(egressv1.EgressTunnel)
 		ctx := context.Background()
-		err = r.client.Get(ctx, types.NamespacedName{Name: r.cfg.NodeName}, node)
+		err = r.client.Get(ctx, types.NamespacedName{Name: r.cfg.NodeName}, tunnel)
 		if err != nil {
 			if k8sErr.IsNotFound(err) {
 				return nil
@@ -548,43 +548,45 @@ func (r *vxlanReconciler) updateEgressTunnelStatus(node *egressv1.EgressTunnel, 
 	}
 
 	needUpdate := false
-	if node.Status.Tunnel.Parent.Name != parent.Name {
+	if tunnel.Status.Tunnel.Parent.Name != parent.Name {
 		needUpdate = true
-		node.Status.Tunnel.Parent.Name = parent.Name
+		tunnel.Status.Tunnel.Parent.Name = parent.Name
 	}
 
 	if version == 4 {
-		if node.Status.Tunnel.Parent.IPv4 != parent.IP.String() {
+		if tunnel.Status.Tunnel.Parent.IPv4 != parent.IP.String() {
 			needUpdate = true
-			node.Status.Tunnel.Parent.IPv4 = parent.IP.String()
+			tunnel.Status.Tunnel.Parent.IPv4 = parent.IP.String()
 		}
-		if node.Status.Tunnel.Parent.IPv6 != "" {
+		if tunnel.Status.Tunnel.Parent.IPv6 != "" {
 			needUpdate = true
-			node.Status.Tunnel.Parent.IPv6 = ""
+			tunnel.Status.Tunnel.Parent.IPv6 = ""
 		}
 	} else {
-		if node.Status.Tunnel.Parent.IPv6 != parent.IP.String() {
+		if tunnel.Status.Tunnel.Parent.IPv6 != parent.IP.String() {
 			needUpdate = true
-			node.Status.Tunnel.Parent.IPv6 = parent.IP.String()
+			tunnel.Status.Tunnel.Parent.IPv6 = parent.IP.String()
 		}
-		if node.Status.Tunnel.Parent.IPv4 != "" {
+		if tunnel.Status.Tunnel.Parent.IPv4 != "" {
 			needUpdate = true
-			node.Status.Tunnel.Parent.IPv4 = ""
+			tunnel.Status.Tunnel.Parent.IPv4 = ""
 		}
 	}
 
 	// calculate whether the state has changed, update if the status changes.
-	vtep := r.parseVTEP(node.Status)
+	vtep := r.parseVTEP(tunnel.Status)
 	if vtep != nil {
 		phase := egressv1.EgressTunnelReady
-		if node.Status.Phase != phase {
+		// We should not overwrite the updated state of the controller.
+		if tunnel.Status.Phase != phase &&
+			tunnel.Status.Phase != egressv1.EgressTunnelNodeNotReady {
 			needUpdate = true
-			node.Status.Phase = phase
+			tunnel.Status.Phase = phase
 		}
 	}
 
 	if needUpdate {
-		err := r.updateTunnelStatus(node)
+		err := r.updateTunnelStatus(tunnel)
 		if err != nil {
 			return err
 		}
@@ -763,20 +765,20 @@ func (r *vxlanReconciler) keepVXLAN() {
 	}
 }
 
-func (r *vxlanReconciler) updateTunnelStatus(node *egressv1.EgressTunnel) error {
+func (r *vxlanReconciler) updateTunnelStatus(tunnel *egressv1.EgressTunnel) error {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(r.cfg.FileConfig.GatewayFailover.EipEvictionTimeout)*time.Second)
 	defer cancel()
 
-	node.Status.LastHeartbeatTime = metav1.Now()
+	tunnel.Status.LastHeartbeatTime = metav1.Now()
 	r.log.Info("update tunnel status",
-		"phase", node.Status.Phase,
-		"tunnelIPv4", node.Status.Tunnel.IPv4,
-		"tunnelIPv6", node.Status.Tunnel.IPv6,
-		"parentName", node.Status.Tunnel.Parent.Name,
-		"parentIPv4", node.Status.Tunnel.Parent.IPv4,
-		"parentIPv6", node.Status.Tunnel.Parent.IPv6,
+		"phase", tunnel.Status.Phase,
+		"tunnelIPv4", tunnel.Status.Tunnel.IPv4,
+		"tunnelIPv6", tunnel.Status.Tunnel.IPv6,
+		"parentName", tunnel.Status.Tunnel.Parent.Name,
+		"parentIPv4", tunnel.Status.Tunnel.Parent.IPv4,
+		"parentIPv6", tunnel.Status.Tunnel.Parent.IPv6,
 	)
-	err := r.client.Status().Update(ctx, node)
+	err := r.client.Status().Update(ctx, tunnel)
 	if err != nil {
 		return err
 	}
