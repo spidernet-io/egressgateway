@@ -131,6 +131,11 @@ func (egw *EgressGatewayWebhook) EgressGatewayValidate(ctx context.Context, req 
 	// Check whether the IP address to be deleted has been allocated
 	for _, item := range eg.Status.NodeList {
 		for _, eip := range item.Eips {
+			// skip the cases of using useNodeIP
+			if eip.IPv4 == "" && eip.IPv6 == "" {
+				continue
+			}
+
 			result, err := ip.IsIPIncludedRange(constant.IPv4, eip.IPv4, ipv4Ranges)
 			if err != nil {
 				return webhook.Denied(fmt.Sprintf("Failed to check IP: %v", err))

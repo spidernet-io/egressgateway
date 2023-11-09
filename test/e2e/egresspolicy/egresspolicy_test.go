@@ -230,7 +230,7 @@ var _ = Describe("EgressPolicy", Ordered, func() {
 		var err error
 
 		AfterEach(func() {
-			// delete the policy if it is exist
+			// delete the policy if it is existed
 			if egp != nil {
 				err = common.WaitEgressPoliciesDeleted(ctx, cli, []*egressv1.EgressPolicy{egp}, time.Second*5)
 				Expect(err).NotTo(HaveOccurred())
@@ -356,7 +356,7 @@ var _ = Describe("EgressPolicy", Ordered, func() {
 			4. Update the gateway to change the match from node1 to node2
 			5. Validate the status of the gateway and policy, verify the pod's egress IP should be the IP of node2
 		*/
-		PContext("Create policy with setting EgressIP.UseNodeIP to be true", Label("P00015", "P00016"), func() {
+		Context("Create policy with setting EgressIP.UseNodeIP to be true", Label("P00015", "P00016"), func() {
 			var egw *egressv1.EgressGateway
 			var egp *egressv1.EgressPolicy
 			var egcp *egressv1.EgressClusterPolicy
@@ -406,14 +406,14 @@ var _ = Describe("EgressPolicy", Ordered, func() {
 					// delete daemonset
 					Expect(common.DeleteObj(ctx, cli, ds)).NotTo(HaveOccurred())
 
-					// delete egresspolicy
+					// delete EgressPolicy
 					if egp != nil {
 						GinkgoWriter.Printf("Delete egp: %s\n", egp.Name)
 						err = common.WaitEgressPoliciesDeleted(ctx, cli, []*egressv1.EgressPolicy{egp}, time.Second*5)
 						Expect(err).NotTo(HaveOccurred())
 					}
 
-					// delete egressclusterpolicy
+					// delete EgressClusterPolicy
 					if egcp != nil {
 						GinkgoWriter.Printf("Delete egcp: %s\n", egcp.Name)
 						err = common.WaitEgressClusterPoliciesDeleted(ctx, cli, []*egressv1.EgressClusterPolicy{egcp}, time.Second*5)
@@ -570,14 +570,14 @@ var _ = Describe("EgressPolicy", Ordered, func() {
 
 			DeferCleanup(func() {
 
-				// delete egresspolicy
+				// delete EgressPolicy
 				if egp != nil {
 					GinkgoWriter.Printf("Delete egp: %s\n", egp.Name)
 					err = common.WaitEgressPoliciesDeleted(ctx, cli, []*egressv1.EgressPolicy{egp}, time.Second*5)
 					Expect(err).NotTo(HaveOccurred())
 				}
 
-				// delete egressclusterpolicy
+				// delete EgressClusterPolicy
 				if egcp != nil {
 					GinkgoWriter.Printf("Delete egcp: %s\n", egcp.Name)
 					err = common.WaitEgressClusterPoliciesDeleted(ctx, cli, []*egressv1.EgressClusterPolicy{egcp}, time.Second*5)
@@ -595,7 +595,7 @@ var _ = Describe("EgressPolicy", Ordered, func() {
 		})
 
 		It("namespace-level policy", func() {
-			// create egresspolicy
+			// create EgressPolicy
 			egp, err = common.CreateEgressPolicyCustom(ctx, cli,
 				func(egp *egressv1.EgressPolicy) {
 					egp.Spec.EgressGatewayName = egw1.Name
@@ -629,7 +629,7 @@ var _ = Describe("EgressPolicy", Ordered, func() {
 
 		// todo @bzsuni waiting for the bug to be fixed
 		PIt("cluster-level policy", func() {
-			// create egressclusterpolicy
+			// create EgressClusterPolicy
 			egcp, err = common.CreateEgressClusterPolicyCustom(ctx, cli,
 				func(egcp *egressv1.EgressClusterPolicy) {
 					egcp.Spec.EgressGatewayName = egw1.Name
@@ -698,7 +698,7 @@ var _ = Describe("EgressPolicy", Ordered, func() {
 					Expect(common.DeleteObj(ctx, cli, podObj)).NotTo(HaveOccurred())
 				}
 
-				// delete egresspolicy
+				// delete EgressPolicy
 				if egp != nil {
 					// Expect(common.DeleteObj(ctx, cli, egp)).NotTo(HaveOccurred())
 					err = common.WaitEgressPoliciesDeleted(ctx, cli, []*egressv1.EgressPolicy{egp}, time.Second*5)
