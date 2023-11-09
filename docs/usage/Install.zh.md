@@ -141,7 +141,6 @@ helm repo update
       name: default
       uid: 7ce835e2-2075-4d26-ba63-eacd841aadfe
     spec:
-      clusterDefault: true
       ippools:
         ipv4:
         - 172.22.0.100-172.22.0.110
