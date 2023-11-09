@@ -356,6 +356,10 @@ func (r egnReconciler) reconcileEGT(ctx context.Context, req reconcile.Request, 
 			} else {
 				for _, node := range egw.Status.NodeList {
 					if node.Name == egt.Name {
+						for _, node := range egw.Status.NodeList {
+							perNodeMap[node.Name] = node
+						}
+
 						if node.Status != string(egress.EgressTunnelReady) {
 							perNodeMap[node.Name] = egress.EgressIPStatus{Name: node.Name, Eips: node.Eips, Status: string(egress.EgressTunnelReady)}
 
