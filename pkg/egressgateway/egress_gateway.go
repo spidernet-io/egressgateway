@@ -330,14 +330,21 @@ func (r egnReconciler) reconcileEGT(ctx context.Context, req reconcile.Request, 
 		return reconcile.Result{Requeue: true}, nil
 	}
 
+	fmt.Println("------n1 egt=", egt.Name, ", status=", egt.Status.Phase)
+
 	for _, item := range egwList.Items {
 		policies, isExist := GetPoliciesByNode(egt.Name, item)
+		fmt.Println("------n2 policies=", policies)
 		if isExist {
 			perNodeMap := make(map[string]egress.EgressIPStatus)
 			egw := item.DeepCopy()
 
 			// If the node is not in success state, the policy on the node is reassigned
 			if egt.Status.Phase != egress.EgressTunnelReady {
+				fmt.Println("------n3 egt.Status.Phase=", egt.Status.Phase)
+				for key, item := range perNodeMap {
+					fmt.Println("------n4 key=", key, ", perNodeMap[key]=", item)
+				}
 				for _, node := range egw.Status.NodeList {
 					if node.Name != egt.Name {
 						perNodeMap[node.Name] = node
@@ -345,8 +352,12 @@ func (r egnReconciler) reconcileEGT(ctx context.Context, req reconcile.Request, 
 						perNodeMap[node.Name] = egress.EgressIPStatus{Name: node.Name, Status: string(egt.Status.Phase)}
 					}
 				}
+				for key, item := range perNodeMap {
+					fmt.Println("------n5 key=", key, ", perNodeMap[key]=", item)
+				}
 
 				for _, policy := range policies {
+					fmt.Println("------n6 policy=", policy)
 					err = r.reAllocatorPolicy(ctx, policy, egw, perNodeMap)
 					if err != nil {
 						log.Error(err, "failed to reassign a gateway node for EgressPolicy", "policy", policy)
@@ -356,9 +367,14 @@ func (r egnReconciler) reconcileEGT(ctx context.Context, req reconcile.Request, 
 			} else {
 				for _, node := range egw.Status.NodeList {
 					if node.Name == egt.Name {
+						for _, node := range egw.Status.NodeList {
+							perNodeMap[node.Name] = node
+						}
+						fmt.Println("------n7 node.Name=", node.Name)
 						if node.Status != string(egress.EgressTunnelReady) {
+							fmt.Println("------n8", "node.Name=", node.Name, " perNodeMap[node.Name]=", perNodeMap[node.Name])
 							perNodeMap[node.Name] = egress.EgressIPStatus{Name: node.Name, Eips: node.Eips, Status: string(egress.EgressTunnelReady)}
-
+							fmt.Println("------n9", "node.Name=", node.Name, " perNodeMap[node.Name]=", perNodeMap[node.Name])
 							// When the first gateway node of an egw recovers, you need to rebind the policy that references the egw
 							readyNum := 0
 							policyNum := 0
@@ -368,6 +384,7 @@ func (r egnReconciler) reconcileEGT(ctx context.Context, req reconcile.Request, 
 									policyNum += len(node.Eips)
 								}
 							}
+							fmt.Println("------n10 readyNum=", readyNum, ", policyNum=", policyNum)
 							if readyNum == 1 && policyNum == 0 {
 								var policies []egress.Policy
 								egpList := &egress.EgressPolicyList{}
@@ -395,6 +412,7 @@ func (r egnReconciler) reconcileEGT(ctx context.Context, req reconcile.Request, 
 								}
 
 								for _, policy := range policies {
+									fmt.Println("------n11 policy=", policy)
 									err = r.reAllocatorPolicy(ctx, policy, egw, perNodeMap)
 									if err != nil {
 										log.Error(err, "failed to reassign a gateway node for EgressPolicy", "policy", policy)
@@ -415,7 +433,7 @@ func (r egnReconciler) reconcileEGT(ctx context.Context, req reconcile.Request, 
 			}
 
 			egw.Status.NodeList = perNodeList
-
+			fmt.Println("------n12 perNodeList=", perNodeList)
 			log.V(1).Info("update egress gateway status", "status", egw.Status)
 			err = r.client.Status().Update(ctx, egw)
 			if err != nil {
