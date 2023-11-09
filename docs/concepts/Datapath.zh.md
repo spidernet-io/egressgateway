@@ -1,9 +1,12 @@
+# Datapath
+
 对需要生效的规则分为三类：所有节点，相对于 EgressGatewayPolicy 的「网关节点」和「非网关节点」。只有当业务 Pod 调度到的「非网关节点」，该节点上的规则才会生效。
 
 ## 所有节点
 
 1. 各节点之间，隧道需要打通的规则就不一一展开；
 2. 在节点第一次变成网关节点时更新，或者节点 join 时，将 policy 命中的流量，重新打标签。其他情况不更新。
+
    ```shell
    iptables -t mangle -N EGRESSGATEWAY-RESET-MARK
    iptables -t mangle -I FORWARD 1  -j EGRESSGATEWAY-RESET-MARK -m comment --comment "egress gateway: mark egress packet"
@@ -15,6 +18,7 @@
    ```
 
 3. 保持 policy 命中流量的标签。直接创建一次，不需要更新；
+
    ```shell
    iptables -t filter -I FORWARD 1 -m mark --mark 0x12000000 -j ACCEPT -m comment --comment "egress gateway: keep mark"
 
@@ -24,6 +28,7 @@
    ```
 
 4. 聚合 policy 命中流量打标签的链。直接创建一次，不需要更新；
+
    ```shell
    iptables -t mangle -N EGRESSGATEWAY-MARK-REQUEST
 
@@ -31,6 +36,7 @@
    ```
 
 5. 聚合不需要做 SNAT 规则的链。直接创建一次，不需要更新；
+
    ```shell
    iptables -t nat -N EGRESSGATEWAY-NO-SNAT
 
@@ -40,6 +46,7 @@
    ```
 
 6. 聚合需要做 SNAT 规则的链。直接创建一次，不需要更新。
+
    ```shell
    iptables -t nat -N EGRESSGATEWAY-SNAT-EIP
 
@@ -48,7 +55,8 @@
    ```
 
 7. egress-ingore-cidr 当 EgressGatewayPolicy 的 `destSubnet` 字段为空时，数据面将会自动匹配 EgressClusterStatus CR 中的 CIDR 之外的流量，并将其转发到 Egress 网关。
-    ```shell
+
+   ```shell
    IPSET_RULE_DEST_NAME=egress-ingore-cidr
 
    ipset x $IPSET_RULE_DEST_NAME
@@ -61,6 +69,7 @@
 ## 相对于 EIP 的非 Egress Gateway 节点
 
 1. policy 命中的源 IP、目的 IP 的 ipset；
+
    ```shell
    IPSET_RULE_DEST_NAME=egress-dest-uuid
 
@@ -81,6 +90,7 @@
    ```
 
 2. policy 命中的流量打标签，保证能从隧道走。其中 NODE_MARK 的值根据 policy 对应的 EIP 所在节点决定。
+
    ```shell
    iptables -A EGRESSGATEWAY-MARK-REQUEST -t mangle -m conntrack --ctdir ORIGINAL \
    -m set --match-set $IPSET_RULE_DEST_NAME dst  \
@@ -89,11 +99,13 @@
    ```
 
 3. 策略路由规则
+
    ```shell
    ip rule add fwmark $NODE_MARK table $TABLE_NUM
    ```
 
 4. 适配 Weave 避免做 SNAT 成 Egress 隧道的 IP。做成开关
+
    ```shell
    iptables -t nat -A EGRESSGATEWAY-NO-SNAT \
    -m set --match-set $IPSET_RULE_DEST_NAME dst  \
@@ -102,7 +114,9 @@
    ```
 
 ## 相对于 EIP 的 Egress Gateway 节点
+
 1. policy 命中的源 IP、目的 IP 的 ipset；
+
    ```shell
    IPSET_RULE_DEST_NAME=egress-dest-uuid
 
@@ -123,6 +137,7 @@
    ```
 
 2. policy 命中的流量。出网关时做 SNAT。实时更新。
+
    ```shell
    iptables -t nat -A EGRESSGATEWAY-SNAT-EIP \
        -m set --match-set $IPSET_RULE_SRC_NAME src \
