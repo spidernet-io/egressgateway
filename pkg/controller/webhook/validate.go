@@ -123,7 +123,7 @@ func validateEgressPolicy(ctx context.Context, client client.Client, req webhook
 
 	if req.Operation == v1.Create {
 		if cfg.FileConfig.EnableIPv4 || cfg.FileConfig.EnableIPv6 {
-			if ok, err := checkEIP(client, ctx, egp.Spec.EgressIP.IPv4, egp.Spec.EgressIP.IPv6, egp.Name); !ok {
+			if ok, err := checkEIP(client, ctx, egp.Spec.EgressIP.IPv4, egp.Spec.EgressIP.IPv6, egp.Spec.EgressGatewayName); !ok {
 				return webhook.Denied(err.Error())
 			}
 
@@ -208,7 +208,7 @@ func validateEgressClusterPolicy(ctx context.Context, client client.Client, req 
 
 	if req.Operation == v1.Create {
 		if cfg.FileConfig.EnableIPv4 || cfg.FileConfig.EnableIPv6 {
-			if ok, err := checkEIP(client, ctx, policy.Spec.EgressIP.IPv4, policy.Spec.EgressIP.IPv6, policy.Name); !ok {
+			if ok, err := checkEIP(client, ctx, policy.Spec.EgressIP.IPv4, policy.Spec.EgressIP.IPv6, policy.Spec.EgressGatewayName); !ok {
 				return webhook.Denied(err.Error())
 			}
 
@@ -273,6 +273,7 @@ func checkEIP(client client.Client, ctx context.Context, ipv4, ipv6, egwName str
 		if !errors.IsNotFound(err) {
 			return false, fmt.Errorf("failed to get the EgressGateway: %v", err)
 		}
+		return false, err
 	}
 
 	if eipIPV4 == egw.Spec.Ippools.Ipv4DefaultEIP || eipIPV6 == egw.Spec.Ippools.Ipv6DefaultEIP {
