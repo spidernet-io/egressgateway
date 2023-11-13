@@ -9,6 +9,7 @@ import (
 	"time"
 
 	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/cache"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/healthz"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
@@ -31,15 +32,17 @@ func New(cfg *config.Config) (types.Service, error) {
 	log := logger.NewLogger(cfg.EnvConfig.Logger)
 	t := time.Duration(0)
 	mgrOpts := manager.Options{
+		Cache: cache.Options{
+			SyncPeriod: &syncPeriod,
+		},
 		Scheme:                  schema.GetScheme(),
 		Logger:                  log,
 		HealthProbeBindAddress:  cfg.HealthProbeBindAddress,
-		SyncPeriod:              &syncPeriod,
 		GracefulShutdownTimeout: &t,
 	}
 
 	if cfg.MetricsBindAddress != "" {
-		mgrOpts.MetricsBindAddress = cfg.MetricsBindAddress
+		mgrOpts.Metrics.BindAddress = cfg.MetricsBindAddress
 	}
 	if cfg.HealthProbeBindAddress != "" {
 		mgrOpts.HealthProbeBindAddress = cfg.HealthProbeBindAddress

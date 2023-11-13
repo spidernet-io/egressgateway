@@ -46,7 +46,7 @@ func New(cfg *config.Config) (types.Service, error) {
 	}
 
 	if cfg.MetricsBindAddress != "" {
-		mgrOpts.MetricsBindAddress = cfg.MetricsBindAddress
+		mgrOpts.Metrics.BindAddress = cfg.MetricsBindAddress
 	}
 
 	if cfg.HealthProbeBindAddress != "" {
