@@ -6,6 +6,7 @@ package common
 import (
 	"context"
 	"fmt"
+	"net"
 	"time"
 
 	"github.com/google/uuid"
@@ -136,4 +137,19 @@ func WaitPodRunning(ctx context.Context, cli client.Client, pod *corev1.Pod, tim
 			time.Sleep(time.Second)
 		}
 	}
+}
+
+func GetPodIPs(pod *corev1.Pod) (ipv4List, ipv6List []string) {
+	ipv4List = make([]string, 0)
+	ipv6List = make([]string, 0)
+
+	for _, podIP := range pod.Status.PodIPs {
+		ip := net.ParseIP(podIP.IP)
+		if ip.To4() != nil {
+			ipv4List = append(ipv4List, podIP.IP)
+		} else if ip.To16() != nil {
+			ipv6List = append(ipv6List, podIP.IP)
+		}
+	}
+	return ipv4List, ipv6List
 }
