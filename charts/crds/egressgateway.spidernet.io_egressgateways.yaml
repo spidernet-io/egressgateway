@@ -123,6 +123,10 @@ spec:
             type: object
           status:
             properties:
+              ipv4Usage:
+                type: integer
+              ipv6Usage:
+                type: integer
               nodeList:
                 items:
                   properties:

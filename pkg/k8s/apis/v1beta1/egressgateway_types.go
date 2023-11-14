@@ -62,6 +62,10 @@ type NodeSelector struct {
 type EgressGatewayStatus struct {
 	// +kubebuilder:validation:Optional
 	NodeList []EgressIPStatus `json:"nodeList,omitempty"`
+	// +kubebuilder:validation:Optional
+	IPv4Usage int `json:"ipv4Usage,omitempty"`
+	// +kubebuilder:validation:Optional
+	IPv6Usage int `json:"ipv6Usage,omitempty"`
 }
 
 func (status *EgressGatewayStatus) GetNodeIPs(nodeName string) []Eips {

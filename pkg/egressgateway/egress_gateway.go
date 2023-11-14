@@ -118,6 +118,9 @@ func (r egnReconciler) reconcileNode(ctx context.Context, req reconcile.Request,
 					egw.Status.NodeList = append(egw.Status.NodeList, egress.EgressIPStatus{Name: node.Name, Status: string(egress.EgressTunnelFailed)})
 				}
 
+				ipv4Usage, ipv6Usage := egwIpsCount(egw.Status)
+				egw.Status.IPv4Usage = ipv4Usage
+				egw.Status.IPv6Usage = ipv6Usage
 				r.log.V(1).Info("update egress gateway status", "status", egw.Status)
 				err = r.client.Status().Update(ctx, &egw)
 				if err != nil {
@@ -293,6 +296,9 @@ func (r egnReconciler) reconcileEGW(ctx context.Context, req reconcile.Request, 
 			perNodeList = append(perNodeList, node)
 		}
 		egw.Status.NodeList = perNodeList
+		ipv4Usage, ipv6Usage := egwIpsCount(egw.Status)
+		egw.Status.IPv4Usage = ipv4Usage
+		egw.Status.IPv6Usage = ipv6Usage
 
 		log.V(1).Info("update egress gateway status", "status", egw.Status)
 		err = r.client.Status().Update(ctx, egw)
@@ -419,6 +425,9 @@ func (r egnReconciler) reconcileEGT(ctx context.Context, req reconcile.Request, 
 			}
 
 			egw.Status.NodeList = perNodeList
+			ipv4Usage, ipv6Usage := egwIpsCount(egw.Status)
+			egw.Status.IPv4Usage = ipv4Usage
+			egw.Status.IPv6Usage = ipv6Usage
 
 			log.V(1).Info("update egress gateway status", "status", egw.Status)
 			err = r.client.Status().Update(ctx, egw)
@@ -516,6 +525,10 @@ func (r egnReconciler) reconcileEGP(ctx context.Context, req reconcile.Request, 
 				// Delete the policy from the EgressGateway. If the referenced EIP is not used by any other policy,
 				// the system reclaims the EIP.
 				DeletePolicyFromEG(log, policy, &egw)
+
+				ipv4Usage, ipv6Usage := egwIpsCount(egw.Status)
+				egw.Status.IPv4Usage = ipv4Usage
+				egw.Status.IPv6Usage = ipv6Usage
 
 				log.V(1).Info("update egress gateway status", "status", egw.Status)
 				err := r.client.Status().Update(ctx, &egw)
@@ -642,6 +655,9 @@ func (r egnReconciler) reconcileEGP(ctx context.Context, req reconcile.Request, 
 
 update:
 	if isUpdate {
+		ipv4Usage, ipv6Usage := egwIpsCount(egw.Status)
+		egw.Status.IPv4Usage = ipv4Usage
+		egw.Status.IPv6Usage = ipv6Usage
 		r.log.V(1).Info("update egress gateway status", "status", egw.Status)
 		err = r.client.Status().Update(ctx, egw)
 		if err != nil {
@@ -696,6 +712,10 @@ func (r egnReconciler) deleteNodeFromEG(ctx context.Context, log logr.Logger, no
 		}
 
 		egw.Status.NodeList = perNodeList
+		ipv4Usage, ipv6Usage := egwIpsCount(egw.Status)
+		egw.Status.IPv4Usage = ipv4Usage
+		egw.Status.IPv6Usage = ipv6Usage
+
 		r.log.V(1).Info("update egress gateway status", "status", egw.Status)
 		err := r.client.Status().Update(ctx, &egw)
 		if err != nil {
@@ -1162,4 +1182,22 @@ func DeletePolicyFromEG(log logr.Logger, policy egress.Policy, egw *egress.Egres
 	}
 breakHere:
 	return
+}
+
+func egwIpsCount(status egress.EgressGatewayStatus) (int, int) {
+	ipv4Usage := 0
+	ipv6Usage := 0
+	for i := range status.NodeList {
+		for j := range status.NodeList[i].Eips {
+			if len(status.NodeList[i].Eips[j].IPv4) != 0 {
+				ipv4Usage++
+			}
+
+			if len(status.NodeList[i].Eips[j].IPv6) != 0 {
+				ipv6Usage++
+			}
+		}
+	}
+
+	return ipv4Usage, ipv6Usage
 }
