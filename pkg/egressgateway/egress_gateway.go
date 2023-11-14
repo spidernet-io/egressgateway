@@ -947,7 +947,7 @@ func (r egnReconciler) allocatorEIP(selEipLolicy string, nodeName string, pi pol
 			freeIpv6s := ip.IPsDiffSet(ipv6s, useIpv6s, false)
 
 			if len(freeIpv6s) == 0 {
-				return "", "", fmt.Errorf("No Egress IPV4 is available; policy=%v egw=%v", pi.policy, egw.Name)
+				return "", "", fmt.Errorf("No Egress IPV6 is available; policy=%v egw=%v", pi.policy, egw.Name)
 
 				// save it for later policy
 				// var useIpv6sByNode []net.IP

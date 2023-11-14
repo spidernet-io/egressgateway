@@ -242,19 +242,6 @@ func checkEGWIppools(client client.Client, cfg *config.Config, ctx context.Conte
 		return fmt.Errorf("referenced egw(%v) spec.Ippools.IPv6 cannot be empty", egw.Name)
 	}
 
-	if allocatorPolicy == egressv1.EipAllocatorRR {
-		ipv4, ipv6, err := countGatewayAvailableIP(egw)
-		if err != nil {
-			return fmt.Errorf("parse egress gateway ippool with error: %s", err)
-		}
-		if cfg.FileConfig.EnableIPv4 && ipv4 < 1 {
-			return fmt.Errorf("the current allocation method is round-robin (rr), and there are no unused egress IPv4")
-		}
-		if cfg.FileConfig.EnableIPv6 && ipv6 < 1 {
-			return fmt.Errorf("the current allocation method is round-robin (rr), and there are no unused egress IPv6")
-		}
-	}
-
 	return nil
 }
 

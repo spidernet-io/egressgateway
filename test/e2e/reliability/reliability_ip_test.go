@@ -49,14 +49,13 @@ var _ = Describe("IP Allocation", Label("Reliability_IP"), func() {
 				Expect(common.DeleteObj(ctx, cli, pod)).NotTo(HaveOccurred())
 			}
 			// delete policy if exists
-			Expect(common.WaitEgressPoliciesDeleted(ctx, cli, egps, time.Second*10)).NotTo(HaveOccurred())
-			Expect(common.WaitEgressPoliciesDeleted(ctx, cli, newEgps, time.Second*10)).NotTo(HaveOccurred())
+			Expect(common.WaitEgressPoliciesDeleted(ctx, cli, egps, time.Minute)).NotTo(HaveOccurred())
+			Expect(common.WaitEgressPoliciesDeleted(ctx, cli, newEgps, time.Minute)).NotTo(HaveOccurred())
 			// delete egressGateway
 			Expect(common.DeleteObj(ctx, cli, egw)).NotTo(HaveOccurred())
 		})
 	})
 
-	// todo @bzsuni wait the bug fixed
 	// case R00008 steps:
 	// (1) In the beforeEach block, we create a gateway and set up a pool with 100 IPs.
 	// (2) Create 120 policies.
@@ -69,10 +68,10 @@ var _ = Describe("IP Allocation", Label("Reliability_IP"), func() {
 	// (9) Delete all policies (start timing).
 	// (10) Verify that the gateway status has synchronized successfully, and all IPs have been released (after deletion is complete, calculate the time spent).
 	// (11) Check pod egress IPs again; they should no longer match the previous EIPs.
-	PIt("test IP allocation", Label("R00008", "P00009"), Serial, func() {
+	It("test IP allocation", Label("R00008", "P00009"), Serial, func() {
 		// create egresspolicies
 		By("create egressPolicies by gaven pods")
-		egps, _, err = common.CreateEgressPoliciesForPods(ctx, cli, egw, pods, egressConfig.EnableIPv4, egressConfig.EnableIPv6, time.Second*5)
+		egps, _, err = common.CreateEgressPoliciesForPods(ctx, cli, egw, pods, egressConfig.EnableIPv4, egressConfig.EnableIPv6, time.Second*10)
 		Expect(err).NotTo(HaveOccurred())
 
 		By("create extra egressPolicies")
@@ -87,7 +86,6 @@ var _ = Describe("IP Allocation", Label("Reliability_IP"), func() {
 
 		// delete egresspolicies
 		By("delete all egressPolicies")
-		// todo @bzsuni we do not wait all policies delete here
 		Expect(common.DeleteEgressPolicies(ctx, cli, egps)).NotTo(HaveOccurred())
 
 		creationStart := time.Now()
@@ -107,7 +105,7 @@ var _ = Describe("IP Allocation", Label("Reliability_IP"), func() {
 
 		// check egressgateway status synced with egresspolicy
 		By("check egressgateway status synced with egresspolicies")
-		err := common.WaitEGWSyncedWithEGP(cli, egw, egressConfig.EnableIPv4, egressConfig.EnableIPv6, int(IPNum), time.Second*10)
+		err := common.WaitEGWSyncedWithEGP(cli, egw, egressConfig.EnableIPv4, egressConfig.EnableIPv6, int(IPNum), time.Minute)
 		Expect(err).NotTo(HaveOccurred())
 		creationTime := time.Since(creationStart)
 
@@ -124,7 +122,7 @@ var _ = Describe("IP Allocation", Label("Reliability_IP"), func() {
 		deletionStart := time.Now()
 		// delete all policies
 		By("delete all egressPolicies")
-		Expect(common.WaitEgressPoliciesDeleted(ctx, cli, newEgps, time.Second*10)).NotTo(HaveOccurred())
+		Expect(common.WaitEgressPoliciesDeleted(ctx, cli, newEgps, time.Minute)).NotTo(HaveOccurred())
 
 		// check eip after policies deleted
 		By("check egressgateway status should be empty")
