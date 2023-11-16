@@ -543,7 +543,7 @@ var _ = Describe("EgressPolicy", Ordered, func() {
 		This test case is used to verify that the policy does not allow editing of the fields Spec.EgressIP.IP and Spec.EgressGatewayName
 		We expect that when these two fields are edited, the request will be rejected
 	*/
-	PContext("Edit policy", Label("P00018", "P00019"), func() {
+	Context("Edit policy", Label("P00018", "P00019"), func() {
 		var egw1 *egressv1.EgressGateway
 		var egp *egressv1.EgressPolicy
 		var egcp *egressv1.EgressClusterPolicy
@@ -599,24 +599,39 @@ var _ = Describe("EgressPolicy", Ordered, func() {
 			egp, err = common.CreateEgressPolicyCustom(ctx, cli,
 				func(egp *egressv1.EgressPolicy) {
 					egp.Spec.EgressGatewayName = egw1.Name
+
+					newEgressGateway := new(egressv1.EgressGateway)
+					err := cli.Get(ctx, types.NamespacedName{Name: egw1.Name}, newEgressGateway)
+					Expect(err).NotTo(HaveOccurred())
+
 					if egressConfig.EnableIPv4 {
-						egp.Spec.EgressIP.IPv4 = pool.IPv4[0]
+						egp.Spec.EgressIP.IPv4 = newEgressGateway.Spec.Ippools.Ipv4DefaultEIP
 					}
 					if egressConfig.EnableIPv6 {
-						egp.Spec.EgressIP.IPv6 = pool.IPv6[0]
+						egp.Spec.EgressIP.IPv6 = newEgressGateway.Spec.Ippools.Ipv6DefaultEIP
 					}
 					egp.Spec.AppliedTo.PodSubnet = []string{"10.10.0.0/18"}
 				})
-			Expect(err).NotTo(HaveOccurred())
 			GinkgoWriter.Printf("the policy yaml:\n%s\n", common.GetObjYAML(egp))
+			Expect(err).NotTo(HaveOccurred())
 
 			cpEgp := egp.DeepCopy()
 			// edit policy Spec.EgressIP.IPv4 and Spec.EgressIP.IPv6
 			if egressConfig.EnableIPv4 {
-				egp.Spec.EgressIP.IPv4 = pool.IPv4[1]
+				for _, val := range pool.IPv4 {
+					if val != egp.Spec.EgressIP.IPv4 {
+						egp.Spec.EgressIP.IPv4 = val
+						break
+					}
+				}
 			}
 			if egressConfig.EnableIPv6 {
-				egp.Spec.EgressIP.IPv6 = pool.IPv6[1]
+				for _, val := range pool.IPv6 {
+					if val != egp.Spec.EgressIP.IPv6 {
+						egp.Spec.EgressIP.IPv6 = val
+						break
+					}
+				}
 			}
 			// update policy EgressIP.IPv4 or EgressIP.IPv6
 			Expect(cli.Update(ctx, egp)).To(HaveOccurred())
