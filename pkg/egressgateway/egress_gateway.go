@@ -1070,7 +1070,7 @@ func setEipStatus(ipv4, ipv6 string, nodeName string, policy egress.Policy, node
 	newEipStatus := egress.EgressIPStatus{}
 
 	for _, eip := range eipStatus.Eips {
-		if ipv4 == eip.IPv4 {
+		if (len(ipv4) != 0 && ipv4 == eip.IPv4) || (len(ipv6) != 0 && ipv6 == eip.IPv6) {
 			eip.Policies = append(eip.Policies, policy)
 
 			isExist = true
