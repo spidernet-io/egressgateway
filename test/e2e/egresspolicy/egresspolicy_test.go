@@ -732,7 +732,7 @@ var _ = Describe("EgressPolicy", Ordered, func() {
 			Expect(err).NotTo(HaveOccurred())
 
 			// waiting for the pod to be created
-			Expect(common.WaitPodRunning(ctx, cli, podObj, time.Second*5)).NotTo(HaveOccurred())
+			Expect(common.WaitPodRunning(ctx, cli, podObj, time.Second*10)).NotTo(HaveOccurred())
 
 			// create a policy in default namespace
 			egp, err = common.CreateEgressPolicyNew(ctx, cli, egressConfig, egw.Name, podLabel)
