@@ -10,14 +10,12 @@ OS=$(uname | tr 'A-Z' 'a-z')
 SED_COMMAND="sed"
 if [ ${OS} == "darwin" ]; then SED_COMMAND=gsed ; fi
 
-CURRENT_FILENAME=$( basename $0 )
 CURRENT_DIR_PATH=$(cd $(dirname $0); pwd)
 PROJECT_ROOT_PATH=$( cd ${CURRENT_DIR_PATH}/../.. && pwd )
 
-DEST_CALICO_YAML_DIR=${PROJECT_ROOT_PATH}/test/.tmp/yaml
+DEST_CALICO_YAML_DIR=${PROJECT_ROOT_PATH}/test/.tmp
 rm -rf ${DEST_CALICO_YAML_DIR}
 mkdir -p ${DEST_CALICO_YAML_DIR}
-cp ${PROJECT_ROOT_PATH}/test/yaml/calico.yaml ${DEST_CALICO_YAML_DIR}/calico.yaml
 
 CALICO_YAML=${DEST_CALICO_YAML_DIR}/calico.yaml
 CALICO_CONFIG=${DEST_CALICO_YAML_DIR}/calico_config.yaml
@@ -25,16 +23,16 @@ CALICO_NODE=${DEST_CALICO_YAML_DIR}/calico_node.yaml
 
 # CALICO_VERSION
 if [ -z "${CALICO_VERSION}" ]; then
-  [ -n "${HTTP_PROXY}" ] && calico_tag=$(curl --retry 3 -x "${HTTP_PROXY}" -s https://api.github.com/repos/projectcalico/calico/releases/latest | jq -r '.tag_name')
-  [ -z "${HTTP_PROXY}" ] && calico_tag=$(curl --retry 3 -s https://api.github.com/repos/projectcalico/calico/releases/latest | jq -r '.tag_name')
+  [ -n "${HTTP_PROXY}" ] && calico_tag=$(curl --retry 3 --retry-delay 5 -x "${HTTP_PROXY}" -s https://api.github.com/repos/projectcalico/calico/releases/latest | jq -r '.tag_name')
+  [ -z "${HTTP_PROXY}" ] && calico_tag=$(curl --retry 3 --retry-delay 5 -s https://api.github.com/repos/projectcalico/calico/releases/latest | jq -r '.tag_name')
   [ "${calico_tag}" == "null" ] && { echo "failed get calico version"; exit 1; }
 else
   calico_tag=${CALICO_VERSION}
 fi
 echo "install calico version ${calico_tag}"
 
-[ -n "${HTTP_PROXY}" ] && curl --retry 3 -x "${HTTP_PROXY}" -Lo ${CALICO_YAML}  https://raw.githubusercontent.com/projectcalico/calico/${calico_tag}/manifests/calico.yaml
-[ -z "${HTTP_PROXY}" ] && curl --retry 3 -Lo ${CALICO_YAML}  https://raw.githubusercontent.com/projectcalico/calico/${calico_tag}/manifests/calico.yaml
+[ -n "${HTTP_PROXY}" ] && curl --retry 3 --retry-delay 5 -x "${HTTP_PROXY}" -Lo ${CALICO_YAML}  https://raw.githubusercontent.com/projectcalico/calico/${calico_tag}/manifests/calico.yaml
+[ -z "${HTTP_PROXY}" ] && curl --retry 3 --retry-delay 5 -Lo ${CALICO_YAML}  https://raw.githubusercontent.com/projectcalico/calico/${calico_tag}/manifests/calico.yaml
 
 # set registry
 if [ -n "${CALICO_REGISTRY}" ]; then
@@ -134,4 +132,6 @@ kubectl wait --for=condition=ready -l k8s-app=calico-node --timeout=${INSTALL_TI
 kubectl -n kube-system delete pod -l k8s-app=calico-kube-controllers --force --grace-period=0
 sleep 3
 kubectl wait --for=condition=ready -l k8s-app=calico-kube-controllers --timeout=${INSTALL_TIME_OUT} pod -n kube-system
+
+rm -rf ${DEST_CALICO_YAML_DIR}
 
