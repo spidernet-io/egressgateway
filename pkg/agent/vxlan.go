@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"net"
+	"reflect"
 	"strconv"
 	"strings"
 	"sync"
@@ -20,6 +21,7 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
+	"sigs.k8s.io/controller-runtime/pkg/event"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
@@ -917,7 +919,9 @@ func newEgressTunnelController(mgr manager.Manager, cfg *config.Config, log logr
 	}
 
 	if err := c.Watch(source.Kind(mgr.GetCache(), &egressv1.EgressTunnel{}),
-		handler.EnqueueRequestsFromMapFunc(utils.KindToMapFlat("EgressTunnel"))); err != nil {
+		handler.EnqueueRequestsFromMapFunc(utils.KindToMapFlat("EgressTunnel")),
+		egressTunnelPredicate{},
+	); err != nil {
 		return fmt.Errorf("failed to watch EgressTunnel: %w", err)
 	}
 
@@ -947,3 +951,29 @@ func newEgressTunnelController(mgr manager.Manager, cfg *config.Config, log logr
 
 	return nil
 }
+
+type egressTunnelPredicate struct{}
+
+func (p egressTunnelPredicate) Create(_ event.CreateEvent) bool { return true }
+func (p egressTunnelPredicate) Delete(_ event.DeleteEvent) bool { return true }
+func (p egressTunnelPredicate) Update(updateEvent event.UpdateEvent) bool {
+	oldEgressTunnel, ok := updateEvent.ObjectOld.(*egressv1.EgressTunnel)
+	if !ok {
+		return false
+	}
+	newEgressTunnel, ok := updateEvent.ObjectNew.(*egressv1.EgressTunnel)
+	if !ok {
+		return false
+	}
+	if !reflect.DeepEqual(oldEgressTunnel.Status.Tunnel, newEgressTunnel.Status.Tunnel) {
+		return true
+	}
+	if oldEgressTunnel.Status.Phase != newEgressTunnel.Status.Phase {
+		return true
+	}
+	if oldEgressTunnel.Status.Mark != newEgressTunnel.Status.Mark {
+		return true
+	}
+	return false
+}
+func (p egressTunnelPredicate) Generic(_ event.GenericEvent) bool { return false }
