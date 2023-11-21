@@ -111,7 +111,7 @@ jobs:
           echo "RUN_IMAGE_SUFFIX=${tmp}-${{ matrix.name }}" >> $GITHUB_ENV
 
       - name: Build Image ${{ matrix.name }} and push
-        uses: docker/build-push-action@v5.0.0
+        uses: docker/build-push-action@v5.1.0
         if: ${{ env.RUN_PUSH == 'true' }}
         id: docker_build_and_push
         with:
@@ -130,7 +130,7 @@ jobs:
             RACE=${{ inputs.race }}
 
       - name: Build Image ${{ matrix.name }} and output docker
-        uses: docker/build-push-action@v5.0.0
+        uses: docker/build-push-action@v5.1.0
         if: ${{ env.RUN_PUSH != 'true' }}
         id: docker_build_and_save
         with:
