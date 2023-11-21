@@ -31,6 +31,22 @@ spec:
       jsonPath: .spec.clusterDefault
       name: clusterDefault
       type: boolean
+    - description: ipv4Total
+      jsonPath: .status.ipUsage.ipv4Total
+      name: ipv4Total
+      type: integer
+    - description: ipv4Free
+      jsonPath: .status.ipUsage.ipv4Free
+      name: ipv4Free
+      type: integer
+    - description: ipv6Total
+      jsonPath: .status.ipUsage.ipv6Total
+      name: ipv6Total
+      type: integer
+    - description: ipv6Free
+      jsonPath: .status.ipUsage.ipv6Free
+      name: ipv6Free
+      type: integer
     name: v1beta1
     schema:
       openAPIV3Schema:
@@ -123,10 +139,17 @@ spec:
             type: object
           status:
             properties:
-              ipv4Usage:
-                type: integer
-              ipv6Usage:
-                type: integer
+              ipUsage:
+                properties:
+                  ipv4Free:
+                    type: integer
+                  ipv4Total:
+                    type: integer
+                  ipv6Free:
+                    type: integer
+                  ipv6Total:
+                    type: integer
+                type: object
               nodeList:
                 items:
                   properties:

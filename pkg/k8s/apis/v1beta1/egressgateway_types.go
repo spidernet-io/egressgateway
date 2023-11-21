@@ -22,6 +22,10 @@ type EgressGatewayList struct {
 // +kubebuilder:printcolumn:JSONPath=".spec.ippools.ipv4DefaultEIP",description="ipv4DefaultEIP",name="ipv4DefaultEIP",type=string
 // +kubebuilder:printcolumn:JSONPath=".spec.ippools.ipv6DefaultEIP",description="ipv6DefaultEIP",name="ipv6DefaultEIP",type=string
 // +kubebuilder:printcolumn:JSONPath=".spec.clusterDefault",description="clusterDefault",name="clusterDefault",type=boolean
+// +kubebuilder:printcolumn:JSONPath=".status.ipUsage.ipv4Total",description="ipv4Total",name="ipv4Total",type=integer
+// +kubebuilder:printcolumn:JSONPath=".status.ipUsage.ipv4Free",description="ipv4Free",name="ipv4Free",type=integer
+// +kubebuilder:printcolumn:JSONPath=".status.ipUsage.ipv6Total",description="ipv6Total",name="ipv6Total",type=integer
+// +kubebuilder:printcolumn:JSONPath=".status.ipUsage.ipv6Free",description="ipv6Free",name="ipv6Free",type=integer
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
 type EgressGateway struct {
@@ -63,9 +67,18 @@ type EgressGatewayStatus struct {
 	// +kubebuilder:validation:Optional
 	NodeList []EgressIPStatus `json:"nodeList,omitempty"`
 	// +kubebuilder:validation:Optional
-	IPv4Usage int `json:"ipv4Usage,omitempty"`
+	IPUsage IPUsage `json:"ipUsage,omitempty"`
+}
+
+type IPUsage struct {
 	// +kubebuilder:validation:Optional
-	IPv6Usage int `json:"ipv6Usage,omitempty"`
+	IPv4Total int `json:"ipv4Total"`
+	// +kubebuilder:validation:Optional
+	IPv4Free int `json:"ipv4Free"`
+	// +kubebuilder:validation:Optional
+	IPv6Total int `json:"ipv6Total"`
+	// +kubebuilder:validation:Optional
+	IPv6Free int `json:"ipv6Free"`
 }
 
 func (status *EgressGatewayStatus) GetNodeIPs(nodeName string) []Eips {
