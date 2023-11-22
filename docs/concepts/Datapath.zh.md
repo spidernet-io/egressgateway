@@ -4,7 +4,68 @@
 
 ## 所有节点
 
-1. 各节点之间，隧道需要打通的规则就不一一展开；
+1. 各节点之间，隧道打通规则；
+   ```
+
+   # 本地隧道网卡信息
+   LOCAL_TUNNEL_IPV4="20.0.0.80/24"
+
+   LOCAL_TUNNEL_IPV6="fccc::80/64"
+
+   TUNNEL_NAME="egress-vxlan"
+
+   VXLAN_ID="20"
+
+   LOCAL_DEV="eth1"
+
+   LOCA_PHY_IP="172.16.1.11"
+
+   DEST_UDP_PORT="8789"
+
+   LOCAL_TUNNEL_MAC="00:11:00:00:00:80"
+
+
+   # 创建隧道网卡
+   ip l d $TUNNEL_NAME &>/dev/null
+
+   ip link add $TUNNEL_NAME type vxlan id $VXLAN_ID local $LOCA_PHY_IP dstport $DEST_UDP_PORT dev $LOCAL_DEV nolearning
+
+   ip -6 a add $LOCAL_TUNNEL_IPV6 dev $TUNNEL_NAME
+
+   ip -4 a add $LOCAL_TUNNEL_IPV4 dev $TUNNEL_NAME
+
+   ip l set $TUNNEL_NAME address $LOCAL_TUNNEL_MAC
+
+   ip link set $TUNNEL_NAME up
+
+
+   # 对端隧道信息
+   REMOTE1_TUNNEL_MAC="00:11:00:00:00:85"
+
+   REMOTE1_TUNNEL_IPV4="20.0.0.85"
+
+   REMOTE1_TUNNEL_IPV6="fccc::85"
+
+   REMOTE1_PHY_IP="172.16.2.21"
+
+
+   # 添加对端隧道转发信息
+   bridge fdb append to $REMOTE1_TUNNEL_MAC dst $REMOTE1_PHY_IP dev $TUNNEL_NAME
+
+   ip -4 n add  $REMOTE1_TUNNEL_IPV4  lladdr  $REMOTE1_TUNNEL_MAC  dev $TUNNEL_NAME
+
+   ip -6 n add  $REMOTE1_TUNNEL_IPV6  lladdr  $REMOTE1_TUNNEL_MAC  dev $TUNNEL_NAME
+
+   # 添加策略路由信息
+   ip rule add fwmark $NODE_MARK table $TABLE_NUM
+
+   ip route add default via $REMOTE1_TUNNEL_IPV4 dev $TUNNEL_NAME onlink table $TABLE_NUM
+
+   ip -6 rule add fwmark $NODE_MARK table $TABLE_NUM
+
+   ip -6 route add default via $REMOTE1_TUNNEL_IPV6 dev $TUNNEL_NAME onlink table $TABLE_NUM
+
+   ```
 2. 在节点第一次变成网关节点时更新，或者节点 join 时，将 policy 命中的流量，重新打标签。其他情况不更新。
 
    ```shell
