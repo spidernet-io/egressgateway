@@ -14,13 +14,12 @@ import (
 	"io"
 	"net"
 
-	"github.com/go-kit/log"
-	"github.com/go-kit/log/level"
+	"github.com/go-logr/logr"
 	"github.com/mdlayher/ndp"
 )
 
 type ndpResponder struct {
-	logger       log.Logger
+	logger       logr.Logger
 	intf         string
 	hardwareAddr net.HardwareAddr
 	conn         *ndp.Conn
@@ -31,7 +30,7 @@ type ndpResponder struct {
 	solicitedNodeGroups map[string]int64
 }
 
-func newNDPResponder(logger log.Logger, ifi *net.Interface, ann announceFunc) (*ndpResponder, error) {
+func newNDPResponder(logger logr.Logger, ifi *net.Interface, ann announceFunc) (*ndpResponder, error) {
 	// Use link-local address as the source IPv6 address for NDP communications.
 	conn, _, err := ndp.Dial(ifi, ndp.LinkLocal)
 	if err != nil {
@@ -144,17 +143,16 @@ func (n *ndpResponder) processRequest() dropReason {
 	// Ignore NDP requests that the announcer tells us to ignore.
 	reason := n.announce(ns.TargetAddress, n.intf)
 	if reason == dropReasonNotMatchInterface {
-		level.Debug(n.logger).Log("op", "ndpRequestIgnore", "ip", ns.TargetAddress, "interface", n.intf, "reason", "notMatchInterface")
+		n.logger.V(1).Info("ignore NDP requests", "op", "ndpRequestIgnore", "ip", ns.TargetAddress, "interface", n.intf, "reason", "notMatchInterface")
 	}
 	if reason != dropReasonNone {
 		return reason
 	}
 
 	stats.GotRequest(ns.TargetAddress.String())
-	level.Debug(n.logger).Log("interface", n.intf, "ip", ns.TargetAddress, "senderIP", src, "senderLLAddr", nsLLAddr, "responseMAC", n.hardwareAddr, "msg", "got NDP request for service IP, sending response")
-
+	n.logger.V(1).Info("got NDP request for service IP, sending response", "interface", n.intf, "ip", ns.TargetAddress, "senderIP", src, "senderLLAddr", nsLLAddr, "responseMAC", n.hardwareAddr)
 	if err := n.advertise(src, ns.TargetAddress, false); err != nil {
-		level.Error(n.logger).Log("op", "ndpReply", "interface", n.intf, "ip", ns.TargetAddress, "senderIP", src, "senderLLAddr", nsLLAddr, "responseMAC", n.hardwareAddr, "error", err, "msg", "failed to send ARP reply")
+		n.logger.Error(err, "failed to send ARP reply", "op", "ndpReply", "interface", n.intf, "ip", ns.TargetAddress, "senderIP", src, "senderLLAddr", nsLLAddr, "responseMAC", n.hardwareAddr)
 	} else {
 		stats.SentResponse(ns.TargetAddress.String())
 	}

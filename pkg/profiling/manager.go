@@ -11,7 +11,7 @@ import (
 
 	"github.com/go-logr/logr"
 	"github.com/google/gops/agent"
-	"github.com/pyroscope-io/client/pyroscope"
+	pyroscope "github.com/grafana/pyroscope-go"
 )
 
 type GoPS struct {

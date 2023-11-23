@@ -184,26 +184,32 @@ func (r *policeReconciler) initApplyPolicy() error {
 	}
 
 	for _, table := range r.mangleTables {
+		table.UpdateChain(&iptables.Chain{Name: "EGRESSGATEWAY-REPLY-ROUTING"})
 		table.UpdateChain(&iptables.Chain{Name: "EGRESSGATEWAY-MARK-REQUEST"})
-		chainMapRules := buildMangleStaticRule(baseMark)
+		chainMapRules := buildMangleStaticRule(
+			baseMark,
+			isEgressNode,
+			r.cfg.FileConfig.EnableGatewayReplyRoute,
+			uint32(r.cfg.FileConfig.GatewayReplyRouteMark),
+		)
 		for chain, rules := range chainMapRules {
 			table.InsertOrAppendRules(chain, rules)
 		}
 	}
 
 	// add forward rules for replay packet on gateway node, which should be enabled for spiderpool
-	if isEgressNode && r.cfg.FileConfig.EnableGatewayReplyRoute {
-		gatewayReplyRouteMark := r.cfg.FileConfig.GatewayReplyRouteMark
-		dev := r.cfg.FileConfig.VXLAN.Name
-
-		for _, table := range r.mangleTables {
-			table.UpdateChain(&iptables.Chain{Name: "EGRESSGATEWAY-REPLY-ROUTING"})
-			chainMapRules := buildReplyRouteIptables(uint32(gatewayReplyRouteMark), dev)
-			for chain, rules := range chainMapRules {
-				table.InsertOrAppendRules(chain, rules)
-			}
-		}
-	}
+	//if isEgressNode && r.cfg.FileConfig.EnableGatewayReplyRoute {
+	//	gatewayReplyRouteMark := r.cfg.FileConfig.GatewayReplyRouteMark
+	//	dev := r.cfg.FileConfig.VXLAN.Name
+	//
+	//	for _, table := range r.mangleTables {
+	//		table.UpdateChain(&iptables.Chain{Name: "EGRESSGATEWAY-REPLY-ROUTING"})
+	//		chainMapRules := buildReplyRouteIptables(uint32(gatewayReplyRouteMark), dev)
+	//		for chain, rules := range chainMapRules {
+	//			table.InsertOrAppendRules(chain, rules)
+	//		}
+	//	}
+	//}
 
 	for _, table := range r.mangleTables {
 		rules := make([]iptables.Rule, 0)
@@ -235,6 +241,11 @@ func (r *policeReconciler) initApplyPolicy() error {
 		table.UpdateChain(&iptables.Chain{
 			Name:  "EGRESSGATEWAY-MARK-REQUEST",
 			Rules: rules,
+		})
+		table.UpdateChain(&iptables.Chain{
+			Name: "EGRESSGATEWAY-REPLY-ROUTING",
+			Rules: buildPreroutingReplyRouting(r.cfg.FileConfig.VXLAN.Name,
+				uint32(r.cfg.FileConfig.GatewayReplyRouteMark)),
 		})
 	}
 
@@ -741,36 +752,40 @@ func buildFilterStaticRule(base uint32) map[string][]iptables.Rule {
 	return res
 }
 
-func buildMangleStaticRule(base uint32) map[string][]iptables.Rule {
-	res := map[string][]iptables.Rule{
-		"FORWARD": {{
+func buildMangleStaticRule(base uint32,
+	isEgressNode bool,
+	enableGatewayReplyRoute bool, replyMark uint32) map[string][]iptables.Rule {
+
+	forward := []iptables.Rule{
+		{
 			Match:  iptables.MatchCriteria{}.MarkMatchesWithMask(base, 0xff000000),
 			Action: iptables.SetMaskedMarkAction{Mark: base, Mask: 0xffffffff},
 			Comment: []string{
 				"Accept for egress traffic from pod going to EgressTunnel",
 			},
-		}},
-		"POSTROUTING": {{
-			Match:  iptables.MatchCriteria{}.MarkMatchesWithMask(base, 0xffffffff),
-			Action: iptables.AcceptAction{},
-			Comment: []string{
-				"Accept for egress traffic from pod going to EgressTunnel",
-			},
-		}},
-		"PREROUTING": {{
+		},
+	}
+
+	postrouting := []iptables.Rule{{
+		Match:  iptables.MatchCriteria{}.MarkMatchesWithMask(base, 0xffffffff),
+		Action: iptables.AcceptAction{},
+		Comment: []string{
+			"Accept for egress traffic from pod going to EgressTunnel",
+		},
+	}}
+
+	prerouting := []iptables.Rule{
+		{
 			Match:  iptables.MatchCriteria{},
 			Action: iptables.JumpAction{Target: "EGRESSGATEWAY-MARK-REQUEST"},
 			Comment: []string{
 				"Checking for EgressPolicy matched traffic",
 			},
-		}},
+		},
 	}
-	return res
-}
 
-func buildReplyRouteIptables(base uint32, dev string) map[string][]iptables.Rule {
-	res := map[string][]iptables.Rule{
-		"PREROUTING": {
+	if isEgressNode && enableGatewayReplyRoute {
+		prerouting = []iptables.Rule{
 			{
 				Match:  iptables.MatchCriteria{},
 				Action: iptables.JumpAction{Target: "EGRESSGATEWAY-REPLY-ROUTING"},
@@ -778,40 +793,55 @@ func buildReplyRouteIptables(base uint32, dev string) map[string][]iptables.Rule
 					"egressGateway Reply datapath rule, rule is from the EgressGateway",
 				},
 			},
-		},
-		"EGRESSGATEWAY-REPLY-ROUTING": {
 			{
-				Match:  iptables.MatchCriteria{}.InInterface(dev),
-				Action: iptables.SetMaskedMarkAction{Mark: base, Mask: 0xffffffff},
+				Match:  iptables.MatchCriteria{},
+				Action: iptables.JumpAction{Target: "EGRESSGATEWAY-MARK-REQUEST"},
 				Comment: []string{
-					"mark the traffic from the EgressGateway tunnel, rule is from the EgressGateway",
+					"Checking for EgressPolicy matched traffic",
 				},
 			},
-			{
-				Match:  iptables.MatchCriteria{}.MarkMatchesWithMask(base, 0xffffffff),
-				Action: iptables.SaveConnMarkAction{SaveMask: base},
-				Comment: []string{
-					"save mark to the connection, rule is from the EgressGateway",
-				},
-			},
-			{
-				Match:  iptables.MatchCriteria{}.ConntrackState("ESTABLISHED"),
-				Action: iptables.RestoreConnMarkAction{RestoreMask: 0},
-				Comment: []string{
-					"label for restoring connections, rule is from the EgressGateway",
-				},
-			},
-		},
-		"POSTROUTING": {{
-			Match:  iptables.MatchCriteria{}.MarkMatchesWithMask(base, 0xffffffff),
+		}
+		postrouting = append(postrouting, iptables.Rule{
+			Match:  iptables.MatchCriteria{}.MarkMatchesWithMask(replyMark, 0xffffffff),
 			Action: iptables.SetMaskedMarkAction{Mark: 0x00000000, Mask: 0xffffffff},
 			Comment: []string{
 				"clear the Mark of the inner package, rule is from the EgressGateway",
 			},
-		}},
+		})
 	}
 
+	res := map[string][]iptables.Rule{
+		"FORWARD":     forward,
+		"POSTROUTING": postrouting,
+		"PREROUTING":  prerouting,
+	}
 	return res
+}
+
+func buildPreroutingReplyRouting(vxlanName string, replyMark uint32) []iptables.Rule {
+	return []iptables.Rule{
+		{
+			Match:  iptables.MatchCriteria{}.InInterface(vxlanName),
+			Action: iptables.SetMaskedMarkAction{Mark: replyMark, Mask: 0xffffffff},
+			Comment: []string{
+				"mark the traffic from the EgressGateway tunnel, rule is from the EgressGateway",
+			},
+		},
+		{
+			Match:  iptables.MatchCriteria{}.MarkMatchesWithMask(replyMark, 0xffffffff),
+			Action: iptables.SaveConnMarkAction{SaveMask: replyMark},
+			Comment: []string{
+				"save mark to the connection, rule is from the EgressGateway",
+			},
+		},
+		{
+			Match:  iptables.MatchCriteria{}.ConntrackState("ESTABLISHED"),
+			Action: iptables.RestoreConnMarkAction{RestoreMask: 0},
+			Comment: []string{
+				"label for restoring connections, rule is from the EgressGateway",
+			},
+		},
+	}
 }
 
 // reconcilePolicy reconcile egress policy

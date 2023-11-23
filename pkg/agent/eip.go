@@ -70,8 +70,7 @@ func (r *eip) Reconcile(ctx context.Context, req reconcile.Request) (reconcile.R
 
 // newEipCtrl return a new egress ip controller
 func newEipCtrl(mgr manager.Manager, log logr.Logger, cfg *config.Config) error {
-	lw := logWrapper{log: log}
-	an, err := layer2.New(lw, cfg.FileConfig.AnnounceExcludeRegexp)
+	an, err := layer2.New(log, cfg.FileConfig.AnnounceExcludeRegexp)
 	if err != nil {
 		return err
 	}
@@ -91,47 +90,6 @@ func newEipCtrl(mgr manager.Manager, log logr.Logger, cfg *config.Config) error 
 	if err = c.Watch(source.Kind(mgr.GetCache(), &egressv1.EgressGateway{}),
 		&handler.EnqueueRequestForObject{}); err != nil {
 		return fmt.Errorf("failed to watch EgressGateway: %v", err)
-	}
-
-	return nil
-}
-
-type logWrapper struct {
-	log logr.Logger
-}
-
-func (lw logWrapper) Log(keyVals ...interface{}) error {
-	fields := make([]interface{}, 0, len(keyVals)/2)
-	var msgValue interface{}
-	var kind string
-	for i := 0; i < len(keyVals); i += 2 {
-		key, ok := keyVals[i].(string)
-		if !ok {
-			key = fmt.Sprintf("%v", keyVals[i])
-		}
-		if key == "msg" {
-			msgValue = keyVals[i+1]
-		} else if key == "level" {
-			kind = fmt.Sprintf("%v", keyVals[i+1])
-		} else {
-			fields = append(fields, key, keyVals[i+1])
-		}
-	}
-
-	var msg string
-	if msgValue != nil {
-		msg = fmt.Sprintf("%v", msgValue)
-	}
-
-	switch kind {
-	case "debug":
-		lw.log.V(1).Info(msg, fields...)
-	case "warn":
-		lw.log.Info(msg, fields...)
-	case "error":
-		lw.log.Error(fmt.Errorf(msg), "", fields...)
-	default:
-		lw.log.Info(msg, fields...)
 	}
 
 	return nil

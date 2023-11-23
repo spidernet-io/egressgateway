@@ -15,8 +15,7 @@ import (
 	"io"
 	"net"
 
-	"github.com/go-kit/log"
-	"github.com/go-kit/log/level"
+	"github.com/go-logr/logr"
 	"github.com/mdlayher/arp"
 	"github.com/mdlayher/ethernet"
 )
@@ -24,7 +23,7 @@ import (
 type announceFunc func(net.IP, string) dropReason
 
 type arpResponder struct {
-	logger       log.Logger
+	logger       logr.Logger
 	intf         string
 	hardwareAddr net.HardwareAddr
 	conn         *arp.Client
@@ -32,7 +31,7 @@ type arpResponder struct {
 	announce     announceFunc
 }
 
-func newARPResponder(logger log.Logger, ifi *net.Interface, ann announceFunc) (*arpResponder, error) {
+func newARPResponder(logger logr.Logger, ifi *net.Interface, ann announceFunc) (*arpResponder, error) {
 	client, err := arp.Dial(ifi)
 	if err != nil {
 		return nil, fmt.Errorf("creating ARP responder for %q: %s", ifi.Name, err)
@@ -106,17 +105,31 @@ func (a *arpResponder) processRequest() dropReason {
 	// Ignore ARP requests that the announcer tells us to ignore.
 	reason := a.announce(pkt.TargetIP, a.intf)
 	if reason == dropReasonNotMatchInterface {
-		level.Debug(a.logger).Log("op", "arpRequestIgnore", "ip", pkt.TargetIP, "interface", a.intf, "reason", "notMatchInterface")
+		a.logger.V(1).Info("ignore ARP requests",
+			"op", "arpRequestIgnore", "ip", pkt.TargetIP, "interface", a.intf, "reason", "notMatchInterface")
 	}
 	if reason != dropReasonNone {
 		return reason
 	}
 
 	stats.GotRequest(pkt.TargetIP.String())
-	level.Debug(a.logger).Log("interface", a.intf, "ip", pkt.TargetIP, "senderIP", pkt.SenderIP, "senderMAC", pkt.SenderHardwareAddr, "responseMAC", a.hardwareAddr, "msg", "got ARP request for service IP, sending response")
+	a.logger.V(1).Info("got ARP request for service IP, sending response",
+		"interface", a.intf,
+		"ip", pkt.TargetIP,
+		"senderIP", pkt.SenderIP,
+		"senderMAC", pkt.SenderHardwareAddr,
+		"responseMAC", a.hardwareAddr,
+	)
 
 	if err := a.conn.Reply(pkt, a.hardwareAddr, pkt.TargetIP); err != nil {
-		level.Error(a.logger).Log("op", "arpReply", "interface", a.intf, "ip", pkt.TargetIP, "senderIP", pkt.SenderIP, "senderMAC", pkt.SenderHardwareAddr, "responseMAC", a.hardwareAddr, "error", err, "msg", "failed to send ARP reply")
+		a.logger.Error(err, "failed to send ARP reply",
+			"op", "arpReply",
+			"interface", a.intf,
+			"ip", pkt.TargetIP,
+			"senderIP", pkt.SenderIP,
+			"senderMAC", pkt.SenderHardwareAddr,
+			"responseMAC", a.hardwareAddr,
+		)
 	} else {
 		stats.SentResponse(pkt.TargetIP.String())
 	}
