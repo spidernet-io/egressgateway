@@ -474,3 +474,79 @@ func IsIPv6IPRange(ipRange string) bool {
 
 	return true
 }
+
+// CidrToIPs convert the CIDR format to IP slices
+func CidrToIPs(cidr string) ([]net.IP, error) {
+	ip, ipnet, err := net.ParseCIDR(cidr)
+	if err != nil {
+		return nil, err
+	}
+
+	var ips []net.IP
+	for ip := ip.Mask(ipnet.Mask); ipnet.Contains(ip); NextIP(ip) {
+		ips = append(ips, ip)
+	}
+
+	return ips, nil
+}
+
+// CidrsToIPs convert the CIDRs format to IP slices
+func CidrsToIPs(cidrs []string) ([]string, error) {
+	ipMap := make(map[string]struct{}, 0)
+	for _, cidr := range cidrs {
+		ips, err := CidrToIPs(cidr)
+		if err != nil {
+			return nil, err
+		}
+		for _, v := range ips {
+			ipMap[v.String()] = struct{}{}
+		}
+	}
+	res := make([]string, 0)
+	for k := range ipMap {
+		res = append(res, k)
+	}
+	return res, nil
+}
+
+// ConvertCidrOrIPrangeToIPs The 'in' can include three formats: single IP, IP range, and IP CIDR, such as ["172.30.0.2", "172.30.0.3-172.30.0-5", "172.30.1.0/24"]
+func ConvertCidrOrIPrangeToIPs(in []string, version constant.IPVersion) ([]net.IP, error) {
+	cidrs := make([]string, 0)
+	ipranges := make([]string, 0)
+
+	for _, v := range in {
+		if _, _, err := net.ParseCIDR(v); err != nil {
+			ipranges = append(ipranges, v)
+		} else {
+			cidrs = append(cidrs, v)
+		}
+	}
+
+	// iprange
+	rangeIPs, err := ParseIPRanges(version, ipranges)
+	if err != nil {
+		return nil, err
+	}
+
+	// ipCidr
+	cidrIPs, err := CidrsToIPs(cidrs)
+	if err != nil {
+		return nil, err
+	}
+
+	ipMap := make(map[string]struct{}, 0)
+	for _, v := range rangeIPs {
+		ipMap[v.String()] = struct{}{}
+	}
+
+	for _, v := range cidrIPs {
+		ipMap[v] = struct{}{}
+	}
+
+	res := make([]net.IP, 0)
+	for k := range ipMap {
+		res = append(res, net.IP(k))
+	}
+
+	return res, nil
+}

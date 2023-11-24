@@ -118,6 +118,16 @@ func (r egnReconciler) reconcileNode(ctx context.Context, req reconcile.Request,
 					egw.Status.NodeList = append(egw.Status.NodeList, egress.EgressIPStatus{Name: node.Name, Status: string(egress.EgressTunnelFailed)})
 				}
 
+				ipv4sFree, ipv6sFree, ipv4sTotal, ipv6sTotal, err := countGatewayIP(&egw)
+				if err != nil {
+					r.log.Error(err, "count egress gateway ippools", "nodeList", egw.Status.NodeList)
+					return reconcile.Result{Requeue: true}, nil
+				}
+				egw.Status.IPUsage.IPv4Free = ipv4sFree
+				egw.Status.IPUsage.IPv4Total = ipv4sTotal
+				egw.Status.IPUsage.IPv6Free = ipv6sFree
+				egw.Status.IPUsage.IPv6Total = ipv6sTotal
+
 				r.log.V(1).Info("update egress gateway status", "status", egw.Status)
 				err = r.client.Status().Update(ctx, &egw)
 				if err != nil {
@@ -294,6 +304,16 @@ func (r egnReconciler) reconcileEGW(ctx context.Context, req reconcile.Request, 
 		}
 		egw.Status.NodeList = perNodeList
 
+		ipv4sFree, ipv6sFree, ipv4sTotal, ipv6sTotal, err := countGatewayIP(egw)
+		if err != nil {
+			r.log.Error(err, "count egress gateway ippools", "nodeList", egw.Status.NodeList)
+			return reconcile.Result{Requeue: true}, nil
+		}
+		egw.Status.IPUsage.IPv4Free = ipv4sFree
+		egw.Status.IPUsage.IPv4Total = ipv4sTotal
+		egw.Status.IPUsage.IPv6Free = ipv6sFree
+		egw.Status.IPUsage.IPv6Total = ipv6sTotal
+
 		log.V(1).Info("update egress gateway status", "status", egw.Status)
 		err = r.client.Status().Update(ctx, egw)
 		if err != nil {
@@ -419,6 +439,15 @@ func (r egnReconciler) reconcileEGT(ctx context.Context, req reconcile.Request, 
 			}
 
 			egw.Status.NodeList = perNodeList
+			ipv4sFree, ipv6sFree, ipv4sTotal, ipv6sTotal, err := countGatewayIP(egw)
+			if err != nil {
+				r.log.Error(err, "count egress gateway ippools", "nodeList", egw.Status.NodeList)
+				return reconcile.Result{Requeue: true}, nil
+			}
+			egw.Status.IPUsage.IPv4Free = ipv4sFree
+			egw.Status.IPUsage.IPv4Total = ipv4sTotal
+			egw.Status.IPUsage.IPv6Free = ipv6sFree
+			egw.Status.IPUsage.IPv6Total = ipv6sTotal
 
 			log.V(1).Info("update egress gateway status", "status", egw.Status)
 			err = r.client.Status().Update(ctx, egw)
@@ -517,8 +546,18 @@ func (r egnReconciler) reconcileEGP(ctx context.Context, req reconcile.Request, 
 				// the system reclaims the EIP.
 				DeletePolicyFromEG(log, policy, &egw)
 
+				ipv4sFree, ipv6sFree, ipv4sTotal, ipv6sTotal, err := countGatewayIP(&egw)
+				if err != nil {
+					r.log.Error(err, "count egress gateway ippools", "nodeList", egw.Status.NodeList)
+					return reconcile.Result{Requeue: true}, nil
+				}
+				egw.Status.IPUsage.IPv4Free = ipv4sFree
+				egw.Status.IPUsage.IPv4Total = ipv4sTotal
+				egw.Status.IPUsage.IPv6Free = ipv6sFree
+				egw.Status.IPUsage.IPv6Total = ipv6sTotal
+
 				log.V(1).Info("update egress gateway status", "status", egw.Status)
-				err := r.client.Status().Update(ctx, &egw)
+				err = r.client.Status().Update(ctx, &egw)
 				if err != nil {
 					log.Error(err, "update egress gateway status", "status", egw.Status)
 					return reconcile.Result{Requeue: true}, err
@@ -642,6 +681,15 @@ func (r egnReconciler) reconcileEGP(ctx context.Context, req reconcile.Request, 
 
 update:
 	if isUpdate {
+		ipv4sFree, ipv6sFree, ipv4sTotal, ipv6sTotal, err := countGatewayIP(egw)
+		if err != nil {
+			r.log.Error(err, "count egress gateway ippools", "nodeList", egw.Status.NodeList)
+			return reconcile.Result{Requeue: true}, nil
+		}
+		egw.Status.IPUsage.IPv4Free = ipv4sFree
+		egw.Status.IPUsage.IPv4Total = ipv4sTotal
+		egw.Status.IPUsage.IPv6Free = ipv6sFree
+		egw.Status.IPUsage.IPv6Total = ipv6sTotal
 		r.log.V(1).Info("update egress gateway status", "status", egw.Status)
 		err = r.client.Status().Update(ctx, egw)
 		if err != nil {
@@ -696,8 +744,18 @@ func (r egnReconciler) deleteNodeFromEG(ctx context.Context, log logr.Logger, no
 		}
 
 		egw.Status.NodeList = perNodeList
+		ipv4sFree, ipv6sFree, ipv4sTotal, ipv6sTotal, err := countGatewayIP(&egw)
+		if err != nil {
+			r.log.Error(err, "count egress gateway ippools", "nodeList", egw.Status.NodeList)
+			return err
+		}
+		egw.Status.IPUsage.IPv4Free = ipv4sFree
+		egw.Status.IPUsage.IPv4Total = ipv4sTotal
+		egw.Status.IPUsage.IPv6Free = ipv6sFree
+		egw.Status.IPUsage.IPv6Total = ipv6sTotal
+
 		r.log.V(1).Info("update egress gateway status", "status", egw.Status)
-		err := r.client.Status().Update(ctx, &egw)
+		err = r.client.Status().Update(ctx, &egw)
 		if err != nil {
 			r.log.Error(err, "update egress gateway status", "status", egw.Status)
 			return err
@@ -1161,5 +1219,52 @@ func DeletePolicyFromEG(log logr.Logger, policy egress.Policy, egw *egress.Egres
 		}
 	}
 breakHere:
+	return
+}
+
+func egwIpsCount(status egress.EgressGatewayStatus) (int, int) {
+	ipv4Usage := 0
+	ipv6Usage := 0
+	for i := range status.NodeList {
+		for j := range status.NodeList[i].Eips {
+			if len(status.NodeList[i].Eips[j].IPv4) != 0 {
+				ipv4Usage++
+			}
+
+			if len(status.NodeList[i].Eips[j].IPv6) != 0 {
+				ipv6Usage++
+			}
+		}
+	}
+
+	return ipv4Usage, ipv6Usage
+}
+
+func countGatewayIP(egw *egress.EgressGateway) (ipv4sFree, ipv6sFree, ipv4sTotal, ipv6sTotal int, err error) {
+	ipv4s, err := ip.ConvertCidrOrIPrangeToIPs(egw.Spec.Ippools.IPv4, constant.IPv4)
+	if err != nil {
+		return 0, 0, 0, 0, err
+	}
+	ipv6s, err := ip.ConvertCidrOrIPrangeToIPs(egw.Spec.Ippools.IPv6, constant.IPv6)
+	if err != nil {
+		return 0, 0, 0, 0, err
+	}
+	useIpv4s := make([]net.IP, 0)
+	useIpv6s := make([]net.IP, 0)
+	for _, node := range egw.Status.NodeList {
+		for _, eip := range node.Eips {
+			if len(eip.IPv4) != 0 {
+				useIpv4s = append(useIpv4s, net.ParseIP(eip.IPv4))
+			}
+			if len(eip.IPv6) != 0 {
+				useIpv6s = append(useIpv6s, net.ParseIP(eip.IPv6))
+			}
+		}
+	}
+
+	ipv4sFree = len(ipv4s) - len(useIpv4s)
+	ipv6sFree = len(ipv6s) - len(useIpv6s)
+
+	ipv4sTotal, ipv6sTotal, err = len(ipv4s), len(ipv6s), nil
 	return
 }
