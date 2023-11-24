@@ -90,5 +90,38 @@ func clean(validate, mutating string) error {
 		}
 	}
 
+	policyList := new(egressv1.EgressPolicyList)
+	err = cli.List(ctx, policyList)
+	if err == nil {
+		for _, item := range policyList.Items {
+			err = cli.Delete(ctx, &item)
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	clusterPolicyList := new(egressv1.EgressClusterPolicyList)
+	err = cli.List(ctx, clusterPolicyList)
+	if err == nil {
+		for _, item := range clusterPolicyList.Items {
+			err = cli.Delete(ctx, &item)
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	gatewayList := new(egressv1.EgressGatewayList)
+	err = cli.List(ctx, gatewayList)
+	if err == nil {
+		for _, item := range gatewayList.Items {
+			err = cli.Delete(ctx, &item)
+			if err != nil {
+				return err
+			}
+		}
+	}
+
 	return nil
 }
