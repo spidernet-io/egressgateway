@@ -19,6 +19,7 @@ import (
 	k8serr "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/client-go/tools/record"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
@@ -81,6 +82,7 @@ type egReconciler struct {
 	allocatorV4 *ipallocator.Range
 	allocatorV6 *ipallocator.Range
 	initDone    chan struct{}
+	recorder    record.EventRecorder
 }
 
 func (r *egReconciler) Reconcile(ctx context.Context, req reconcile.Request) (reconcile.Result, error) {
@@ -629,6 +631,12 @@ func (r *egReconciler) tunnelListCheck(ctx context.Context) error {
 				r.log.Error(err, "update tunnel status to TunnelHeartbeatTimeout")
 				continue
 			}
+
+			r.recorder.Event(
+				tunnel, corev1.EventTypeNormal,
+				egressv1.ReasonStatusChanged,
+				"EgressTunnel status changes to HeartbeatTimeout.",
+			)
 		}
 	}
 	return nil
@@ -709,6 +717,8 @@ func newEgressTunnelController(mgr manager.Manager, log logr.Logger, cfg *config
 		handler.EnqueueRequestsFromMapFunc(utils.KindToMapFlat("Node"))); err != nil {
 		return fmt.Errorf("failed to watch Node: %w", err)
 	}
+
+	r.recorder = mgr.GetEventRecorderFor("egress-tunnel")
 
 	return nil
 }

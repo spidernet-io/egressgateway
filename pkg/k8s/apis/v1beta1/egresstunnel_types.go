@@ -83,6 +83,8 @@ const (
 	EgressTunnelReady EgressTunnelPhase = "Ready"
 )
 
+var ReasonStatusChanged = "StatusChanged"
+
 func init() {
 	SchemeBuilder.Register(&EgressTunnel{}, &EgressTunnelList{})
 }
