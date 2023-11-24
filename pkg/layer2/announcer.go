@@ -6,6 +6,9 @@
 // https://github.com/metallb/metallb
 // SPDX-License-Identifier:Apache-2.0
 
+// Changes:
+// * replace logger library
+
 package layer2
 
 import (
@@ -15,15 +18,14 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/go-kit/log"
-	"github.com/go-kit/log/level"
+	"github.com/go-logr/logr"
 
 	"github.com/spidernet-io/egressgateway/pkg/lock"
 )
 
 // Announce is used to "announce" new IPs mapped to the node's MAC address.
 type Announce struct {
-	logger log.Logger
+	logger logr.Logger
 
 	lock.RWMutex
 	nodeInterfaces []string // current local interfaces' name list
@@ -39,7 +41,7 @@ type Announce struct {
 }
 
 // New returns an initialized Announce.
-func New(l log.Logger, excludeRegexp *regexp.Regexp) (*Announce, error) {
+func New(l logr.Logger, excludeRegexp *regexp.Regexp) (*Announce, error) {
 	ret := &Announce{
 		logger:         l,
 		nodeInterfaces: []string{},
@@ -65,12 +67,12 @@ func (a *Announce) interfaceScan() {
 }
 
 // updateInterfaces is used to scan network interfaces, update the arps and ndps lists in
-// the Announce object to respond to ARP and NDP requests, and exclude some unnecessary
+// the Announcement object to respond to ARP and NDP requests, and exclude some unnecessary
 // interfaces.
 func (a *Announce) updateInterfaces() {
 	ifs, err := net.Interfaces()
 	if err != nil {
-		level.Error(a.logger).Log("op", "getInterfaces", "error", err, "msg", "couldn't list interfaces")
+		a.logger.Error(err, "couldn't list interfaces", "op", "getInterfaces")
 		return
 	}
 
@@ -83,15 +85,17 @@ func (a *Announce) updateInterfaces() {
 		ifi := intf
 
 		if (a.excludeRegexp != nil) && a.excludeRegexp.MatchString(ifi.Name) {
-			level.Debug(a.logger).Log("event", "announced interface to exclude", "interface", ifi.Name)
+			a.logger.V(1).Info("announced interface to exclude interface", "interface", ifi.Name)
 			continue
 		}
 
 		curIfs = append(curIfs, ifi.Name)
-		l := log.With(a.logger, "interface", ifi.Name)
+
+		l := a.logger.WithValues("interface", ifi.Name)
+
 		addrs, err := ifi.Addrs()
 		if err != nil {
-			level.Error(l).Log("op", "getAddresses", "error", err, "msg", "couldn't get addresses for interface")
+			l.Error(err, "couldn't get addresses for interface", "op", "getAddresses")
 			return
 		}
 
@@ -128,20 +132,20 @@ func (a *Announce) updateInterfaces() {
 		if keepARP[ifi.Index] && a.arps[ifi.Index] == nil {
 			resp, err := newARPResponder(a.logger, &ifi, a.shouldAnnounce)
 			if err != nil {
-				level.Error(l).Log("op", "createARPResponder", "error", err, "msg", "failed to create ARP responder")
+				l.Error(err, "failed to create ARP responder", "op", "createARPResponder")
 				continue
 			}
 			a.arps[ifi.Index] = resp
-			level.Info(l).Log("event", "createARPResponder", "msg", "created ARP responder for interface")
+			l.Info("created ARP responder for interface", "event", "createARPResponder")
 		}
 		if keepNDP[ifi.Index] && a.ndps[ifi.Index] == nil {
 			resp, err := newNDPResponder(a.logger, &ifi, a.shouldAnnounce)
 			if err != nil {
-				level.Error(l).Log("op", "createNDPResponder", "error", err, "msg", "failed to create NDP responder")
+				l.Error(err, "failed to create NDP responder", "op", "createNDPResponder")
 				continue
 			}
 			a.ndps[ifi.Index] = resp
-			level.Info(l).Log("event", "createNDPResponder", "msg", "created NDP responder for interface")
+			l.Info("created NDP responder for interface", "event", "createNDPResponder")
 		}
 	}
 
@@ -151,14 +155,14 @@ func (a *Announce) updateInterfaces() {
 		if !keepARP[i] {
 			client.Close()
 			delete(a.arps, i)
-			level.Info(a.logger).Log("interface", client.Interface(), "event", "deleteARPResponder", "msg", "deleted ARP responder for interface")
+			a.logger.Info("deleted ARP responder for interface", "event", "deleteARPResponder", "interface", client.Interface())
 		}
 	}
 	for i, client := range a.ndps {
 		if !keepNDP[i] {
 			client.Close()
 			delete(a.ndps, i)
-			level.Info(a.logger).Log("interface", client.Interface(), "event", "deleteNDPResponder", "msg", "deleted NDP responder for interface")
+			a.logger.Info("deleted NDP responder for interface", "event", "deleteNDPResponder", "interface", client.Interface())
 		}
 	}
 }
@@ -234,21 +238,23 @@ func (a *Announce) gratuitous(adv IPAdvertisement) {
 	if ip.To4() != nil {
 		for _, client := range a.arps {
 			if !adv.matchInterface(client.intf) {
-				level.Debug(a.logger).Log("op", "gratuitousAnnounce", "skip interfaces", client.intf)
+				a.logger.V(1).Info("skip interfaces", "op", "gratuitousAnnounce", "interface", client.intf)
 				continue
 			}
 			if err := client.Gratuitous(ip); err != nil {
-				level.Error(a.logger).Log("op", "gratuitousAnnounce", "error", err, "ip", ip, "msg", "failed to make gratuitous ARP announcement")
+				a.logger.Error(err, "failed to make gratuitous ARP announcement",
+					"op", "gratuitousAnnounce", "ip", ip)
 			}
 		}
 	} else {
 		for _, client := range a.ndps {
 			if !adv.matchInterface(client.intf) {
-				level.Debug(a.logger).Log("op", "gratuitousAnnounce", "skip interfaces", client.intf)
+				a.logger.V(1).Info("skip interfaces", "op", "gratuitousAnnounce", "interface", client.intf)
 				continue
 			}
 			if err := client.Gratuitous(ip); err != nil {
-				level.Error(a.logger).Log("op", "gratuitousAnnounce", "error", err, "ip", ip, "msg", "failed to make gratuitous NDP announcement")
+				a.logger.Error(err, "failed to make gratuitous NDP announcement",
+					"op", "gratuitousAnnounce", "ip", ip)
 			}
 		}
 	}
@@ -302,7 +308,9 @@ func (a *Announce) SetBalancer(name string, adv IPAdvertisement) {
 
 	for _, client := range a.ndps {
 		if err := client.Watch(adv.ip); err != nil {
-			level.Error(a.logger).Log("op", "watchMulticastGroup", "error", err, "ip", adv.ip, "interface", client.intf, "msg", "failed to watch NDP multicast group for IP, NDP responder will not respond to requests for this address")
+			a.logger.Error(err, "failed to watch NDP multicast group for IP, NDP responder will not respond to requests for this address",
+				"op", "watchMulticastGroup", "ip", adv.ip, "interface", client.intf,
+			)
 		}
 	}
 }
@@ -328,7 +336,9 @@ func (a *Announce) DeleteBalancer(name string) {
 
 		for _, client := range a.ndps {
 			if err := client.Unwatch(cur.ip); err != nil {
-				level.Error(a.logger).Log("op", "unwatchMulticastGroup", "error", err, "ip", cur.ip, "interface", client.intf, "msg", "failed to unwatch NDP multicast group for IP")
+				a.logger.Error(err, "failed to unwatch NDP multicast group for IP",
+					"op", "unwatchMulticastGroup", "ip", cur.ip, "interface", client.intf,
+				)
 			}
 		}
 	}
