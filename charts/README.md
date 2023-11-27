@@ -38,7 +38,7 @@ helm install egressgateway egressgateway/egressgateway --namespace kube-system
 | `feature.vxlan.name`                         | The name of VXLAN device                                                                                                   | `egress.vxlan`          |
 | `feature.vxlan.port`                         | VXLAN port                                                                                                                 | `7789`                  |
 | `feature.vxlan.id`                           | VXLAN ID                                                                                                                   | `100`                   |
-| `feature.vxlan.disableChecksumOffload`       | Disable checksum offload                                                                                                   | `true`                  |
+| `feature.vxlan.disableChecksumOffload`       | Disable checksum offload                                                                                                   | `false`                 |
 | `feature.clusterCIDR.autoDetect.podCidrMode` | cni cluster used, it can be specified as `k8s`, `calico`, `auto` or `""`. The default value is `auto`.                     | `auto`                  |
 | `feature.clusterCIDR.autoDetect.clusterIP`   | if ignore service ip                                                                                                       | `true`                  |
 | `feature.clusterCIDR.autoDetect.nodeIP`      | if ignore node ip                                                                                                          | `true`                  |
