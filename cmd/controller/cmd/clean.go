@@ -116,6 +116,13 @@ func clean(validate, mutating string) error {
 	err = cli.List(ctx, gatewayList)
 	if err == nil {
 		for _, item := range gatewayList.Items {
+			if len(item.Finalizers) != 0 {
+				(&item).Finalizers = nil
+				err := cli.Update(ctx, &item)
+				if err != nil {
+					return err
+				}
+			}
 			err = cli.Delete(ctx, &item)
 			if err != nil {
 				return err

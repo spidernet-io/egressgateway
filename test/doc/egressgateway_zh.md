@@ -25,6 +25,7 @@
 | G00017   | When creating an `EgressCluster` or `EgressClusterPolicy` without specifying `spec.egressGatewayName`, the tenant or cluster default gateway can be automatically configured and created successfully                                                             | p2        | false  |        |       |
 | G00018  | When `Ippools.IPv4` and `Ippools.IPv6` are empty, creating `EgressGateway` succeeds                                                           | p2        | false  |        |       |
 | G00019  | When `Ippools.IPv4` and `Ippools.IPv6` are empty, creating `EgressCluster` or `EgressClusterPolicy` without specifying `spec.egressIP.useNodeIP` will fail to create the policy. When `spec.egressIP.useNodeIP` is set to true, the policy will be created successfully                                                           | p2        | false  |        |       |
+| G00020  | When a policy references a gateway, deleting the gateway will be in a "deleting" state until all the policies that reference the gateway are deleted. The gateway will be successfully deleted once all the referencing policies are removed                                                           | p2        | false  |        |       |
 -->
 
 # EgressGateway E2E 用例
@@ -49,3 +50,4 @@
 | G00017 | 创建 `EgressCluster` 或者 `EgressClusterPolicy` 时使用未指定 `spec.egressGatewayName` 时，可以使用自动设置租户或者集群默认网关，并创建成功 | p2  | false |    |    |
 | G00018 | 当 `Ippools.IPv4` 和 `Ippools.IPv6` 为空时，创建 EgressGateway 成功 | p2  | false |    |    |
 | G00019 | 当 `Ippools.IPv4` 和 `Ippools.IPv6` 为空时，创建 `EgressCluster` 或者 `EgressClusterPolicy`，未指定 `spec.egressIP.useNodeIP` 时，policy 创建失败，`spec.egressIP.useNodeIP` 为 true 时，policy 创建成功 | p2  | false |    |    |
+| G00020 | 存在 `policy` 引用 `gateway` 时，删除 `gateway`，会处于 `deleting` 状态，直到所有引用 `gateway` 的 `policy` 都被删除，`gateway` 会被删除成功     | p2  | false |    |    |

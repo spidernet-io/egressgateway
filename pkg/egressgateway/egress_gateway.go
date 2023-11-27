@@ -28,6 +28,7 @@ import (
 	egress "github.com/spidernet-io/egressgateway/pkg/k8s/apis/v1beta1"
 	"github.com/spidernet-io/egressgateway/pkg/utils"
 	"github.com/spidernet-io/egressgateway/pkg/utils/ip"
+	"github.com/spidernet-io/egressgateway/pkg/utils/slice"
 )
 
 type egnReconciler struct {
@@ -166,7 +167,23 @@ func (r egnReconciler) reconcileEGW(ctx context.Context, req reconcile.Request, 
 
 	if deleted {
 		log.Info("request item is deleted")
-		return reconcile.Result{}, nil
+		p, err := getEgressGatewayPolicies(r.client, ctx, egw)
+		if err != nil {
+			log.Error(err, "getEgressGatewayPolicies when delete egressgateway")
+			return reconcile.Result{Requeue: true}, err
+		}
+		if containsEgressGatewayFinalizer(egw, egressGatewayFinalizers) && len(p) == 0 {
+			log.Info("remove the egressGatewayFinalizer")
+			removeEgressGatewayFinalizer(egw)
+			log.V(1).Info("remove the egressGatewayFinalizer", "ObjectMeta", egw.ObjectMeta)
+
+			err = r.client.Update(ctx, egw)
+			if err != nil {
+				log.Error(err, "remove the egressGatewayFinalizer", "ObjectMeta", egw.ObjectMeta)
+				return reconcile.Result{Requeue: true}, err
+			}
+		}
+		return reconcile.Result{Requeue: false}, nil
 	}
 
 	if egw.Spec.NodeSelector.Selector == nil {
@@ -1267,4 +1284,49 @@ func countGatewayIP(egw *egress.EgressGateway) (ipv4sFree, ipv6sFree, ipv4sTotal
 
 	ipv4sTotal, ipv6sTotal, err = len(ipv4s), len(ipv6s), nil
 	return
+}
+
+// removeEgressGatewayFinalizer if the egress gateway is being deleted
+func removeEgressGatewayFinalizer(egw *egress.EgressGateway) {
+	if !egw.DeletionTimestamp.IsZero() {
+		if containsEgressGatewayFinalizer(egw, egressGatewayFinalizers) {
+			egw.Finalizers = slice.RemoveElement(egw.Finalizers, egressGatewayFinalizers)
+		}
+	}
+}
+
+func getEgressGatewayPolicies(client client.Client, ctx context.Context, egw *egress.EgressGateway) ([]egress.Policy, error) {
+	policies := make([]egress.Policy, 0)
+	// list policy
+	policyList := &egress.EgressPolicyList{}
+	err := client.List(ctx, policyList)
+	if err != nil {
+		return nil, err
+	}
+	for _, p := range policyList.Items {
+		if p.Spec.EgressGatewayName == egw.Name {
+			policies = append(policies, egress.Policy{Name: p.Name, Namespace: p.Namespace})
+		}
+	}
+	// list cluster policy
+	clusterPolicyList := &egress.EgressClusterPolicyList{}
+	err = client.List(ctx, clusterPolicyList)
+	if err != nil {
+		return nil, err
+	}
+	for _, cp := range clusterPolicyList.Items {
+		if cp.Spec.EgressGatewayName == egw.Name {
+			policies = append(policies, egress.Policy{Name: cp.Name, Namespace: cp.Namespace})
+		}
+	}
+	return policies, nil
+}
+
+func containsEgressGatewayFinalizer(gateway *egress.EgressGateway, finalizer string) bool {
+	for _, f := range gateway.ObjectMeta.Finalizers {
+		if f == finalizer {
+			return true
+		}
+	}
+	return false
 }
