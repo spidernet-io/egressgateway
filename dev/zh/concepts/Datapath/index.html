@@ -442,6 +442,26 @@
 
               
             
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../usage/EgressGatewayFailover/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Failover
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -1038,131 +1058,189 @@
 <p>对需要生效的规则分为三类：所有节点，相对于 EgressGatewayPolicy 的「网关节点」和「非网关节点」。只有当业务 Pod 调度到的「非网关节点」，该节点上的规则才会生效。</p>
 <h2 id="_1">所有节点</h2>
 <ol>
-<li>各节点之间，隧道需要打通的规则就不一一展开；</li>
+<li>各节点之间，隧道打通规则；
+   <div class="language-text highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a># 本地隧道网卡信息
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>LOCAL_TUNNEL_IPV4=&quot;20.0.0.80/24&quot;
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>LOCAL_TUNNEL_IPV6=&quot;fccc::80/64&quot;
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>
+</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>TUNNEL_NAME=&quot;egress-vxlan&quot;
+</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>
+</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>VXLAN_ID=&quot;20&quot;
+</span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>
+</span><span id="__span-0-10"><a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>LOCAL_DEV=&quot;eth1&quot;
+</span><span id="__span-0-11"><a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>
+</span><span id="__span-0-12"><a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>LOCA_PHY_IP=&quot;172.16.1.11&quot;
+</span><span id="__span-0-13"><a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>
+</span><span id="__span-0-14"><a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>DEST_UDP_PORT=&quot;8789&quot;
+</span><span id="__span-0-15"><a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a>
+</span><span id="__span-0-16"><a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a>LOCAL_TUNNEL_MAC=&quot;00:11:00:00:00:80&quot;
+</span><span id="__span-0-17"><a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a>
+</span><span id="__span-0-18"><a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a>
+</span><span id="__span-0-19"><a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a># 创建隧道网卡
+</span><span id="__span-0-20"><a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a>ip l d $TUNNEL_NAME &amp;&gt;/dev/null
+</span><span id="__span-0-21"><a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a>
+</span><span id="__span-0-22"><a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a>ip link add $TUNNEL_NAME type vxlan id $VXLAN_ID local $LOCA_PHY_IP dstport $DEST_UDP_PORT dev $LOCAL_DEV nolearning
+</span><span id="__span-0-23"><a id="__codelineno-0-23" name="__codelineno-0-23" href="#__codelineno-0-23"></a>
+</span><span id="__span-0-24"><a id="__codelineno-0-24" name="__codelineno-0-24" href="#__codelineno-0-24"></a>ip -6 a add $LOCAL_TUNNEL_IPV6 dev $TUNNEL_NAME
+</span><span id="__span-0-25"><a id="__codelineno-0-25" name="__codelineno-0-25" href="#__codelineno-0-25"></a>
+</span><span id="__span-0-26"><a id="__codelineno-0-26" name="__codelineno-0-26" href="#__codelineno-0-26"></a>ip -4 a add $LOCAL_TUNNEL_IPV4 dev $TUNNEL_NAME
+</span><span id="__span-0-27"><a id="__codelineno-0-27" name="__codelineno-0-27" href="#__codelineno-0-27"></a>
+</span><span id="__span-0-28"><a id="__codelineno-0-28" name="__codelineno-0-28" href="#__codelineno-0-28"></a>ip l set $TUNNEL_NAME address $LOCAL_TUNNEL_MAC
+</span><span id="__span-0-29"><a id="__codelineno-0-29" name="__codelineno-0-29" href="#__codelineno-0-29"></a>
+</span><span id="__span-0-30"><a id="__codelineno-0-30" name="__codelineno-0-30" href="#__codelineno-0-30"></a>ip link set $TUNNEL_NAME up
+</span><span id="__span-0-31"><a id="__codelineno-0-31" name="__codelineno-0-31" href="#__codelineno-0-31"></a>
+</span><span id="__span-0-32"><a id="__codelineno-0-32" name="__codelineno-0-32" href="#__codelineno-0-32"></a>
+</span><span id="__span-0-33"><a id="__codelineno-0-33" name="__codelineno-0-33" href="#__codelineno-0-33"></a># 对端隧道信息
+</span><span id="__span-0-34"><a id="__codelineno-0-34" name="__codelineno-0-34" href="#__codelineno-0-34"></a>REMOTE1_TUNNEL_MAC=&quot;00:11:00:00:00:85&quot;
+</span><span id="__span-0-35"><a id="__codelineno-0-35" name="__codelineno-0-35" href="#__codelineno-0-35"></a>
+</span><span id="__span-0-36"><a id="__codelineno-0-36" name="__codelineno-0-36" href="#__codelineno-0-36"></a>REMOTE1_TUNNEL_IPV4=&quot;20.0.0.85&quot;
+</span><span id="__span-0-37"><a id="__codelineno-0-37" name="__codelineno-0-37" href="#__codelineno-0-37"></a>
+</span><span id="__span-0-38"><a id="__codelineno-0-38" name="__codelineno-0-38" href="#__codelineno-0-38"></a>REMOTE1_TUNNEL_IPV6=&quot;fccc::85&quot;
+</span><span id="__span-0-39"><a id="__codelineno-0-39" name="__codelineno-0-39" href="#__codelineno-0-39"></a>
+</span><span id="__span-0-40"><a id="__codelineno-0-40" name="__codelineno-0-40" href="#__codelineno-0-40"></a>REMOTE1_PHY_IP=&quot;172.16.2.21&quot;
+</span><span id="__span-0-41"><a id="__codelineno-0-41" name="__codelineno-0-41" href="#__codelineno-0-41"></a>
+</span><span id="__span-0-42"><a id="__codelineno-0-42" name="__codelineno-0-42" href="#__codelineno-0-42"></a>
+</span><span id="__span-0-43"><a id="__codelineno-0-43" name="__codelineno-0-43" href="#__codelineno-0-43"></a># 添加对端隧道转发信息
+</span><span id="__span-0-44"><a id="__codelineno-0-44" name="__codelineno-0-44" href="#__codelineno-0-44"></a>bridge fdb append to $REMOTE1_TUNNEL_MAC dst $REMOTE1_PHY_IP dev $TUNNEL_NAME
+</span><span id="__span-0-45"><a id="__codelineno-0-45" name="__codelineno-0-45" href="#__codelineno-0-45"></a>
+</span><span id="__span-0-46"><a id="__codelineno-0-46" name="__codelineno-0-46" href="#__codelineno-0-46"></a>ip -4 n add  $REMOTE1_TUNNEL_IPV4  lladdr  $REMOTE1_TUNNEL_MAC  dev $TUNNEL_NAME
+</span><span id="__span-0-47"><a id="__codelineno-0-47" name="__codelineno-0-47" href="#__codelineno-0-47"></a>
+</span><span id="__span-0-48"><a id="__codelineno-0-48" name="__codelineno-0-48" href="#__codelineno-0-48"></a>ip -6 n add  $REMOTE1_TUNNEL_IPV6  lladdr  $REMOTE1_TUNNEL_MAC  dev $TUNNEL_NAME
+</span><span id="__span-0-49"><a id="__codelineno-0-49" name="__codelineno-0-49" href="#__codelineno-0-49"></a>
+</span><span id="__span-0-50"><a id="__codelineno-0-50" name="__codelineno-0-50" href="#__codelineno-0-50"></a># 添加策略路由信息
+</span><span id="__span-0-51"><a id="__codelineno-0-51" name="__codelineno-0-51" href="#__codelineno-0-51"></a>ip rule add fwmark $NODE_MARK table $TABLE_NUM
+</span><span id="__span-0-52"><a id="__codelineno-0-52" name="__codelineno-0-52" href="#__codelineno-0-52"></a>
+</span><span id="__span-0-53"><a id="__codelineno-0-53" name="__codelineno-0-53" href="#__codelineno-0-53"></a>ip route add default via $REMOTE1_TUNNEL_IPV4 dev $TUNNEL_NAME onlink table $TABLE_NUM
+</span><span id="__span-0-54"><a id="__codelineno-0-54" name="__codelineno-0-54" href="#__codelineno-0-54"></a>
+</span><span id="__span-0-55"><a id="__codelineno-0-55" name="__codelineno-0-55" href="#__codelineno-0-55"></a>ip -6 rule add fwmark $NODE_MARK table $TABLE_NUM
+</span><span id="__span-0-56"><a id="__codelineno-0-56" name="__codelineno-0-56" href="#__codelineno-0-56"></a>
+</span><span id="__span-0-57"><a id="__codelineno-0-57" name="__codelineno-0-57" href="#__codelineno-0-57"></a>ip -6 route add default via $REMOTE1_TUNNEL_IPV6 dev $TUNNEL_NAME onlink table $TABLE_NUM
+</span></code></pre></div></li>
 <li>在节点第一次变成网关节点时更新，或者节点 join 时，将 policy 命中的流量，重新打标签。其他情况不更新。</li>
 </ol>
-<div class="language-shell highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>iptables<span class="w"> </span>-t<span class="w"> </span>mangle<span class="w"> </span>-N<span class="w"> </span>EGRESSGATEWAY-RESET-MARK
-</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>iptables<span class="w"> </span>-t<span class="w"> </span>mangle<span class="w"> </span>-I<span class="w"> </span>FORWARD<span class="w"> </span><span class="m">1</span><span class="w">  </span>-j<span class="w"> </span>EGRESSGATEWAY-RESET-MARK<span class="w"> </span>-m<span class="w"> </span>comment<span class="w"> </span>--comment<span class="w"> </span><span class="s2">&quot;egress gateway: mark egress packet&quot;</span>
-</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>
-</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>iptables<span class="w"> </span>-t<span class="w"> </span>mangle<span class="w"> </span>-A<span class="w"> </span>EGRESSGATEWAY-RESET-MARK<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="w">    </span>-m<span class="w"> </span>mark<span class="w"> </span>--mark<span class="w"> </span><span class="nv">$NODE_MARK</span>/0x26000000<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="w">    </span>-j<span class="w"> </span>MARK<span class="w"> </span>--set-mark<span class="w"> </span>0x12000000<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="w">    </span>-m<span class="w"> </span>comment<span class="w"> </span>--comment<span class="w"> </span><span class="s2">&quot;egress gateway: change mark&quot;</span>
+<div class="language-shell highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>iptables<span class="w"> </span>-t<span class="w"> </span>mangle<span class="w"> </span>-N<span class="w"> </span>EGRESSGATEWAY-RESET-MARK
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>iptables<span class="w"> </span>-t<span class="w"> </span>mangle<span class="w"> </span>-I<span class="w"> </span>FORWARD<span class="w"> </span><span class="m">1</span><span class="w">  </span>-j<span class="w"> </span>EGRESSGATEWAY-RESET-MARK<span class="w"> </span>-m<span class="w"> </span>comment<span class="w"> </span>--comment<span class="w"> </span><span class="s2">&quot;egress gateway: mark egress packet&quot;</span>
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>
+</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>iptables<span class="w"> </span>-t<span class="w"> </span>mangle<span class="w"> </span>-A<span class="w"> </span>EGRESSGATEWAY-RESET-MARK<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="w">    </span>-m<span class="w"> </span>mark<span class="w"> </span>--mark<span class="w"> </span><span class="nv">$NODE_MARK</span>/0x26000000<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="w">    </span>-j<span class="w"> </span>MARK<span class="w"> </span>--set-mark<span class="w"> </span>0x12000000<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-1-7"><a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a><span class="w">    </span>-m<span class="w"> </span>comment<span class="w"> </span>--comment<span class="w"> </span><span class="s2">&quot;egress gateway: change mark&quot;</span>
 </span></code></pre></div>
 <ol>
 <li>保持 policy 命中流量的标签。直接创建一次，不需要更新；</li>
 </ol>
-<div class="language-shell highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>iptables<span class="w"> </span>-t<span class="w"> </span>filter<span class="w"> </span>-I<span class="w"> </span>FORWARD<span class="w"> </span><span class="m">1</span><span class="w"> </span>-m<span class="w"> </span>mark<span class="w"> </span>--mark<span class="w"> </span>0x12000000<span class="w"> </span>-j<span class="w"> </span>ACCEPT<span class="w"> </span>-m<span class="w"> </span>comment<span class="w"> </span>--comment<span class="w"> </span><span class="s2">&quot;egress gateway: keep mark&quot;</span>
-</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>
-</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>iptables<span class="w"> </span>-t<span class="w"> </span>filter<span class="w"> </span>-I<span class="w"> </span>OUTPUT<span class="w"> </span><span class="m">1</span><span class="w"> </span>-m<span class="w"> </span>mark<span class="w"> </span>--mark<span class="w"> </span>0x12000000<span class="w"> </span>-j<span class="w"> </span>ACCEPT<span class="w"> </span>-m<span class="w"> </span>comment<span class="w"> </span>--comment<span class="w"> </span><span class="s2">&quot;egress gateway: keep mark&quot;</span>
-</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>
-</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>iptables<span class="w"> </span>-t<span class="w"> </span>mangle<span class="w"> </span>-I<span class="w"> </span>POSTROUTING<span class="w"> </span><span class="m">1</span><span class="w"> </span>-m<span class="w"> </span>mark<span class="w"> </span>--mark<span class="w"> </span>0x12000000<span class="w"> </span>-j<span class="w"> </span>ACCEPT<span class="w"> </span>-m<span class="w"> </span>comment<span class="w"> </span>--comment<span class="w"> </span><span class="s2">&quot;egress gateway: keep mark&quot;</span>
+<div class="language-shell highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>iptables<span class="w"> </span>-t<span class="w"> </span>filter<span class="w"> </span>-I<span class="w"> </span>FORWARD<span class="w"> </span><span class="m">1</span><span class="w"> </span>-m<span class="w"> </span>mark<span class="w"> </span>--mark<span class="w"> </span>0x12000000<span class="w"> </span>-j<span class="w"> </span>ACCEPT<span class="w"> </span>-m<span class="w"> </span>comment<span class="w"> </span>--comment<span class="w"> </span><span class="s2">&quot;egress gateway: keep mark&quot;</span>
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>
+</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>iptables<span class="w"> </span>-t<span class="w"> </span>filter<span class="w"> </span>-I<span class="w"> </span>OUTPUT<span class="w"> </span><span class="m">1</span><span class="w"> </span>-m<span class="w"> </span>mark<span class="w"> </span>--mark<span class="w"> </span>0x12000000<span class="w"> </span>-j<span class="w"> </span>ACCEPT<span class="w"> </span>-m<span class="w"> </span>comment<span class="w"> </span>--comment<span class="w"> </span><span class="s2">&quot;egress gateway: keep mark&quot;</span>
+</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>
+</span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>iptables<span class="w"> </span>-t<span class="w"> </span>mangle<span class="w"> </span>-I<span class="w"> </span>POSTROUTING<span class="w"> </span><span class="m">1</span><span class="w"> </span>-m<span class="w"> </span>mark<span class="w"> </span>--mark<span class="w"> </span>0x12000000<span class="w"> </span>-j<span class="w"> </span>ACCEPT<span class="w"> </span>-m<span class="w"> </span>comment<span class="w"> </span>--comment<span class="w"> </span><span class="s2">&quot;egress gateway: keep mark&quot;</span>
 </span></code></pre></div>
 <ol>
 <li>聚合 policy 命中流量打标签的链。直接创建一次，不需要更新；</li>
 </ol>
-<div class="language-shell highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>iptables<span class="w"> </span>-t<span class="w"> </span>mangle<span class="w"> </span>-N<span class="w"> </span>EGRESSGATEWAY-MARK-REQUEST
-</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>
-</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>iptables<span class="w"> </span>-t<span class="w"> </span>mangle<span class="w"> </span>-I<span class="w"> </span>PREROUTING<span class="w"> </span><span class="m">1</span><span class="w"> </span>-j<span class="w"> </span>EGRESSGATEWAY-MARK-REQUEST<span class="w"> </span>-m<span class="w"> </span>comment<span class="w"> </span>--comment<span class="w"> </span><span class="s2">&quot;egress gateway: mark egress packet&quot;</span>
+<div class="language-shell highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>iptables<span class="w"> </span>-t<span class="w"> </span>mangle<span class="w"> </span>-N<span class="w"> </span>EGRESSGATEWAY-MARK-REQUEST
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>
+</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>iptables<span class="w"> </span>-t<span class="w"> </span>mangle<span class="w"> </span>-I<span class="w"> </span>PREROUTING<span class="w"> </span><span class="m">1</span><span class="w"> </span>-j<span class="w"> </span>EGRESSGATEWAY-MARK-REQUEST<span class="w"> </span>-m<span class="w"> </span>comment<span class="w"> </span>--comment<span class="w"> </span><span class="s2">&quot;egress gateway: mark egress packet&quot;</span>
 </span></code></pre></div>
 <ol>
 <li>聚合不需要做 SNAT 规则的链。直接创建一次，不需要更新；</li>
 </ol>
-<div class="language-shell highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>iptables<span class="w"> </span>-t<span class="w"> </span>nat<span class="w"> </span>-N<span class="w"> </span>EGRESSGATEWAY-NO-SNAT
-</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>
-</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>iptables<span class="w"> </span>-t<span class="w"> </span>nat<span class="w"> </span>-I<span class="w"> </span>POSTROUTING<span class="w"> </span><span class="m">1</span><span class="w">  </span>-j<span class="w"> </span>EGRESSGATEWAY-NO-SNAT<span class="w"> </span>-m<span class="w"> </span>comment<span class="w"> </span>--comment<span class="w"> </span><span class="s2">&quot;egress gateway: no snat&quot;</span>
-</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>
-</span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>iptables<span class="w"> </span>-t<span class="w"> </span>nat<span class="w"> </span>-A<span class="w"> </span>EGRESSGATEWAY-NO-SNAT<span class="w"> </span>-m<span class="w"> </span>mark<span class="w"> </span>--mark<span class="w"> </span>0x12000000<span class="w"> </span>-j<span class="w"> </span>ACCEPT<span class="w"> </span>-m<span class="w"> </span>comment<span class="w"> </span>--comment<span class="w"> </span><span class="s2">&quot;egress gateway: no snat&quot;</span>
+<div class="language-shell highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>iptables<span class="w"> </span>-t<span class="w"> </span>nat<span class="w"> </span>-N<span class="w"> </span>EGRESSGATEWAY-NO-SNAT
+</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>
+</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>iptables<span class="w"> </span>-t<span class="w"> </span>nat<span class="w"> </span>-I<span class="w"> </span>POSTROUTING<span class="w"> </span><span class="m">1</span><span class="w">  </span>-j<span class="w"> </span>EGRESSGATEWAY-NO-SNAT<span class="w"> </span>-m<span class="w"> </span>comment<span class="w"> </span>--comment<span class="w"> </span><span class="s2">&quot;egress gateway: no snat&quot;</span>
+</span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a>
+</span><span id="__span-4-5"><a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a>iptables<span class="w"> </span>-t<span class="w"> </span>nat<span class="w"> </span>-A<span class="w"> </span>EGRESSGATEWAY-NO-SNAT<span class="w"> </span>-m<span class="w"> </span>mark<span class="w"> </span>--mark<span class="w"> </span>0x12000000<span class="w"> </span>-j<span class="w"> </span>ACCEPT<span class="w"> </span>-m<span class="w"> </span>comment<span class="w"> </span>--comment<span class="w"> </span><span class="s2">&quot;egress gateway: no snat&quot;</span>
 </span></code></pre></div>
 <ol>
 <li>聚合需要做 SNAT 规则的链。直接创建一次，不需要更新。</li>
 </ol>
-<div class="language-shell highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>iptables<span class="w"> </span>-t<span class="w"> </span>nat<span class="w"> </span>-N<span class="w"> </span>EGRESSGATEWAY-SNAT-EIP
-</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>
-</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="c1"># 需要在不需要 SNAT 的规则后面插入，才能保证该链在最前面</span>
-</span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a>iptables<span class="w"> </span>-t<span class="w"> </span>nat<span class="w"> </span>-I<span class="w"> </span>POSTROUTING<span class="w"> </span><span class="m">1</span><span class="w">  </span>-j<span class="w"> </span>EGRESSGATEWAY-SNAT-EIP<span class="w"> </span>-m<span class="w"> </span>comment<span class="w"> </span>--comment<span class="w"> </span><span class="s2">&quot;egress gateway: snat EIP&quot;</span>
+<div class="language-shell highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>iptables<span class="w"> </span>-t<span class="w"> </span>nat<span class="w"> </span>-N<span class="w"> </span>EGRESSGATEWAY-SNAT-EIP
+</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>
+</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="c1"># 需要在不需要 SNAT 的规则后面插入，才能保证该链在最前面</span>
+</span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a>iptables<span class="w"> </span>-t<span class="w"> </span>nat<span class="w"> </span>-I<span class="w"> </span>POSTROUTING<span class="w"> </span><span class="m">1</span><span class="w">  </span>-j<span class="w"> </span>EGRESSGATEWAY-SNAT-EIP<span class="w"> </span>-m<span class="w"> </span>comment<span class="w"> </span>--comment<span class="w"> </span><span class="s2">&quot;egress gateway: snat EIP&quot;</span>
 </span></code></pre></div>
 <ol>
 <li>egress-ingore-cidr 当 EgressGatewayPolicy 的 <code>destSubnet</code> 字段为空时，数据面将会自动匹配 EgressClusterStatus CR 中的 CIDR 之外的流量，并将其转发到 Egress 网关。</li>
 </ol>
-<div class="language-shell highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="nv">IPSET_RULE_DEST_NAME</span><span class="o">=</span>egress-ingore-cidr
-</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>
-</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a>ipset<span class="w"> </span>x<span class="w"> </span><span class="nv">$IPSET_RULE_DEST_NAME</span>
-</span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a>
-</span><span id="__span-5-5"><a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a>ipset<span class="w"> </span>create<span class="w"> </span><span class="nv">$IPSET_RULE_DEST_NAME</span><span class="w"> </span>hash:net
-</span><span id="__span-5-6"><a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a>
-</span><span id="__span-5-7"><a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a>ipset<span class="w"> </span>add<span class="w"> </span><span class="nv">$IPSET_RULE_DEST_NAME</span><span class="w"> </span><span class="m">10</span>.6.105.150/32
-</span></code></pre></div>
-<h2 id="eip-egress-gateway">相对于 EIP 的非 Egress Gateway 节点</h2>
-<ol>
-<li>policy 命中的源 IP、目的 IP 的 ipset；</li>
-</ol>
-<div class="language-shell highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="nv">IPSET_RULE_DEST_NAME</span><span class="o">=</span>egress-dest-uuid
+<div class="language-shell highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="nv">IPSET_RULE_DEST_NAME</span><span class="o">=</span>egress-ingore-cidr
 </span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>
 </span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>ipset<span class="w"> </span>x<span class="w"> </span><span class="nv">$IPSET_RULE_DEST_NAME</span>
 </span><span id="__span-6-4"><a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a>
 </span><span id="__span-6-5"><a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a>ipset<span class="w"> </span>create<span class="w"> </span><span class="nv">$IPSET_RULE_DEST_NAME</span><span class="w"> </span>hash:net
 </span><span id="__span-6-6"><a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a>
 </span><span id="__span-6-7"><a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a>ipset<span class="w"> </span>add<span class="w"> </span><span class="nv">$IPSET_RULE_DEST_NAME</span><span class="w"> </span><span class="m">10</span>.6.105.150/32
-</span><span id="__span-6-8"><a id="__codelineno-6-8" name="__codelineno-6-8" href="#__codelineno-6-8"></a>
-</span><span id="__span-6-9"><a id="__codelineno-6-9" name="__codelineno-6-9" href="#__codelineno-6-9"></a>
-</span><span id="__span-6-10"><a id="__codelineno-6-10" name="__codelineno-6-10" href="#__codelineno-6-10"></a><span class="nv">IPSET_RULE_SRC_NAME</span><span class="o">=</span>egress-src-uuid
-</span><span id="__span-6-11"><a id="__codelineno-6-11" name="__codelineno-6-11" href="#__codelineno-6-11"></a>
-</span><span id="__span-6-12"><a id="__codelineno-6-12" name="__codelineno-6-12" href="#__codelineno-6-12"></a>ipset<span class="w"> </span>x<span class="w"> </span><span class="nv">$IPSET_RULE_SRC_NAME</span>
-</span><span id="__span-6-13"><a id="__codelineno-6-13" name="__codelineno-6-13" href="#__codelineno-6-13"></a>
-</span><span id="__span-6-14"><a id="__codelineno-6-14" name="__codelineno-6-14" href="#__codelineno-6-14"></a>ipset<span class="w"> </span>create<span class="w"> </span><span class="nv">$IPSET_RULE_SRC_NAME</span><span class="w"> </span>hash:net
-</span><span id="__span-6-15"><a id="__codelineno-6-15" name="__codelineno-6-15" href="#__codelineno-6-15"></a>
-</span><span id="__span-6-16"><a id="__codelineno-6-16" name="__codelineno-6-16" href="#__codelineno-6-16"></a>ipset<span class="w"> </span>add<span class="w"> </span><span class="nv">$IPSET_RULE_SRC_NAME</span><span class="w"> </span><span class="m">172</span>.29.234.173/32
+</span></code></pre></div>
+<h2 id="eip-egress-gateway">相对于 EIP 的非 Egress Gateway 节点</h2>
+<ol>
+<li>policy 命中的源 IP、目的 IP 的 ipset；</li>
+</ol>
+<div class="language-shell highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="nv">IPSET_RULE_DEST_NAME</span><span class="o">=</span>egress-dest-uuid
+</span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>
+</span><span id="__span-7-3"><a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a>ipset<span class="w"> </span>x<span class="w"> </span><span class="nv">$IPSET_RULE_DEST_NAME</span>
+</span><span id="__span-7-4"><a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a>
+</span><span id="__span-7-5"><a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a>ipset<span class="w"> </span>create<span class="w"> </span><span class="nv">$IPSET_RULE_DEST_NAME</span><span class="w"> </span>hash:net
+</span><span id="__span-7-6"><a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a>
+</span><span id="__span-7-7"><a id="__codelineno-7-7" name="__codelineno-7-7" href="#__codelineno-7-7"></a>ipset<span class="w"> </span>add<span class="w"> </span><span class="nv">$IPSET_RULE_DEST_NAME</span><span class="w"> </span><span class="m">10</span>.6.105.150/32
+</span><span id="__span-7-8"><a id="__codelineno-7-8" name="__codelineno-7-8" href="#__codelineno-7-8"></a>
+</span><span id="__span-7-9"><a id="__codelineno-7-9" name="__codelineno-7-9" href="#__codelineno-7-9"></a>
+</span><span id="__span-7-10"><a id="__codelineno-7-10" name="__codelineno-7-10" href="#__codelineno-7-10"></a><span class="nv">IPSET_RULE_SRC_NAME</span><span class="o">=</span>egress-src-uuid
+</span><span id="__span-7-11"><a id="__codelineno-7-11" name="__codelineno-7-11" href="#__codelineno-7-11"></a>
+</span><span id="__span-7-12"><a id="__codelineno-7-12" name="__codelineno-7-12" href="#__codelineno-7-12"></a>ipset<span class="w"> </span>x<span class="w"> </span><span class="nv">$IPSET_RULE_SRC_NAME</span>
+</span><span id="__span-7-13"><a id="__codelineno-7-13" name="__codelineno-7-13" href="#__codelineno-7-13"></a>
+</span><span id="__span-7-14"><a id="__codelineno-7-14" name="__codelineno-7-14" href="#__codelineno-7-14"></a>ipset<span class="w"> </span>create<span class="w"> </span><span class="nv">$IPSET_RULE_SRC_NAME</span><span class="w"> </span>hash:net
+</span><span id="__span-7-15"><a id="__codelineno-7-15" name="__codelineno-7-15" href="#__codelineno-7-15"></a>
+</span><span id="__span-7-16"><a id="__codelineno-7-16" name="__codelineno-7-16" href="#__codelineno-7-16"></a>ipset<span class="w"> </span>add<span class="w"> </span><span class="nv">$IPSET_RULE_SRC_NAME</span><span class="w"> </span><span class="m">172</span>.29.234.173/32
 </span></code></pre></div>
 <ol>
 <li>policy 命中的流量打标签，保证能从隧道走。其中 NODE_MARK 的值根据 policy 对应的 EIP 所在节点决定。</li>
 </ol>
-<div class="language-shell highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>iptables<span class="w"> </span>-A<span class="w"> </span>EGRESSGATEWAY-MARK-REQUEST<span class="w"> </span>-t<span class="w"> </span>mangle<span class="w"> </span>-m<span class="w"> </span>conntrack<span class="w"> </span>--ctdir<span class="w"> </span>ORIGINAL<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>-m<span class="w"> </span><span class="nb">set</span><span class="w"> </span>--match-set<span class="w"> </span><span class="nv">$IPSET_RULE_DEST_NAME</span><span class="w"> </span>dst<span class="w">  </span><span class="se">\</span>
-</span><span id="__span-7-3"><a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a>-m<span class="w"> </span><span class="nb">set</span><span class="w"> </span>--match-set<span class="w"> </span><span class="nv">$IPSET_RULE_SRC_NAME</span><span class="w"> </span>src<span class="w">  </span><span class="se">\</span>
-</span><span id="__span-7-4"><a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a>-j<span class="w"> </span>MARK<span class="w"> </span>--set-mark<span class="w"> </span><span class="nv">$NODE_MARK</span><span class="w"> </span>-m<span class="w"> </span>comment<span class="w"> </span>--comment<span class="w"> </span><span class="s2">&quot;rule uuid: mark request packet&quot;</span>
+<div class="language-shell highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>iptables<span class="w"> </span>-A<span class="w"> </span>EGRESSGATEWAY-MARK-REQUEST<span class="w"> </span>-t<span class="w"> </span>mangle<span class="w"> </span>-m<span class="w"> </span>conntrack<span class="w"> </span>--ctdir<span class="w"> </span>ORIGINAL<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a>-m<span class="w"> </span><span class="nb">set</span><span class="w"> </span>--match-set<span class="w"> </span><span class="nv">$IPSET_RULE_DEST_NAME</span><span class="w"> </span>dst<span class="w">  </span><span class="se">\</span>
+</span><span id="__span-8-3"><a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a>-m<span class="w"> </span><span class="nb">set</span><span class="w"> </span>--match-set<span class="w"> </span><span class="nv">$IPSET_RULE_SRC_NAME</span><span class="w"> </span>src<span class="w">  </span><span class="se">\</span>
+</span><span id="__span-8-4"><a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a>-j<span class="w"> </span>MARK<span class="w"> </span>--set-mark<span class="w"> </span><span class="nv">$NODE_MARK</span><span class="w"> </span>-m<span class="w"> </span>comment<span class="w"> </span>--comment<span class="w"> </span><span class="s2">&quot;rule uuid: mark request packet&quot;</span>
 </span></code></pre></div>
 <ol>
 <li>策略路由规则</li>
 </ol>
-<div class="language-shell highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>ip<span class="w"> </span>rule<span class="w"> </span>add<span class="w"> </span>fwmark<span class="w"> </span><span class="nv">$NODE_MARK</span><span class="w"> </span>table<span class="w"> </span><span class="nv">$TABLE_NUM</span>
+<div class="language-shell highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>ip<span class="w"> </span>rule<span class="w"> </span>add<span class="w"> </span>fwmark<span class="w"> </span><span class="nv">$NODE_MARK</span><span class="w"> </span>table<span class="w"> </span><span class="nv">$TABLE_NUM</span>
 </span></code></pre></div>
 <ol>
 <li>适配 Weave 避免做 SNAT 成 Egress 隧道的 IP。做成开关</li>
 </ol>
-<div class="language-shell highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>iptables<span class="w"> </span>-t<span class="w"> </span>nat<span class="w"> </span>-A<span class="w"> </span>EGRESSGATEWAY-NO-SNAT<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-9-2"><a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a>-m<span class="w"> </span><span class="nb">set</span><span class="w"> </span>--match-set<span class="w"> </span><span class="nv">$IPSET_RULE_DEST_NAME</span><span class="w"> </span>dst<span class="w">  </span><span class="se">\</span>
-</span><span id="__span-9-3"><a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a>-m<span class="w"> </span><span class="nb">set</span><span class="w"> </span>--match-set<span class="w"> </span><span class="nv">$IPSET_RULE_SRC_NAME</span><span class="w"> </span>src<span class="w">  </span><span class="se">\</span>
-</span><span id="__span-9-4"><a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a>-j<span class="w"> </span>ACCEPT<span class="w"> </span>-m<span class="w"> </span>comment<span class="w"> </span>--comment<span class="w"> </span><span class="s2">&quot;egress gateway: weave does not do SNAT&quot;</span>
+<div class="language-shell highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a>iptables<span class="w"> </span>-t<span class="w"> </span>nat<span class="w"> </span>-A<span class="w"> </span>EGRESSGATEWAY-NO-SNAT<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-10-2"><a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a>-m<span class="w"> </span><span class="nb">set</span><span class="w"> </span>--match-set<span class="w"> </span><span class="nv">$IPSET_RULE_DEST_NAME</span><span class="w"> </span>dst<span class="w">  </span><span class="se">\</span>
+</span><span id="__span-10-3"><a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a>-m<span class="w"> </span><span class="nb">set</span><span class="w"> </span>--match-set<span class="w"> </span><span class="nv">$IPSET_RULE_SRC_NAME</span><span class="w"> </span>src<span class="w">  </span><span class="se">\</span>
+</span><span id="__span-10-4"><a id="__codelineno-10-4" name="__codelineno-10-4" href="#__codelineno-10-4"></a>-j<span class="w"> </span>ACCEPT<span class="w"> </span>-m<span class="w"> </span>comment<span class="w"> </span>--comment<span class="w"> </span><span class="s2">&quot;egress gateway: weave does not do SNAT&quot;</span>
 </span></code></pre></div>
 <h2 id="eip-egress-gateway_1">相对于 EIP 的 Egress Gateway 节点</h2>
 <ol>
 <li>policy 命中的源 IP、目的 IP 的 ipset；</li>
 </ol>
-<div class="language-shell highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="nv">IPSET_RULE_DEST_NAME</span><span class="o">=</span>egress-dest-uuid
-</span><span id="__span-10-2"><a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a>
-</span><span id="__span-10-3"><a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a>ipset<span class="w"> </span>x<span class="w"> </span><span class="nv">$IPSET_RULE_DEST_NAME</span>
-</span><span id="__span-10-4"><a id="__codelineno-10-4" name="__codelineno-10-4" href="#__codelineno-10-4"></a>
-</span><span id="__span-10-5"><a id="__codelineno-10-5" name="__codelineno-10-5" href="#__codelineno-10-5"></a>ipset<span class="w"> </span>create<span class="w"> </span><span class="nv">$IPSET_RULE_DEST_NAME</span><span class="w"> </span>hash:net
-</span><span id="__span-10-6"><a id="__codelineno-10-6" name="__codelineno-10-6" href="#__codelineno-10-6"></a>
-</span><span id="__span-10-7"><a id="__codelineno-10-7" name="__codelineno-10-7" href="#__codelineno-10-7"></a>ipset<span class="w"> </span>add<span class="w"> </span><span class="nv">$IPSET_RULE_DEST_NAME</span><span class="w"> </span><span class="m">10</span>.6.105.150/32
-</span><span id="__span-10-8"><a id="__codelineno-10-8" name="__codelineno-10-8" href="#__codelineno-10-8"></a>
-</span><span id="__span-10-9"><a id="__codelineno-10-9" name="__codelineno-10-9" href="#__codelineno-10-9"></a>
-</span><span id="__span-10-10"><a id="__codelineno-10-10" name="__codelineno-10-10" href="#__codelineno-10-10"></a><span class="nv">IPSET_RULE_SRC_NAME</span><span class="o">=</span>egress-src-uuid
-</span><span id="__span-10-11"><a id="__codelineno-10-11" name="__codelineno-10-11" href="#__codelineno-10-11"></a>
-</span><span id="__span-10-12"><a id="__codelineno-10-12" name="__codelineno-10-12" href="#__codelineno-10-12"></a>ipset<span class="w"> </span>x<span class="w"> </span><span class="nv">$IPSET_RULE_SRC_NAME</span>
-</span><span id="__span-10-13"><a id="__codelineno-10-13" name="__codelineno-10-13" href="#__codelineno-10-13"></a>
-</span><span id="__span-10-14"><a id="__codelineno-10-14" name="__codelineno-10-14" href="#__codelineno-10-14"></a>ipset<span class="w"> </span>create<span class="w"> </span><span class="nv">$IPSET_RULE_SRC_NAME</span><span class="w"> </span>hash:net
-</span><span id="__span-10-15"><a id="__codelineno-10-15" name="__codelineno-10-15" href="#__codelineno-10-15"></a>
-</span><span id="__span-10-16"><a id="__codelineno-10-16" name="__codelineno-10-16" href="#__codelineno-10-16"></a>ipset<span class="w"> </span>add<span class="w"> </span><span class="nv">$IPSET_RULE_SRC_NAME</span><span class="w"> </span><span class="m">172</span>.29.234.173/32
+<div class="language-shell highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="nv">IPSET_RULE_DEST_NAME</span><span class="o">=</span>egress-dest-uuid
+</span><span id="__span-11-2"><a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a>
+</span><span id="__span-11-3"><a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a>ipset<span class="w"> </span>x<span class="w"> </span><span class="nv">$IPSET_RULE_DEST_NAME</span>
+</span><span id="__span-11-4"><a id="__codelineno-11-4" name="__codelineno-11-4" href="#__codelineno-11-4"></a>
+</span><span id="__span-11-5"><a id="__codelineno-11-5" name="__codelineno-11-5" href="#__codelineno-11-5"></a>ipset<span class="w"> </span>create<span class="w"> </span><span class="nv">$IPSET_RULE_DEST_NAME</span><span class="w"> </span>hash:net
+</span><span id="__span-11-6"><a id="__codelineno-11-6" name="__codelineno-11-6" href="#__codelineno-11-6"></a>
+</span><span id="__span-11-7"><a id="__codelineno-11-7" name="__codelineno-11-7" href="#__codelineno-11-7"></a>ipset<span class="w"> </span>add<span class="w"> </span><span class="nv">$IPSET_RULE_DEST_NAME</span><span class="w"> </span><span class="m">10</span>.6.105.150/32
+</span><span id="__span-11-8"><a id="__codelineno-11-8" name="__codelineno-11-8" href="#__codelineno-11-8"></a>
+</span><span id="__span-11-9"><a id="__codelineno-11-9" name="__codelineno-11-9" href="#__codelineno-11-9"></a>
+</span><span id="__span-11-10"><a id="__codelineno-11-10" name="__codelineno-11-10" href="#__codelineno-11-10"></a><span class="nv">IPSET_RULE_SRC_NAME</span><span class="o">=</span>egress-src-uuid
+</span><span id="__span-11-11"><a id="__codelineno-11-11" name="__codelineno-11-11" href="#__codelineno-11-11"></a>
+</span><span id="__span-11-12"><a id="__codelineno-11-12" name="__codelineno-11-12" href="#__codelineno-11-12"></a>ipset<span class="w"> </span>x<span class="w"> </span><span class="nv">$IPSET_RULE_SRC_NAME</span>
+</span><span id="__span-11-13"><a id="__codelineno-11-13" name="__codelineno-11-13" href="#__codelineno-11-13"></a>
+</span><span id="__span-11-14"><a id="__codelineno-11-14" name="__codelineno-11-14" href="#__codelineno-11-14"></a>ipset<span class="w"> </span>create<span class="w"> </span><span class="nv">$IPSET_RULE_SRC_NAME</span><span class="w"> </span>hash:net
+</span><span id="__span-11-15"><a id="__codelineno-11-15" name="__codelineno-11-15" href="#__codelineno-11-15"></a>
+</span><span id="__span-11-16"><a id="__codelineno-11-16" name="__codelineno-11-16" href="#__codelineno-11-16"></a>ipset<span class="w"> </span>add<span class="w"> </span><span class="nv">$IPSET_RULE_SRC_NAME</span><span class="w"> </span><span class="m">172</span>.29.234.173/32
 </span></code></pre></div>
 <ol>
 <li>policy 命中的流量。出网关时做 SNAT。实时更新。</li>
 </ol>
-<div class="language-shell highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a>iptables<span class="w"> </span>-t<span class="w"> </span>nat<span class="w"> </span>-A<span class="w"> </span>EGRESSGATEWAY-SNAT-EIP<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-11-2"><a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a><span class="w">    </span>-m<span class="w"> </span><span class="nb">set</span><span class="w"> </span>--match-set<span class="w"> </span><span class="nv">$IPSET_RULE_SRC_NAME</span><span class="w"> </span>src<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-11-3"><a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a><span class="w">    </span>-m<span class="w"> </span><span class="nb">set</span><span class="w"> </span>--match-set<span class="w"> </span><span class="nv">$IPSET_RULE_DST_NAME</span><span class="w"> </span>dst<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-11-4"><a id="__codelineno-11-4" name="__codelineno-11-4" href="#__codelineno-11-4"></a><span class="w">    </span>-j<span class="w"> </span>SNAT<span class="w"> </span>--to-source<span class="w"> </span><span class="nv">$EIP</span>
+<div class="language-shell highlight"><pre><span></span><code><span id="__span-12-1"><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a>iptables<span class="w"> </span>-t<span class="w"> </span>nat<span class="w"> </span>-A<span class="w"> </span>EGRESSGATEWAY-SNAT-EIP<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-12-2"><a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a><span class="w">    </span>-m<span class="w"> </span><span class="nb">set</span><span class="w"> </span>--match-set<span class="w"> </span><span class="nv">$IPSET_RULE_SRC_NAME</span><span class="w"> </span>src<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-12-3"><a id="__codelineno-12-3" name="__codelineno-12-3" href="#__codelineno-12-3"></a><span class="w">    </span>-m<span class="w"> </span><span class="nb">set</span><span class="w"> </span>--match-set<span class="w"> </span><span class="nv">$IPSET_RULE_DST_NAME</span><span class="w"> </span>dst<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-12-4"><a id="__codelineno-12-4" name="__codelineno-12-4" href="#__codelineno-12-4"></a><span class="w">    </span>-j<span class="w"> </span>SNAT<span class="w"> </span>--to-source<span class="w"> </span><span class="nv">$EIP</span>
 </span></code></pre></div>
 <h2 id="_2">其他</h2>
 <ol>

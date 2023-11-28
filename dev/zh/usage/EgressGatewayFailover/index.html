@@ -11,6 +11,10 @@
         <link rel="canonical" href="https://spidernet-io.github.io/egressgateway/dev/zh/usage/EgressGatewayFailover/">
       
       
+        <link rel="prev" href="../ClusterDefaultEgressGateway/">
+      
+      
+        <link rel="next" href="../../concepts/Architecture/">
       
       
       <link rel="icon" href="../../../assets/images/favicon.png">
@@ -18,7 +22,7 @@
     
     
       
-        <title>EgressGateway Failover - EgressGateway</title>
+        <title>Failover - EgressGateway</title>
       
     
     
@@ -109,7 +113,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              EgressGateway Failover
+              Failover
             
           </span>
         </div>
@@ -368,17 +372,19 @@
       
   
   
+    
+  
   
     
     
     
-    <li class="md-nav__item md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
       
         
         
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" checked>
         
           <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
             
@@ -391,7 +397,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="true">
           <label class="md-nav__title" for="__nav_3">
             <span class="md-nav__icon md-icon"></span>
             Usage
@@ -433,6 +439,80 @@
   
 
       </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  <span class="md-ellipsis">
+    Failover
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  <span class="md-ellipsis">
+    Failover
+  </span>
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="目录">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      目录
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#controller-failover" class="md-nav__link">
+    Controller Failover
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#datapath-failover" class="md-nav__link">
+    Datapath Failover
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -948,7 +1028,7 @@
 
 <h1 id="egressgateway-failover">EgressGateway Failover</h1>
 <h2 id="controller-failover">Controller Failover</h2>
-<p>EgressGateway 控制面故障转移时，可以通过在安装时指定 <code>controller.replicas</code> 参数来控制 Controller 的副本数量。在多个 Controller 副本中的一个发生故障时，系统会自动选择另一个副本作为主要控制器，以确保服务的持续提供。</p>
+<p>EgressGateway 的控制面故障转移，可以通过在安装时指定 <code>controller.replicas</code> 参数来控制 Controller 的副本数量。 在多个 Controller 副本中的一个发生故障时，系统会自动选择另一个副本作为主要控制器，以确保服务的持续提供。</p>
 <h2 id="datapath-failover">Datapath Failover</h2>
 <p>在处理数据面故障转移时，创建 EgressGateway 可以通过使用 <code>nodeSelector</code> 来选择一组节点作为 Egress Node。Egress IP 将会绑定到其中的一个节点上。当某个节点发生故障或者节点上的 Egress Agent 故障时，Egress IP 将会自动转移到另一个可用节点上，从而保证服务的连续性和可靠性。</p>
 <div class="language-yaml highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nt">apiVersion</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">egressgateway.spidernet.io/v1beta1</span>
@@ -972,27 +1052,47 @@
 </span><span id="__span-0-19"><a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a><span class="w">        </span><span class="nt">egress</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;true&quot;</span>
 </span><span id="__span-0-20"><a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a><span class="nt">status</span><span class="p">:</span>
 </span><span id="__span-0-21"><a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a><span class="w">  </span><span class="nt">nodeList</span><span class="p">:</span>
-</span><span id="__span-0-22"><a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a><span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">eips</span><span class="p">:</span>
-</span><span id="__span-0-23"><a id="__codelineno-0-23" name="__codelineno-0-23" href="#__codelineno-0-23"></a><span class="w">        </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">ipv4</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">10.6.1.56</span>
-</span><span id="__span-0-24"><a id="__codelineno-0-24" name="__codelineno-0-24" href="#__codelineno-0-24"></a><span class="w">          </span><span class="nt">ipv6</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">fd00::55</span>
-</span><span id="__span-0-25"><a id="__codelineno-0-25" name="__codelineno-0-25" href="#__codelineno-0-25"></a><span class="w">          </span><span class="nt">policies</span><span class="p">:</span>
-</span><span id="__span-0-26"><a id="__codelineno-0-26" name="__codelineno-0-26" href="#__codelineno-0-26"></a><span class="w">            </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">policy1</span>
-</span><span id="__span-0-27"><a id="__codelineno-0-27" name="__codelineno-0-27" href="#__codelineno-0-27"></a><span class="w">              </span><span class="nt">namespace</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">default</span>
-</span><span id="__span-0-28"><a id="__codelineno-0-28" name="__codelineno-0-28" href="#__codelineno-0-28"></a><span class="w">      </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">workstation2</span>
-</span><span id="__span-0-29"><a id="__codelineno-0-29" name="__codelineno-0-29" href="#__codelineno-0-29"></a><span class="w">      </span><span class="nt">status</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Ready</span>
-</span><span id="__span-0-30"><a id="__codelineno-0-30" name="__codelineno-0-30" href="#__codelineno-0-30"></a><span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">workstation3</span>
+</span><span id="__span-0-22"><a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a><span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">node1</span>
+</span><span id="__span-0-23"><a id="__codelineno-0-23" name="__codelineno-0-23" href="#__codelineno-0-23"></a><span class="w">      </span><span class="nt">status</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Ready</span>
+</span><span id="__span-0-24"><a id="__codelineno-0-24" name="__codelineno-0-24" href="#__codelineno-0-24"></a><span class="w">      </span><span class="nt">eips</span><span class="p">:</span>
+</span><span id="__span-0-25"><a id="__codelineno-0-25" name="__codelineno-0-25" href="#__codelineno-0-25"></a><span class="w">        </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">ipv4</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">10.6.1.56</span>
+</span><span id="__span-0-26"><a id="__codelineno-0-26" name="__codelineno-0-26" href="#__codelineno-0-26"></a><span class="w">          </span><span class="nt">ipv6</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">fd00::55</span>
+</span><span id="__span-0-27"><a id="__codelineno-0-27" name="__codelineno-0-27" href="#__codelineno-0-27"></a><span class="w">          </span><span class="nt">policies</span><span class="p">:</span>
+</span><span id="__span-0-28"><a id="__codelineno-0-28" name="__codelineno-0-28" href="#__codelineno-0-28"></a><span class="w">            </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">policy1</span>
+</span><span id="__span-0-29"><a id="__codelineno-0-29" name="__codelineno-0-29" href="#__codelineno-0-29"></a><span class="w">              </span><span class="nt">namespace</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">default</span>
+</span><span id="__span-0-30"><a id="__codelineno-0-30" name="__codelineno-0-30" href="#__codelineno-0-30"></a><span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">node2</span>
 </span><span id="__span-0-31"><a id="__codelineno-0-31" name="__codelineno-0-31" href="#__codelineno-0-31"></a><span class="w">      </span><span class="nt">status</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Ready</span>
 </span></code></pre></div>
+<p>在上述 EgressGateway 的定义中，通过设置 <code>egress: "true"</code>，将两个节点 node1 和 node2 作为 Egress Node。node1 为被选为了生效的节点，其有效 Egress IP 可在 status 中查看。如果 node1 遇到故障，那么 node2 将作为故障切换的节点。</p>
+<p><img alt="primary-backup" src="../../../usage/primary-backup.svg" /></p>
 <p>通过 Helm 的 values 配置，可以调整状态检测和 Egress IP 转移的时间。</p>
 <ul>
 <li><code>feature.tunnelMonitorPeriod</code>：Egress Controller 以秒为单位设置的间隔检查 EgressTunnel 的最后更新状态，默认为 <code>5</code>。</li>
 <li><code>feature.tunnelUpdatePeriod</code>：Egress Agent 以秒为单位设置的间隔更新 EgressTunnel 状态，默认为 <code>5</code>。</li>
-<li><code>feature.eipEvictionTimeout</code>：如果 EgressTunnel 的最后更新时间超过此时间，则将节点的 Egress IP 移动到另一个可用节点，单位为秒，默认为 <code>15</code>。</li>
+<li><code>feature.eipEvictionTimeout</code>：如果 EgressTunnel 的最后更新时间超过此时间，则将节点的 Egress IP 移动到另一个可用节点，单位为秒，默认为 <code>5</code>。</li>
 </ul>
+<div class="language-yaml highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="nt">apiVersion</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">egressgateway.spidernet.io/v1beta1</span>
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="nt">kind</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">EgressTunnel</span>
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="nt">metadata</span><span class="p">:</span>
+</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="w">  </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">workstation1</span>
+</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="nt">spec</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{}</span>
+</span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="nt">status</span><span class="p">:</span>
+</span><span id="__span-1-7"><a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a><span class="w">  </span><span class="nt">lastHeartbeatTime</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;2023-11-27T12:04:56Z&quot;</span>
+</span><span id="__span-1-8"><a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a><span class="w">  </span><span class="nt">mark</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;0x26d9b723&quot;</span>
+</span><span id="__span-1-9"><a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a><span class="w">  </span><span class="nt">phase</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Ready</span>
+</span></code></pre></div>
+<p>EgressGateway Agent 会通过 <code>feature.tunnelUpdatePeriod</code> 间隔定时更新 <code>status.lastHeartbeatTime</code> 字段，EgressGateway Controller 则会通过 <code>feature.tunnelMonitorPeriod</code> 定时列出所有 EgressTunnel，分别检查 <code>status.lastHeartbeatTime</code> 与 <code>feature.eipEvictionTimeout</code> 的和是否超过当前时间。 </p>
+<p><img alt="egress-check" src="../../../usage/egress-check.svg" /></p>
 <p>Datapath Failover 问题排查步骤：</p>
 <ol>
 <li>首先，查看 EgressGateway 应用的安装配置文件 <code>values.yaml</code>，确认与 Datapath Failover 相关的配置是否设置合理，特别是确保 <code>eipEvictionTimeout</code> 的值大于 <code>tunnelMonitorPeriod</code> 加上 <code>tunnelUpdatePeriod</code> 的总和；</li>
-<li>执行 <code>kubectl get egt -w</code> 命令，检查 <code>EgressTunnel</code> 的状态。检查选中的 Node 是否处于 <code>HeartbeatTimeout</code> 状态，并且是否存在其他处于 <code>Ready</code> 状态的 <code>EgressTunnel</code>；</li>
+<li>执行 <code>kubectl get egt -w</code> 命令，检查 <code>EgressTunnel</code> 的状态。检查选中的 Node 是否处于 <code>HeartbeatTimeout</code> 状态，并且是否存在其他处于 <code>Ready</code> 状态的 <code>EgressTunnel</code>；
+    <div class="language-shell highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>kubectl<span class="w"> </span>get<span class="w"> </span>egt<span class="w"> </span>-w
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>NAME<span class="w">    </span>TUNNELMAC<span class="w">           </span>TUNNELIPV4<span class="w">        </span>TUNNELIPV6<span class="w">   </span>MARK<span class="w">         </span>PHASE
+</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>node1<span class="w">   </span><span class="m">66</span>:50:85:cb:b2:bf<span class="w">   </span><span class="m">192</span>.200.229.11<span class="w">    </span>fd01::c486<span class="w">   </span>0x26d9b723<span class="w">   </span>Ready
+</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>node2<span class="w">   </span><span class="m">66</span>:d4:65:85:e2:c7<span class="w">   </span><span class="m">192</span>.200.128.75<span class="w">    </span>fd01::6676<span class="w">   </span>0x26abf380<span class="w">   </span>HeartbeatTimeout
+</span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>node3<span class="w">   </span><span class="m">66</span>:c4:da:a7:58:25<span class="w">   </span><span class="m">192</span>.200.101.153<span class="w">   </span>fd01::edb5<span class="w">   </span>0x26c4ce84<span class="w">   </span>Ready
+</span></code></pre></div></li>
 <li>如果想查询是否出现过 HeartbeatTimeout 导致的 IP 切换，可以在 controller 容器检索 <code>update tunnel status to HeartbeatTimeout</code> 相关的日志。</li>
 </ol>
 
