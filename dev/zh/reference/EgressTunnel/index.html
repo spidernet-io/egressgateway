@@ -437,6 +437,26 @@
 
               
             
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../usage/EgressGatewayFailover/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Failover
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -962,6 +982,8 @@
 <li><code>Init</code>：分配隧道 IP 成功</li>
 <li><code>Ready</code>：隧道 IP 已分配，且隧道已建成</li>
 <li><code>Failed</code>：隧道 IP 分配失败</li>
+<li><code>HeartbeatTimeout</code> Agent 心跳超时</li>
+<li><code>NodeNotReady</code> Node 状态处于 NotReady</li>
 </ul>
 </li>
 <li>数据包 mark 值，每个节点对应一个。例如节点 A 有 Egress 流量需要转发到网关节点 B，会对 A 节点的流量打 mark 进行标记。</li>
