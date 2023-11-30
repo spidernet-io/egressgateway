@@ -51,7 +51,7 @@ feature:
     ## @param feature.vxlan.id VXLAN ID
     id: 100
     ## @param feature.vxlan.disableChecksumOffload Disable checksum offload
-    disableChecksumOffload: true
+    disableChecksumOffload: false
   clusterCIDR:
     autoDetect:
       ## @param feature.clusterCIDR.autoDetect.podCidrMode cni cluster used, it can be specified as `k8s`, `calico`, `auto` or `""`. The default value is `auto`.
