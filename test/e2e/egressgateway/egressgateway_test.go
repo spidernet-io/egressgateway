@@ -15,7 +15,9 @@ import (
 
 	"github.com/go-faker/faker/v4"
 	appsv1 "k8s.io/api/apps/v1"
+	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/types"
 
 	"github.com/spidernet-io/egressgateway/pkg/constant"
 	egressv1 "github.com/spidernet-io/egressgateway/pkg/k8s/apis/v1beta1"
@@ -632,6 +634,92 @@ var _ = Describe("Operate EgressGateway", Label("EgressGateway"), Ordered, func(
 			// check eip in pod
 			GinkgoWriter.Printf("Check eip in ds: %s after update egressGateway nodeSelector form not match any nodes to node2\n", ds.Name)
 			Expect(common.CheckDaemonSetEgressIP(ctx, cli, config, egressConfig, ds, egp.Status.Eip.Ipv4, egp.Status.Eip.Ipv6, true)).NotTo(HaveOccurred())
+		})
+	})
+
+	/*
+		Test Case: EgressGateway Finalizer Testing
+
+		1. Create an egress gateway and verify that the finalizer is added.
+		2. Create a policy referencing the egress gateway created in the previous step.
+		3. Delete the egress gateway and verify that it enters the "deleting" state but is not immediately deleted.
+		4. Delete the policy, and verify that the egress gateway is subsequently deleted.
+	*/
+	Context("Delete egressGateway", func() {
+		var ctx context.Context
+		// gateway
+		var egw *egressv1.EgressGateway
+
+		// policy
+		var egp *egressv1.EgressPolicy
+
+		// lalbe
+		var label map[string]string
+
+		// error
+		var err error
+
+		var gatewayFinalizer = "egressgateway.spidernet.io/egressgateway"
+
+		BeforeEach(func() {
+			ctx = context.Background()
+
+			label = map[string]string{"test-finalizer": faker.Word()}
+
+			// create gateway
+			egw = createEgressGateway(ctx)
+
+			// check finalizer
+			Expect(egw.GetFinalizers()).Should(ContainElement(gatewayFinalizer), "failed to check egressgateway finzalizer")
+
+			// create egressPolicy
+			egp, err = common.CreateEgressPolicyNew(ctx, cli, egressConfig, egw.Name, label)
+			Expect(err).NotTo(HaveOccurred())
+			GinkgoWriter.Printf("Succeeded create EgressPolicy: %s\n", egp.Name)
+
+			DeferCleanup(func() {
+				// delete the egp if it exists
+				if egp != nil {
+					GinkgoWriter.Printf("Delete egp: %s\n", egp.Name)
+					Expect(common.DeleteObj(ctx, cli, egp)).NotTo(HaveOccurred())
+				}
+
+				// delete the egw if it exists
+				if egw != nil {
+					GinkgoWriter.Printf("Delete egw: %s\n", egw.Name)
+					Expect(common.DeleteObj(ctx, cli, egw)).NotTo(HaveOccurred())
+				}
+			})
+		})
+
+		It("Test egressgateway finalizer", Label("G00020"), func() {
+			// delete gateway
+			GinkgoWriter.Printf("delete the egw: %s, we expect it to be in deleting status", egw.Name)
+			Expect(common.DeleteObj(ctx, cli, egw)).NotTo(HaveOccurred())
+			Consistently(ctx, func() error {
+				err = cli.Get(ctx, types.NamespacedName{Name: egw.Name}, egw)
+				if err != nil {
+					return err
+				}
+				if egw.DeletionTimestamp.Time.IsZero() {
+					return fmt.Errorf("not found deletionTimeStamp")
+				}
+				return nil
+			}).WithTimeout(time.Second * 6).WithPolling(time.Second * 2).Should(Succeed())
+
+			// delete egp
+			GinkgoWriter.Printf("delete the egp: %s\n", egp.Name)
+			Expect(common.DeleteObj(ctx, cli, egp)).NotTo(HaveOccurred())
+
+			// we expect the egw will be delete after a while
+			Eventually(ctx, func() error {
+				err = cli.Get(ctx, types.NamespacedName{Name: egw.Name}, egw)
+				if errors.IsNotFound(err) {
+					return nil
+				} else {
+					return fmt.Errorf("get the egw: %s that is not our expected", egw.Name)
+				}
+			}).WithTimeout(time.Second * 6).WithPolling(time.Second * 2).Should(Succeed())
 		})
 	})
 })

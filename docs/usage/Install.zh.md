@@ -274,3 +274,9 @@ helm repo update
     $ curl 10.6.1.92:8080
     Remote IP: 172.22.0.110
     ```
+
+## 卸载 EgressGateway
+  为了保证业务不断流，`egressgateway` 中加入了 finalizer 机制，删除 `egressgateway` 时，如果存在 policy 引用此 `egressgateway`，`egressgateway` 会一直处于 deleting 状态, 直到 所有的 policy 被删除，finalizer 就会被自动删除。  
+  所以，如果要删除 `egressgateway`，建议使用如下步骤：
+  1. 删除所有引用 egressgateway 的 policy
+  2. 删除 egressgateway

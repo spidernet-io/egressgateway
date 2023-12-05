@@ -36,22 +36,10 @@ type patchOperation struct {
 	Value interface{} `json:"value,omitempty"`
 }
 
-func (egw *EgressGatewayWebhook) EgressGatewayValidate(ctx context.Context, req webhook.AdmissionRequest) webhook.AdmissionResponse {
-	// Check whether the deleted EgressGateway is referenced
-	if req.Operation == v1.Delete {
-		delEG := new(egress.EgressGateway)
-		err := json.Unmarshal(req.OldObject.Raw, delEG)
-		if err != nil {
-			return webhook.Denied(fmt.Sprintf("json unmarshal EgressGateway with error: %v", err))
-		}
+var egressGatewayFinalizers = "egressgateway.spidernet.io/egressgateway"
 
-		for _, item := range delEG.Status.NodeList {
-			for _, eip := range item.Eips {
-				if len(eip.Policies) != 0 {
-					return webhook.Denied(fmt.Sprintf("Do not delete %v:%v because it is already referenced by EgressPolicy", req.Namespace, req.Name))
-				}
-			}
-		}
+func (egw *EgressGatewayWebhook) EgressGatewayValidate(ctx context.Context, req webhook.AdmissionRequest) webhook.AdmissionResponse {
+	if req.Operation == v1.Delete {
 		return webhook.Allowed("checked")
 	}
 
@@ -173,7 +161,6 @@ func (egw *EgressGatewayWebhook) EgressGatewayValidate(ctx context.Context, req 
 
 func (egw *EgressGatewayWebhook) EgressGatewayMutate(ctx context.Context, req webhook.AdmissionRequest) webhook.AdmissionResponse {
 	rander := rand.New(rand.NewSource(time.Now().UnixNano()))
-	isPatch := false
 	eg := new(egress.EgressGateway)
 	err := json.Unmarshal(req.Object.Raw, eg)
 	if err != nil {
@@ -181,8 +168,9 @@ func (egw *EgressGatewayWebhook) EgressGatewayMutate(ctx context.Context, req we
 	}
 
 	reviewResponse := webhook.AdmissionResponse{}
-	var patch []patchOperation
+	var patchList []patchOperation
 
+	// patch egress gateway default eip
 	if egw.Config.FileConfig.EnableIPv4 {
 		if len(eg.Spec.Ippools.Ipv4DefaultEIP) == 0 && len(eg.Spec.Ippools.IPv4) != 0 {
 			ipv4Ranges, err := ip.MergeIPRanges(constant.IPv4, eg.Spec.Ippools.IPv4)
@@ -192,12 +180,11 @@ func (egw *EgressGatewayWebhook) EgressGatewayMutate(ctx context.Context, req we
 
 			ipv4s, _ := ip.ParseIPRanges(constant.IPv4, ipv4Ranges)
 			if len(ipv4s) != 0 {
-				patch = append(patch, patchOperation{
+				patchList = append(patchList, patchOperation{
 					Op:    "add",
 					Path:  "/spec/ippools/ipv4DefaultEIP",
 					Value: ipv4s[rander.Intn(len(ipv4s))].String(),
 				})
-				isPatch = true
 			}
 
 		}
@@ -213,21 +200,25 @@ func (egw *EgressGatewayWebhook) EgressGatewayMutate(ctx context.Context, req we
 
 			ipv6s, _ := ip.ParseIPRanges(constant.IPv6, ipv6Ranges)
 			if len(ipv6s) != 0 {
-				patch = append(patch, patchOperation{
+				patchList = append(patchList, patchOperation{
 					Op:    "add",
 					Path:  "/spec/ippools/ipv6DefaultEIP",
 					Value: ipv6s[rander.Intn(len(ipv6s))].String(),
 				})
-				isPatch = true
 			}
-
 		}
 	}
 
-	if isPatch {
-		patchBytes, err := json.Marshal(patch)
+	// patch egress gateway finalizer
+	patch := getEgressGatewayFinalizerPatch(req, []string{egressGatewayFinalizers})
+	if patch != nil {
+		patchList = append(patchList, *patch)
+	}
+
+	if len(patchList) > 0 {
+		patchBytes, err := json.Marshal(patchList)
 		if err != nil {
-			return webhook.Denied(fmt.Sprintf("failed to allocate defaultEIP.: %v", err))
+			return webhook.Denied(fmt.Sprintf("failed to Marshal patchList.: %v", err))
 		}
 
 		reviewResponse.Allowed = true
@@ -239,4 +230,15 @@ func (egw *EgressGatewayWebhook) EgressGatewayMutate(ctx context.Context, req we
 	}
 
 	return webhook.Allowed("checked")
+}
+
+func getEgressGatewayFinalizerPatch(req webhook.AdmissionRequest, finalizer []string) *patchOperation {
+	if req.Operation == v1.Create {
+		return &patchOperation{
+			Op:    "add",
+			Path:  "/metadata/finalizers",
+			Value: finalizer,
+		}
+	}
+	return nil
 }
