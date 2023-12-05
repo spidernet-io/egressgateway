@@ -235,6 +235,67 @@ func TestValidateEgressPolicy(t *testing.T) {
 			},
 			expAllow: false,
 		},
+		"case7 the policy's eip is not within the ip ranges defined in the ippool of the gateway": {
+			existingResources: []client.Object{
+				&v1beta1.EgressGateway{
+					ObjectMeta: metav1.ObjectMeta{Name: "test"},
+					Spec: v1beta1.EgressGatewaySpec{
+						Ippools: v1beta1.Ippools{
+							IPv4: []string{"172.18.1.2-172.18.1.5"},
+							IPv6: []string{"fc00:f853:ccd:e793:a::3-fc00:f853:ccd:e793:a::6"},
+						},
+					},
+				},
+			},
+			spec: v1beta1.EgressPolicySpec{
+				EgressGatewayName: "test",
+				EgressIP: v1beta1.EgressIP{
+					UseNodeIP: false,
+					IPv4:      "172.19.1.2",
+					IPv6:      "fddd:feee::2",
+				},
+				AppliedTo: v1beta1.AppliedTo{
+					PodSelector: &metav1.LabelSelector{
+						MatchLabels: map[string]string{"app": "test"},
+					},
+				},
+				DestSubnet: []string{
+					"192.168.1.1/24",
+					"1.1.1.1/32",
+					"10.0.6.1/16",
+					"fd00::21/112",
+				},
+			},
+			expAllow: false,
+		},
+		"case8 reating a policy with the value of the field spec.egressIP.useNodeIP set to false when the ippool of its referenced gateway is empty": {
+			existingResources: []client.Object{
+				&v1beta1.EgressGateway{
+					ObjectMeta: metav1.ObjectMeta{Name: "test"},
+					Spec: v1beta1.EgressGatewaySpec{
+						Ippools: v1beta1.Ippools{},
+					},
+				},
+			},
+			spec: v1beta1.EgressPolicySpec{
+				EgressGatewayName: "test",
+				EgressIP: v1beta1.EgressIP{
+					UseNodeIP: false,
+				},
+				AppliedTo: v1beta1.AppliedTo{
+					PodSelector: &metav1.LabelSelector{
+						MatchLabels: map[string]string{"app": "test"},
+					},
+				},
+				DestSubnet: []string{
+					"192.168.1.1/24",
+					"1.1.1.1/32",
+					"10.0.6.1/16",
+					"fd00::21/112",
+				},
+			},
+			expAllow: false,
+		},
 	}
 	for name, c := range cases {
 		t.Run(name, func(t *testing.T) {
@@ -656,6 +717,39 @@ func TestValidateEgressClusterPolicy(t *testing.T) {
 				EgressGatewayName: "test",
 				AppliedTo:         v1beta1.ClusterAppliedTo{},
 				DestSubnet:        []string{},
+			},
+			expAllow: false,
+		},
+		"case6 the policy's eip is not within the ip ranges defined in the ippool of the gateway": {
+			existingResources: []client.Object{
+				&v1beta1.EgressGateway{
+					ObjectMeta: metav1.ObjectMeta{Name: "test"},
+					Spec: v1beta1.EgressGatewaySpec{
+						Ippools: v1beta1.Ippools{
+							IPv4: []string{"172.18.1.2-172.18.1.5"},
+							IPv6: []string{"fc00:f853:ccd:e793:a::3-fc00:f853:ccd:e793:a::6"},
+						},
+					},
+				},
+			},
+			spec: v1beta1.EgressClusterPolicySpec{
+				EgressGatewayName: "test",
+				EgressIP: v1beta1.EgressIP{
+					UseNodeIP: false,
+					IPv4:      "10.10.10.1",
+					IPv6:      "fddd:10::1",
+				},
+				AppliedTo: v1beta1.ClusterAppliedTo{
+					PodSelector: &metav1.LabelSelector{
+						MatchLabels: map[string]string{"app": "test"},
+					},
+				},
+				DestSubnet: []string{
+					"192.168.1.1/24",
+					"1.1.1.1/32",
+					"10.0.6.1/16",
+					"fd00::21/112",
+				},
 			},
 			expAllow: false,
 		},

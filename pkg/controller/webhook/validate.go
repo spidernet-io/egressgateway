@@ -134,6 +134,14 @@ func validateEgressPolicy(ctx context.Context, client client.Client, req webhook
 				}
 			}
 		}
+
+		// denied when the `Spec.EgressIP.IPv4` or `Spec.EgressIP.IPv6` are not within the ip ranges defined in the ippools of the egressgateway
+		if ok, err := checkEIPIncluded(client, ctx, egp.Spec.EgressIP.IPv4, egp.Spec.EgressIP.IPv6, egp.Spec.EgressGatewayName); !ok {
+			if err != nil {
+				return webhook.Denied(err.Error())
+			}
+			return webhook.Denied("the Spec.EgressIP.IPv4 or Spec.EgressIP.IPv6 is not within the ip ranges defined in the ippools of the egressgateway")
+		}
 	}
 
 	return validateSubnet(egp.Spec.DestSubnet)
@@ -220,11 +228,20 @@ func validateEgressClusterPolicy(ctx context.Context, client client.Client, req 
 
 			}
 		}
+
+		// denied when the `Spec.EgressIP.IPv4` or `Spec.EgressIP.IPv6` are not within the ip ranges defined in the ippools of the egressgateway
+		if ok, err := checkEIPIncluded(client, ctx, policy.Spec.EgressIP.IPv4, policy.Spec.EgressIP.IPv6, policy.Spec.EgressGatewayName); !ok {
+			if err != nil {
+				return webhook.Denied(err.Error())
+			}
+			return webhook.Denied("the Spec.EgressIP.IPv4 or Spec.EgressIP.IPv6 is not within the ip ranges defined in the ippools of the egressgateway")
+		}
 	}
 
 	return validateSubnet(policy.Spec.DestSubnet)
 }
 
+// checkEGWIppools when creating the policy with the value of the field .Spec.EgressIP.UseNodeIP set to be false, the ippools of the gateway should not be empty
 func checkEGWIppools(client client.Client, cfg *config.Config, ctx context.Context, name, allocatorPolicy string) error {
 
 	egw := new(egressv1.EgressGateway)
@@ -234,12 +251,8 @@ func checkEGWIppools(client client.Client, cfg *config.Config, ctx context.Conte
 		return fmt.Errorf("failed to obtain the EgressGateway: %v", err)
 	}
 
-	if cfg.FileConfig.EnableIPv4 && len(egw.Spec.Ippools.IPv4) == 0 {
-		return fmt.Errorf("referenced egw(%v) spec.Ippools.IPv4 cannot be empty", egw.Name)
-	}
-
-	if cfg.FileConfig.EnableIPv6 && len(egw.Spec.Ippools.IPv6) == 0 {
-		return fmt.Errorf("referenced egw(%v) spec.Ippools.IPv6 cannot be empty", egw.Name)
+	if len(egw.Spec.Ippools.IPv4) == 0 && len(egw.Spec.Ippools.IPv6) == 0 {
+		return fmt.Errorf("referenced egw(%v) spec.Ippools cannot be empty", egw.Name)
 	}
 
 	return nil
@@ -283,6 +296,41 @@ func checkEIP(client client.Client, ctx context.Context, ipv4, ipv6, egwName str
 		}
 	}
 
+	return true, nil
+}
+
+// checkEIPIncluded check if the `Spec.EgressIP.IPv4` or `Spec.EgressIP.IPv6` are within the ip ranges defined in the ippools of the egressgateway
+func checkEIPIncluded(client client.Client, ctx context.Context, ipv4, ipv6, egwName string) (bool, error) {
+	eipIPV4 := ipv4
+	eipIPV6 := ipv6
+
+	if len(eipIPV4) == 0 && len(eipIPV6) == 0 {
+		return true, nil
+	}
+
+	egw := new(egressv1.EgressGateway)
+	err := client.Get(ctx, types.NamespacedName{Name: egwName}, egw)
+	if err != nil {
+		if !errors.IsNotFound(err) {
+			return false, fmt.Errorf("failed to get the EgressGateway: %v", err)
+		}
+	}
+
+	if len(egw.Spec.Ippools.IPv4) != 0 || len(egw.Spec.Ippools.IPv6) != 0 {
+		ips := append(egw.Spec.Ippools.IPv4, egw.Spec.Ippools.IPv6...)
+		if len(ipv4) != 0 {
+			ok, err := ip.CheckIPIncluded(ipv4, ips)
+			if !ok {
+				return ok, err
+			}
+		}
+		if len(ipv6) != 0 {
+			ok, err := ip.CheckIPIncluded(ipv6, ips)
+			if !ok {
+				return ok, err
+			}
+		}
+	}
 	return true, nil
 }
 

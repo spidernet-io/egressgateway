@@ -550,3 +550,77 @@ func ConvertCidrOrIPrangeToIPs(in []string, version constant.IPVersion) ([]net.I
 
 	return res, nil
 }
+
+// CheckIPIncluded checks if the 'ips' contain the 'ip'. The 'ips' can include three formats: single IP, IP range, and IP CIDR, such as ["172.30.0.2", "172.30.0.3-172.30.0-5", "172.30.1.0/24"]
+func CheckIPIncluded(ip string, ips []string) (bool, error) {
+	if net.ParseIP(ip) == nil {
+		return false, ErrInvalidIP
+	}
+	var version constant.IPVersion
+	// check ip
+	if ok, _ := IsIPv4(ip); ok {
+		version = constant.IPv4
+	} else {
+		version = constant.IPv6
+	}
+
+	cidrs := make([]string, 0)
+	ipV4Ranges := make([]string, 0)
+	ipV6Ranges := make([]string, 0)
+
+	for _, item := range ips {
+		_, _, err := net.ParseCIDR(item)
+		if err != nil {
+			if IsIPv4IPRange(item) {
+				ipV4Ranges = append(ipV4Ranges, item)
+			} else if IsIPv6IPRange(item) {
+				ipV6Ranges = append(ipV6Ranges, item)
+			} else {
+				return false, ErrInvalidIPRangeFormat
+			}
+		} else {
+			// cidr
+			cidrs = append(cidrs, item)
+		}
+	}
+
+	// check if the ip is within the cidr
+	for _, item := range cidrs {
+		include, err := IsIPIncludedCidr(ip, item)
+		if err != nil {
+			return false, err
+		}
+		if include {
+			return true, nil
+		}
+	}
+
+	// check if the ip is within the ipRange
+	var ipRanges []string
+	if version == constant.IPv4 {
+		ipRanges = ipV4Ranges
+	} else {
+		ipRanges = ipV6Ranges
+	}
+	include, err := IsIPIncludedRange(version, ip, ipRanges)
+	if err != nil {
+		return false, err
+	}
+	if include {
+		return true, nil
+	}
+	return false, nil
+}
+
+// IsIPIncludedCidr checks if the "cidr" contains the "ip"
+func IsIPIncludedCidr(ip, cidr string) (bool, error) {
+	IPip := net.ParseIP(ip)
+	if IPip == nil {
+		return false, ErrInvalidIP
+	}
+	_, IPnet, err := net.ParseCIDR(cidr)
+	if err != nil {
+		return false, err
+	}
+	return IPnet.Contains(IPip), nil
+}

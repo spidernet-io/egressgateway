@@ -940,7 +940,7 @@ func (r egnReconciler) allocatorEIP(selEipLolicy string, nodeName string, pi pol
 	var perIpv6 string
 	rander := rand.New(rand.NewSource(time.Now().UnixNano()))
 
-	if r.config.FileConfig.EnableIPv4 {
+	if len(egw.Spec.Ippools.IPv4) > 0 {
 		var useIpv4s []net.IP
 
 		ipv4Ranges, _ := ip.MergeIPRanges(constant.IPv4, egw.Spec.Ippools.IPv4)
@@ -991,7 +991,7 @@ func (r egnReconciler) allocatorEIP(selEipLolicy string, nodeName string, pi pol
 		}
 	}
 
-	if r.config.FileConfig.EnableIPv6 {
+	if len(egw.Spec.Ippools.IPv6) > 0 {
 		if len(perIpv4) != 0 && len(GetEipByIPV4(perIpv4, egw).IPv6) != 0 {
 			return perIpv4, GetEipByIPV4(perIpv4, egw).IPv6, nil
 		}

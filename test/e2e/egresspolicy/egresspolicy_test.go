@@ -255,8 +255,7 @@ var _ = Describe("EgressPolicy", Ordered, func() {
 					egp.Spec.EgressIP.IPv6 = "10.10.10.2"
 				}
 			}),
-			// todo @bzsuni waiting for the bug be fixed
-			PEntry("should fail when the `Spec.EgressIP` of the policy is not within the IP range of the ippools in the gateway used by the policy", Label("P00004"), true,
+			Entry("should fail when the `Spec.EgressIP` of the policy is not within the IP range of the ippools in the gateway used by the policy", Label("P00004"), true,
 				func(egp *egressv1.EgressPolicy) {
 					egp.Spec.EgressGatewayName = egw.Name
 					egp.Spec.AppliedTo.PodSubnet = []string{"10.10.0.0/16"}
@@ -310,8 +309,7 @@ var _ = Describe("EgressPolicy", Ordered, func() {
 					egcp.Spec.EgressIP.IPv6 = "10.10.10.2"
 				}
 			}),
-			// todo @bzsuni waiting for the bug be fixed
-			PEntry("should fail when the `Spec.EgressIP` of the cluster-policy is not within the IP range of the ippools in the gateway used by the policy", Label("P00004"), true,
+			Entry("should fail when the `Spec.EgressIP` of the cluster-policy is not within the IP range of the ippools in the gateway used by the policy", Label("P00004"), true,
 				func(egcp *egressv1.EgressClusterPolicy) {
 					egcp.Spec.EgressGatewayName = egw.Name
 					egcp.Spec.AppliedTo.PodSubnet = &[]string{"10.10.0.0/16"}
