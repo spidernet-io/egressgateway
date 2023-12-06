@@ -97,7 +97,7 @@ var _ = Describe("Egressendpointslice", func() {
 			GinkgoWriter.Printf("succeeded to create deploy %s\n", deploy.Name)
 
 			// create policy
-			egp, err = common.CreateEgressPolicyNew(ctx, cli, egressConfig, egw.Name, deploy.Labels)
+			egp, err = common.CreateEgressPolicyNew(ctx, cli, egressConfig, egw.Name, deploy.Labels, "")
 			Expect(err).NotTo(HaveOccurred(), "failed to create policy")
 			GinkgoWriter.Printf("succeeded to create policy %s\n", egp.Name)
 

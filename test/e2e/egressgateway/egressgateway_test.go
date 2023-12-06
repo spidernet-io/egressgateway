@@ -467,7 +467,7 @@ var _ = Describe("Operate EgressGateway", Label("EgressGateway"), Ordered, func(
 			v6DefaultEip = egw.Spec.Ippools.Ipv6DefaultEIP
 
 			// create egressPolicy
-			egp, err = common.CreateEgressPolicyNew(ctx, cli, egressConfig, egw.Name, ds.Labels)
+			egp, err = common.CreateEgressPolicyNew(ctx, cli, egressConfig, egw.Name, ds.Labels, "")
 			Expect(err).NotTo(HaveOccurred())
 			GinkgoWriter.Printf("Succeeded create EgressPolicy: %s\n", egp.Name)
 
@@ -673,7 +673,7 @@ var _ = Describe("Operate EgressGateway", Label("EgressGateway"), Ordered, func(
 			Expect(egw.GetFinalizers()).Should(ContainElement(gatewayFinalizer), "failed to check egressgateway finzalizer")
 
 			// create egressPolicy
-			egp, err = common.CreateEgressPolicyNew(ctx, cli, egressConfig, egw.Name, label)
+			egp, err = common.CreateEgressPolicyNew(ctx, cli, egressConfig, egw.Name, label, "")
 			Expect(err).NotTo(HaveOccurred())
 			GinkgoWriter.Printf("Succeeded create EgressPolicy: %s\n", egp.Name)
 

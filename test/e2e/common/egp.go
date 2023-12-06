@@ -22,12 +22,16 @@ import (
 )
 
 func CreateEgressPolicyNew(ctx context.Context, cli client.Client, cfg econfig.FileConfig,
-	egw string, podLabel map[string]string) (*egressv1.EgressPolicy, error) {
+	egw string, podLabel map[string]string, namespace string) (*egressv1.EgressPolicy, error) {
 	ctx, cancel := context.WithTimeout(ctx, time.Second*20)
 	defer cancel()
 
+	if len(namespace) == 0 {
+		namespace = "default"
+	}
+
 	res := &egressv1.EgressPolicy{
-		ObjectMeta: metav1.ObjectMeta{GenerateName: "policy-" + uuid.NewString(), Namespace: "default"},
+		ObjectMeta: metav1.ObjectMeta{GenerateName: "policy-" + uuid.NewString(), Namespace: namespace},
 		Spec: egressv1.EgressPolicySpec{
 			EgressGatewayName: egw,
 			AppliedTo: egressv1.AppliedTo{PodSelector: &metav1.LabelSelector{
