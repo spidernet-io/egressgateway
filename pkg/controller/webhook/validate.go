@@ -123,7 +123,7 @@ func validateEgressPolicy(ctx context.Context, client client.Client, req webhook
 
 	if req.Operation == v1.Create {
 		if cfg.FileConfig.EnableIPv4 || cfg.FileConfig.EnableIPv6 {
-			if ok, err := checkEIP(client, ctx, egp.Spec.EgressIP.IPv4, egp.Spec.EgressIP.IPv6, egp.Spec.EgressGatewayName); !ok {
+			if ok, err := checkEIP(client, ctx, egp.Spec.EgressIP.IPv4, egp.Spec.EgressIP.IPv6, egp.Spec.EgressGatewayName, cfg); !ok {
 				return webhook.Denied(err.Error())
 			}
 
@@ -216,7 +216,7 @@ func validateEgressClusterPolicy(ctx context.Context, client client.Client, req 
 
 	if req.Operation == v1.Create {
 		if cfg.FileConfig.EnableIPv4 || cfg.FileConfig.EnableIPv6 {
-			if ok, err := checkEIP(client, ctx, policy.Spec.EgressIP.IPv4, policy.Spec.EgressIP.IPv6, policy.Spec.EgressGatewayName); !ok {
+			if ok, err := checkEIP(client, ctx, policy.Spec.EgressIP.IPv4, policy.Spec.EgressIP.IPv6, policy.Spec.EgressGatewayName, cfg); !ok {
 				return webhook.Denied(err.Error())
 			}
 
@@ -258,7 +258,7 @@ func checkEGWIppools(client client.Client, cfg *config.Config, ctx context.Conte
 	return nil
 }
 
-func checkEIP(client client.Client, ctx context.Context, ipv4, ipv6, egwName string) (bool, error) {
+func checkEIP(client client.Client, ctx context.Context, ipv4, ipv6, egwName string, cfg *config.Config) (bool, error) {
 
 	eipIPV4 := ipv4
 	eipIPV6 := ipv6
@@ -276,9 +276,11 @@ func checkEIP(client client.Client, ctx context.Context, ipv4, ipv6, egwName str
 		return false, err
 	}
 
-	if eipIPV4 == egw.Spec.Ippools.Ipv4DefaultEIP || eipIPV6 == egw.Spec.Ippools.Ipv6DefaultEIP {
-		if eipIPV4 != egw.Spec.Ippools.Ipv4DefaultEIP || eipIPV6 != egw.Spec.Ippools.Ipv6DefaultEIP {
-			return false, fmt.Errorf("%v egw Ipv4DefaultEIP=%v Ipv6DefaultEIP=%v, they can only be used together", egwName, egw.Spec.Ippools.Ipv4DefaultEIP, egw.Spec.Ippools.Ipv6DefaultEIP)
+	if egw.Spec.Ippools.Ipv4DefaultEIP != "" && egw.Spec.Ippools.Ipv6DefaultEIP != "" {
+		if eipIPV4 == egw.Spec.Ippools.Ipv4DefaultEIP || eipIPV6 == egw.Spec.Ippools.Ipv6DefaultEIP {
+			if eipIPV4 != egw.Spec.Ippools.Ipv4DefaultEIP || eipIPV6 != egw.Spec.Ippools.Ipv6DefaultEIP {
+				return false, fmt.Errorf("%v egw Ipv4DefaultEIP=%v Ipv6DefaultEIP=%v, they can only be used together", egwName, egw.Spec.Ippools.Ipv4DefaultEIP, egw.Spec.Ippools.Ipv6DefaultEIP)
+			}
 		}
 	}
 
