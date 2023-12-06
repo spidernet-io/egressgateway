@@ -182,6 +182,7 @@ E2E_KIND_IPV6_POD_CIDR = fd40::/48
 
 #====== calico
 CALICO_VERSION ?=
+MAMUAL_CALICO_VERSION ?= v3.26.4
 INSTALL_TIME_OUT = 300s
 ifeq ($(E2E_CHINA_IMAGE_REGISTRY),true)
     CALICO_REGISTRY ?= docker.m.daocloud.io
