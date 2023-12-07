@@ -10,6 +10,7 @@ import (
 	"time"
 
 	corev1 "k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 
 	"github.com/google/uuid"
 
@@ -353,4 +354,36 @@ func CreateEgressPoliciesForPods(ctx context.Context, cli client.Client, egw *eg
 	}
 
 	return egps, pod2Policy, nil
+}
+
+// GetPodsReferencedEgressPolicy get the podList referencing the given policy
+func GetPodsReferencedEgressPolicy(ctx context.Context, cli client.Client, egp *egressv1.EgressPolicy) (*v1.PodList, error) {
+	// the field Spec.AppliedTo.PodSelector of the policy cannot be empty
+	if egp.Spec.AppliedTo.PodSelector == nil {
+		return nil, nil
+	}
+	podList := new(v1.PodList)
+
+	matchingLabels := client.MatchingLabels(egp.Spec.AppliedTo.PodSelector.MatchLabels)
+	err := cli.List(ctx, podList, matchingLabels)
+	if err != nil {
+		return nil, err
+	}
+	return podList, nil
+}
+
+// GetPodsReferencedEgressClusterPolicy get the podList referencing the given cluster policy
+func GetPodsReferencedEgressClusterPolicy(ctx context.Context, cli client.Client, egcp *egressv1.EgressClusterPolicy) (*v1.PodList, error) {
+	// the field Spec.AppliedTo.PodSelector of the cluster policy cannot be empty
+	if egcp.Spec.AppliedTo.PodSelector == nil {
+		return nil, nil
+	}
+	podList := new(v1.PodList)
+
+	matchingLabels := client.MatchingLabels(egcp.Spec.AppliedTo.PodSelector.MatchLabels)
+	err := cli.List(ctx, podList, matchingLabels)
+	if err != nil {
+		return nil, err
+	}
+	return podList, nil
 }

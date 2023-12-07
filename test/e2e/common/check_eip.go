@@ -135,3 +135,42 @@ func CheckPodsEgressIP(ctx context.Context, cfg *Config, p2p map[*corev1.Pod]*eg
 	}
 	return nil
 }
+
+func CheckDeployEgressIP(
+	ctx context.Context, cli client.Client,
+	cfg *Config, egressConfig config.FileConfig,
+	deploy *appsv1.Deployment, ipv4, ipv6 string, expectUsedEip bool) error {
+
+	list := &corev1.PodList{}
+	labels := &metav1.LabelSelector{MatchLabels: deploy.Spec.Template.Labels}
+	selector, err := metav1.LabelSelectorAsSelector(labels)
+	if err != nil {
+		return err
+	}
+	err = cli.List(ctx, list, &client.ListOptions{
+		LabelSelector: selector,
+		Namespace:     deploy.Namespace,
+	})
+	if err != nil {
+		return err
+	}
+
+	for _, pod := range list.Items {
+		// check v4
+		if egressConfig.EnableIPv4 {
+			err = CheckPodEgressIP(ctx, cfg, pod, ipv4, cfg.ServerAIPv4, expectUsedEip)
+			if err != nil {
+				return err
+			}
+		}
+
+		// check v6
+		if egressConfig.EnableIPv6 {
+			err = CheckPodEgressIP(ctx, cfg, pod, ipv6, cfg.ServerAIPv6, expectUsedEip)
+			if err != nil {
+				return err
+			}
+		}
+	}
+	return nil
+}

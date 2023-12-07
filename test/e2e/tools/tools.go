@@ -69,6 +69,9 @@ func SubtractionSlice(a, b []string) []string {
 
 // IsSameSlice determine whether two slices are the same
 func IsSameSlice(a, b []string) bool {
+	if len(a) == len(b) && len(b) == 0 {
+		return true
+	}
 	ac := deepcopy.Copy(a).([]string)
 	bc := deepcopy.Copy(b).([]string)
 	sort.Strings(ac)
