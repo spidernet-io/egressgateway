@@ -67,6 +67,10 @@ func (egw *EgressGatewayWebhook) EgressGatewayValidate(ctx context.Context, req 
 
 	if newEg.Spec.ClusterDefault {
 		egwList := new(egress.EgressGatewayList)
+		err := egw.Client.List(ctx, egwList)
+		if err != nil {
+			return webhook.Denied(fmt.Sprintf("Check for duplicate EgressGateway, get EgressGatewayList: %v", err))
+		}
 		for _, item := range egwList.Items {
 			if item.Spec.ClusterDefault && item.Name != newEg.Name {
 				return webhook.Denied(fmt.Sprintf("A cluster can only have one default gateway, default gateway: %s.", item.Name))
