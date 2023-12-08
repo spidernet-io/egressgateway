@@ -153,3 +153,12 @@ func GetPodIPs(pod *corev1.Pod) (ipv4List, ipv6List []string) {
 	}
 	return ipv4List, ipv6List
 }
+
+func GetPodListIPs(podList *corev1.PodList) (ipv4List, ipv6List []string) {
+	for _, pod := range podList.Items {
+		v4s, v6s := GetPodIPs(&pod)
+		ipv4List = append(ipv4List, v4s...)
+		ipv6List = append(ipv6List, v6s...)
+	}
+	return ipv4List, ipv6List
+}

@@ -27,13 +27,19 @@ import (
 )
 
 var _ = Describe("EgressPolicy", Serial, func() {
-	var egw *egressv1.EgressGateway
+	var (
+		egw   *egressv1.EgressGateway
+		ipNum int
+		pool  egressv1.Ippools
+	)
 
 	BeforeEach(func() {
 		ctx := context.Background()
+		var err error
+		ipNum = 3
 
 		// create EgressGateway
-		pool, err := common.GenIPPools(ctx, cli, egressConfig.EnableIPv4, egressConfig.EnableIPv6, 3, 1)
+		pool, err = common.GenIPPools(ctx, cli, egressConfig.EnableIPv4, egressConfig.EnableIPv6, int64(ipNum), 1)
 		Expect(err).NotTo(HaveOccurred())
 		nodeSelector := egressv1.NodeSelector{Selector: &metav1.LabelSelector{MatchLabels: nodeLabel}}
 
@@ -50,16 +56,29 @@ var _ = Describe("EgressPolicy", Serial, func() {
 		})
 	})
 
-	Context("Test EgressPolicy", Label("EgressPolicy", "P00007", "P00008", "P00013", "P00014", "P00019"), func() {
+	Context("Test EgressPolicy", Label("EgressPolicy", "P00007", "P00008", "P00011", "P00012", "P00013", "P00014", "P00020"), func() {
 		var (
 			dsA *appsv1.DaemonSet
 			dsB *appsv1.DaemonSet
 
 			policy        *egressv1.EgressPolicy
 			clusterPolicy *egressv1.EgressClusterPolicy
+
+			// ip usage
+			ipUsage egressv1.IPUsage
 		)
 
 		BeforeEach(func() {
+			// ip usage
+			if len(pool.IPv4) != 0 {
+				ipUsage.IPv4Total = ipNum
+				ipUsage.IPv4Free = ipNum - 1
+			}
+			if len(pool.IPv6) != 0 {
+				ipUsage.IPv6Total = ipNum
+				ipUsage.IPv6Free = ipNum - 1
+			}
+
 			ctx := context.Background()
 			var err error
 			// create DaemonSet-A DaemonSet-B for A/B test
@@ -89,8 +108,8 @@ var _ = Describe("EgressPolicy", Serial, func() {
 			var err error
 			ctx := context.Background()
 
-			// P00008
-			By("case P00008: create policy with empty `EgressIP`")
+			// P00008 and P00011
+			By("case P00008, P00011: create policy with empty `EgressIP`")
 
 			policy, err = common.CreateEgressPolicyNew(ctx, cli, egressConfig, egw.Name, dsA.Labels, "")
 			Expect(err).NotTo(HaveOccurred())
@@ -101,11 +120,65 @@ var _ = Describe("EgressPolicy", Serial, func() {
 			err = common.CheckDaemonSetEgressIP(ctx, cli, config, egressConfig, dsA, e.Ipv4, e.Ipv6, true)
 			Expect(err).NotTo(HaveOccurred())
 
-			// P00011
-			By("case P00011: update policy to empty `DestSubnet`")
-			e = policy.Status.Eip
+			// check the status of the policy and gateway
+			GinkgoWriter.Printf("check the status of the policy: %s\n", policy.Name)
+			expectPolicyStatus := &egressv1.EgressPolicyStatus{
+				Eip: egressv1.Eip{
+					Ipv4: egw.Spec.Ippools.Ipv4DefaultEIP,
+					Ipv6: egw.Spec.Ippools.Ipv6DefaultEIP,
+				},
+				Node: node1.Name,
+			}
+			Expect(common.CheckEgressPolicyStatusSynced(ctx, cli, policy, expectPolicyStatus, time.Second*5)).NotTo(HaveOccurred())
+
+			GinkgoWriter.Printf("check the status of the gateway: %s\n", egw.Name)
+			expectGatewayStatus := &egressv1.EgressGatewayStatus{
+				NodeList: []egressv1.EgressIPStatus{
+					{
+						Name: node1.Name,
+						Eips: []egressv1.Eips{
+							{
+								IPv4: egw.Spec.Ippools.Ipv4DefaultEIP,
+								IPv6: egw.Spec.Ippools.Ipv6DefaultEIP,
+								Policies: []egressv1.Policy{
+									{
+										Name:      policy.Name,
+										Namespace: policy.Namespace,
+									},
+								},
+							},
+						},
+						Status: string(egressv1.EgressTunnelReady),
+					},
+				},
+				IPUsage: ipUsage,
+			}
+			err = common.CheckEgressGatewayStatusSynced(ctx, cli, egw, expectGatewayStatus, time.Second*5)
+			Expect(err).NotTo(HaveOccurred(), fmt.Sprintf("expect: %v\ngot: %v\n", expectGatewayStatus, egw.Status))
+
+			GinkgoWriter.Println("the exported IP of the unmatched dsB should not be the EIP")
 			err = common.CheckDaemonSetEgressIP(ctx, cli, config, egressConfig, dsB, e.Ipv4, e.Ipv6, false)
 			Expect(err).NotTo(HaveOccurred())
+
+			// P00012
+			By("case P00012: add the ips of the nettools-server-a to the spec.extraCidr field of the egressClusterInfo")
+
+			egci, err := updateEgressClusterInfoExtraCidr(ctx, []string{config.ServerAIPv4, config.ServerAIPv6})
+			Expect(err).NotTo(HaveOccurred())
+
+			// check dsA
+			GinkgoWriter.Printf("we expect the exportIP of the dsA should not be the EIP")
+			err = common.CheckDaemonSetEgressIP(ctx, cli, config, egressConfig, dsA, e.Ipv4, e.Ipv6, false)
+			Expect(err).NotTo(HaveOccurred(), fmt.Sprintf("egressClusterInfo yaml: %s\npolicy yaml: %s\n", common.GetObjYAML(egci), common.GetObjYAML(policy)))
+
+			GinkgoWriter.Println("set the spec.ExtraCidr back to be empty")
+			egci, err = updateEgressClusterInfoExtraCidr(ctx, []string{config.ServerAIPv4, config.ServerAIPv6})
+			Expect(err).NotTo(HaveOccurred())
+
+			// check dsA again
+			GinkgoWriter.Printf("we expect the exportIP of the matched dsA should be the EIP")
+			err = common.CheckDaemonSetEgressIP(ctx, cli, config, egressConfig, dsA, e.Ipv4, e.Ipv6, true)
+			Expect(err).NotTo(HaveOccurred(), fmt.Sprintf("egressClusterInfo yaml: %s\npolicy yaml: %s\n", common.GetObjYAML(egci), common.GetObjYAML(policy)))
 
 			// P00014
 			By("case P00014: update policy matched dsA to match dsB")
@@ -137,8 +210,8 @@ var _ = Describe("EgressPolicy", Serial, func() {
 			err = common.CheckDaemonSetEgressIP(ctx, cli, config, egressConfig, dsB, e.Ipv4, e.Ipv6, false)
 			Expect(err).NotTo(HaveOccurred())
 
-			// P00019
-			By("case P00019: delete policy, we expect the egress address not egressIP")
+			// P00020
+			By("case P00020: delete policy, we expect the egress address not egressIP")
 			err = common.DeleteObj(ctx, cli, policy)
 			Expect(err).NotTo(HaveOccurred())
 
@@ -153,8 +226,8 @@ var _ = Describe("EgressPolicy", Serial, func() {
 			var err error
 			ctx := context.Background()
 
-			// P00008
-			By("case P00008: create policy with empty `EgressIP`")
+			// P00008 and P00011
+			By("case P00008, P00011: create policy with empty `EgressIP`")
 
 			clusterPolicy, err = common.CreateEgressClusterPolicy(ctx, cli, egressConfig, egw.Name, dsA.Labels)
 			Expect(err).NotTo(HaveOccurred())
@@ -165,11 +238,62 @@ var _ = Describe("EgressPolicy", Serial, func() {
 			err = common.CheckDaemonSetEgressIP(ctx, cli, config, egressConfig, dsA, e.Ipv4, e.Ipv6, true)
 			Expect(err).NotTo(HaveOccurred())
 
-			// P00011
-			By("case P00011: update policy to empty `DestSubnet`")
-			e = clusterPolicy.Status.Eip
+			// check the status of the policy and gateway
+			GinkgoWriter.Printf("check the status of the policy: %s\n", clusterPolicy.Name)
+			expectPolicyStatus := &egressv1.EgressPolicyStatus{
+				Eip: egressv1.Eip{
+					Ipv4: egw.Spec.Ippools.Ipv4DefaultEIP,
+					Ipv6: egw.Spec.Ippools.Ipv6DefaultEIP,
+				},
+				Node: node1.Name,
+			}
+			Expect(common.CheckEgressClusterPolicyStatusSynced(ctx, cli, clusterPolicy, expectPolicyStatus, time.Second*5)).NotTo(HaveOccurred())
+
+			GinkgoWriter.Printf("check the status of the gateway: %s\n", egw.Name)
+			expectGatewayStatus := &egressv1.EgressGatewayStatus{
+				NodeList: []egressv1.EgressIPStatus{
+					{
+						Name: node1.Name,
+						Eips: []egressv1.Eips{
+							{
+								IPv4: egw.Spec.Ippools.Ipv4DefaultEIP,
+								IPv6: egw.Spec.Ippools.Ipv6DefaultEIP,
+								Policies: []egressv1.Policy{
+									{
+										Name: clusterPolicy.Name,
+									},
+								},
+							},
+						},
+						Status: string(egressv1.EgressTunnelReady),
+					},
+				},
+				IPUsage: ipUsage,
+			}
+			Expect(common.CheckEgressGatewayStatusSynced(ctx, cli, egw, expectGatewayStatus, time.Second*5)).NotTo(HaveOccurred())
+
+			GinkgoWriter.Println("the exported IP of the unmatched dsB should not be the EIP")
 			err = common.CheckDaemonSetEgressIP(ctx, cli, config, egressConfig, dsB, e.Ipv4, e.Ipv6, false)
 			Expect(err).NotTo(HaveOccurred())
+
+			// P00012
+			By("case P00012: add the ips of the nettools-server-a to the spec.extraCidr field of the egressClusterInfo")
+			egci, err := updateEgressClusterInfoExtraCidr(ctx, []string{config.ServerAIPv4, config.ServerAIPv6})
+			Expect(err).NotTo(HaveOccurred())
+
+			// check dsA
+			GinkgoWriter.Printf("we expect the exportIP of the dsA should not be the EIP")
+			err = common.CheckDaemonSetEgressIP(ctx, cli, config, egressConfig, dsA, e.Ipv4, e.Ipv6, false)
+			Expect(err).NotTo(HaveOccurred(), fmt.Sprintf("egressClusterInfo yaml: %s\npolicy yaml: %s\n", common.GetObjYAML(egci), common.GetObjYAML(policy)))
+
+			GinkgoWriter.Println("set the spec.ExtraCidr back to be empty")
+			egci, err = updateEgressClusterInfoExtraCidr(ctx, []string{config.ServerAIPv4, config.ServerAIPv6})
+			Expect(err).NotTo(HaveOccurred())
+
+			// check dsA again
+			GinkgoWriter.Printf("we expect the exportIP of the matched dsA should be the EIP")
+			err = common.CheckDaemonSetEgressIP(ctx, cli, config, egressConfig, dsA, e.Ipv4, e.Ipv6, true)
+			Expect(err).NotTo(HaveOccurred(), fmt.Sprintf("egressClusterInfo yaml: %s\npolicy yaml: %s\n", common.GetObjYAML(egci), common.GetObjYAML(policy)))
 
 			// P00014
 			By("case P00014: update policy matched dsA to match dsB")
@@ -201,8 +325,8 @@ var _ = Describe("EgressPolicy", Serial, func() {
 			err = common.CheckDaemonSetEgressIP(ctx, cli, config, egressConfig, dsB, e.Ipv4, e.Ipv6, false)
 			Expect(err).NotTo(HaveOccurred())
 
-			// P00019
-			By("case P00019: delete policy, we expect the egress address not egressIP")
+			// P00020
+			By("case P00020: delete policy, we expect the egress address not egressIP")
 			err = common.DeleteObj(ctx, cli, clusterPolicy)
 			Expect(err).NotTo(HaveOccurred())
 
@@ -289,6 +413,18 @@ var _ = Describe("EgressPolicy", Serial, func() {
 						egp.Spec.EgressIP.IPv6 = egw.Spec.Ippools.Ipv6DefaultEIP
 					}
 				}),
+			Entry("should success when the `Spec.EgressIP` of the policy is not empty and the Spec.EgressIP.AllocatorPolicy is 'rr'", Label("P00010"), false,
+				func(egp *egressv1.EgressPolicy) {
+					egp.Spec.EgressGatewayName = egw.Name
+					egp.Spec.AppliedTo.PodSubnet = []string{"10.10.0.0/16"}
+					if egressConfig.EnableIPv4 {
+						egp.Spec.EgressIP.IPv4 = egw.Spec.Ippools.Ipv4DefaultEIP
+					}
+					if egressConfig.EnableIPv6 {
+						egp.Spec.EgressIP.IPv6 = egw.Spec.Ippools.Ipv6DefaultEIP
+					}
+					egp.Spec.EgressIP.AllocatorPolicy = egressv1.EipAllocatorRR
+				}),
 		)
 
 		DescribeTable("cluster policy", func(expectErr bool, setUp func(egp *egressv1.EgressClusterPolicy)) {
@@ -342,6 +478,19 @@ var _ = Describe("EgressPolicy", Serial, func() {
 					if egressConfig.EnableIPv6 {
 						egcp.Spec.EgressIP.IPv6 = egw.Spec.Ippools.Ipv6DefaultEIP
 					}
+				}),
+
+			Entry("should success when the `Spec.EgressIP` of the policy is not empty and the Spec.EgressIP.AllocatorPolicy is 'rr'", Label("P00010"), false,
+				func(egcp *egressv1.EgressClusterPolicy) {
+					egcp.Spec.EgressGatewayName = egw.Name
+					egcp.Spec.AppliedTo.PodSubnet = &[]string{"10.10.0.0/16"}
+					if egressConfig.EnableIPv4 {
+						egcp.Spec.EgressIP.IPv4 = egw.Spec.Ippools.Ipv4DefaultEIP
+					}
+					if egressConfig.EnableIPv6 {
+						egcp.Spec.EgressIP.IPv6 = egw.Spec.Ippools.Ipv6DefaultEIP
+					}
+					egcp.Spec.EgressIP.AllocatorPolicy = egressv1.EipAllocatorRR
 				}),
 		)
 
@@ -912,7 +1061,7 @@ var _ = Describe("EgressPolicy", Serial, func() {
 			Expect(err).NotTo(HaveOccurred(), fmt.Sprintf("the status of the gateway is: %v\nthe status of expect is: %v\n", defaultClusterEgw.Status, expectGatewayStatus))
 		})
 
-		It("namespace-level policy", Label("P00002"), func() {
+		It("namespace-level policy", Label("P00003"), func() {
 			// create namespace
 			testNS = &corev1.Namespace{
 				ObjectMeta: metav1.ObjectMeta{
@@ -1000,4 +1149,19 @@ func createNamespaceLevelPolicyAndCheck(ctx context.Context, egw *egressv1.Egres
 	}
 	err = common.CheckEgressGatewayStatusSynced(ctx, cli, egw, expectGatewayStatus, time.Second*5)
 	Expect(err).NotTo(HaveOccurred(), fmt.Sprintf("the status of the gateway is: %v\nthe status of expect is: %v\n", egw.Status, expectGatewayStatus))
+}
+
+func updateEgressClusterInfoExtraCidr(ctx context.Context, extraCidr []string) (*egressv1.EgressClusterInfo, error) {
+	egci := new(egressv1.EgressClusterInfo)
+	egci.Name = "default"
+	Expect(cli.Get(ctx, types.NamespacedName{Name: egci.Name}, egci)).NotTo(HaveOccurred())
+	// egci.Spec.ExtraCidr = []string{config.ServerAIPv4, config.ServerAIPv6}
+	egci.Spec.ExtraCidr = extraCidr
+	Expect(common.UpdateEgressClusterInfoNew(ctx, cli, egci)).NotTo(HaveOccurred())
+	err := common.CheckEgressClusterInfoStatusSynced(ctx, cli, egci)
+	if err != nil {
+		GinkgoWriter.Printf("failed to check the status of egressClusterInfo: %v\n", common.GetObjYAML(egci))
+		return nil, err
+	}
+	return egci, err
 }
