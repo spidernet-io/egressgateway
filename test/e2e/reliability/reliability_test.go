@@ -55,7 +55,7 @@ var _ = Describe("Reliability", func() {
 			GinkgoWriter.Printf("Create DaemonSet: %s\n", daemonSet.Name)
 
 			// policy
-			policy, err = common.CreateEgressPolicyNew(ctx, cli, egressConfig, egw.Name, daemonSet.Labels)
+			policy, err = common.CreateEgressPolicyNew(ctx, cli, egressConfig, egw.Name, daemonSet.Labels, "")
 			Expect(err).NotTo(HaveOccurred())
 
 			// check eip

@@ -24,10 +24,10 @@ import (
 	"github.com/spidernet-io/egressgateway/test/e2e/common"
 )
 
-var _ = Describe("EgressPolicy", Ordered, func() {
+var _ = Describe("EgressPolicy", Serial, func() {
 	var egw *egressv1.EgressGateway
 
-	BeforeAll(func() {
+	BeforeEach(func() {
 		ctx := context.Background()
 
 		// create EgressGateway
@@ -42,8 +42,6 @@ var _ = Describe("EgressPolicy", Ordered, func() {
 		DeferCleanup(func() {
 			// delete EgressGateway
 			if egw != nil {
-				// todo @bzsuni waiting finalizer-feature to be done
-				time.Sleep(time.Second * 3)
 				err = common.DeleteObj(ctx, cli, egw)
 				Expect(err).NotTo(HaveOccurred())
 			}
@@ -92,7 +90,7 @@ var _ = Describe("EgressPolicy", Ordered, func() {
 			// P00008
 			By("case P00008: create policy with empty `EgressIP`")
 
-			policy, err = common.CreateEgressPolicyNew(ctx, cli, egressConfig, egw.Name, dsA.Labels)
+			policy, err = common.CreateEgressPolicyNew(ctx, cli, egressConfig, egw.Name, dsA.Labels, "")
 			Expect(err).NotTo(HaveOccurred())
 
 			GinkgoWriter.Printf("Create EgressPolicy: %s\n", policy.Name)
@@ -331,8 +329,7 @@ var _ = Describe("EgressPolicy", Ordered, func() {
 					egcp.Spec.AppliedTo.PodSubnet = &[]string{"10.10.0.0/16"}
 					egcp.Spec.AppliedTo.PodSelector = &metav1.LabelSelector{MatchLabels: map[string]string{"a": "b"}}
 				}),
-			// todo @bzsuni waiting for the bug be fixed
-			PEntry("should fail when the `Spec.EgressIP.UseNodeIP` of the cluster-policy is set to true and the Spec.EgressIP is not empty", Label("P00017"), true,
+			Entry("should fail when the `Spec.EgressIP.UseNodeIP` of the cluster-policy is set to true and the Spec.EgressIP is not empty", Label("P00017"), true,
 				func(egcp *egressv1.EgressClusterPolicy) {
 					egcp.Spec.EgressGatewayName = egw.Name
 					egcp.Spec.AppliedTo.PodSubnet = &[]string{"10.10.0.0/16"}
@@ -458,7 +455,6 @@ var _ = Describe("EgressPolicy", Ordered, func() {
 				// update the `NodeSelector` of the gateway to change the match from node1 to node2
 				GinkgoWriter.Printf("update the gateway: %s, to change the match from node: %s to node: %s\n", egw.Name, node1.Name, node2.Name)
 				egw.Spec.NodeSelector = node2Selector
-				// todo @bzsuni waiting for the bug to be fixed
 				Expect(cli.Update(ctx, egw)).NotTo(HaveOccurred(), fmt.Sprintf("failed to update gateway:\n%s\n", common.GetObjYAML(egw)))
 				// check if the egressgateway synced successfully
 				expectStatus = &egressv1.EgressGatewayStatus{
@@ -512,7 +508,6 @@ var _ = Describe("EgressPolicy", Ordered, func() {
 				// update the `NodeSelector` of the gateway to change the match from node1 to node2
 				GinkgoWriter.Printf("update the gateway: %s, to change the match from node: %s to node: %s\n", egw.Name, node1.Name, node2.Name)
 				egw.Spec.NodeSelector = node2Selector
-				// todo @bzsuni waiting for the bug to be fixed
 				Expect(cli.Update(ctx, egw)).NotTo(HaveOccurred(), fmt.Sprintf("failed to update gateway:\n%s\n", common.GetObjYAML(egw)))
 				// check if the egressgateway synced successfully
 				expectStatus = &egressv1.EgressGatewayStatus{
@@ -584,8 +579,6 @@ var _ = Describe("EgressPolicy", Ordered, func() {
 
 				// delete egw
 				if egw1 != nil {
-					// todo @bzsuni waiting for the finalizer-feature to be done
-					time.Sleep(time.Second * 2)
 					GinkgoWriter.Printf("Delete egw: %s\n", egw1.Name)
 					Expect(common.DeleteObj(ctx, cli, egw1)).NotTo(HaveOccurred())
 				}
@@ -640,17 +633,20 @@ var _ = Describe("EgressPolicy", Ordered, func() {
 			Expect(cli.Update(ctx, cpEgp)).To(HaveOccurred())
 		})
 
-		// todo @bzsuni waiting for the bug to be fixed
-		PIt("cluster-level policy", func() {
+		It("cluster-level policy", func() {
 			// create EgressClusterPolicy
+			newEgressGateway := new(egressv1.EgressGateway)
+			err := cli.Get(ctx, types.NamespacedName{Name: egw1.Name}, newEgressGateway)
+			Expect(err).NotTo(HaveOccurred())
+
 			egcp, err = common.CreateEgressClusterPolicyCustom(ctx, cli,
 				func(egcp *egressv1.EgressClusterPolicy) {
 					egcp.Spec.EgressGatewayName = egw1.Name
 					if egressConfig.EnableIPv4 {
-						egcp.Spec.EgressIP.IPv4 = pool.IPv4[0]
+						egcp.Spec.EgressIP.IPv4 = newEgressGateway.Spec.Ippools.Ipv4DefaultEIP
 					}
 					if egressConfig.EnableIPv6 {
-						egcp.Spec.EgressIP.IPv6 = pool.IPv6[0]
+						egcp.Spec.EgressIP.IPv6 = newEgressGateway.Spec.Ippools.Ipv6DefaultEIP
 					}
 					egcp.Spec.AppliedTo.PodSubnet = &[]string{"10.10.0.0/18"}
 				})
@@ -660,10 +656,20 @@ var _ = Describe("EgressPolicy", Ordered, func() {
 			cpEgcp := egcp.DeepCopy()
 			// edit policy Spec.EgressIP.IPv4 and Spec.EgressIP.IPv6
 			if egressConfig.EnableIPv4 {
-				egcp.Spec.EgressIP.IPv4 = pool.IPv4[1]
+				for _, val := range pool.IPv4 {
+					if val != egcp.Spec.EgressIP.IPv4 {
+						egcp.Spec.EgressIP.IPv4 = val
+						break
+					}
+				}
 			}
 			if egressConfig.EnableIPv6 {
-				egcp.Spec.EgressIP.IPv6 = pool.IPv6[1]
+				for _, val := range pool.IPv6 {
+					if val != egcp.Spec.EgressIP.IPv6 {
+						egcp.Spec.EgressIP.IPv6 = val
+						break
+					}
+				}
 			}
 			// update policy EgressIP.IPv4 or EgressIP.IPv6
 			Expect(cli.Update(ctx, egcp)).To(HaveOccurred())
@@ -748,7 +754,7 @@ var _ = Describe("EgressPolicy", Ordered, func() {
 			Expect(common.WaitPodRunning(ctx, cli, podObj, time.Second*10)).NotTo(HaveOccurred())
 
 			// create a policy in default namespace
-			egp, err = common.CreateEgressPolicyNew(ctx, cli, egressConfig, egw.Name, podLabel)
+			egp, err = common.CreateEgressPolicyNew(ctx, cli, egressConfig, egw.Name, podLabel, "")
 			Expect(err).NotTo(HaveOccurred())
 			err = common.WaitEgressPolicyStatusReady(ctx, cli, egp, egressConfig.EnableIPv4, egressConfig.EnableIPv6, time.Second*3)
 			Expect(err).NotTo(HaveOccurred())
@@ -774,4 +780,218 @@ var _ = Describe("EgressPolicy", Ordered, func() {
 			}
 		})
 	})
+
+	/*
+		This test case focuses on creating a policy with the default gateway in cluster level or namespace level
+
+		Create a cluster-level gateway.
+		Create a policy without specifying the gatewayName
+		The policy and clusterPolicy should be created successfully, and the spec.egressGatewayName should be set to the cluster's default gateway. Verify that the status is correct.
+		Create a namespace-level default gateway. Create a policy in this namespace without specifying the gatewayName. It is expected to use the default gateway of this namespace, and verify that the status is correct.
+	*/
+	Context("Test cluster-level default-egressgateway and namesapce-level default-egressgateway", func() {
+		var ctx context.Context
+		var err error
+		// gateway
+		var (
+			defaultClusterEgw   *egressv1.EgressGateway
+			defaultNamespaceEgw *egressv1.EgressGateway
+			ipNum               int
+			pool                egressv1.Ippools
+		)
+		// policy
+		var (
+			egp  *egressv1.EgressPolicy
+			egcp *egressv1.EgressClusterPolicy
+		)
+		// label
+		var (
+			podLabels map[string]string
+		)
+		// namespace
+		var (
+			testNS *corev1.Namespace
+		)
+		BeforeEach(func() {
+			ctx = context.TODO()
+			podLabels = map[string]string{"app": uuid.NewString()}
+
+			// create cluster-level egressgateway
+			ipNum = 3
+			pool, err = common.GenIPPools(ctx, cli, egressConfig.EnableIPv4, egressConfig.EnableIPv6, int64(ipNum), 1)
+			Expect(err).NotTo(HaveOccurred())
+			nodeSelector := egressv1.NodeSelector{Selector: &metav1.LabelSelector{MatchLabels: nodeLabel}}
+
+			defaultClusterEgw, err = common.CreateGatewayCustom(ctx, cli, func(egw *egressv1.EgressGateway) {
+				egw.Spec.NodeSelector = nodeSelector
+				egw.Spec.Ippools = pool
+				egw.Spec.ClusterDefault = true
+			})
+
+			Expect(err).NotTo(HaveOccurred())
+
+			DeferCleanup(func() {
+				// delete the namespace if it exists
+				if testNS != nil {
+					Expect(common.DeleteObj(ctx, cli, testNS)).NotTo(HaveOccurred())
+				}
+				// delete the policy if it exists
+				if egcp != nil {
+					Expect(common.DeleteObj(ctx, cli, egcp)).NotTo(HaveOccurred())
+				}
+				if egp != nil {
+					Expect(common.DeleteObj(ctx, cli, egp)).NotTo(HaveOccurred())
+				}
+
+				// delete gateway if it exists
+				if defaultClusterEgw != nil {
+					Expect(common.DeleteObj(ctx, cli, defaultClusterEgw)).NotTo(HaveOccurred())
+				}
+				if defaultNamespaceEgw != nil {
+					Expect(common.DeleteObj(ctx, cli, defaultNamespaceEgw)).NotTo(HaveOccurred())
+				}
+			})
+		})
+
+		It("cluster-level policy", Label("P00002"), func() {
+			// create cluster-level policy
+			egcp, err = common.CreateEgressClusterPolicy(ctx, cli, egressConfig, "", podLabels)
+			Expect(err).NotTo(HaveOccurred())
+			GinkgoWriter.Printf("succeeded to create cluster-level policy: %s\n", egcp.Name)
+			// check the name of the gateway used by policy
+			Expect(egcp.Spec.EgressGatewayName).To(BeEquivalentTo(defaultClusterEgw.Name))
+			// check the status of policy
+			GinkgoWriter.Printf("check the status of the policy: %s\n", egcp.Name)
+			expectPolicyStatus := &egressv1.EgressPolicyStatus{
+				Eip: egressv1.Eip{
+					Ipv4: defaultClusterEgw.Spec.Ippools.Ipv4DefaultEIP,
+					Ipv6: defaultClusterEgw.Spec.Ippools.Ipv6DefaultEIP,
+				},
+				Node: node1.Name,
+			}
+			err = common.CheckEgressClusterPolicyStatusSynced(ctx, cli, egcp, expectPolicyStatus, time.Second*5)
+			Expect(err).NotTo(HaveOccurred(), fmt.Sprintf("the status of the policy is: %v\nthe status of expect is: %v\n", egcp.Status, expectPolicyStatus))
+			// check the status of the default gateway
+			GinkgoWriter.Printf("check the status of the gateway: %s\n", defaultClusterEgw.Name)
+			var ipUsage egressv1.IPUsage
+			if len(pool.IPv4) != 0 {
+				ipUsage.IPv4Total = ipNum
+				ipUsage.IPv4Free = ipNum - 1
+			}
+			if len(pool.IPv6) != 0 {
+				ipUsage.IPv6Total = ipNum
+				ipUsage.IPv6Free = ipNum - 1
+			}
+			expectGatewayStatus := &egressv1.EgressGatewayStatus{
+				NodeList: []egressv1.EgressIPStatus{
+					{
+						Name: node1.Name,
+						Eips: []egressv1.Eips{
+							{
+								IPv4: defaultClusterEgw.Spec.Ippools.Ipv4DefaultEIP,
+								IPv6: defaultClusterEgw.Spec.Ippools.Ipv6DefaultEIP,
+								Policies: []egressv1.Policy{
+									{
+										Name: egcp.Name,
+									},
+								},
+							},
+						},
+						Status: string(egressv1.EgressTunnelReady),
+					},
+				},
+				IPUsage: ipUsage,
+			}
+			err = common.CheckEgressGatewayStatusSynced(ctx, cli, defaultClusterEgw, expectGatewayStatus, time.Second*5)
+			Expect(err).NotTo(HaveOccurred(), fmt.Sprintf("the status of the gateway is: %v\nthe status of expect is: %v\n", defaultClusterEgw.Status, expectGatewayStatus))
+		})
+
+		It("namespace-level policy", Label("P00002"), func() {
+			// create namespace
+			testNS = &corev1.Namespace{
+				ObjectMeta: metav1.ObjectMeta{
+					Name: "ns-" + uuid.NewString(),
+				},
+			}
+			Expect(cli.Create(ctx, testNS)).NotTo(HaveOccurred())
+
+			// create policy and check
+			createNamespaceLevelPolicyAndCheck(ctx, defaultClusterEgw, pool, ipNum, podLabels, testNS)
+
+			// create namespace-default-gateway
+			pool, err = common.GenIPPools(ctx, cli, egressConfig.EnableIPv4, egressConfig.EnableIPv6, int64(ipNum), 1)
+			Expect(err).NotTo(HaveOccurred())
+			nodeSelector := egressv1.NodeSelector{Selector: &metav1.LabelSelector{MatchLabels: nodeLabel}}
+
+			defaultNamespaceEgw, err = common.CreateGatewayCustom(ctx, cli, func(egw *egressv1.EgressGateway) {
+				egw.Spec.NodeSelector = nodeSelector
+				egw.Spec.Ippools = pool
+				egw.Spec.ClusterDefault = false
+			})
+			Expect(err).NotTo(HaveOccurred())
+
+			// label namespace
+			testNS.Labels = map[string]string{
+				egressv1.LabelNamespaceEgressGatewayDefault: defaultNamespaceEgw.Name,
+			}
+			Expect(cli.Update(ctx, testNS)).NotTo(HaveOccurred())
+			// create policy and check
+			createNamespaceLevelPolicyAndCheck(ctx, defaultNamespaceEgw, pool, ipNum, podLabels, testNS)
+
+		})
+	})
 })
+
+func createNamespaceLevelPolicyAndCheck(ctx context.Context, egw *egressv1.EgressGateway, pool egressv1.Ippools, ipNum int, podLabels map[string]string, namespace *corev1.Namespace) {
+	// create namespace-level policy
+	egp, err := common.CreateEgressPolicyNew(ctx, cli, egressConfig, "", podLabels, namespace.Name)
+	Expect(err).NotTo(HaveOccurred())
+	GinkgoWriter.Printf("succeeded to create namespace-level policy: %s\n", egp.Name)
+	// check the name of the gateway used by policy
+	Expect(egp.Spec.EgressGatewayName).To(BeEquivalentTo(egw.Name))
+	// check the status of policy
+	GinkgoWriter.Printf("check the status of the policy: %s\n", egp.Name)
+	expectPolicyStatus := &egressv1.EgressPolicyStatus{
+		Eip: egressv1.Eip{
+			Ipv4: egw.Spec.Ippools.Ipv4DefaultEIP,
+			Ipv6: egw.Spec.Ippools.Ipv6DefaultEIP,
+		},
+		Node: node1.Name,
+	}
+	err = common.CheckEgressPolicyStatusSynced(ctx, cli, egp, expectPolicyStatus, time.Second*5)
+	Expect(err).NotTo(HaveOccurred(), fmt.Sprintf("the status of the policy is: %v\nthe status of expect is: %v\n", egp.Status, expectPolicyStatus))
+	// check the status of the default gateway
+	GinkgoWriter.Printf("check the status of the gateway: %s\n", egw.Name)
+	var ipUsage egressv1.IPUsage
+	if len(pool.IPv4) != 0 {
+		ipUsage.IPv4Total = ipNum
+		ipUsage.IPv4Free = ipNum - 1
+	}
+	if len(pool.IPv6) != 0 {
+		ipUsage.IPv6Total = ipNum
+		ipUsage.IPv6Free = ipNum - 1
+	}
+	expectGatewayStatus := &egressv1.EgressGatewayStatus{
+		NodeList: []egressv1.EgressIPStatus{
+			{
+				Name: node1.Name,
+				Eips: []egressv1.Eips{
+					{
+						IPv4: egw.Spec.Ippools.Ipv4DefaultEIP,
+						IPv6: egw.Spec.Ippools.Ipv6DefaultEIP,
+						Policies: []egressv1.Policy{
+							{
+								Name:      egp.Name,
+								Namespace: egp.Namespace,
+							},
+						},
+					},
+				},
+				Status: string(egressv1.EgressTunnelReady),
+			},
+		},
+		IPUsage: ipUsage,
+	}
+	err = common.CheckEgressGatewayStatusSynced(ctx, cli, egw, expectGatewayStatus, time.Second*5)
+	Expect(err).NotTo(HaveOccurred(), fmt.Sprintf("the status of the gateway is: %v\nthe status of expect is: %v\n", egw.Status, expectGatewayStatus))
+}
