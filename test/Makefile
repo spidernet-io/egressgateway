@@ -93,6 +93,7 @@ install_calico: KIND_CLUSTER_NAME ?= $(E2E_KIND_CLUSTER_NAME)
 install_calico:
 	echo "install calico"
 	export CALICO_VERSION=$(CALICO_VERSION); \
+	export DEFAULT_CALICO_VERSION=$(DEFAULT_CALICO_VERSION); \
 	export HTTP_PROXY=$(HTTP_PROXY); \
 	export CALICO_REGISTRY=$(CALICO_REGISTRY); \
 	export INSTALL_TIME_OUT=$(INSTALL_TIME_OUT); \

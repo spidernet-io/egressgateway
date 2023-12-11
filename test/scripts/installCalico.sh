@@ -26,7 +26,7 @@ CALICO_NODE=${DEST_CALICO_YAML_DIR}/calico_node.yaml
 if [ -z "${CALICO_VERSION}" ]; then
   [ -n "${HTTP_PROXY}" ] && { calico_info_json=$(curl --retry 3 --retry-delay 5 -x "${HTTP_PROXY}" -s https://api.github.com/repos/projectcalico/calico/releases/latest); echo ${calico_info_json}; calico_tag=$(echo ${calico_info_json} | jq -r '.tag_name'); }
   [ -z "${HTTP_PROXY}" ] && { calico_info_json=$(curl --retry 3 --retry-delay 5 -s https://api.github.com/repos/projectcalico/calico/releases/latest); echo ${calico_info_json}; calico_tag=$(echo ${calico_info_json} | jq -r '.tag_name'); }
-  [ "${calico_tag}" == "null" ] && { echo "failed to get the calico version, specify the version manually"; calico_tag=${MANUAL_CALICO_VERSION}; }
+  [ "${calico_tag}" == "null" ] && { echo "failed to get the calico version, specify the version manually"; calico_tag=${DEFAULT_CALICO_VERSION}; }
 else
   calico_tag=${CALICO_VERSION}
 fi

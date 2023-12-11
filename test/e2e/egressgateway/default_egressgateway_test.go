@@ -5,6 +5,7 @@ package egressgateway_test
 
 import (
 	"context"
+	"strings"
 	"time"
 
 	. "github.com/onsi/ginkgo/v2"
@@ -16,6 +17,7 @@ import (
 
 	egressv1 "github.com/spidernet-io/egressgateway/pkg/k8s/apis/v1beta1"
 	"github.com/spidernet-io/egressgateway/test/e2e/common"
+	e2econstant "github.com/spidernet-io/egressgateway/test/e2e/constant"
 )
 
 var _ = Describe("Test default egress gateway", Label("DefaultEgressGateway", "G00017"), Ordered, func() {
@@ -88,7 +90,7 @@ var _ = Describe("Test default egress gateway", Label("DefaultEgressGateway", "G
 			err = common.DeleteObj(ctx, cli, nsDefaultEgw)
 			Expect(err).NotTo(HaveOccurred())
 
-			err = common.DeleteObj(ctx, cli, clusterDefaultEgw)
+			err = common.DeleteEgressGateway(ctx, cli, clusterDefaultEgw, time.Second*3)
 			Expect(err).NotTo(HaveOccurred())
 
 			ns := &corev1.Namespace{}
@@ -108,6 +110,9 @@ var _ = Describe("Test default egress gateway", Label("DefaultEgressGateway", "G
 		// create global egress gateway
 		ctx := context.Background()
 		err := cli.Create(ctx, clusterDefaultEgw)
+		if err != nil && strings.Contains(err.Error(), e2econstant.WebhookMsgClusterDefaultGateway) {
+			Skip("The default egressgateway already exists, skip this test case")
+		}
 		Expect(err).NotTo(HaveOccurred())
 
 		// create egress policy1
