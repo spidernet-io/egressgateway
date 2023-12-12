@@ -72,3 +72,14 @@ func CreateDaemonSet(ctx context.Context, cli client.Client, name string, image 
 		}
 	}
 }
+
+func GetDaemonSetPodIPs(ctx context.Context, cli client.Client, ds *appsv1.DaemonSet) (ipv4List, ipv6List []string, err error) {
+	podList := new(corev1.PodList)
+	listOps := client.MatchingLabels(ds.Spec.Selector.MatchLabels)
+	err = cli.List(ctx, podList, listOps)
+	if err != nil {
+		return nil, nil, err
+	}
+	ipv4List, ipv6List = GetPodListIPs(podList)
+	return ipv4List, ipv6List, nil
+}

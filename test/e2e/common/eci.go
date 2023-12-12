@@ -15,6 +15,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	egressv1 "github.com/spidernet-io/egressgateway/pkg/k8s/apis/v1beta1"
+	"github.com/spidernet-io/egressgateway/test/e2e/tools"
 )
 
 func UpdateEgressClusterInfoNew(ctx context.Context, cli client.Client,
@@ -133,6 +134,10 @@ func CheckEgressClusterInfoStatusSynced(
 				if err == nil {
 					checked++
 				}
+			}
+			if tools.IsSameSlice(eci.Spec.ExtraCidr, eci.Status.ExtraCidr) {
+				exp++
+				checked++
 			}
 
 			if checked == exp {
