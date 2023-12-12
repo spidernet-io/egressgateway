@@ -336,12 +336,17 @@ e2e_test:
 		$(ROOT_DIR)/tools/golang/ginkgo.sh \
 			--race --timeout=$(E2E_TIMEOUT) --output-interceptor-mode=none --poll-progress-after=20s \
 			--json-report e2ereport.json --output-dir $(ROOT_DIR) --procs $(E2E_GINKGO_PROCS) \
-			--label-filter="$(E2E_GINKGO_LABELS)" -randomize-suites -randomize-all -vv --fail-fast  $(E2E_GINKGO_OPTION) \
+			--label-filter="$(E2E_GINKGO_LABELS)" -randomize-suites -randomize-all -vv --fail-fast  $(E2E_GINKGO_OPTION) --skip=$(E2E_RELIABILITY) \
 			-r e2e/* || RESULT=1 ; \
 		echo "=========== after test `date` ===========" >> $(E2E_LOG_FILE) ; \
 		./scripts/debugCluster.sh $(KIND_KUBECONFIG) "system" "$(E2E_LOG_FILE)" $(E2E_NAMESPACE) ; \
 		KIND_CLUSTER_NAME=$(KIND_CLUSTER_NAME) ./scripts/debugCluster.sh $(KIND_KUBECONFIG) "detail" "$(E2E_LOG_FILE)" $(E2E_NAMESPACE) ; \
 		./scripts/debugCluster.sh $(KIND_KUBECONFIG) "error" "$(E2E_LOG_FILE)" $(E2E_NAMESPACE) || { echo "error, found error log, datarace/pacni/longlock !!!" ; RESULT=1 ; } ; \
+		$(ROOT_DIR)/tools/golang/ginkgo.sh \
+			--race --timeout=$(E2E_TIMEOUT) --output-interceptor-mode=none --poll-progress-after=20s \
+			--json-report e2ereport.json --output-dir $(ROOT_DIR) --procs $(E2E_GINKGO_PROCS) \
+			--label-filter="$(E2E_GINKGO_LABELS)" -randomize-suites -randomize-all -vv --fail-fast  $(E2E_GINKGO_OPTION) --focus=$(E2E_RELIABILITY) \
+			-r e2e/* || RESULT=1 ; \
 		if (($${RESULT} != 0)) ; then \
 		   echo "failed to run e2e test"  ; \
 		   exit 1 ; \

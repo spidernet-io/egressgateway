@@ -170,6 +170,7 @@ E2E_GINKGO_LABELS ?=
 E2E_GINKGO_OPTION ?=
 E2E_TIMEOUT ?= 60m
 E2E_GINKGO_PROCS ?= 4
+E2E_RELIABILITY ?= Reliability
 
 # ipv4 or ipv6 or dual, default ipv4
 E2E_IP_FAMILY ?= dual

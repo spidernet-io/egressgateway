@@ -9,15 +9,12 @@ import (
 	"net"
 	"time"
 
-	. "github.com/onsi/ginkgo/v2"
-	. "github.com/onsi/gomega"
-
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
 
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	"github.com/spidernet-io/e2eframework/framework"
+	e2eerr "github.com/spidernet-io/egressgateway/test/e2e/err"
 	"github.com/spidernet-io/egressgateway/test/e2e/tools"
 )
 
@@ -39,22 +36,45 @@ func LabelNodes(ctx context.Context, cli client.Client, nodes []string, labels m
 	return nil
 }
 
-func PowerOffNodeUntilNotReady(f *framework.Framework, nodeName string, timeout time.Duration) error {
-	c := fmt.Sprintf("docker stop %s", nodeName)
-	out, err := tools.ExecCommand(c, timeout)
-	GinkgoWriter.Printf("out: %s\n", out)
-	Expect(err).NotTo(HaveOccurred())
+func UnLabelNodes(ctx context.Context, cli client.Client, nodes []string, labels map[string]string) error {
+	for _, nodeName := range nodes {
+		node := &corev1.Node{}
+		err := cli.Get(ctx, types.NamespacedName{Name: nodeName}, node)
+		if err != nil {
+			return err
+		}
+		l := node.Labels
+		for k := range labels {
+			delete(l, k)
+		}
+		node.Labels = l
+		err = cli.Update(ctx, node)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
 
-	ctx, cancel := context.WithTimeout(context.TODO(), timeout)
+func PowerOffNodeUntilNotReady(ctx context.Context, cli client.Client, nodeName string, execTimeout, poweroffTimeout time.Duration) error {
+	c := fmt.Sprintf("docker stop %s", nodeName)
+	out, err := tools.ExecCommand(ctx, c, execTimeout)
+	if err != nil {
+		return fmt.Errorf("err: %v\nout: %v\n", err, string(out))
+	}
+
+	ctx, cancel := context.WithTimeout(ctx, poweroffTimeout)
 	defer cancel()
 	for {
 		select {
 		case <-ctx.Done():
-			return fmt.Errorf("power off node timeout")
+			return e2eerr.ErrTimeout
 		default:
-			node, err := f.GetNode(nodeName)
-			Expect(err).NotTo(HaveOccurred())
-			down := f.CheckNodeStatus(node, false)
+			node, err := GetNode(ctx, cli, nodeName)
+			if err != nil {
+				return err
+			}
+			down := CheckNodeStatus(node, false)
 			if down {
 				return nil
 			}
@@ -63,21 +83,25 @@ func PowerOffNodeUntilNotReady(f *framework.Framework, nodeName string, timeout 
 	}
 }
 
-func PowerOnNodeUntilReady(f *framework.Framework, nodeName string, timeout time.Duration) error {
+func PowerOnNodeUntilReady(ctx context.Context, cli client.Client, nodeName string, execTimeout, poweronTimeout time.Duration) error {
 	c := fmt.Sprintf("docker start %s", nodeName)
-	_, err := tools.ExecCommand(c, timeout)
-	Expect(err).NotTo(HaveOccurred())
+	out, err := tools.ExecCommand(ctx, c, execTimeout)
+	if err != nil {
+		return fmt.Errorf("err: %v\nout: %v\n", err, string(out))
+	}
 
-	ctx, cancel := context.WithTimeout(context.TODO(), timeout)
+	ctx, cancel := context.WithTimeout(ctx, poweronTimeout)
 	defer cancel()
 	for {
 		select {
 		case <-ctx.Done():
-			return fmt.Errorf("power on node timeout")
+			return e2eerr.ErrTimeout
 		default:
-			node, err := f.GetNode(nodeName)
-			Expect(err).NotTo(HaveOccurred())
-			up := f.CheckNodeStatus(node, true)
+			node, err := GetNode(ctx, cli, nodeName)
+			if err != nil {
+				return err
+			}
+			up := CheckNodeStatus(node, true)
 			if up {
 				return nil
 			}
@@ -86,16 +110,14 @@ func PowerOnNodeUntilReady(f *framework.Framework, nodeName string, timeout time
 	}
 }
 
-func PowerOnNodesUntilClusterReady(f *framework.Framework, nodes []string, timeout time.Duration) error {
+func PowerOnNodesUntilClusterReady(ctx context.Context, cli client.Client, nodes []string, execTimeout, poweronTimeout time.Duration) error {
 	for _, node := range nodes {
-		err := PowerOnNodeUntilReady(f, node, timeout)
+		err := PowerOnNodeUntilReady(ctx, cli, node, execTimeout, poweronTimeout)
 		if err != nil {
 			return err
 		}
 	}
-	ctx, cancel := context.WithTimeout(context.TODO(), timeout)
-	defer cancel()
-	return f.WaitAllPodUntilRunning(ctx)
+	return WaitAllPodRunning(ctx, cli, poweronTimeout)
 }
 
 func GetNodeIP(node *corev1.Node) (string, string) {
@@ -112,4 +134,49 @@ func GetNodeIP(node *corev1.Node) (string, string) {
 		}
 	}
 	return ipv4, ipv6
+}
+
+func CheckNodeStatus(node *corev1.Node, expectReady bool) bool {
+
+	unreachTaintTemp := &corev1.Taint{
+		Key:    corev1.TaintNodeUnreachable,
+		Effect: corev1.TaintEffectNoExecute,
+	}
+	notReadyTaintTemp := &corev1.Taint{
+		Key:    corev1.TaintNodeNotReady,
+		Effect: corev1.TaintEffectNoExecute,
+	}
+	for _, cond := range node.Status.Conditions {
+		// check whether the ready host have taints
+		if cond.Type == corev1.NodeReady {
+			haveTaints := false
+			taints := node.Spec.Taints
+			for _, t := range taints {
+				if t.MatchTaint(unreachTaintTemp) || t.MatchTaint(notReadyTaintTemp) {
+					haveTaints = true
+					break
+				}
+			}
+			if expectReady {
+				if (cond.Status == corev1.ConditionTrue) && !haveTaints {
+					return true
+				}
+				return false
+			}
+			if cond.Status != corev1.ConditionTrue {
+				return true
+			}
+			return false
+		}
+	}
+	return false
+}
+
+func GetNode(ctx context.Context, cli client.Client, nodeName string) (*corev1.Node, error) {
+	node := new(corev1.Node)
+	err := cli.Get(ctx, types.NamespacedName{Name: nodeName}, node)
+	if err != nil {
+		return nil, err
+	}
+	return node, nil
 }

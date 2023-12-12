@@ -117,7 +117,7 @@ func generateCmd(ctx context.Context, config *Config, pod corev1.Pod, eip, serve
 	return exec.CommandContext(ctx, "sh", "-c", args)
 }
 
-// CheckPodsEgressIP check pods egressIP my pod-egressPolicy-map
+// CheckPodsEgressIP check pods egressIP by pod-egressPolicy-map
 func CheckPodsEgressIP(ctx context.Context, cfg *Config, p2p map[*corev1.Pod]*egressv1.EgressPolicy, checkv4, checkv6 bool, expectUsedEip bool) error {
 	for pod, egp := range p2p {
 		if checkv4 {
@@ -173,4 +173,35 @@ func CheckDeployEgressIP(
 		}
 	}
 	return nil
+}
+
+func CheckPodListEgressIP(ctx context.Context, cfg *Config, egressConfig config.FileConfig, list *corev1.PodList,
+	ipv4, ipv6 string, expectUsedEip bool) error {
+	for _, pod := range list.Items {
+		// check v4
+		if egressConfig.EnableIPv4 {
+			err := CheckPodEgressIP(ctx, cfg, pod, ipv4, cfg.ServerAIPv4, expectUsedEip)
+			if err != nil {
+				return err
+			}
+		}
+
+		// check v6
+		if egressConfig.EnableIPv6 {
+			err := CheckPodEgressIP(ctx, cfg, pod, ipv6, cfg.ServerAIPv6, expectUsedEip)
+			if err != nil {
+				return err
+			}
+		}
+	}
+	return nil
+}
+
+func CheckEgressIPOfNodesPodList(ctx context.Context, cli client.Client, cfg *Config, egressConfig config.FileConfig, labels map[string]string, nodes []string,
+	ipv4, ipv6 string, expectUsedEip bool) error {
+	pl, err := GetNodesPodList(ctx, cli, labels, nodes)
+	if err != nil {
+		return err
+	}
+	return CheckPodListEgressIP(ctx, cfg, egressConfig, pl, ipv4, ipv6, expectUsedEip)
 }

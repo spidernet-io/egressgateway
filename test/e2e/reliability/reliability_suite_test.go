@@ -31,9 +31,7 @@ var (
 
 	cli client.Client
 
-	nodeLabel map[string]string
-
-	nodeNameList []string
+	nodeNameList, workerNodes []string
 )
 
 var _ = BeforeSuite(func() {
@@ -54,12 +52,13 @@ var _ = BeforeSuite(func() {
 	Expect(err).NotTo(HaveOccurred())
 	Expect(len(nodes.Items) > 2).To(BeTrue(), "test case needs at lest 3 nodes")
 
-	//
-	nodeLabel = nodes.Items[0].Labels
-
 	for _, item := range nodes.Items {
 		nodeNameList = append(nodeNameList, item.Name)
+		if _, ok := item.Labels["node-role.kubernetes.io/control-plane"]; !ok {
+			workerNodes = append(workerNodes, item.Name)
+		}
 	}
+	Expect(len(workerNodes) > 1).To(BeTrue(), "this test case needs at lest 2 worker nodes")
 
 	// get egressgateway config
 	configMap := &corev1.ConfigMap{}
