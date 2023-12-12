@@ -147,9 +147,11 @@ jobs:
               echo "RUN_UNITEST_ENABLED=false" >> $GITHUB_ENV
           else
               # call by auto-nightly-ci, the event is schedule or its workflow_dispatch
+              if ${{ github.event_name != 'workflow_dispatch' }}; then
+                echo "RUN_TAG=main" >> $GITHUB_ENV
+              fi
               # use main sha for ci image tag
               echo "trigger by workflow_call"
-              echo "RUN_TAG=main" >> $GITHUB_ENV
               echo "RUN_E2E_LABEL=" >> $GITHUB_ENV
               echo "RUN_E2E_ENABLED=true" >> $GITHUB_ENV
               echo "RUN_UNITEST_ENABLED=true" >> $GITHUB_ENV

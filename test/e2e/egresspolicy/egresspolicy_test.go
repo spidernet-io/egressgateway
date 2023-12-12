@@ -6,6 +6,7 @@ package egresspolicy_test
 import (
 	"context"
 	"fmt"
+	"strings"
 	"time"
 
 	. "github.com/onsi/ginkgo/v2"
@@ -22,6 +23,7 @@ import (
 
 	egressv1 "github.com/spidernet-io/egressgateway/pkg/k8s/apis/v1beta1"
 	"github.com/spidernet-io/egressgateway/test/e2e/common"
+	e2econstant "github.com/spidernet-io/egressgateway/test/e2e/constant"
 )
 
 var _ = Describe("EgressPolicy", Serial, func() {
@@ -827,6 +829,10 @@ var _ = Describe("EgressPolicy", Serial, func() {
 				egw.Spec.Ippools = pool
 				egw.Spec.ClusterDefault = true
 			})
+
+			if err != nil && strings.Contains(err.Error(), e2econstant.WebhookMsgClusterDefaultGateway) {
+				Skip("The default egressgateway already exists, skip this test case")
+			}
 
 			Expect(err).NotTo(HaveOccurred())
 

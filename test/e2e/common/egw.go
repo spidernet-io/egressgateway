@@ -11,6 +11,7 @@ import (
 
 	"github.com/google/uuid"
 	"k8s.io/apimachinery/pkg/api/errors"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -250,4 +251,41 @@ func CheckEgressGatewayStatusSynced(ctx context.Context, cli client.Client, egw 
 			time.Sleep(time.Second)
 		}
 	}
+}
+
+func DeleteEgressGateway(ctx context.Context, cli client.Client, egw *egressv1.EgressGateway, timeout time.Duration) error {
+	ctx, cancel := context.WithTimeout(ctx, timeout)
+	defer cancel()
+
+	err := DeleteObj(ctx, cli, egw)
+	if err != nil {
+		return err
+	}
+
+	for {
+		select {
+		case <-ctx.Done():
+			return e2eerr.ErrTimeout
+		default:
+			err = cli.Get(ctx, types.NamespacedName{Name: egw.Name}, egw)
+			if apierrors.IsNotFound(err) {
+				return nil
+			}
+			time.Sleep(time.Second / 2)
+		}
+	}
+}
+
+func GetClusterDefualtEgressGateway(ctx context.Context, cli client.Client) (*egressv1.EgressGateway, error) {
+	egwList := new(egressv1.EgressGatewayList)
+	err := cli.List(ctx, egwList)
+	if err != nil {
+		return nil, err
+	}
+	for _, v := range egwList.Items {
+		if v.Spec.ClusterDefault {
+			return &v, nil
+		}
+	}
+	return nil, nil
 }
