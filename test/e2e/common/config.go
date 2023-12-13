@@ -5,6 +5,7 @@ package common
 
 import (
 	"fmt"
+
 	"github.com/mitchellh/mapstructure"
 	"github.com/spf13/viper"
 	corev1 "k8s.io/api/core/v1"
@@ -79,7 +80,7 @@ func ReadConfig() (*Config, error) {
 		}
 	}
 
-	err = viper.Unmarshal(&config)
+	err = viper.Unmarshal(config)
 	if err != nil {
 		return nil, err
 	}
