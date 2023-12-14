@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 	"reflect"
+	"sort"
 	"time"
 
 	"github.com/google/uuid"
@@ -235,6 +236,8 @@ func CheckEgressGatewayStatusSynced(ctx context.Context, cli client.Client, egw 
 	ctx, cancel := context.WithTimeout(ctx, timeout)
 	defer cancel()
 
+	expectStatusCP := expectStatus.DeepCopy()
+
 	for {
 		select {
 		case <-ctx.Done():
@@ -245,7 +248,12 @@ func CheckEgressGatewayStatusSynced(ctx context.Context, cli client.Client, egw 
 			if err != nil {
 				return nil
 			}
-			if reflect.DeepEqual(*expectStatus, egw.Status) {
+
+			egwStatusCp := egw.Status.DeepCopy()
+			expectNodeList := SortEgressGatewayNodeListByName(expectStatusCP.NodeList)
+			egwNodeList := SortEgressGatewayNodeListByName(egwStatusCp.NodeList)
+
+			if reflect.DeepEqual(expectNodeList, egwNodeList) && reflect.DeepEqual(expectStatusCP.IPUsage, egwStatusCp.IPUsage) {
 				return nil
 			}
 			time.Sleep(time.Second)
@@ -288,4 +296,11 @@ func GetClusterDefualtEgressGateway(ctx context.Context, cli client.Client) (*eg
 		}
 	}
 	return nil, nil
+}
+
+func SortEgressGatewayNodeListByName(nodes []egressv1.EgressIPStatus) []egressv1.EgressIPStatus {
+	sort.Slice(nodes, func(i, j int) bool {
+		return nodes[i].Name < nodes[j].Name
+	})
+	return nodes
 }

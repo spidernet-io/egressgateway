@@ -90,30 +90,30 @@ func ExecInKindNode(nodeName string, command string, duration time.Duration) ([]
 	return exec.CommandContext(ctx, "sh", "-c", c).Output()
 }
 
-func ExecCommand(command string, duration time.Duration) ([]byte, error) {
-	ctx, cancel := context.WithTimeout(context.TODO(), duration)
+func ExecCommand(ctx context.Context, command string, duration time.Duration) ([]byte, error) {
+	ctx, cancel := context.WithTimeout(ctx, duration)
 	defer cancel()
 	return exec.CommandContext(ctx, "sh", "-c", command).Output()
 }
 
-func GetNetStats(duration time.Duration) ([]byte, error) {
+func GetNetStats(ctx context.Context, duration time.Duration) ([]byte, error) {
 	a := "ss -tunlp "
-	return ExecCommand(a, duration)
+	return ExecCommand(ctx, a, duration)
 }
 
-func GetKernelParams(duration time.Duration) ([]byte, error) {
+func GetKernelParams(ctx context.Context, duration time.Duration) ([]byte, error) {
 	a := "sysctl -a "
-	return ExecCommand(a, duration)
+	return ExecCommand(ctx, a, duration)
 }
 
-func GetContainerIPV4(container string, duration time.Duration) ([]byte, error) {
+func GetContainerIPV4(ctx context.Context, container string, duration time.Duration) ([]byte, error) {
 	a := fmt.Sprintf("docker inspect %s | grep -w IPAddress | grep -E -o '[0-9]+\\.[0-9]+\\.[0-9]+\\.[0-9]+' | tr -d '\n'", container)
-	return ExecCommand(a, duration)
+	return ExecCommand(ctx, a, duration)
 }
 
-func GetContainerIPV6(container string, duration time.Duration) ([]byte, error) {
+func GetContainerIPV6(ctx context.Context, container string, duration time.Duration) ([]byte, error) {
 	a := fmt.Sprintf("docker inspect %s | grep -w GlobalIPv6Address  | sed 1d | awk '{print $2}' | tr -d '\",' | tr -d '\n'", container)
-	return ExecCommand(a, duration)
+	return ExecCommand(ctx, a, duration)
 }
 
 func RemoveValueFromSlice[T string | int](slice []T, value T) []T {
@@ -129,4 +129,13 @@ func RemoveValueFromSlice[T string | int](slice []T, value T) []T {
 		ss = append(slice[:index], slice[index+1:]...)
 	}
 	return ss
+}
+
+func ContainsElement(slice []string, element string) bool {
+	for _, item := range slice {
+		if item == element {
+			return true
+		}
+	}
+	return false
 }

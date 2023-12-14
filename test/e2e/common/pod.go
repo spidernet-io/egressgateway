@@ -15,6 +15,9 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+
+	e2eerr "github.com/spidernet-io/egressgateway/test/e2e/err"
+	e2etools "github.com/spidernet-io/egressgateway/test/e2e/tools"
 )
 
 func CreatePod(ctx context.Context, cli client.Client, image string) (*corev1.Pod, error) {
@@ -161,4 +164,86 @@ func GetPodListIPs(podList *corev1.PodList) (ipv4List, ipv6List []string) {
 		ipv6List = append(ipv6List, v6s...)
 	}
 	return ipv4List, ipv6List
+}
+
+func WaitAllPodRunning(ctx context.Context, cli client.Client, timeout time.Duration) error {
+	ctx, cancel := context.WithTimeout(ctx, timeout)
+	defer cancel()
+
+	podList := new(corev1.PodList)
+
+WAIT:
+	for {
+		select {
+		case <-ctx.Done():
+			return e2eerr.ErrTimeout
+		default:
+			err := cli.List(ctx, podList)
+			if err != nil {
+				continue
+			}
+			for _, pod := range podList.Items {
+				if pod.Status.Phase != corev1.PodRunning {
+					time.Sleep(time.Second)
+					goto WAIT
+				}
+			}
+			return nil
+		}
+	}
+}
+
+func GetNodesPodList(ctx context.Context, cli client.Client, labels map[string]string, nodes []string) (*corev1.PodList, error) {
+	list := new(corev1.PodList)
+	lsOps := client.MatchingLabels(labels)
+	err := cli.List(ctx, list, lsOps)
+	if err != nil {
+		return nil, err
+	}
+	if len(nodes) == 0 {
+		return list, nil
+	}
+	res := new(corev1.PodList)
+	for _, pod := range list.Items {
+		if e2etools.ContainsElement(nodes, pod.Spec.NodeName) {
+			res.Items = append(res.Items, pod)
+		}
+	}
+	return res, nil
+}
+
+func WaitForNodesPodListRestarted(ctx context.Context, cli client.Client, labels map[string]string, nodes []string, timeout time.Duration) error {
+	ctx, cancel := context.WithTimeout(ctx, timeout)
+	defer cancel()
+
+	for {
+		select {
+		case <-ctx.Done():
+			return e2eerr.ErrTimeout
+		default:
+			pl, err := GetNodesPodList(ctx, cli, labels, nodes)
+			if err != nil {
+				continue
+			}
+			if IfPodListRestarted(pl) {
+				return nil
+			}
+			time.Sleep(time.Second * 2)
+		}
+	}
+}
+
+// IfPodListRestart check pods of the podList if restarted
+func IfPodListRestarted(pods *corev1.PodList) bool {
+	for _, p := range pods.Items {
+		for _, status := range p.Status.ContainerStatuses {
+			if status.RestartCount == 0 {
+				return false
+			}
+		}
+		if p.Status.Phase != corev1.PodRunning {
+			return false
+		}
+	}
+	return true
 }
