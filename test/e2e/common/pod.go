@@ -247,3 +247,63 @@ func IfPodListRestarted(pods *corev1.PodList) bool {
 	}
 	return true
 }
+
+// DeletePodsUntilReady delete pods until rerunning
+func DeletePodsUntilReady(ctx context.Context, cli client.Client, labels map[string]string, timeout time.Duration) error {
+	pl, err := GetNodesPodList(ctx, cli, labels, []string{})
+	if err != nil {
+		return err
+	}
+	oldUIDs := GetPodListUIDs(pl)
+
+	err = DeletePodList(ctx, cli, pl)
+	if err != nil {
+		return err
+	}
+
+	ctx, cancel := context.WithTimeout(ctx, timeout)
+	defer cancel()
+
+	for {
+		select {
+		case <-ctx.Done():
+			return e2eerr.ErrTimeout
+		default:
+			pl, err := GetNodesPodList(ctx, cli, labels, []string{})
+			if err != nil {
+				continue
+			}
+			newUIDs := GetPodListUIDs(pl)
+			if len(e2etools.SubtractionSlice(oldUIDs, newUIDs)) != len(oldUIDs) {
+				time.Sleep(time.Second)
+				continue
+			}
+
+			for _, p := range pl.Items {
+				if p.Status.Phase != corev1.PodRunning {
+					time.Sleep(time.Second)
+					continue
+				}
+			}
+			return nil
+		}
+	}
+}
+
+func GetPodListUIDs(podList *corev1.PodList) []string {
+	res := make([]string, 0)
+	for _, p := range podList.Items {
+		res = append(res, string(p.UID))
+	}
+	return res
+}
+
+func DeletePodList(ctx context.Context, cli client.Client, podList *corev1.PodList) error {
+	for _, p := range podList.Items {
+		err := cli.Delete(ctx, &p)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
