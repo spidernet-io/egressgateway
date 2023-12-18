@@ -6,6 +6,8 @@ package reliability_test
 import (
 	"context"
 	"fmt"
+	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/go-faker/faker/v4"
@@ -21,6 +23,7 @@ import (
 
 	egressv1 "github.com/spidernet-io/egressgateway/pkg/k8s/apis/v1beta1"
 	"github.com/spidernet-io/egressgateway/test/e2e/common"
+	"github.com/spidernet-io/egressgateway/test/e2e/constant"
 	"github.com/spidernet-io/egressgateway/test/e2e/tools"
 )
 
@@ -210,6 +213,88 @@ var _ = Describe("Reliability", Serial, Label("Reliability"), func() {
 			GinkgoWriter.Println("check the egress gateway status; the EIP should not drift")
 			checkGatewayStatus(ctx, cli, pool, ipNum, gatewayNode, workerNodes[1:], []string{}, policy, egw, time.Second*5)
 		})
+
+		/*
+			restart the components such as calico, etcd and kube-proxy
+			check the eip of the pods
+			check the status of the egress gateway crs
+		*/
+		DescribeTable("restart components", Serial, Label("R00007"), func(labels map[string]string, timeout time.Duration) {
+			// get gateway
+			beforeEgw := new(egressv1.EgressGateway)
+			err := cli.Get(ctx, types.NamespacedName{Name: egw.Name}, beforeEgw)
+			Expect(err).NotTo(HaveOccurred())
+
+			// get policy
+			beforPolicy := new(egressv1.EgressPolicy)
+			err = cli.Get(ctx, types.NamespacedName{Namespace: policy.Namespace, Name: policy.Name}, beforPolicy)
+			Expect(err).NotTo(HaveOccurred())
+
+			// get egressClusterInfo
+			beforeEgci := new(egressv1.EgressClusterInfo)
+			err = cli.Get(ctx, types.NamespacedName{Name: "default"}, beforeEgci)
+			Expect(err).NotTo(HaveOccurred())
+
+			// get egressEndPoints
+			beforeEgep, err := common.GetEgressEndPointSliceByEgressPolicy(ctx, cli, policy)
+			Expect(err).NotTo(HaveOccurred())
+
+			var wg sync.WaitGroup
+			var isRerun atomic.Bool
+			wg.Add(1)
+
+			go func() {
+				defer GinkgoRecover()
+				defer wg.Done()
+
+				err := common.DeletePodsUntilReady(ctx, cli, labels, timeout)
+				Expect(err).NotTo(HaveOccurred())
+				isRerun.Store(true)
+			}()
+
+			for !isRerun.Load() {
+				err := common.CheckDaemonSetEgressIP(ctx, cli, config, egressConfig, daemonSet,
+					policy.Status.Eip.Ipv4, policy.Status.Eip.Ipv6, true)
+				Expect(err).NotTo(HaveOccurred())
+				GinkgoWriter.Printf("succeeded to check the export IP of the daemonSet: %s\n", daemonSet.Name)
+				time.Sleep(time.Second / 2)
+			}
+			wg.Wait()
+
+			// check the gateway status
+			GinkgoWriter.Println("check egress gateway status")
+			nowEgw := new(egressv1.EgressGateway)
+			err = cli.Get(ctx, types.NamespacedName{Name: egw.Name}, nowEgw)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(nowEgw.Status).Should(Equal(beforeEgw.Status), fmt.Sprintf("expect %v\ngot: %v\n", beforeEgw.Status, nowEgw.Status))
+
+			// check the policy status
+			GinkgoWriter.Println("check egress policy status")
+			nowPolicy := new(egressv1.EgressPolicy)
+			err = cli.Get(ctx, types.NamespacedName{Namespace: policy.Namespace, Name: policy.Name}, nowPolicy)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(nowPolicy.Status).Should(Equal(beforPolicy.Status), fmt.Sprintf("expect:\n%v\ngot:\n %v\n", beforPolicy.Status, nowPolicy.Status))
+
+			// check the egressClusterInfo status
+			nowEgci := new(egressv1.EgressClusterInfo)
+			err = cli.Get(ctx, types.NamespacedName{Name: "default"}, nowEgci)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(nowEgci.Status).Should(Equal(beforeEgci.Status), fmt.Sprintf("expect:\n%v\ngot:\n %v\n", beforeEgci.Status, nowEgci.Status))
+
+			// check the egressEndPointSlice
+			// get egressEndPoints
+			nowEgep, err := common.GetEgressEndPointSliceByEgressPolicy(ctx, cli, policy)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(nowEgep.Endpoints).Should(Equal(beforeEgep.Endpoints), fmt.Sprintf("expect:\n%v\ngot:\n %v\n", beforeEgep.Endpoints, nowEgep.Endpoints))
+		},
+			Entry("restart kube-controller-manager", constant.KubeControllerManagerLabel, time.Minute),
+			Entry("restart kube-apiserver", constant.KubeApiServerLabel, time.Minute),
+			Entry("restart etcd", constant.KubeEtcdLabel, time.Minute),
+			Entry("restart kube-scheduler", constant.KubeSchedulerLabel, time.Minute),
+			Entry("restart kube-proxy", constant.KubeProxyLabel, time.Minute),
+			Entry("restart calico-node", constant.CalicoNodeLabel, time.Minute),
+			Entry("restart calico-kube-controllers", constant.CalicoControllerLabel, time.Minute),
+		)
 	})
 })
 
