@@ -159,7 +159,7 @@ github.com/google/gops/signal
 # github.com/google/pprof v0.0.0-20231101202521-4ca4178f5c7a
 ## explicit; go 1.19
 github.com/google/pprof/profile
-# github.com/google/uuid v1.4.0
+# github.com/google/uuid v1.5.0
 ## explicit
 github.com/google/uuid
 # github.com/gorilla/handlers v1.5.1
