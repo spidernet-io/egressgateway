@@ -27,7 +27,7 @@ require (
 	github.com/spf13/viper v1.18.1
 	github.com/spidernet-io/e2eframework v0.0.0-20230403061847-445757b963b3
 	github.com/stretchr/testify v1.8.4
-	github.com/tigera/operator v1.32.2
+	github.com/tigera/operator v1.32.3
 	github.com/vishvananda/netlink v1.2.1-beta.2.0.20230130171208-05506ada9f99
 	go.uber.org/zap v1.25.0
 	golang.org/x/sys v0.15.0
