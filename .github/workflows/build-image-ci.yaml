@@ -21,7 +21,7 @@ permissions: write-all
 jobs:
   call-by-workflow:
     uses: ./.github/workflows/call-release-image.yaml
-    if: ${{ inputs.ref != '' }}
+    if: ${{ github.event_name != 'pull_request_target' && inputs.ref != '' }}
     with:
       ref: ${{ inputs.ref }}
       push: "false"
