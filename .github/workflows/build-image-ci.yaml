@@ -35,6 +35,6 @@ jobs:
     with:
       ref: ${{ github.event.pull_request.head.sha }}
       push: "false"
-      upload: "false"
+      upload: "true"
       race: "1"
     secrets: inherit
