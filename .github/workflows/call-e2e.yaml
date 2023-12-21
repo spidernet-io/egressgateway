@@ -90,7 +90,7 @@ jobs:
       # download all artifact
       # https://github.com/actions/download-artifact#download-all-artifacts
       - name: Download images
-        uses: actions/download-artifact@v3.0.2
+        uses: actions/download-artifact@v4.0.0
         with:
           path: output/artifact-${{ inputs.ipfamily }}
 
@@ -160,17 +160,17 @@ jobs:
           fi
 
       - name: Upload e2e cluster log
-        uses: actions/upload-artifact@v3.1.3
+        uses: actions/upload-artifact@v4.0.0
         with:
-          name: ${{ inputs.ipfamily }}-debuglog-${{ env.RUN_VAR }}.txt
+          name: ${{ inputs.os }}-${{ inputs.cni }}-${{ inputs.ipfamily }}-${{ env.RUN_VAR }}-debuglog.txt
           path: ${{ env.E2E_LOG_PATH }}
           retention-days: 30
 
       - name: Upload e2e ginkgo report
         if: ${{ env.RUN_UPLOAD_LOG == 'true' }}
-        uses: actions/upload-artifact@v3.1.3
+        uses: actions/upload-artifact@v4.0.0
         with:
-          name: ${{ inputs.ipfamily }}-e2e-report-${{ env.RUN_VAR }}.json
+          name: ${{ inputs.os }}-${{ inputs.cni }}-${{ inputs.ipfamily }}-${{ env.RUN_VAR }}-e2e-report.json
           path: ${{ env.E2E_GINKGO_REPORT_PATH }}
           retention-days: 30
 
