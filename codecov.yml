@@ -16,6 +16,8 @@ comment:
   behavior: default
 
 ignore:
+
+  # skip third-party dependencies and test path
   - "test/*"
   - "cmd/*"
   - "tools/*"

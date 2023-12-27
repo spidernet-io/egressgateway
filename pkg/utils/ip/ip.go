@@ -475,7 +475,6 @@ func IsIPv6IPRange(ipRange string) bool {
 	return true
 }
 
-// CidrToIPs convert the CIDR format to IP slices
 func CidrToIPs(cidr string) ([]net.IP, error) {
 	ip, ipnet, err := net.ParseCIDR(cidr)
 	if err != nil {
@@ -483,28 +482,52 @@ func CidrToIPs(cidr string) ([]net.IP, error) {
 	}
 
 	var ips []net.IP
-	for ip := ip.Mask(ipnet.Mask); ipnet.Contains(ip); NextIP(ip) {
-		ips = append(ips, ip)
+	for ip := ip.Mask(ipnet.Mask); ipnet.Contains(ip); incrementIP(ip) {
+		ips = append(ips, cloneIP(ip))
+	}
+
+	// Remove network and broadcast addresses for IPv4
+	if len(ips) > 2 && isIPv4(ip) {
+		ips = ips[1 : len(ips)-1]
 	}
 
 	return ips, nil
 }
 
+func isIPv4(ip net.IP) bool {
+	return len(ip.To4()) == net.IPv4len
+}
+
+func incrementIP(ip net.IP) {
+	for j := len(ip) - 1; j >= 0; j-- {
+		ip[j]++
+		if ip[j] > 0 {
+			break
+		}
+	}
+}
+
+func cloneIP(ip net.IP) net.IP {
+	clone := make(net.IP, len(ip))
+	copy(clone, ip)
+	return clone
+}
+
 // CidrsToIPs convert the CIDRs format to IP slices
-func CidrsToIPs(cidrs []string) ([]string, error) {
-	ipMap := make(map[string]struct{}, 0)
+func CidrsToIPs(cidrs []string) ([]net.IP, error) {
+	ipMap := make(map[string]net.IP)
 	for _, cidr := range cidrs {
 		ips, err := CidrToIPs(cidr)
 		if err != nil {
 			return nil, err
 		}
 		for _, v := range ips {
-			ipMap[v.String()] = struct{}{}
+			ipMap[v.String()] = v
 		}
 	}
-	res := make([]string, 0)
-	for k := range ipMap {
-		res = append(res, k)
+	res := make([]net.IP, 0)
+	for _, v := range ipMap {
+		res = append(res, v)
 	}
 	return res, nil
 }
@@ -522,30 +545,30 @@ func ConvertCidrOrIPrangeToIPs(in []string, version constant.IPVersion) ([]net.I
 		}
 	}
 
-	// iprange
+	// IP range
 	rangeIPs, err := ParseIPRanges(version, ipranges)
 	if err != nil {
 		return nil, err
 	}
 
-	// ipCidr
+	// IP CIDR
 	cidrIPs, err := CidrsToIPs(cidrs)
 	if err != nil {
 		return nil, err
 	}
 
-	ipMap := make(map[string]struct{}, 0)
+	ipMap := make(map[string]net.IP)
 	for _, v := range rangeIPs {
-		ipMap[v.String()] = struct{}{}
+		ipMap[v.String()] = v
 	}
 
 	for _, v := range cidrIPs {
-		ipMap[v] = struct{}{}
+		ipMap[v.String()] = v
 	}
 
 	res := make([]net.IP, 0)
-	for k := range ipMap {
-		res = append(res, net.IP(k))
+	for _, v := range ipMap {
+		res = append(res, v)
 	}
 
 	return res, nil

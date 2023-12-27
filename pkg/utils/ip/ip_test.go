@@ -12,6 +12,76 @@ import (
 	"github.com/spidernet-io/egressgateway/pkg/utils/ip"
 )
 
+func TestIsIPv4(t *testing.T) {
+	tests := []struct {
+		ip       string
+		expected bool
+		wantErr  bool
+	}{
+		{"192.168.1.1", true, false},
+		{"255.255.255.255", true, false},
+		{"0.0.0.0", true, false},
+		{"256.256.256.256", false, true},
+		{"192.168.1", false, true},
+		{"", false, true},
+		{"abcd", false, true},
+		{"1234:5678:9abc:def0:1234:5678:9abc:def0", false, false},
+	}
+
+	for _, tt := range tests {
+		got, err := ip.IsIPv4(tt.ip)
+		if got != tt.expected {
+			t.Errorf("IsIPv4(%q) = %v; want %v", tt.ip, got, tt.expected)
+		}
+
+		if tt.wantErr && err == nil {
+			t.Errorf("IsIPv4(%q) expected error, but got none", tt.ip)
+		}
+
+		if !tt.wantErr && err != nil {
+			t.Errorf("IsIPv4(%q) unexpected error: %v", tt.ip, err)
+		}
+	}
+}
+
+func TestIsIPv6(t *testing.T) {
+	tests := []struct {
+		ip       string
+		expected bool
+		wantErr  bool
+	}{
+		{"1234:5678:9abc:def0:1234:5678:9abc:def0", true, false},
+		{"::1", true, false},
+		{"fe80::1", true, false},
+		{"192.168.1.1", false, false},
+		{"255.255.255.255", false, false},
+		{"0.0.0.0", false, false},
+		{"::ffff:192.0.2.128", false, false},
+		{"12345::", false, true},
+		{"", false, true},
+		{"abcd", false, true},
+	}
+
+	for _, tt := range tests {
+		got, err := ip.IsIPv6(tt.ip)
+		if got != tt.expected {
+			t.Errorf("IsIPv6(%q) = %v; want %v", tt.ip, got, tt.expected)
+		}
+
+		if tt.wantErr {
+			if err == nil {
+				t.Errorf("IsIPv6(%q) expected error, but got none", tt.ip)
+			} else if err.Error() != constant.InvalidIPFormat {
+				t.Errorf("IsIPv6(%q) expected error message %q, but got %q", tt.ip, constant.InvalidIPFormat, err.Error())
+			}
+		} else {
+			if err != nil {
+				t.Errorf("IsIPv6(%q) unexpected error: %v", tt.ip, err)
+			}
+		}
+	}
+}
+
 func TestCmp(t *testing.T) {
 	ip1 := net.ParseIP("2001:db8::1")
 	ip2 := net.ParseIP("2001:db8::2")
@@ -800,4 +870,203 @@ func TestCheckIPIncluded(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestCidrToIPs(t *testing.T) {
+	tests := []struct {
+		name        string
+		cidr        string
+		wantIPs     []string
+		expectError bool
+	}{
+		{
+			name:        "Valid CIDR /32",
+			cidr:        "192.168.1.1/32",
+			wantIPs:     []string{"192.168.1.1"},
+			expectError: false,
+		},
+		{
+			name:        "Valid CIDR /30",
+			cidr:        "192.168.1.4/30",
+			wantIPs:     []string{"192.168.1.5", "192.168.1.6"},
+			expectError: false,
+		},
+		{
+			name:        "Invalid CIDR",
+			cidr:        "192.168.1.1/33",
+			wantIPs:     nil,
+			expectError: true,
+		},
+		{
+			name:        "Valid IPv6 CIDR /128",
+			cidr:        "2001:db8::1/128",
+			wantIPs:     []string{"2001:db8::1"},
+			expectError: false,
+		},
+		{
+			name: "Valid small IPv6 CIDR /124",
+			cidr: "2001:db8::/124",
+			wantIPs: []string{
+				"2001:db8::", "2001:db8::1", "2001:db8::2", "2001:db8::3",
+				"2001:db8::4", "2001:db8::5", "2001:db8::6", "2001:db8::7",
+				"2001:db8::8", "2001:db8::9", "2001:db8::a", "2001:db8::b",
+				"2001:db8::c", "2001:db8::d", "2001:db8::e", "2001:db8::f",
+			},
+			expectError: false,
+		},
+		{
+			name:        "Invalid IPv6 CIDR",
+			cidr:        "2001:db8::1/129",
+			wantIPs:     nil,
+			expectError: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			gotIPs, err := ip.CidrToIPs(tt.cidr)
+			if (err != nil) != tt.expectError {
+				t.Errorf("CidrToIPs() error = %v, expectError %v", err, tt.expectError)
+				return
+			}
+			var gotIPsStr []string
+			for _, item := range gotIPs {
+				gotIPsStr = append(gotIPsStr, item.String())
+			}
+			if !reflect.DeepEqual(gotIPsStr, tt.wantIPs) {
+				t.Errorf("CidrToIPs() = %v, want %v", gotIPsStr, tt.wantIPs)
+			}
+		})
+	}
+}
+
+func TestCidrsToIPs(t *testing.T) {
+	tests := []struct {
+		name    string
+		cidrs   []string
+		want    []net.IP
+		wantErr bool
+	}{
+		{
+			name:    "single CIDR",
+			cidrs:   []string{"192.168.1.0/30"},
+			want:    []net.IP{net.ParseIP("192.168.1.1"), net.ParseIP("192.168.1.2")},
+			wantErr: false,
+		},
+		{
+			name:    "multiple CIDRs",
+			cidrs:   []string{"192.168.1.0/30", "192.168.1.4/31"},
+			want:    []net.IP{net.ParseIP("192.168.1.1"), net.ParseIP("192.168.1.2"), net.ParseIP("192.168.1.4"), net.ParseIP("192.168.1.5")},
+			wantErr: false,
+		},
+		{
+			name:    "invalid CIDR",
+			cidrs:   []string{"invalid"},
+			want:    nil,
+			wantErr: true,
+		},
+		{
+			name:    "empty slice",
+			cidrs:   []string{},
+			want:    []net.IP{},
+			wantErr: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			gotIPs, err := ip.CidrsToIPs(tt.cidrs)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("CidrsToIPs() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			// Compare the sorted slices.
+			if !ipsEqual(gotIPs, tt.want) {
+				t.Errorf("CidrsToIPs() = %v, want %v", gotIPs, tt.want)
+			}
+		})
+	}
+}
+
+func TestConvertCidrOrIPRangeToIPs(t *testing.T) {
+	tests := []struct {
+		name    string
+		in      []string
+		version constant.IPVersion
+		want    []net.IP
+		wantErr bool
+	}{
+		//{
+		//	name:    "single IP",
+		//	in:      []string{"172.30.0.2"},
+		//	version: constant.IPv4, // Assuming constant.IPv4 is a valid constant for IPv4
+		//	want:    []net.IP{net.ParseIP("172.30.0.2")},
+		//	wantErr: false,
+		//},
+		{
+			name:    "IP range",
+			in:      []string{"172.30.0.3-172.30.0.5"},
+			version: constant.IPv4,
+			want: []net.IP{
+				net.ParseIP("172.30.0.3"),
+				net.ParseIP("172.30.0.4"),
+				net.ParseIP("172.30.0.5"),
+			},
+			wantErr: false,
+		},
+		{
+			name:    "IP CIDR",
+			in:      []string{"172.30.1.0/30"},
+			version: constant.IPv4,
+			want: []net.IP{
+				net.ParseIP("172.30.1.1"),
+				net.ParseIP("172.30.1.2"),
+			},
+			wantErr: false,
+		},
+		{
+			name:    "invalid input",
+			in:      []string{"this-is-not-an-ip"},
+			version: constant.IPv4,
+			want:    nil,
+			wantErr: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := ip.ConvertCidrOrIPrangeToIPs(tt.in, tt.version)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("ConvertCidrOrIPrangeToIPs() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !ipsEqual(got, tt.want) {
+				t.Errorf("ConvertCidrOrIPrangeToIPs() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func ipsEqual(got, want []net.IP) bool {
+	if len(got) != len(want) {
+		return false
+	}
+
+	gotMap := make(map[string]struct{}, len(got))
+
+	// Convert the 'got' slice into a map for quick lookup
+	for _, v := range got {
+		gotMap[v.String()] = struct{}{}
+	}
+
+	// Check if all IPs in 'want' are in 'got'
+	for _, v := range want {
+		if _, found := gotMap[v.String()]; !found {
+			return false
+		}
+		delete(gotMap, v.String()) // Ensure duplicates in 'want' are also in 'got'
+	}
+
+	// If the map is empty, all IPs were matched
+	return len(gotMap) == 0
 }
