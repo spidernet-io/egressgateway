@@ -14,3 +14,13 @@ coverage:
 comment:
   layout: "reach, diff, flags, files"
   behavior: default
+
+ignore:
+
+  # skip third-party dependencies and test path
+  - "test/*"
+  - "cmd/*"
+  - "tools/*"
+  - "pkg/iptables/*"
+  - "pkg/ipset/*"
+  - "pkg/ethtool/*"

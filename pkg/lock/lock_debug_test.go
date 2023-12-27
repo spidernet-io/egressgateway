@@ -8,6 +8,7 @@ package lock_test
 
 import (
 	. "github.com/onsi/ginkgo/v2"
+
 	"github.com/spidernet-io/egressgateway/pkg/lock"
 )
 
