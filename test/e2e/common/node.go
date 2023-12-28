@@ -60,7 +60,7 @@ func PowerOffNodeUntilNotReady(ctx context.Context, cli client.Client, nodeName 
 	c := fmt.Sprintf("docker stop %s", nodeName)
 	out, err := tools.ExecCommand(ctx, c, execTimeout)
 	if err != nil {
-		return fmt.Errorf("err: %v\nout: %v\n", err, string(out))
+		return fmt.Errorf("err: %v\nout: %v", err, string(out))
 	}
 
 	ctx, cancel := context.WithTimeout(ctx, poweroffTimeout)
@@ -87,7 +87,7 @@ func PowerOnNodeUntilReady(ctx context.Context, cli client.Client, nodeName stri
 	c := fmt.Sprintf("docker start %s", nodeName)
 	out, err := tools.ExecCommand(ctx, c, execTimeout)
 	if err != nil {
-		return fmt.Errorf("err: %v\nout: %v\n", err, string(out))
+		return fmt.Errorf("err: %v\nout: %v", err, string(out))
 	}
 
 	ctx, cancel := context.WithTimeout(ctx, poweronTimeout)
@@ -95,7 +95,7 @@ func PowerOnNodeUntilReady(ctx context.Context, cli client.Client, nodeName stri
 	for {
 		select {
 		case <-ctx.Done():
-			return e2eerr.ErrTimeout
+			return e2eerr.ErrWaitNodeOnTimeout
 		default:
 			node, err := GetNode(ctx, cli, nodeName)
 			if err != nil {
@@ -137,7 +137,6 @@ func GetNodeIP(node *corev1.Node) (string, string) {
 }
 
 func CheckNodeStatus(node *corev1.Node, expectReady bool) bool {
-
 	unreachTaintTemp := &corev1.Taint{
 		Key:    corev1.TaintNodeUnreachable,
 		Effect: corev1.TaintEffectNoExecute,

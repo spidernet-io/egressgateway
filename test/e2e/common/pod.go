@@ -62,7 +62,7 @@ func CreatePod(ctx context.Context, cli client.Client, image string) (*corev1.Po
 				return nil, err
 			}
 
-			if res.Status.Phase == corev1.PodRunning {
+			if IfContainerRunning(res) {
 				return res, nil
 			}
 
@@ -134,7 +134,7 @@ func WaitPodRunning(ctx context.Context, cli client.Client, pod *corev1.Pod, tim
 				time.Sleep(time.Second)
 				continue
 			}
-			if pod.Status.Phase == corev1.PodRunning {
+			if IfPodRunning(pod) {
 				return nil
 			}
 			time.Sleep(time.Second)
@@ -176,14 +176,14 @@ WAIT:
 	for {
 		select {
 		case <-ctx.Done():
-			return e2eerr.ErrTimeout
+			return e2eerr.ErrWaitPodRunningTimeout
 		default:
 			err := cli.List(ctx, podList)
 			if err != nil {
 				continue
 			}
 			for _, pod := range podList.Items {
-				if pod.Status.Phase != corev1.PodRunning {
+				if !IfPodRunning(&pod) {
 					time.Sleep(time.Second)
 					goto WAIT
 				}
@@ -241,7 +241,7 @@ func IfPodListRestarted(pods *corev1.PodList) bool {
 				return false
 			}
 		}
-		if p.Status.Phase != corev1.PodRunning {
+		if !IfPodRunning(&p) {
 			return false
 		}
 	}
@@ -280,7 +280,7 @@ func DeletePodsUntilReady(ctx context.Context, cli client.Client, labels map[str
 			}
 
 			for _, p := range pl.Items {
-				if p.Status.Phase != corev1.PodRunning {
+				if !IfPodRunning(&p) {
 					time.Sleep(time.Second)
 					continue
 				}
@@ -306,4 +306,18 @@ func DeletePodList(ctx context.Context, cli client.Client, podList *corev1.PodLi
 		}
 	}
 	return nil
+}
+
+// IfContainerRunning check if the containers of the pod running
+func IfContainerRunning(pod *corev1.Pod) bool {
+	for _, c := range pod.Status.ContainerStatuses {
+		if c.State.Running == nil || !c.Ready {
+			return false
+		}
+	}
+	return true
+}
+
+func IfPodRunning(pod *corev1.Pod) bool {
+	return pod.Status.Phase == corev1.PodRunning
 }

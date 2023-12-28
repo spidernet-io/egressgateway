@@ -322,6 +322,52 @@ func WaitEgressPolicyStatusReady(ctx context.Context, cli client.Client, egp *eg
 	}
 }
 
+// WaitEgressClusterPolicyStatusReady waits for the EgressPolicy status.Eip to be allocated after the EgressPolicy is created
+func WaitEgressClusterPolicyStatusReady(ctx context.Context, cli client.Client, egcp *egressv1.EgressClusterPolicy, v4Enabled, v6Enabled bool, timeout time.Duration) error {
+	if !v4Enabled && !v6Enabled {
+		return fmt.Errorf("both v4 and v6 are not enabled")
+	}
+	ctx, cancel := context.WithTimeout(ctx, timeout)
+	defer cancel()
+
+	var v4Ok, v6Ok bool
+
+	for {
+		select {
+		case <-ctx.Done():
+			return fmt.Errorf("timeout to wait egressPolicy status ready")
+		default:
+			err := cli.Get(ctx, types.NamespacedName{Name: egcp.Name}, egcp)
+			if err != nil {
+				time.Sleep(time.Second / 2)
+				continue
+			}
+			if !egcp.Spec.EgressIP.UseNodeIP {
+				if v4Enabled && len(egcp.Status.Eip.Ipv4) != 0 {
+					v4Ok = true
+				}
+				if v6Enabled && len(egcp.Status.Eip.Ipv6) != 0 {
+					v6Ok = true
+				}
+			} else {
+				if len(egcp.Status.Eip.Ipv4) == 0 && len(egcp.Status.Eip.Ipv6) == 0 {
+					return nil
+				}
+			}
+			if v4Enabled && v6Enabled {
+				if v4Ok && v6Ok {
+					return nil
+				}
+			} else if v4Enabled && v4Ok {
+				return nil
+			} else if v6Enabled && v6Ok {
+				return nil
+			}
+			time.Sleep(time.Second / 2)
+		}
+	}
+}
+
 // CreateEgressPolicyWithEipAllocatorRR  creates an egressPolicy  and sets Spec.EgressIP.AllocatorPolicy to "rr"
 func CreateEgressPolicyWithEipAllocatorRR(ctx context.Context, cli client.Client, egw *egressv1.EgressGateway, labels map[string]string) (*egressv1.EgressPolicy, error) {
 	return CreateEgressPolicyCustom(ctx, cli,
