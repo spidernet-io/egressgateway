@@ -338,6 +338,42 @@ func TestIsSameIPs(t *testing.T) {
 			want:    true,
 			wantErr: false,
 		},
+		{
+			name: "ip a invalid",
+			args: args{
+				a: []string{"192.0.2.1", "192.0.2.2", "test"},
+				b: []string{"192.0.2.2", "192.0.2.1", "192.0.2.3"},
+			},
+			want:    false,
+			wantErr: true,
+		},
+		{
+			name: "ip b invalid",
+			args: args{
+				a: []string{"192.0.2.1", "192.0.2.2", "192.0.2.3"},
+				b: []string{"192.0.2.2", "192.0.2.1", "test"},
+			},
+			want:    false,
+			wantErr: true,
+		},
+		{
+			name: "len ip a not equal ip b",
+			args: args{
+				a: []string{"192.0.2.1", "192.0.2.2", "192.0.2.3"},
+				b: []string{"192.0.2.2", "192.0.2.1"},
+			},
+			want:    false,
+			wantErr: false,
+		},
+		{
+			name: "sort a not equal b",
+			args: args{
+				a: []string{"192.0.2.1", "192.0.2.2", "192.0.2.3"},
+				b: []string{"192.0.2.2", "192.0.2.1", "192.0.2.4"},
+			},
+			want:    false,
+			wantErr: false,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -746,6 +782,24 @@ func TestGetIPV4V6Cidr(t *testing.T) {
 			wantIPV6Cidrs: []string{"fd00::/120"},
 			wantErr:       false,
 		},
+		{
+			name: "invalid-v4-cidr",
+			args: args{
+				ipCidrs: []string{"test.test.test", "fd00::/120"},
+			},
+			wantIPV4Cidrs: nil,
+			wantIPV6Cidrs: nil,
+			wantErr:       true,
+		},
+		{
+			name: "invalid-v6-cidr",
+			args: args{
+				ipCidrs: []string{"10.6.1.0/24", "test"},
+			},
+			wantIPV4Cidrs: nil,
+			wantIPV6Cidrs: nil,
+			wantErr:       true,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -1069,4 +1123,49 @@ func ipsEqual(got, want []net.IP) bool {
 
 	// If the map is empty, all IPs were matched
 	return len(gotMap) == 0
+}
+
+func TestIsIPIncludedCidr(t *testing.T) {
+
+	type args struct {
+		ip   string
+		cidr string
+	}
+	tests := []struct {
+		name    string
+		args    args
+		want    bool
+		wantErr bool
+	}{
+		{
+			name: "invalid-ip",
+			args: args{
+				ip:   "12.12.12.12.12",
+				cidr: "10.10.0.1/16",
+			},
+			want:    false,
+			wantErr: true,
+		},
+		{
+			name: "invalid-cidr",
+			args: args{
+				ip:   "12.12.12.12",
+				cidr: "test",
+			},
+			want:    false,
+			wantErr: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := ip.IsIPIncludedCidr(tt.args.ip, tt.args.cidr)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("IsIPIncludedCidr() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if got != tt.want {
+				t.Errorf("IsIPIncludedCidr() got = %v, want %v", got, tt.want)
+			}
+		})
+	}
 }
