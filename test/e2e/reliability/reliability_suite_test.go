@@ -32,6 +32,7 @@ var (
 	cli client.Client
 
 	nodeNameList, workerNodes []string
+	nodeLabel                 map[string]string
 )
 
 var _ = BeforeSuite(func() {
@@ -59,6 +60,8 @@ var _ = BeforeSuite(func() {
 		}
 	}
 	Expect(len(workerNodes) > 1).To(BeTrue(), "this test case needs at lest 2 worker nodes")
+
+	nodeLabel = nodes.Items[0].Labels
 
 	// get egressgateway config
 	configMap := &corev1.ConfigMap{}
