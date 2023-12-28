@@ -3,6 +3,7 @@ module github.com/spidernet-io/egressgateway
 go 1.20
 
 require (
+	github.com/agiledragon/gomonkey/v2 v2.11.0
 	github.com/asaskevich/govalidator v0.0.0-20230301143203-a9d515a09cc2
 	github.com/cilium/ipam v0.0.0-20220824141044-46ef3d556735
 	github.com/go-faker/faker/v4 v4.2.0

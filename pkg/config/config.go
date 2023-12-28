@@ -186,22 +186,22 @@ func LoadConfig(isAgent bool) (*Config, error) {
 	if len(config.ConfigMapPath) > 0 {
 		configmapBytes, err := os.ReadFile(config.ConfigMapPath)
 		if nil != err {
-			return nil, fmt.Errorf("failed to read ConfigMap file %v, error: %v", config.ConfigMapPath, err)
+			return nil, fmt.Errorf("failed to read ConfigMap file %v, error: %w", config.ConfigMapPath, err)
 		}
 		if err := yaml.Unmarshal(configmapBytes, &config.FileConfig); nil != err {
-			return nil, fmt.Errorf("failed to parse ConfigMap data, error: %v", err)
+			return nil, fmt.Errorf("failed to parse ConfigMap data, error: %w", err)
 		}
 		if config.FileConfig.EnableIPv4 {
 			_, ipn, err := net.ParseCIDR(config.FileConfig.TunnelIpv4Subnet)
 			if err != nil {
-				return nil, fmt.Errorf("failed to parse TunnelIpv4Subnet: %v", err)
+				return nil, fmt.Errorf("failed to parse TunnelIpv4Subnet: %w", err)
 			}
 			config.FileConfig.TunnelIPv4Net = ipn
 		}
 		if config.FileConfig.EnableIPv6 {
 			_, ipn, err := net.ParseCIDR(config.FileConfig.TunnelIpv6Subnet)
 			if err != nil {
-				return nil, fmt.Errorf("failed to parse TunnelIpv6Subnet: %v", err)
+				return nil, fmt.Errorf("failed to parse TunnelIpv6Subnet: %w", err)
 			}
 			config.FileConfig.TunnelIPv6Net = ipn
 		}
@@ -243,7 +243,7 @@ func LoadConfig(isAgent bool) (*Config, error) {
 	// load kube config
 	config.KubeConfig, err = ctrl.GetConfig()
 	if err != nil {
-		return nil, fmt.Errorf("failed to load kubeconfig, error: %v", config)
+		return nil, fmt.Errorf("failed to load kubeconfig, error: %w", err)
 	}
 
 	// validate config
