@@ -72,6 +72,11 @@
     <label class="md-overlay" for="__drawer"></label>
     <div data-md-component="skip">
       
+        
+        <a href="#vxlan" class="md-skip">
+          跳转至
+        </a>
+      
     </div>
     <div data-md-component="announce">
       
@@ -437,6 +442,26 @@
 
               
             
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../usage/EgressGatewayFailover/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Failover
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -719,6 +744,17 @@
       
       
       
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  <span class="md-ellipsis">
+    Troubleshooting
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
       <a href="./" class="md-nav__link md-nav__link--active">
         
   
@@ -728,6 +764,63 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="目录">
+  
+  
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      目录
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#vxlan" class="md-nav__link">
+    VXLAN 速度
+  </a>
+  
+    <nav class="md-nav" aria-label="VXLAN 速度">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#benchmark" class="md-nav__link">
+    Benchmark
+  </a>
+  
+    <nav class="md-nav" aria-label="Benchmark">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#_1" class="md-nav__link">
+    物理机
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_2" class="md-nav__link">
+    虚拟机
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
       
     </li>
   
@@ -913,6 +1006,54 @@
   
   
   
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      目录
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#vxlan" class="md-nav__link">
+    VXLAN 速度
+  </a>
+  
+    <nav class="md-nav" aria-label="VXLAN 速度">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#benchmark" class="md-nav__link">
+    Benchmark
+  </a>
+  
+    <nav class="md-nav" aria-label="Benchmark">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#_1" class="md-nav__link">
+    物理机
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_2" class="md-nav__link">
+    虚拟机
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
 </nav>
                   </div>
                 </div>
@@ -931,7 +1072,133 @@
 
   <h1>Troubleshooting</h1>
 
-
+<h2 id="vxlan">VXLAN 速度</h2>
+<p>EgressGateway 使用了 vxlan 隧道，经过测试 vxlan 损耗在 10% 左右。如果您发现 EgressGateway 的速度不达标，可以执行如下步骤检查：</p>
+<ol>
+<li>确认宿主机节点到节点的速度符合预期；<ol>
+<li>vxlan 使用的宿主机的网卡的 offload 设置会对 vxlan 接口的速度产生较小的影响（在 10G 网卡测试中仅会有 0.5 Gbits/sec 的差距），可以执行 <code>ethtool --offload host-interface-name rx on tx on</code> 开启 offload。</li>
+</ol>
+</li>
+<li>vxlan 网卡的 offload 设置可以对 vxlan 接口速度产生较大的影响（在 10G 网卡测试中，不开启 2.5 Gbits/sec，开启 8.9 Gbits/sec），你可以运行 <code>ethtool -k egress.vxlan</code> 检查 checksum offload 是否关闭，并通过 helm values 的配置 <code>feature.vxlan.disableChecksumOffload</code> 为 <code>false</code> 开启 offload。</li>
+</ol>
+<h3 id="benchmark">Benchmark</h3>
+<h4 id="_1">物理机</h4>
+<p>以下是我们使用物理服务器做压测的数据。</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Name</th>
+<th style="text-align: left;">CPU</th>
+<th style="text-align: left;">MEM</th>
+<th style="text-align: left;">Interface</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">Node 1</td>
+<td style="text-align: left;">Intel(R) Xeon(R) CPU E5-2680 v4 @ 2.40GHz</td>
+<td style="text-align: left;">128G</td>
+<td style="text-align: left;">10G Mellanox</td>
+</tr>
+<tr>
+<td style="text-align: left;">Node 2</td>
+<td style="text-align: left;">Intel(R) Xeon(R) CPU E5-2680 v4 @ 2.40GHz</td>
+<td style="text-align: left;">128G</td>
+<td style="text-align: left;">10G Mellanox</td>
+</tr>
+<tr>
+<td style="text-align: left;">Node Target</td>
+<td style="text-align: left;">Intel(R) Xeon(R) CPU E5-2680 v4 @ 2.40GHz</td>
+<td style="text-align: left;">128G</td>
+<td style="text-align: left;">10G Mellanox</td>
+</tr>
+</tbody>
+</table>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Case</th>
+<th style="text-align: left;">Item</th>
+<th style="text-align: left;">Detail</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">case1</td>
+<td style="text-align: left;">node -&gt; node</td>
+<td style="text-align: left;"><code>9.44 Gbits/sec sender - 9.41 Gbits/sec receiver</code></td>
+</tr>
+<tr>
+<td style="text-align: left;">case2</td>
+<td style="text-align: left;">egress vxlan -&gt; egress vxlan</td>
+<td style="text-align: left;"><code>9.11 Gbits/sec sender - 9.09 Gbits/sec receiver</code></td>
+</tr>
+<tr>
+<td style="text-align: left;">case3</td>
+<td style="text-align: left;">pod -&gt; egress node -&gt; target</td>
+<td style="text-align: left;"><code>9.01 Gbits/sec sender - 8.98 Gbits/sec receiver</code></td>
+</tr>
+</tbody>
+</table>
+<p><img alt="egress-check" src="../../speed.svg" /></p>
+<h4 id="_2">虚拟机</h4>
+<p>以下是使用 VMWare 的虚拟机，限制 Node 规格为 4C8G 压测的数据，</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Name</th>
+<th style="text-align: left;">CPU</th>
+<th style="text-align: left;">MEM</th>
+<th style="text-align: left;">Interface</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">Node 1</td>
+<td style="text-align: left;">Intel(R) Xeon(R) Gold 5118 CPU @ 2.30GHz 4C</td>
+<td style="text-align: left;">8G</td>
+<td style="text-align: left;">VMXNET3</td>
+</tr>
+<tr>
+<td style="text-align: left;">Node 2</td>
+<td style="text-align: left;">Intel(R) Xeon(R) Gold 5118 CPU @ 2.30GHz 4C</td>
+<td style="text-align: left;">8G</td>
+<td style="text-align: left;">VMXNET3</td>
+</tr>
+<tr>
+<td style="text-align: left;">Node Target</td>
+<td style="text-align: left;">Intel(R) Xeon(R) Gold 5118 CPU @ 2.30GHz 4C</td>
+<td style="text-align: left;">8G</td>
+<td style="text-align: left;">VMXNET3</td>
+</tr>
+</tbody>
+</table>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Case</th>
+<th style="text-align: left;">Item</th>
+<th style="text-align: left;">Detail</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">case1</td>
+<td style="text-align: left;">node -&gt; node</td>
+<td style="text-align: left;"><code>2.99 Gbits/sec sender - 2.99 Gbits/sec receiver</code></td>
+</tr>
+<tr>
+<td style="text-align: left;">case2</td>
+<td style="text-align: left;">egress vxlan -&gt; egress vxlan</td>
+<td style="text-align: left;"><code>1.73 Gbits/sec sender - 1.71 Gbits/sec receiver</code></td>
+</tr>
+<tr>
+<td style="text-align: left;">case3</td>
+<td style="text-align: left;">pod -&gt; egress node -&gt; target</td>
+<td style="text-align: left;"><code>1.23 Gbits/sec sender - 1.22 Gbits/sec receiver</code></td>
+</tr>
+</tbody>
+</table>
 
 
 

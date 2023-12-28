@@ -416,6 +416,13 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#egressgateway_5" class="md-nav__link">
+    卸载 EgressGateway
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -537,6 +544,26 @@
   
   <span class="md-ellipsis">
     Cluster Default EgressGateway
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../EgressGatewayFailover/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Failover
   </span>
   
 
@@ -1084,6 +1111,13 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#egressgateway_5" class="md-nav__link">
+    卸载 EgressGateway
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -1365,6 +1399,11 @@ EgressPolicy 对象是租户级别的，因此，它务必创建在 selected 应
 </span></code></pre></div></p>
 </li>
 </ol>
+<h2 id="egressgateway_5">卸载 EgressGateway</h2>
+<p>为了保证业务不断流，<code>egressgateway</code> 中加入了 finalizer 机制，删除 <code>egressgateway</code> 时，如果存在 policy 引用此 <code>egressgateway</code>，<code>egressgateway</code> 会一直处于 deleting 状态, 直到 所有的 policy 被删除，finalizer 就会被自动删除。<br />
+  所以，如果要删除 <code>egressgateway</code>，建议使用如下步骤：
+  1. 删除所有引用 egressgateway 的 policy
+  2. 删除 egressgateway</p>
 
 
 
