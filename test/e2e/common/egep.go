@@ -14,6 +14,8 @@ import (
 	egressv1 "github.com/spidernet-io/egressgateway/pkg/k8s/apis/v1beta1"
 	e2eerr "github.com/spidernet-io/egressgateway/test/e2e/err"
 	"github.com/spidernet-io/egressgateway/test/e2e/tools"
+
+	. "github.com/onsi/ginkgo/v2"
 )
 
 func CheckEgressEndPointSliceStatus(ctx context.Context, cli client.Client, egp *egressv1.EgressPolicy) (bool, error) {
@@ -35,10 +37,15 @@ func CheckEgressEndPointSliceStatus(ctx context.Context, cli client.Client, egp 
 		if pod2Ep[v.Name].Pod != v.Name ||
 			pod2Ep[v.Name].Namespace != v.Namespace ||
 			pod2Ep[v.Name].Node != v.Spec.NodeName {
+			GinkgoWriter.Printf("pod2Ep[v.Name].Pod: %s\nv.Name: %s\n", pod2Ep[v.Name].Pod, v.Name)
+			GinkgoWriter.Printf("pod2Ep[v.Name].Namespace: %s\nv.Namespace: %s\n", pod2Ep[v.Name].Namespace, v.Namespace)
+			GinkgoWriter.Printf("pod2Ep[v.Name].Node: %s\nv.Spec.NodeName: %s\n", pod2Ep[v.Name].Node, v.Spec.NodeName)
 			ok++
 		}
 		ipv4s, ipv6s := GetPodIPs(&v)
 		if !tools.IsSameSlice(pod2Ep[v.Name].IPv4, ipv4s) || !tools.IsSameSlice(pod2Ep[v.Name].IPv6, ipv6s) {
+			GinkgoWriter.Printf("pod2Ep[v.Name].IPv4: %v\nipv4s: %v\n", pod2Ep[v.Name].IPv4, ipv4s)
+			GinkgoWriter.Printf("pod2Ep[v.Name].IPv6: %v\nipv6s: %v\n", pod2Ep[v.Name].IPv6, ipv6s)
 			ok++
 		}
 		if ok != 0 {
@@ -67,10 +74,16 @@ func CheckEgressClusterEndPointSliceStatus(ctx context.Context, cli client.Clien
 		if pod2Ep[v.Name].Pod != v.Name ||
 			pod2Ep[v.Name].Namespace != v.Namespace ||
 			pod2Ep[v.Name].Node != v.Spec.NodeName {
+			GinkgoWriter.Printf("pod2Ep[v.Name].Pod: %s\nv.Name: %s\n", pod2Ep[v.Name].Pod, v.Name)
+			GinkgoWriter.Printf("pod2Ep[v.Name].Namespace: %s\nv.Namespace: %s\n", pod2Ep[v.Name].Namespace, v.Namespace)
+			GinkgoWriter.Printf("pod2Ep[v.Name].Node: %s\nv.Spec.NodeName: %s\n", pod2Ep[v.Name].Node, v.Spec.NodeName)
 			ok++
 		}
 		ipv4s, ipv6s := GetPodIPs(&v)
 		if !tools.IsSameSlice(pod2Ep[v.Name].IPv4, ipv4s) || !tools.IsSameSlice(pod2Ep[v.Name].IPv6, ipv6s) {
+			GinkgoWriter.Printf("pod2Ep[v.Name].IPv4: %v\nipv4s: %v\n", pod2Ep[v.Name].IPv4, ipv4s)
+			GinkgoWriter.Printf("pod2Ep[v.Name].IPv6: %v\nipv6s: %v\n", pod2Ep[v.Name].IPv6, ipv6s)
+
 			ok++
 		}
 		if ok != 0 {

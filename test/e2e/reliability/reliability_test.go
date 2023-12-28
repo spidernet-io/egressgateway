@@ -18,7 +18,6 @@ import (
 	. "github.com/onsi/gomega"
 
 	appsv1 "k8s.io/api/apps/v1"
-	corev1 "k8s.io/api/core/v1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 
@@ -49,9 +48,8 @@ var _ = Describe("Reliability", Serial, Label("Reliability"), func() {
 			labels = map[string]string{"eg-reliability": "true"}
 			selector := egressv1.NodeSelector{Selector: &v1.LabelSelector{MatchLabels: labels}}
 
-			Eventually(ctx, func() error {
-				return common.LabelNodes(ctx, cli, egNodes, labels)
-			}).WithTimeout(time.Second * 6).WithPolling(time.Second * 2).Should(Succeed())
+			err = common.LabelNodes(ctx, cli, egNodes, labels)
+			Expect(err).NotTo(HaveOccurred())
 
 			ipNum = 3
 			pool, err = common.GenIPPools(ctx, cli, egressConfig.EnableIPv4, egressConfig.EnableIPv6, int64(ipNum), 2)
@@ -98,7 +96,7 @@ var _ = Describe("Reliability", Serial, Label("Reliability"), func() {
 
 			// start up all nodes if some nodes not ready
 			GinkgoWriter.Println("PowerOnNodesUntilClusterReady")
-			Expect(common.PowerOnNodesUntilClusterReady(ctx, cli, workerNodes, time.Minute*3, time.Minute*3)).NotTo(HaveOccurred())
+			Expect(common.PowerOnNodesUntilClusterReady(ctx, cli, workerNodes, time.Minute, time.Minute)).NotTo(HaveOccurred())
 
 			// unlabel nodes
 			GinkgoWriter.Println("unLabel nodes")
@@ -298,146 +296,6 @@ var _ = Describe("Reliability", Serial, Label("Reliability"), func() {
 			Entry("restart calico-kube-controllers", constant.CalicoControllerLabel, time.Minute),
 		)
 	})
-
-	Context("kwok", Serial, func() {
-		var ctx context.Context
-		var err error
-
-		// kwok
-		var (
-			kNodesNum int
-			kwokNodes *corev1.NodeList
-		)
-		// deploy
-		var (
-			deploy         *appsv1.Deployment
-			deployReplicas int
-			deployName     string
-		)
-
-		// gateway
-		var (
-			egw   *egressv1.EgressGateway
-			ipNum int
-			pool  egressv1.Ippools
-		)
-
-		// policy
-		var (
-			egp  *egressv1.EgressPolicy
-			egcp *egressv1.EgressClusterPolicy
-		)
-
-		BeforeEach(func() {
-			ctx = context.Background()
-			kNodesNum = 10
-			// deploy
-			deployReplicas = 50
-			deployName = "dp-" + uuid.NewString()
-
-			// gateway
-			ipNum = 3
-
-			// create deploy
-			deploy, err = common.CreateDeploy(ctx, cli, deployName, config.Image, deployReplicas, time.Minute*5)
-			Expect(err).NotTo(HaveOccurred())
-			Expect(deploy).NotTo(BeNil())
-			GinkgoWriter.Printf("succeeded to create the deploy %s\n", deploy.Name)
-
-			// create EgressGateway
-			pool, err = common.GenIPPools(ctx, cli, egressConfig.EnableIPv4, egressConfig.EnableIPv6, int64(ipNum), 1)
-			Expect(err).NotTo(HaveOccurred())
-			nodeSelector := egressv1.NodeSelector{Selector: &v1.LabelSelector{MatchLabels: nodeLabel}}
-
-			egw, err = common.CreateGatewayNew(ctx, cli, "egw-"+uuid.NewString(), pool, nodeSelector)
-			Expect(err).NotTo(HaveOccurred())
-			GinkgoWriter.Printf("succeeded to create the egressGateway: %s\n", egw.Name)
-
-			// create 10 kwok node
-			Expect(common.CreateKwokNodes(ctx, cli, kNodesNum)).NotTo(HaveOccurred())
-			GinkgoWriter.Println("succeeded to create the kwok nodes")
-
-			// get kwok nodes
-			kwokNodes, err = common.GetKwokNodes(ctx, cli)
-			Expect(err).NotTo(HaveOccurred())
-
-			DeferCleanup(func() {
-				// delete deploy
-				if deploy != nil {
-					GinkgoWriter.Printf("delete deploy %s\n", deploy.Name)
-					Expect(common.WaitDeployDeleted(ctx, cli, deploy, time.Minute*5)).NotTo(HaveOccurred())
-				}
-
-				// delete policy
-				if egp != nil {
-					GinkgoWriter.Printf("delete policy %s\n", egp.Name)
-					Expect(common.DeleteEgressPolicies(ctx, cli, []*egressv1.EgressPolicy{egp})).NotTo(HaveOccurred())
-				}
-
-				// delete cluster policy
-				if egcp != nil {
-					GinkgoWriter.Printf("delete cluster policy %s\n", egcp.Name)
-					Expect(common.DeleteEgressClusterPolicies(ctx, cli, []*egressv1.EgressClusterPolicy{egcp})).NotTo(HaveOccurred())
-				}
-
-				// delete gateway
-				if egw != nil {
-					GinkgoWriter.Printf("delete gateway %s\n", egw.Name)
-					Expect(common.DeleteEgressGateway(ctx, cli, egw, time.Second*5)).NotTo(HaveOccurred())
-				}
-
-				// delete kwok nodes
-				GinkgoWriter.Println("delete kwok nodes")
-				Expect(common.DeleteKwokNodes(ctx, cli, kwokNodes)).NotTo(HaveOccurred())
-			})
-		})
-
-		Context("check eip", Serial, func() {
-			It("namespace-level policy", Label("R00001", "R00002"), func() {
-				// create policy
-				egp, err = createPolicy(ctx, egw, deploy)
-				Expect(err).NotTo(HaveOccurred())
-				GinkgoWriter.Printf("succeeded to create the policy %s\n", egp.Name)
-
-				// check the export ip of the pods on the real nodes
-				GinkgoWriter.Println("check the export ip of the pods on the real nodes")
-				err = common.CheckEgressIPOfNodesPodList(ctx, cli, config, egressConfig, deploy.Spec.Template.Labels, nodeNameList, egp.Status.Eip.Ipv4, egp.Status.Eip.Ipv6, true)
-				Expect(err).NotTo(HaveOccurred())
-
-				// restart deploy
-				GinkgoWriter.Printf("restart the deployment %s\n", deploy.Name)
-				err = common.DeletePodsUntilReady(ctx, cli, deploy.Spec.Template.Labels, time.Minute*10)
-				Expect(err).NotTo(HaveOccurred())
-
-				// check the export ip of the pods on the real nodes again
-				GinkgoWriter.Println("check the export ip of the pods on the real nodes again")
-				err = common.CheckEgressIPOfNodesPodList(ctx, cli, config, egressConfig, deploy.Spec.Template.Labels, nodeNameList, egp.Status.Eip.Ipv4, egp.Status.Eip.Ipv6, true)
-				Expect(err).NotTo(HaveOccurred())
-			})
-
-			It("cluster-level policy", Label("R00001", "R00002"), func() {
-				// create policy
-				egcp, err = createClusterPolicy(ctx, egw, deploy)
-				Expect(err).NotTo(HaveOccurred())
-				GinkgoWriter.Printf("succeeded to create the policy %s\n", egcp.Name)
-
-				// check the export ip of the pods on the real nodes
-				GinkgoWriter.Println("check the export ip of the pods on the real nodes")
-				err = common.CheckEgressIPOfNodesPodList(ctx, cli, config, egressConfig, deploy.Spec.Template.Labels, nodeNameList, egcp.Status.Eip.Ipv4, egcp.Status.Eip.Ipv6, true)
-				Expect(err).NotTo(HaveOccurred())
-
-				// restart deploy
-				GinkgoWriter.Printf("restart the deployment %s\n", deploy.Name)
-				err = common.DeletePodsUntilReady(ctx, cli, deploy.Spec.Template.Labels, time.Minute*10)
-				Expect(err).NotTo(HaveOccurred())
-
-				// check the export ip of the pods on the real nodes again
-				GinkgoWriter.Println("check the export ip of the pods on the real nodes again")
-				err = common.CheckEgressIPOfNodesPodList(ctx, cli, config, egressConfig, deploy.Spec.Template.Labels, nodeNameList, egcp.Status.Eip.Ipv4, egcp.Status.Eip.Ipv6, true)
-				Expect(err).NotTo(HaveOccurred())
-			})
-		})
-	})
 })
 
 func checkGatewayStatus(ctx context.Context, cli client.Client, pool egressv1.Ippools, ipNum int, gatewayNode string, otherNodes, notReadyNodes []string, policy *egressv1.EgressPolicy, egw *egressv1.EgressGateway, timeout time.Duration) {
@@ -503,55 +361,4 @@ func checkGatewayStatus(ctx context.Context, cli client.Client, pool egressv1.Ip
 	err := common.CheckEgressGatewayStatusSynced(ctx, cli, egw, expectGatewayStatus, timeout)
 	Expect(err).NotTo(HaveOccurred(), fmt.Sprintf("expect: %v\ngot: %v\n", *expectGatewayStatus, egw.Status))
 	GinkgoWriter.Println("succeeded to check gateway status")
-}
-
-func createPolicy(ctx context.Context, egw *egressv1.EgressGateway, deploy *appsv1.Deployment) (*egressv1.EgressPolicy, error) {
-	// create policy
-	egp, err := common.CreateEgressPolicyCustom(ctx, cli,
-		func(egp *egressv1.EgressPolicy) {
-			egp.Spec.EgressGatewayName = egw.Name
-
-			if egressConfig.EnableIPv4 {
-				egp.Spec.EgressIP.IPv4 = egw.Spec.Ippools.Ipv4DefaultEIP
-			}
-			if egressConfig.EnableIPv6 {
-				egp.Spec.EgressIP.IPv6 = egw.Spec.Ippools.Ipv6DefaultEIP
-			}
-			egp.Spec.AppliedTo.PodSelector = deploy.Spec.Selector
-		})
-	if err != nil {
-		return nil, err
-	}
-
-	// wait policy status ready
-	err = common.WaitEgressPolicyStatusReady(ctx, cli, egp, egressConfig.EnableIPv4, egressConfig.EnableIPv6, time.Second*20)
-	if err != nil {
-		return nil, err
-	}
-	return egp, nil
-}
-
-func createClusterPolicy(ctx context.Context, egw *egressv1.EgressGateway, deploy *appsv1.Deployment) (*egressv1.EgressClusterPolicy, error) {
-	// create policy
-	egcp, err := common.CreateEgressClusterPolicyCustom(ctx, cli,
-		func(egcp *egressv1.EgressClusterPolicy) {
-			egcp.Spec.EgressGatewayName = egw.Name
-			if egressConfig.EnableIPv4 {
-				egcp.Spec.EgressIP.IPv4 = egw.Spec.Ippools.Ipv4DefaultEIP
-			}
-			if egressConfig.EnableIPv6 {
-				egcp.Spec.EgressIP.IPv6 = egw.Spec.Ippools.Ipv6DefaultEIP
-			}
-			egcp.Spec.AppliedTo.PodSelector = deploy.Spec.Selector
-		})
-	if err != nil {
-		return nil, err
-	}
-
-	// wait policy status ready
-	err = common.WaitEgressClusterPolicyStatusReady(ctx, cli, egcp, egressConfig.EnableIPv4, egressConfig.EnableIPv6, time.Second*20)
-	if err != nil {
-		return nil, err
-	}
-	return egcp, nil
 }

@@ -8,7 +8,5 @@ import (
 )
 
 var (
-	ErrTimeout               = errors.New("error timeout")
-	ErrWaitNodeOnTimeout     = errors.New("timeout waiting node to be ready timeout")
-	ErrWaitPodRunningTimeout = errors.New("timeout waiting for pod running")
+	ErrTimeout = errors.New("error timeout")
 )

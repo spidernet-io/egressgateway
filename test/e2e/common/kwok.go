@@ -4,12 +4,13 @@
 package common
 
 import (
-	"context"
 	"strconv"
 
 	corev1 "k8s.io/api/core/v1"
-	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+
+	"github.com/spidernet-io/e2eframework/framework"
 )
 
 func GenerateKwokNodeYaml(n int) *corev1.Node {
@@ -37,7 +38,7 @@ func GenerateKwokNodeYaml(n int) *corev1.Node {
 		},
 		Spec: corev1.NodeSpec{
 			Taints: []corev1.Taint{
-				// KwokNodeTaint,
+				KwokNodeTaint,
 			},
 		},
 		Status: corev1.NodeStatus{
@@ -50,28 +51,23 @@ func GenerateKwokNodeYaml(n int) *corev1.Node {
 	return node
 }
 
-func CreateKwokNodes(ctx context.Context, cli client.Client, n int) error {
+func CreateKwokNodes(f *framework.Framework, n int) error {
 	for i := 0; i < n; i++ {
-		err := cli.Create(ctx, GenerateKwokNodeYaml(i))
-		if err != nil {
-			return err
+		e := f.CreateResource(GenerateKwokNodeYaml(i))
+		if e != nil {
+			return e
 		}
 	}
 	return nil
 }
 
-func GetKwokNodes(ctx context.Context, cli client.Client) (*corev1.NodeList, error) {
-	nodeList := new(corev1.NodeList)
-	err := cli.List(ctx, nodeList, client.MatchingLabels(KwokNodeLabel))
-	if err != nil {
-		return nil, err
-	}
-	return nodeList, nil
+func GetKwokNodes(f *framework.Framework) (*corev1.NodeList, error) {
+	return f.GetNodeList(client.MatchingLabels(KwokNodeLabel))
 }
 
-func DeleteKwokNodes(ctx context.Context, cli client.Client, nodes *corev1.NodeList) error {
+func DeleteKwokNodes(f *framework.Framework, nodes *corev1.NodeList) error {
 	for _, node := range nodes.Items {
-		err := DeleteObj(ctx, cli, &node)
+		err := f.DeleteResource(&node)
 		if err != nil {
 			return err
 		}

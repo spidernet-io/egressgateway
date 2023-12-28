@@ -5,6 +5,7 @@ package common
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	appsv1 "k8s.io/api/apps/v1"
@@ -18,8 +19,8 @@ import (
 	e2eerr "github.com/spidernet-io/egressgateway/test/e2e/err"
 )
 
-func CreateDeploy(ctx context.Context, cli client.Client, name string, image string, repolicas int, timeout time.Duration) (*appsv1.Deployment, error) {
-	ctx, cancel := context.WithTimeout(ctx, timeout)
+func CreateDeploy(ctx context.Context, cli client.Client, name string, image string, repolicas int) (*appsv1.Deployment, error) {
+	ctx, cancel := context.WithTimeout(ctx, time.Second*20)
 	defer cancel()
 
 	var terminationGracePeriodSeconds int64 = 0
@@ -57,7 +58,7 @@ func CreateDeploy(ctx context.Context, cli client.Client, name string, image str
 		select {
 		case <-ctx.Done():
 			_ = DeleteObj(context.Background(), cli, res)
-			return nil, e2eerr.ErrTimeout
+			return nil, fmt.Errorf("create DaemonSet time out")
 		default:
 			err := cli.Get(ctx, types.NamespacedName{Namespace: res.Namespace, Name: res.Name}, res)
 			if err != nil {
@@ -97,11 +98,6 @@ func WaitDeployDeleted(ctx context.Context, cli client.Client, deploy *appsv1.De
 		default:
 			err = cli.Get(ctx, types.NamespacedName{Name: deploy.Name, Namespace: deploy.Namespace}, dp)
 			if !apiserrors.IsNotFound(err) {
-				time.Sleep(time.Second / 2)
-				continue
-			}
-			pl, err := GetNodesPodList(ctx, cli, deploy.Spec.Template.Labels, []string{})
-			if err != nil || len(pl.Items) != 0 {
 				time.Sleep(time.Second / 2)
 				continue
 			}

@@ -92,7 +92,7 @@ var _ = Describe("Egressendpointslice", func() {
 		It("test the namespace-level policy", func() {
 			// create deploy
 			deployName := "deploy-" + uuid.NewString()
-			deploy, err = common.CreateDeploy(ctx, cli, deployName, config.Image, podNum, time.Second*20)
+			deploy, err = common.CreateDeploy(ctx, cli, deployName, config.Image, podNum)
 			Expect(err).NotTo(HaveOccurred(), fmt.Sprintf("failed to create daemonset %s\n", deployName))
 			GinkgoWriter.Printf("succeeded to create deploy %s\n", deploy.Name)
 
@@ -106,7 +106,7 @@ var _ = Describe("Egressendpointslice", func() {
 			Expect(err).NotTo(HaveOccurred())
 
 			// create deploy agen
-			deploy, err = common.CreateDeploy(ctx, cli, deployName, config.Image, podNum, time.Second*20)
+			deploy, err = common.CreateDeploy(ctx, cli, deployName, config.Image, podNum)
 			Expect(err).NotTo(HaveOccurred(), fmt.Sprintf("failed to create daemonset %s\n", deployName))
 			GinkgoWriter.Printf("succeeded to create deploy %s\n", deploy.Name)
 
@@ -133,7 +133,7 @@ var _ = Describe("Egressendpointslice", func() {
 		It("test the cluster-level policy", func() {
 			// create deploy
 			deployName := "deploy-" + uuid.NewString()
-			deploy, err = common.CreateDeploy(ctx, cli, deployName, config.Image, podNum, time.Second*20)
+			deploy, err = common.CreateDeploy(ctx, cli, deployName, config.Image, podNum)
 			Expect(err).NotTo(HaveOccurred(), fmt.Sprintf("failed to create daemonset %s\n", deployName))
 			GinkgoWriter.Printf("succeeded to create deploy %s\n", deploy.Name)
 
@@ -147,7 +147,7 @@ var _ = Describe("Egressendpointslice", func() {
 			Expect(err).NotTo(HaveOccurred())
 
 			// create deploy again
-			deploy, err = common.CreateDeploy(ctx, cli, deployName, config.Image, podNum, time.Second*20)
+			deploy, err = common.CreateDeploy(ctx, cli, deployName, config.Image, podNum)
 			Expect(err).NotTo(HaveOccurred(), fmt.Sprintf("failed to create daemonset %s\n", deployName))
 			GinkgoWriter.Printf("succeeded to create deploy %s\n", deploy.Name)
 
