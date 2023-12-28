@@ -1,7 +1,7 @@
 // Copyright 2022 Authors of spidernet-io
 // SPDX-License-Identifier: Apache-2.0
 
-package controller
+package tunnel
 
 import (
 	"context"
@@ -64,13 +64,11 @@ var (
 	egressTunnelFinalizers = "egressgateway.spidernet.io/egresstunnel"
 )
 
-func egressTunnelControllerMetricCollectors() []prometheus.Collector {
-	return []prometheus.Collector{
-		countNumIPAllocateNextCalls,
-		countNumIPReleaseCalls,
-		countNumMarkAllocateNextCalls,
-		countNumMarkReleaseCalls,
-	}
+var EgressTunnelControllerMetricCollectors = []prometheus.Collector{
+	countNumIPAllocateNextCalls,
+	countNumIPReleaseCalls,
+	countNumMarkAllocateNextCalls,
+	countNumMarkReleaseCalls,
 }
 
 type egReconciler struct {
@@ -656,7 +654,7 @@ func (r *egReconciler) Start(ctx context.Context) error {
 	return nil
 }
 
-func newEgressTunnelController(mgr manager.Manager, log logr.Logger, cfg *config.Config) error {
+func NewEgressTunnelController(mgr manager.Manager, log logr.Logger, cfg *config.Config) error {
 	if cfg == nil {
 		return fmt.Errorf("cfg can not be nil")
 	}

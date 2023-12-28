@@ -1,7 +1,7 @@
 // Copyright 2022 Authors of spidernet-io
 // SPDX-License-Identifier: Apache-2.0
 
-package controller
+package policy
 
 import (
 	"context"
@@ -22,20 +22,20 @@ import (
 	"github.com/spidernet-io/egressgateway/pkg/utils"
 )
 
-type egpReconciler struct {
+type egcpReconciler struct {
 	client client.Client
 	log    logr.Logger
 	config *config.Config
 }
 
-func (r *egpReconciler) Reconcile(ctx context.Context, req reconcile.Request) (reconcile.Result, error) {
+func (r *egcpReconciler) Reconcile(ctx context.Context, req reconcile.Request) (reconcile.Result, error) {
 	kind, newReq, err := utils.ParseKindWithReq(req)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
 
 	log := r.log.WithValues("name", newReq.Name, "kind", kind)
-	log.V(1).Info("reconciling")
+	log.Info("reconciling")
 	switch kind {
 	case "EgressGateway":
 		return r.reconcileEGW(ctx, newReq, log)
@@ -44,10 +44,10 @@ func (r *egpReconciler) Reconcile(ctx context.Context, req reconcile.Request) (r
 	}
 }
 
-// reconcileEN reconcile EgressGateway
+// reconcileEN reconcile egressgateway
 // goal:
-// - update EgressPolicy
-func (r *egpReconciler) reconcileEGW(ctx context.Context, req reconcile.Request, log logr.Logger) (reconcile.Result, error) {
+// - update egressclusterpolicy
+func (r *egcpReconciler) reconcileEGW(ctx context.Context, req reconcile.Request, log logr.Logger) (reconcile.Result, error) {
 	deleted := false
 	egw := new(v1beta1.EgressGateway)
 	err := r.client.Get(ctx, req.NamespacedName, egw)
@@ -63,19 +63,19 @@ func (r *egpReconciler) reconcileEGW(ctx context.Context, req reconcile.Request,
 		return reconcile.Result{Requeue: false}, nil
 	}
 
-	egpList := &v1beta1.EgressPolicyList{}
-	if err := r.client.List(ctx, egpList); err != nil {
+	egcpList := &v1beta1.EgressClusterPolicyList{}
+	if err := r.client.List(ctx, egcpList); err != nil {
 		log.Error(err, "failed to list")
 		return reconcile.Result{Requeue: true}, err
 	}
 
-	for _, item := range egpList.Items {
+	for _, item := range egcpList.Items {
 		if item.Spec.EgressGatewayName == egw.Name {
-			newEGP := item.DeepCopy()
+			newEGCP := item.DeepCopy()
 
-			newEGP.Status.Eip.Ipv4 = ""
-			newEGP.Status.Eip.Ipv6 = ""
-			newEGP.Status.Node = ""
+			newEGCP.Status.Eip.Ipv4 = ""
+			newEGCP.Status.Eip.Ipv6 = ""
+			newEGCP.Status.Node = ""
 
 			policy := v1beta1.Policy{Name: item.Name, Namespace: item.Namespace}
 			eipStatus, isExist := egressgateway.GetEIPStatusByPolicy(policy, *egw)
@@ -83,18 +83,18 @@ func (r *egpReconciler) reconcileEGW(ctx context.Context, req reconcile.Request,
 				for _, eip := range eipStatus.Eips {
 					for _, p := range eip.Policies {
 						if p == policy {
-							newEGP.Status.Eip.Ipv4 = eip.IPv4
-							newEGP.Status.Eip.Ipv6 = eip.IPv6
-							newEGP.Status.Node = eipStatus.Name
+							newEGCP.Status.Eip.Ipv4 = eip.IPv4
+							newEGCP.Status.Eip.Ipv6 = eip.IPv6
+							newEGCP.Status.Node = eipStatus.Name
 						}
 					}
 				}
 			}
 
-			log.V(1).Info("update egresspolicy status", "status", newEGP.Status)
-			err = r.client.Status().Update(ctx, newEGP)
+			log.V(1).Info("update egressclusterpolicy status", "status", newEGCP.Status)
+			err = r.client.Status().Update(ctx, newEGCP)
 			if err != nil {
-				log.Error(err, "update egresspolicy status", "status", newEGP.Status)
+				log.Error(err, "update egressclusterpolicy status", "status", newEGCP.Status)
 				return reconcile.Result{Requeue: true}, err
 			}
 		}
@@ -103,19 +103,15 @@ func (r *egpReconciler) reconcileEGW(ctx context.Context, req reconcile.Request,
 	return reconcile.Result{Requeue: false}, nil
 }
 
-func newEgressPolicyController(mgr manager.Manager, log logr.Logger, cfg *config.Config) error {
+func NewEgressClusterPolicyController(mgr manager.Manager, log logr.Logger, cfg *config.Config) error {
 	if cfg == nil {
 		return fmt.Errorf("cfg can not be nil")
 	}
 
-	r := &egpReconciler{
-		client: mgr.GetClient(),
-		log:    log,
-		config: cfg,
-	}
+	log.Info("new egressclusterpolicy controller")
 
-	log.Info("new egress policy controller")
-	c, err := controller.New("egresspolicy", mgr, controller.Options{Reconciler: r})
+	r := &egcpReconciler{client: mgr.GetClient(), log: log, config: cfg}
+	c, err := controller.New("egressclusterpolicy", mgr, controller.Options{Reconciler: r})
 	if err != nil {
 		return err
 	}

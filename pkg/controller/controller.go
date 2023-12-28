@@ -6,6 +6,9 @@ package controller
 import (
 	"context"
 	"fmt"
+	"github.com/spidernet-io/egressgateway/pkg/controller/endpoint"
+	"github.com/spidernet-io/egressgateway/pkg/controller/policy"
+	"github.com/spidernet-io/egressgateway/pkg/controller/tunnel"
 
 	"github.com/go-logr/logr"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -69,17 +72,17 @@ func New(cfg *config.Config) (types.Service, error) {
 		return nil, fmt.Errorf("failed to create egress gateway controller: %w", err)
 	}
 
-	err = newEgressPolicyController(mgr, log, cfg)
+	err = policy.NewEgressPolicyController(mgr, log, cfg)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create egress policy controller: %w", err)
 	}
 
-	err = newEgressClusterPolicyController(mgr, log, cfg)
+	err = policy.NewEgressClusterPolicyController(mgr, log, cfg)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create egress cluster policy controller: %w", err)
 	}
 
-	err = newEgressTunnelController(mgr, log, cfg)
+	err = tunnel.NewEgressTunnelController(mgr, log, cfg)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create egress tunnel controller: %w", err)
 	}
@@ -88,12 +91,12 @@ func New(cfg *config.Config) (types.Service, error) {
 		return nil, fmt.Errorf("failed to create egress cluster info controller: %w", err)
 	}
 
-	err = newEgressEndpointSliceController(mgr, log, cfg)
+	err = endpoint.NewEgressEndpointSliceController(mgr, log, cfg)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create endpoint slice controller: %w", err)
 	}
 
-	err = newEgressClusterEpSliceController(mgr, log, cfg)
+	err = endpoint.NewEgressClusterEpSliceController(mgr, log, cfg)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create cluster endpoint slice controller: %w", err)
 	}
