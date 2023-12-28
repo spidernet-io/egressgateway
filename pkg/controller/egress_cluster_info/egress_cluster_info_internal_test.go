@@ -5,23 +5,26 @@ package egressclusterinfo
 
 import (
 	"context"
+	"testing"
 
 	"github.com/go-logr/logr"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/client-go/rest"
+	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
+	"sigs.k8s.io/controller-runtime/pkg/manager"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
-	corev1 "k8s.io/api/core/v1"
-
-	calicov1 "github.com/tigera/operator/pkg/apis/crd.projectcalico.org/v1"
-
-	egressv1beta1 "github.com/spidernet-io/egressgateway/pkg/k8s/apis/v1beta1"
+	"github.com/spidernet-io/egressgateway/pkg/config"
+	egressv1 "github.com/spidernet-io/egressgateway/pkg/k8s/apis/v1beta1"
+	"github.com/spidernet-io/egressgateway/pkg/logger"
 	"github.com/spidernet-io/egressgateway/pkg/schema"
+	calicov1 "github.com/tigera/operator/pkg/apis/crd.projectcalico.org/v1"
 )
 
 var _ = Describe("EgressClusterInfo", Serial, Label("EgressClusterInfo UT"), func() {
@@ -31,7 +34,7 @@ var _ = Describe("EgressClusterInfo", Serial, Label("EgressClusterInfo UT"), fun
 		// err     error
 		builder *fake.ClientBuilder
 		r       *eciReconciler
-		egci    *egressv1beta1.EgressClusterInfo
+		egci    *egressv1.EgressClusterInfo
 		objs    []client.Object
 		// cli     client.WithWatch
 		controllerManagerPod, controllerManagerPodV4, controllerManagerPodV6, controllerManagerPodNoCommand, controllerManagerPodNoContainer *corev1.Pod
@@ -52,15 +55,15 @@ var _ = Describe("EgressClusterInfo", Serial, Label("EgressClusterInfo UT"), fun
 		// eciReconciler
 		r = &eciReconciler{
 			// mgr:           mgr,
-			eci:           new(egressv1beta1.EgressClusterInfo),
+			eci:           new(egressv1.EgressClusterInfo),
 			log:           logr.Logger{},
-			k8sPodCidr:    make(map[string]egressv1beta1.IPListPair),
+			k8sPodCidr:    make(map[string]egressv1.IPListPair),
 			v4ClusterCidr: make([]string, 0),
 			v6ClusterCidr: make([]string, 0),
 		}
 
 		// egci
-		egci = &egressv1beta1.EgressClusterInfo{
+		egci = &egressv1.EgressClusterInfo{
 			TypeMeta: metav1.TypeMeta{
 				Kind:       "egressclusterinfos",
 				APIVersion: "egressgateway.spidernet.io/v1beta1",
@@ -68,7 +71,7 @@ var _ = Describe("EgressClusterInfo", Serial, Label("EgressClusterInfo UT"), fun
 			ObjectMeta: metav1.ObjectMeta{
 				Name: egciName,
 			},
-			// Spec: egressv1beta1.EgressClusterInfoSpec{
+			// Spec: egressv1.EgressClusterInfoSpec{
 			// 	ExtraCidr: []string{"10.10.0.0/16"},
 			// },
 		}
@@ -241,7 +244,7 @@ var _ = Describe("EgressClusterInfo", Serial, Label("EgressClusterInfo UT"), fun
 			Expect(res).To(Equal(reconcile.Result{}))
 		})
 
-		DescribeTable("when egci.Spec.AutoDetec.PodCidrMode", func(isOK bool, prepare func(egci *egressv1beta1.EgressClusterInfo, r *eciReconciler)) {
+		DescribeTable("when egci.Spec.AutoDetec.PodCidrMode", func(isOK bool, prepare func(egci *egressv1.EgressClusterInfo, r *eciReconciler)) {
 			prepare(egci, r)
 			res, err := r.Reconcile(ctx, reconcile.Request{NamespacedName: types.NamespacedName{Namespace: kindEGCI + "/", Name: egciName}})
 			if isOK {
@@ -253,9 +256,9 @@ var _ = Describe("EgressClusterInfo", Serial, Label("EgressClusterInfo UT"), fun
 			}
 		},
 			// when egci.Spec.AutoDetect.PodCidrMode is CniTypeCalico
-			Entry("CniTypeCalico success", true, func(egci *egressv1beta1.EgressClusterInfo, r *eciReconciler) {
+			Entry("CniTypeCalico success", true, func(egci *egressv1.EgressClusterInfo, r *eciReconciler) {
 				// set egci
-				egci.Spec.AutoDetect.PodCidrMode = egressv1beta1.CniTypeCalico
+				egci.Spec.AutoDetect.PodCidrMode = egressv1.CniTypeCalico
 
 				// set eciReconciler
 				r.isWatchingCalico.Store(true)
@@ -266,9 +269,9 @@ var _ = Describe("EgressClusterInfo", Serial, Label("EgressClusterInfo UT"), fun
 			}),
 
 			// when egci.Spec.AutoDetect.PodCidrMode is CniTypeK8s
-			Entry("CniTypeK8s fail with no commands", false, func(egci *egressv1beta1.EgressClusterInfo, r *eciReconciler) {
+			Entry("CniTypeK8s fail with no commands", false, func(egci *egressv1.EgressClusterInfo, r *eciReconciler) {
 				// set egci
-				egci.Spec.AutoDetect.PodCidrMode = egressv1beta1.CniTypeK8s
+				egci.Spec.AutoDetect.PodCidrMode = egressv1.CniTypeK8s
 
 				// set eciReconciler
 				objs = []client.Object{controllerManagerPodNoCommand, egci}
@@ -278,9 +281,9 @@ var _ = Describe("EgressClusterInfo", Serial, Label("EgressClusterInfo UT"), fun
 			}),
 
 			// when egci.Spec.AutoDetect.PodCidrMode is CniTypeK8s
-			Entry("CniTypeK8s fail with no containers", false, func(egci *egressv1beta1.EgressClusterInfo, r *eciReconciler) {
+			Entry("CniTypeK8s fail with no containers", false, func(egci *egressv1.EgressClusterInfo, r *eciReconciler) {
 				// set egci
-				egci.Spec.AutoDetect.PodCidrMode = egressv1beta1.CniTypeK8s
+				egci.Spec.AutoDetect.PodCidrMode = egressv1.CniTypeK8s
 
 				// set eciReconciler
 				objs = []client.Object{controllerManagerPodNoContainer, egci}
@@ -290,9 +293,9 @@ var _ = Describe("EgressClusterInfo", Serial, Label("EgressClusterInfo UT"), fun
 			}),
 
 			// when egci.Spec.AutoDetect.PodCidrMode is CniTypeK8s
-			Entry("CniTypeK8s success dual", true, func(egci *egressv1beta1.EgressClusterInfo, r *eciReconciler) {
+			Entry("CniTypeK8s success dual", true, func(egci *egressv1.EgressClusterInfo, r *eciReconciler) {
 				// set egci
-				egci.Spec.AutoDetect.PodCidrMode = egressv1beta1.CniTypeK8s
+				egci.Spec.AutoDetect.PodCidrMode = egressv1.CniTypeK8s
 
 				// set eciReconciler
 				objs = []client.Object{controllerManagerPod, egci}
@@ -302,9 +305,9 @@ var _ = Describe("EgressClusterInfo", Serial, Label("EgressClusterInfo UT"), fun
 			}),
 
 			// when egci.Spec.AutoDetect.PodCidrMode is CniTypeK8s
-			Entry("CniTypeK8s success v4", true, func(egci *egressv1beta1.EgressClusterInfo, r *eciReconciler) {
+			Entry("CniTypeK8s success v4", true, func(egci *egressv1.EgressClusterInfo, r *eciReconciler) {
 				// set egci
-				egci.Spec.AutoDetect.PodCidrMode = egressv1beta1.CniTypeK8s
+				egci.Spec.AutoDetect.PodCidrMode = egressv1.CniTypeK8s
 
 				// set eciReconciler
 				objs = []client.Object{controllerManagerPodV4, egci}
@@ -314,9 +317,9 @@ var _ = Describe("EgressClusterInfo", Serial, Label("EgressClusterInfo UT"), fun
 			}),
 
 			// when egci.Spec.AutoDetect.PodCidrMode is CniTypeK8s
-			Entry("CniTypeK8s success v6", true, func(egci *egressv1beta1.EgressClusterInfo, r *eciReconciler) {
+			Entry("CniTypeK8s success v6", true, func(egci *egressv1.EgressClusterInfo, r *eciReconciler) {
 				// set egci
-				egci.Spec.AutoDetect.PodCidrMode = egressv1beta1.CniTypeK8s
+				egci.Spec.AutoDetect.PodCidrMode = egressv1.CniTypeK8s
 
 				// set eciReconciler
 				objs = []client.Object{controllerManagerPodV6, egci}
@@ -326,9 +329,9 @@ var _ = Describe("EgressClusterInfo", Serial, Label("EgressClusterInfo UT"), fun
 			}),
 
 			// when egci.Spec.AutoDetect.PodCidrMode is CniTypeEmpty
-			Entry("CniTypeEmpty success", true, func(egci *egressv1beta1.EgressClusterInfo, r *eciReconciler) {
+			Entry("CniTypeEmpty success", true, func(egci *egressv1.EgressClusterInfo, r *eciReconciler) {
 				// set egci
-				egci.Spec.AutoDetect.PodCidrMode = egressv1beta1.CniTypeEmpty
+				egci.Spec.AutoDetect.PodCidrMode = egressv1.CniTypeEmpty
 
 				// set eciReconciler
 				objs = append(objs, egci)
@@ -338,7 +341,7 @@ var _ = Describe("EgressClusterInfo", Serial, Label("EgressClusterInfo UT"), fun
 			}),
 
 			// when egci.Spec.AutoDetect.PodCidrMode is unkownType
-			Entry("unkownType fail", true, func(egci *egressv1beta1.EgressClusterInfo, r *eciReconciler) {
+			Entry("unkownType fail", true, func(egci *egressv1.EgressClusterInfo, r *eciReconciler) {
 				// set egci
 				egci.Spec.AutoDetect.PodCidrMode = "unkownType"
 
@@ -386,7 +389,7 @@ var _ = Describe("EgressClusterInfo", Serial, Label("EgressClusterInfo UT"), fun
 	Context("reconcileCalicoIPPool", func() {
 		It("will success when delete event", func() {
 			// when egci.Spec.AutoDetect.PodCidrMode is CniTypeCalico
-			egci.Spec.AutoDetect.PodCidrMode = egressv1beta1.CniTypeCalico
+			egci.Spec.AutoDetect.PodCidrMode = egressv1.CniTypeCalico
 
 			// set client
 			objs = append(objs, egci)
@@ -400,7 +403,7 @@ var _ = Describe("EgressClusterInfo", Serial, Label("EgressClusterInfo UT"), fun
 		})
 
 		It("will success when update event", func() {
-			egci.Spec.AutoDetect.PodCidrMode = egressv1beta1.CniTypeCalico
+			egci.Spec.AutoDetect.PodCidrMode = egressv1.CniTypeCalico
 
 			// set client
 			objs = []client.Object{egci, calicoIPPoolV4, calicoIPPoolV6}
@@ -465,3 +468,66 @@ var _ = Describe("EgressClusterInfo", Serial, Label("EgressClusterInfo UT"), fun
 		})
 	})
 })
+
+func TestNewEgressClusterInfoController(t *testing.T) {
+	labels := map[string]string{"app": "nginx1"}
+	initialObjects := []client.Object{
+		&egressv1.EgressClusterPolicy{
+			ObjectMeta: metav1.ObjectMeta{
+				Name: "p1",
+			},
+			Spec: egressv1.EgressClusterPolicySpec{
+				AppliedTo: egressv1.ClusterAppliedTo{
+					PodSelector: &metav1.LabelSelector{MatchLabels: labels},
+				},
+			},
+		},
+	}
+
+	builder := fake.NewClientBuilder()
+	builder.WithScheme(schema.GetScheme())
+	builder.WithObjects(initialObjects...)
+	cli := builder.Build()
+
+	mgrOpts := manager.Options{
+		Scheme: schema.GetScheme(),
+		NewClient: func(config *rest.Config, options client.Options) (client.Client, error) {
+			return cli, nil
+		},
+	}
+
+	cfg := &config.Config{
+		KubeConfig: &rest.Config{},
+		FileConfig: config.FileConfig{
+			TunnelIpv4Subnet:          "10.6.1.21/24",
+			TunnelIpv6Subnet:          "fd00::/126",
+			EnableIPv4:                true,
+			EnableIPv6:                true,
+			MaxNumberEndpointPerSlice: 100,
+			IPTables: config.IPTables{
+				RefreshIntervalSecond:   90,
+				PostWriteIntervalSecond: 1,
+				LockTimeoutSecond:       0,
+				LockProbeIntervalMillis: 50,
+				LockFilePath:            "/run/xtables.lock",
+				RestoreSupportsLock:     true,
+			},
+			Mark: "0x26000000",
+			GatewayFailover: config.GatewayFailover{
+				Enable:              true,
+				TunnelMonitorPeriod: 5,
+				TunnelUpdatePeriod:  5,
+				EipEvictionTimeout:  15,
+			},
+		},
+	}
+	log := logger.NewLogger(cfg.EnvConfig.Logger)
+	mgr, err := ctrl.NewManager(cfg.KubeConfig, mgrOpts)
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = NewEgressClusterInfoController(mgr, log)
+	if err != nil {
+		t.Fatal(err)
+	}
+}

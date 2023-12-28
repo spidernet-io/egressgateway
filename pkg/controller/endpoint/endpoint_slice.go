@@ -1,7 +1,7 @@
 // Copyright 2022 Authors of spidernet-io
 // SPDX-License-Identifier: Apache-2.0
 
-package controller
+package endpoint
 
 import (
 	"context"
@@ -334,7 +334,7 @@ func listEndpointSlices(ctx context.Context, cli client.Client, namespace, polic
 	return slices, err
 }
 
-func newEgressEndpointSliceController(mgr manager.Manager, log logr.Logger, cfg *config.Config) error {
+func NewEgressEndpointSliceController(mgr manager.Manager, log logr.Logger, cfg *config.Config) error {
 	r := &endpointReconciler{
 		client: mgr.GetClient(),
 		log:    log,

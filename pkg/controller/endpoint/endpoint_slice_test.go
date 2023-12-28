@@ -1,13 +1,16 @@
 // Copyright 2022 Authors of spidernet-io
 // SPDX-License-Identifier: Apache-2.0
 
-package controller
+package endpoint
 
 import (
 	"context"
 	"errors"
 	"fmt"
+	"k8s.io/client-go/rest"
+	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/event"
+	"sigs.k8s.io/controller-runtime/pkg/manager"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -540,5 +543,84 @@ func TestPodPredicate(t *testing.T) {
 		},
 	}) {
 		t.Fatal("got false")
+	}
+}
+
+func TestEnqueuePod(t *testing.T) {
+	labels := map[string]string{"app": "nginx1"}
+	initialObjects := []client.Object{
+		&v1beta1.EgressPolicy{
+			ObjectMeta: metav1.ObjectMeta{
+				Name: "p1",
+			},
+			Spec: v1beta1.EgressPolicySpec{
+				AppliedTo: v1beta1.AppliedTo{
+					PodSelector: &metav1.LabelSelector{MatchLabels: labels},
+				},
+			},
+		},
+	}
+
+	builder := fake.NewClientBuilder()
+	builder.WithScheme(schema.GetScheme())
+	builder.WithObjects(initialObjects...)
+	cli := builder.Build()
+
+	f := enqueuePod(cli)
+	ctx := context.Background()
+
+	f(ctx, &corev1.Pod{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "pod1",
+			Namespace: "default",
+			Labels:    labels,
+		},
+	})
+}
+
+func TestNewEgressEndpointSliceController(t *testing.T) {
+	var initialObjects []client.Object
+
+	builder := fake.NewClientBuilder()
+	builder.WithScheme(schema.GetScheme())
+	builder.WithObjects(initialObjects...)
+	cli := builder.Build()
+
+	mgrOpts := manager.Options{
+		Scheme: schema.GetScheme(),
+		NewClient: func(config *rest.Config, options client.Options) (client.Client, error) {
+			return cli, nil
+		},
+	}
+
+	cfg := &config.Config{
+		KubeConfig: &rest.Config{},
+		FileConfig: config.FileConfig{
+			MaxNumberEndpointPerSlice: 100,
+			IPTables: config.IPTables{
+				RefreshIntervalSecond:   90,
+				PostWriteIntervalSecond: 1,
+				LockTimeoutSecond:       0,
+				LockProbeIntervalMillis: 50,
+				LockFilePath:            "/run/xtables.lock",
+				RestoreSupportsLock:     true,
+			},
+			Mark: "0x26000000",
+			GatewayFailover: config.GatewayFailover{
+				Enable:              true,
+				TunnelMonitorPeriod: 5,
+				TunnelUpdatePeriod:  5,
+				EipEvictionTimeout:  15,
+			},
+		},
+	}
+	log := logger.NewLogger(cfg.EnvConfig.Logger)
+	mgr, err := ctrl.NewManager(cfg.KubeConfig, mgrOpts)
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = NewEgressEndpointSliceController(mgr, log, cfg)
+	if err != nil {
+		t.Fatal(err)
 	}
 }

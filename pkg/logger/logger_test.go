@@ -21,4 +21,11 @@ func TestNewLogger(t *testing.T) {
 		cfg := logger.Config{}
 		logger.NewLogger(cfg)
 	})
+
+	t.Run("console log", func(t *testing.T) {
+		cfg := logger.Config{
+			Encoder: "console",
+		}
+		logger.NewLogger(cfg)
+	})
 }
