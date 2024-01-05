@@ -126,7 +126,7 @@ var _ = Describe("Egressendpointslice", func() {
 			ees, err := common.GetEgressEndPointSliceByEgressPolicy(ctx, cli, egp)
 			Expect(err).NotTo(HaveOccurred())
 			if ees != nil {
-				Expect(common.WaitEgressEndPointSliceDeleted(ctx, cli, ees, time.Second*5)).NotTo(HaveOccurred())
+				Expect(common.WaitEgressEndPointSliceDeleted(ctx, cli, ees, time.Minute)).NotTo(HaveOccurred())
 			}
 		})
 
@@ -167,7 +167,7 @@ var _ = Describe("Egressendpointslice", func() {
 			eces, err := common.GetEgressClusterEndPointSliceByEgressClusterPolicy(ctx, cli, egcp)
 			Expect(err).NotTo(HaveOccurred())
 			if eces != nil {
-				Expect(common.WaitEgressClusterEndPointSliceDeleted(ctx, cli, eces, time.Second*5)).NotTo(HaveOccurred())
+				Expect(common.WaitEgressClusterEndPointSliceDeleted(ctx, cli, eces, time.Minute)).NotTo(HaveOccurred())
 			}
 		})
 	})

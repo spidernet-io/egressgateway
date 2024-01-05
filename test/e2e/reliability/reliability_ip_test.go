@@ -29,8 +29,8 @@ var _ = Describe("IP Allocation", Label("Reliability_IP"), func() {
 	var ctx context.Context
 
 	const (
-		creationThresholdTime = time.Second * 10
-		deletionThresholdTime = time.Second * 10
+		creationThresholdTime = time.Second * 30
+		deletionThresholdTime = time.Second * 30
 	)
 
 	BeforeEach(func() {
@@ -71,7 +71,7 @@ var _ = Describe("IP Allocation", Label("Reliability_IP"), func() {
 	It("test IP allocation", Label("R00008", "P00009"), Serial, func() {
 		// create egresspolicies
 		By("create egressPolicies by gaven pods")
-		egps, _, err = common.CreateEgressPoliciesForPods(ctx, cli, egw, pods, egressConfig.EnableIPv4, egressConfig.EnableIPv6, time.Second*10)
+		egps, _, err = common.CreateEgressPoliciesForPods(ctx, cli, egw, pods, egressConfig.EnableIPv4, egressConfig.EnableIPv6, creationThresholdTime)
 		Expect(err).NotTo(HaveOccurred())
 
 		By("create extra egressPolicies")

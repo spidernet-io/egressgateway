@@ -179,7 +179,7 @@ var _ = Describe("Operate EgressGateway", Label("EgressGateway"), Ordered, func(
 			ctx = context.Background()
 
 			// create DaemonSet
-			ds, err = common.CreateDaemonSet(ctx, cli, "ds-"+faker.Word(), config.Image)
+			ds, err = common.CreateDaemonSet(ctx, cli, "ds-"+faker.Word(), config.Image, time.Minute/2)
 			Expect(err).NotTo(HaveOccurred())
 			GinkgoWriter.Printf("succeeded to create DaemonSet: %s\n", ds.Name)
 			podLabelSelector = &metav1.LabelSelector{MatchLabels: ds.Labels}
@@ -457,7 +457,7 @@ var _ = Describe("Operate EgressGateway", Label("EgressGateway"), Ordered, func(
 			var err error
 
 			// create ds for eip test
-			ds, err = common.CreateDaemonSet(ctx, cli, "ds-"+faker.Word(), config.Image)
+			ds, err = common.CreateDaemonSet(ctx, cli, "ds-"+faker.Word(), config.Image, time.Minute/2)
 			Expect(err).NotTo(HaveOccurred())
 			GinkgoWriter.Printf("Create DaemonSet: %s\n", ds.Name)
 

@@ -94,7 +94,7 @@ func CreatePodCustom(ctx context.Context, cli client.Client, name, image string,
 
 	err := cli.Create(ctx, res)
 	if err != nil {
-		return nil, fmt.Errorf("error:\n%w\npod yaml:\n%s\n", err, GetObjYAML(res))
+		return nil, fmt.Errorf("error:\n%w\npod yaml:\n%s", err, GetObjYAML(res))
 	}
 	return res, nil
 }
@@ -256,6 +256,50 @@ func DeletePodsUntilReady(ctx context.Context, cli client.Client, labels map[str
 	}
 	oldUIDs := GetPodListUIDs(pl)
 
+	ctx, cancel := context.WithTimeout(ctx, timeout)
+	defer cancel()
+
+	for {
+		select {
+		case <-ctx.Done():
+			return e2eerr.ErrTimeout
+		default:
+			err = DeletePodList(ctx, cli, pl)
+			if err != nil {
+				time.Sleep(time.Second)
+				continue
+			}
+
+		CHECKPOD:
+			pl, err := GetNodesPodList(ctx, cli, labels, []string{})
+			if err != nil {
+				time.Sleep(time.Second)
+				goto CHECKPOD
+			}
+			newUIDs := GetPodListUIDs(pl)
+			if len(e2etools.SubtractionSlice(oldUIDs, newUIDs)) != len(oldUIDs) {
+				time.Sleep(time.Second)
+				goto CHECKPOD
+			}
+
+			for _, p := range pl.Items {
+				if !IfPodRunning(&p) {
+					time.Sleep(time.Second)
+					goto CHECKPOD
+				}
+			}
+			return nil
+		}
+	}
+}
+
+func DeleteTestPodsUntilReady(ctx context.Context, cli client.Client, labels map[string]string, timeout time.Duration) error {
+	pl, err := GetNodesPodList(ctx, cli, labels, []string{})
+	if err != nil {
+		return err
+	}
+	oldUIDs := GetPodListUIDs(pl)
+
 	err = DeletePodList(ctx, cli, pl)
 	if err != nil {
 		return err
@@ -264,6 +308,7 @@ func DeletePodsUntilReady(ctx context.Context, cli client.Client, labels map[str
 	ctx, cancel := context.WithTimeout(ctx, timeout)
 	defer cancel()
 
+RETRY:
 	for {
 		select {
 		case <-ctx.Done():
@@ -280,9 +325,9 @@ func DeletePodsUntilReady(ctx context.Context, cli client.Client, labels map[str
 			}
 
 			for _, p := range pl.Items {
-				if !IfPodRunning(&p) {
+				if !IfContainerRunning(&p) || !IfPodRunning(&p) {
 					time.Sleep(time.Second)
-					continue
+					goto RETRY
 				}
 			}
 			return nil

@@ -15,8 +15,8 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-func CreateDaemonSet(ctx context.Context, cli client.Client, name string, image string) (*appsv1.DaemonSet, error) {
-	ctx, cancel := context.WithTimeout(ctx, time.Second*20)
+func CreateDaemonSet(ctx context.Context, cli client.Client, name string, image string, timeout time.Duration) (*appsv1.DaemonSet, error) {
+	ctx, cancel := context.WithTimeout(ctx, timeout)
 	defer cancel()
 
 	var terminationGracePeriodSeconds int64 = 0

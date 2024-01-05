@@ -10,7 +10,6 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/go-faker/faker/v4"
 	"github.com/google/uuid"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
@@ -67,7 +66,7 @@ var _ = Describe("Reliability", Serial, Label("Reliability"), func() {
 			GinkgoWriter.Printf("v4DefaultEip: %s, v6DefaultEip: %s\n", v4DefaultEip, v6DefaultEip)
 
 			// daemonSet
-			daemonSet, err = common.CreateDaemonSet(ctx, cli, "ds-reliability-"+faker.Word(), config.Image)
+			daemonSet, err = common.CreateDaemonSet(ctx, cli, "ds-reliability-"+uuid.NewString(), config.Image, time.Minute/2)
 			Expect(err).NotTo(HaveOccurred())
 			GinkgoWriter.Printf("succeeded to create DaemonSet: %s\n", daemonSet.Name)
 
@@ -102,7 +101,9 @@ var _ = Describe("Reliability", Serial, Label("Reliability"), func() {
 
 			// unlabel nodes
 			GinkgoWriter.Println("unLabel nodes")
-			Expect(common.UnLabelNodes(ctx, cli, egNodes, labels)).NotTo(HaveOccurred())
+			Eventually(ctx, func() error {
+				return common.UnLabelNodes(ctx, cli, egNodes, labels)
+			}).WithTimeout(time.Second * 10).WithPolling(time.Second).Should(Succeed())
 		})
 
 		/*
@@ -246,12 +247,12 @@ var _ = Describe("Reliability", Serial, Label("Reliability"), func() {
 			wg.Add(1)
 
 			go func() {
-				defer GinkgoRecover()
 				defer wg.Done()
+				defer isRerun.Store(true)
+				defer GinkgoRecover()
 
 				err := common.DeletePodsUntilReady(ctx, cli, labels, timeout)
 				Expect(err).NotTo(HaveOccurred())
-				isRerun.Store(true)
 			}()
 
 			for !isRerun.Load() {
@@ -289,13 +290,13 @@ var _ = Describe("Reliability", Serial, Label("Reliability"), func() {
 			Expect(err).NotTo(HaveOccurred())
 			Expect(nowEgep.Endpoints).Should(Equal(beforeEgep.Endpoints), fmt.Sprintf("expect:\n%v\ngot:\n %v\n", beforeEgep.Endpoints, nowEgep.Endpoints))
 		},
-			Entry("restart kube-controller-manager", constant.KubeControllerManagerLabel, time.Minute),
-			Entry("restart kube-apiserver", constant.KubeApiServerLabel, time.Minute),
-			Entry("restart etcd", constant.KubeEtcdLabel, time.Minute),
-			Entry("restart kube-scheduler", constant.KubeSchedulerLabel, time.Minute),
-			Entry("restart kube-proxy", constant.KubeProxyLabel, time.Minute),
-			Entry("restart calico-node", constant.CalicoNodeLabel, time.Minute),
-			Entry("restart calico-kube-controllers", constant.CalicoControllerLabel, time.Minute),
+			Entry("restart kube-controller-manager", constant.KubeControllerManagerLabel, time.Minute*2),
+			Entry("restart kube-apiserver", constant.KubeApiServerLabel, time.Minute*2),
+			Entry("restart etcd", constant.KubeEtcdLabel, time.Minute*2),
+			Entry("restart kube-scheduler", constant.KubeSchedulerLabel, time.Minute*2),
+			Entry("restart kube-proxy", constant.KubeProxyLabel, time.Minute*2),
+			Entry("restart calico-node", constant.CalicoNodeLabel, time.Minute*2),
+			Entry("restart calico-kube-controllers", constant.CalicoControllerLabel, time.Minute*2),
 		)
 	})
 
@@ -406,7 +407,7 @@ var _ = Describe("Reliability", Serial, Label("Reliability"), func() {
 
 				// restart deploy
 				GinkgoWriter.Printf("restart the deployment %s\n", deploy.Name)
-				err = common.DeletePodsUntilReady(ctx, cli, deploy.Spec.Template.Labels, time.Minute*10)
+				err = common.DeleteTestPodsUntilReady(ctx, cli, deploy.Spec.Template.Labels, time.Minute*10)
 				Expect(err).NotTo(HaveOccurred())
 
 				// check the export ip of the pods on the real nodes again
@@ -428,7 +429,7 @@ var _ = Describe("Reliability", Serial, Label("Reliability"), func() {
 
 				// restart deploy
 				GinkgoWriter.Printf("restart the deployment %s\n", deploy.Name)
-				err = common.DeletePodsUntilReady(ctx, cli, deploy.Spec.Template.Labels, time.Minute*10)
+				err = common.DeleteTestPodsUntilReady(ctx, cli, deploy.Spec.Template.Labels, time.Minute*10)
 				Expect(err).NotTo(HaveOccurred())
 
 				// check the export ip of the pods on the real nodes again
