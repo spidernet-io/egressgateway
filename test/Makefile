@@ -23,8 +23,13 @@ init_kind_env:
 init_one_kind: KIND_CONFIG_PATH ?=
 init_one_kind: KIND_CLUSTER_NAME ?=
 init_one_kind: KIND_KUBECONFIG ?=
-init_one_kind: checkBin clean
+init_one_kind: checkBin
 	@echo "================== init kind cluster $(KIND_CLUSTER_NAME) KIND_CONFIG_PATH=$(KIND_CONFIG_PATH) KIND_KUBECONFIG=$(KIND_KUBECONFIG) E2E_IP_FAMILY=$(E2E_IP_FAMILY)"
+	-@ kind delete cluster --name $(E2E_KIND_CLUSTER_NAME)
+	-@ rm -rf $(E2E_RUNTIME_DIR)
+	-@ docker stop $(PYROSCOPE_CONTAINER_NAME) &>/dev/null
+	-@ docker rm $(PYROSCOPE_CONTAINER_NAME) &>/dev/null
+
 	[ -n $(KIND_CLUSTER_NAME) ] || { echo "error, miss KIND_CLUSTER_NAME " ; exit 1 ; }
 	[ -f $(KIND_CONFIG_PATH) ] || { echo "error, miss file KIND_CONFIG_PATH=$(KIND_CONFIG_PATH)" ; exit 1 ; }
 	- mkdir -p $(E2E_RUNTIME_DIR) || true
@@ -208,34 +213,22 @@ check_netttool_server:
 
 #==================
 
-# this will auto tag github ci image : agent:xxx -> github.com/spidernet-io/egressgateway/agent:xxx
 .PHONY: check_images_ready
 check_images_ready:
-	echo "check image  " ; \
-	IMAGE_LIST=` helm template test $(ROOT_DIR)/charts --set global.imageTagOverride=$(PROJECT_IMAGE_VERSION)  | grep " image: " | tr -d '"'| awk '{print $$2}' ` ; \
-	if [ -z "$${IMAGE_LIST}" ] ; then \
-		echo "warning, failed to find image from chart " ; \
-		exit 1 ;\
-	else \
-		echo "find image from chart : $${IMAGE_LIST} " ; \
-		for IMAGE in $${IMAGE_LIST} ; do \
-		  	echo "try to find image $${IMAGE} " ; \
-			EXIST=` docker images | awk '{printf("%s:%s\n",$$1,$$2)}' | grep "$${IMAGE}" ` || true ; \
-			if [ -z "$${EXIST}" ] ; then \
-					CI_IMAGE=$${IMAGE##*/} ; \
-			  		echo "try to find github CI image $${CI_IMAGE} " ; \
-			  		EXIST=` docker images | awk '{printf("%s:%s\n",$$1,$$2)}' | grep "$${CI_IMAGE}" ` || true ; \
-			  		if [ -z "$${EXIST}" ] ; then \
-			  			echo "error, failed to find image $${IMAGE}" ; \
-			  			echo "error, failed to find image $${CI_IMAGE}" ; \
-			  			exit 1 ; \
-			  		fi ; \
-			  		docker tag $${CI_IMAGE} $${IMAGE} ; \
-			fi ;\
-			echo "image exists: $${IMAGE}" ; \
-		done ; \
-		docker images ; \
-	fi
+	@echo "Checking if images are ready..."
+	@IMAGE_LIST=$$(helm template test $(ROOT_DIR)/charts --set global.imageTagOverride=$(PROJECT_IMAGE_VERSION) | grep " image: " | tr -d '"' | awk '{print $$2}'); \
+	if [ -z "$$IMAGE_LIST" ]; then \
+		echo "No images found in the helm template output."; \
+		exit 1; \
+	fi; \
+	for image in $$IMAGE_LIST ; do \
+		if docker image inspect $$image > /dev/null 2>&1; then \
+			echo "Image $$image exists locally."; \
+		else \
+			echo "Image $$image does not exist locally."; \
+			exit 1; \
+		fi; \
+	done
 
 
 # install spidernet on global cluster
