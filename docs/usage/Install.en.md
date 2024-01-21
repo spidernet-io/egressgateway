@@ -273,8 +273,3 @@ helm repo update
     $ curl 10.6.1.92:8080
     Remote IP: 172.22.0.110
     ```
-## Uninstalling EgressGateway
-  In order to ensure uninterrupted business flow, the `egressgateway` incorporates a finalizer mechanism. When deleting the `egressgateway`, if there are `policies` referencing it, the `egressgateway` will remain in the "deleting" state until all `policies` are deleted, and the finalizer will be automatically removed.  
-  Therefore, if you want to delete the `egressgateway`, it is recommended to follow these steps:  
-  1. Delete all `policies` that reference the `egressgateway`.  
-  2. Delete the `egressgateway`.
