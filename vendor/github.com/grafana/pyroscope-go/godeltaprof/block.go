@@ -39,7 +39,29 @@ type BlockProfiler struct {
 //	    ...
 //	    err := mp.Profile(someWriter)
 func NewMutexProfiler() *BlockProfiler {
-	return &BlockProfiler{runtimeProfile: runtime.MutexProfile, scaleProfile: pprof.ScalerMutexProfile}
+	return &BlockProfiler{
+		runtimeProfile: runtime.MutexProfile,
+		scaleProfile:   pprof.ScalerMutexProfile,
+		impl: pprof.DeltaMutexProfiler{
+			Options: pprof.ProfileBuilderOptions{
+				GenericsFrames: true,
+				LazyMapping:    true,
+			},
+		},
+	}
+}
+
+func NewMutexProfilerWithOptions(options ProfileOptions) *BlockProfiler {
+	return &BlockProfiler{
+		runtimeProfile: runtime.MutexProfile,
+		scaleProfile:   pprof.ScalerMutexProfile,
+		impl: pprof.DeltaMutexProfiler{
+			Options: pprof.ProfileBuilderOptions{
+				GenericsFrames: options.GenericsFrames,
+				LazyMapping:    options.LazyMappings,
+			},
+		},
+	}
 }
 
 // NewBlockProfiler creates a new BlockProfiler instance for profiling goroutine blocking events.
@@ -51,7 +73,29 @@ func NewMutexProfiler() *BlockProfiler {
 //	...
 //	err := bp.Profile(someWriter)
 func NewBlockProfiler() *BlockProfiler {
-	return &BlockProfiler{runtimeProfile: runtime.BlockProfile, scaleProfile: pprof.ScalerBlockProfile}
+	return &BlockProfiler{
+		runtimeProfile: runtime.BlockProfile,
+		scaleProfile:   pprof.ScalerBlockProfile,
+		impl: pprof.DeltaMutexProfiler{
+			Options: pprof.ProfileBuilderOptions{
+				GenericsFrames: true,
+				LazyMapping:    true,
+			},
+		},
+	}
+}
+
+func NewBlockProfilerWithOptions(options ProfileOptions) *BlockProfiler {
+	return &BlockProfiler{
+		runtimeProfile: runtime.BlockProfile,
+		scaleProfile:   pprof.ScalerBlockProfile,
+		impl: pprof.DeltaMutexProfiler{
+			Options: pprof.ProfileBuilderOptions{
+				GenericsFrames: options.GenericsFrames,
+				LazyMapping:    options.LazyMappings,
+			},
+		},
+	}
 }
 
 func (d *BlockProfiler) Profile(w io.Writer) error {

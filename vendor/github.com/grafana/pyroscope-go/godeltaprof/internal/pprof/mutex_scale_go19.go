@@ -9,7 +9,7 @@ type MutexProfileScaler struct {
 	f func(cnt int64, ns float64) (int64, float64)
 }
 
-func scaleMutexProfile(scaler MutexProfileScaler, cnt int64, ns float64) (int64, float64) {
+func ScaleMutexProfile(scaler MutexProfileScaler, cnt int64, ns float64) (int64, float64) {
 	return scaler.f(cnt, ns)
 }
 
