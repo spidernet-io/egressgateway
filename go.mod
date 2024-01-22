@@ -12,7 +12,7 @@ require (
 	github.com/google/gops v0.3.27
 	github.com/google/uuid v1.5.0
 	github.com/gorilla/websocket v1.5.1
-	github.com/grafana/pyroscope-go v1.0.4
+	github.com/grafana/pyroscope-go v1.1.0
 	github.com/mdlayher/arp v0.0.0-20220221190821-c37aaafac7f9
 	github.com/mdlayher/ethernet v0.0.0-20220221185849-529eae5b6118
 	github.com/mdlayher/ndp v0.0.0-20200602162440-17ab9e3e5567
@@ -79,7 +79,7 @@ require (
 	github.com/google/gofuzz v1.2.0 // indirect
 	github.com/google/pprof v0.0.0-20231101202521-4ca4178f5c7a // indirect
 	github.com/gorilla/handlers v1.5.1 // indirect
-	github.com/grafana/pyroscope-go/godeltaprof v0.1.4 // indirect
+	github.com/grafana/pyroscope-go/godeltaprof v0.1.6 // indirect
 	github.com/hashicorp/golang-lru v1.0.2 // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect
 	github.com/huandu/xstrings v1.4.0 // indirect
@@ -89,6 +89,7 @@ require (
 	github.com/josharian/intern v1.0.0 // indirect
 	github.com/josharian/native v1.0.0 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
+	github.com/klauspost/compress v1.17.3 // indirect
 	github.com/kr/pretty v0.3.1 // indirect
 	github.com/kr/text v0.2.0 // indirect
 	github.com/magiconair/properties v1.8.7 // indirect
