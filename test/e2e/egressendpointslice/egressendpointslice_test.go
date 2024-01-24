@@ -93,7 +93,7 @@ var _ = Describe("Egressendpointslice", func() {
 			// create deploy
 			deployName := "deploy-" + uuid.NewString()
 			deploy, err = common.CreateDeploy(ctx, cli, deployName, config.Image, podNum, time.Second*20)
-			Expect(err).NotTo(HaveOccurred(), fmt.Sprintf("failed to create daemonset %s\n", deployName))
+			Expect(err).NotTo(HaveOccurred(), fmt.Sprintf("failed to create deploy %s\n", deployName))
 			GinkgoWriter.Printf("succeeded to create deploy %s\n", deploy.Name)
 
 			// create policy
@@ -105,9 +105,9 @@ var _ = Describe("Egressendpointslice", func() {
 			err := common.WaitDeployDeleted(ctx, cli, deploy, time.Second*10)
 			Expect(err).NotTo(HaveOccurred())
 
-			// create deploy agen
+			// create deploy again
 			deploy, err = common.CreateDeploy(ctx, cli, deployName, config.Image, podNum, time.Second*20)
-			Expect(err).NotTo(HaveOccurred(), fmt.Sprintf("failed to create daemonset %s\n", deployName))
+			Expect(err).NotTo(HaveOccurred(), fmt.Sprintf("failed to create deploy %s\n", deployName))
 			GinkgoWriter.Printf("succeeded to create deploy %s\n", deploy.Name)
 
 			// check egressEndpointSlice synced
@@ -123,18 +123,18 @@ var _ = Describe("Egressendpointslice", func() {
 			// delete the deploy, and we expect the egressEndpointSlice to be deleted as well
 			err = common.WaitDeployDeleted(ctx, cli, deploy, time.Second*10)
 			Expect(err).NotTo(HaveOccurred())
-			ees, err := common.GetEgressEndPointSliceByEgressPolicy(ctx, cli, egp)
-			Expect(err).NotTo(HaveOccurred())
-			if ees != nil {
-				Expect(common.WaitEgressEndPointSliceDeleted(ctx, cli, ees, time.Minute)).NotTo(HaveOccurred())
-			}
+
+			Eventually(ctx, func() string {
+				ees, _ := common.GetEgressEndPointSliceByEgressPolicy(ctx, cli, egp)
+				return ees.Name
+			}).WithTimeout(time.Second * 10).WithPolling(time.Second * 2).Should(BeEmpty())
 		})
 
 		It("test the cluster-level policy", func() {
 			// create deploy
 			deployName := "deploy-" + uuid.NewString()
 			deploy, err = common.CreateDeploy(ctx, cli, deployName, config.Image, podNum, time.Second*20)
-			Expect(err).NotTo(HaveOccurred(), fmt.Sprintf("failed to create daemonset %s\n", deployName))
+			Expect(err).NotTo(HaveOccurred(), fmt.Sprintf("failed to create deploy %s\n", deployName))
 			GinkgoWriter.Printf("succeeded to create deploy %s\n", deploy.Name)
 
 			// create cluster policy
@@ -148,7 +148,7 @@ var _ = Describe("Egressendpointslice", func() {
 
 			// create deploy again
 			deploy, err = common.CreateDeploy(ctx, cli, deployName, config.Image, podNum, time.Second*20)
-			Expect(err).NotTo(HaveOccurred(), fmt.Sprintf("failed to create daemonset %s\n", deployName))
+			Expect(err).NotTo(HaveOccurred(), fmt.Sprintf("failed to create deploy %s\n", deployName))
 			GinkgoWriter.Printf("succeeded to create deploy %s\n", deploy.Name)
 
 			// check egressClusterEndpointSlice synced
@@ -164,11 +164,10 @@ var _ = Describe("Egressendpointslice", func() {
 			// delete the deploy, and we expect the egressClusterEndpointSlice to be deleted as well
 			err = common.WaitDeployDeleted(ctx, cli, deploy, time.Second*10)
 			Expect(err).NotTo(HaveOccurred())
-			eces, err := common.GetEgressClusterEndPointSliceByEgressClusterPolicy(ctx, cli, egcp)
-			Expect(err).NotTo(HaveOccurred())
-			if eces != nil {
-				Expect(common.WaitEgressClusterEndPointSliceDeleted(ctx, cli, eces, time.Minute)).NotTo(HaveOccurred())
-			}
+			Eventually(ctx, func() string {
+				eces, _ := common.GetEgressClusterEndPointSliceByEgressClusterPolicy(ctx, cli, egcp)
+				return eces.Name
+			}).WithTimeout(time.Second * 10).WithPolling(time.Second * 2).Should(BeEmpty())
 		})
 	})
 })
