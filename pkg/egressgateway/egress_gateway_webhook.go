@@ -11,8 +11,6 @@ import (
 	"net"
 	"time"
 
-	"github.com/spidernet-io/egressgateway/pkg/utils/ip"
-
 	admissionv1 "k8s.io/api/admission/v1"
 	v1 "k8s.io/api/admission/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -23,6 +21,7 @@ import (
 	"github.com/spidernet-io/egressgateway/pkg/config"
 	"github.com/spidernet-io/egressgateway/pkg/constant"
 	egress "github.com/spidernet-io/egressgateway/pkg/k8s/apis/v1beta1"
+	"github.com/spidernet-io/egressgateway/pkg/utils/ip"
 )
 
 type EgressGatewayWebhook struct {
@@ -85,7 +84,7 @@ func (egw *EgressGatewayWebhook) EgressGatewayValidate(ctx context.Context, req 
 		return webhook.Denied(fmt.Sprintf("Failed to check IP: %v", err))
 	}
 
-	ipv6Ranges, _ := ip.MergeIPRanges(constant.IPv6, newEg.Spec.Ippools.IPv6)
+	ipv6Ranges, err := ip.MergeIPRanges(constant.IPv6, newEg.Spec.Ippools.IPv6)
 	if err != nil {
 		return webhook.Denied(fmt.Sprintf("Failed to check IP: %v", err))
 	}
@@ -95,7 +94,6 @@ func (egw *EgressGatewayWebhook) EgressGatewayValidate(ctx context.Context, req 
 		if err != nil {
 			return webhook.Denied(fmt.Sprintf("Failed to check IP: %v", err))
 		}
-
 	}
 
 	if egw.Config.FileConfig.EnableIPv6 {
@@ -103,7 +101,6 @@ func (egw *EgressGatewayWebhook) EgressGatewayValidate(ctx context.Context, req 
 		if err != nil {
 			return webhook.Denied(fmt.Sprintf("Failed to check IP: %v", err))
 		}
-
 	}
 
 	if egw.Config.FileConfig.EnableIPv4 && egw.Config.FileConfig.EnableIPv6 {
@@ -113,65 +110,143 @@ func (egw *EgressGatewayWebhook) EgressGatewayValidate(ctx context.Context, req 
 		}
 	}
 
-	eg := new(egress.EgressGateway)
-	err = egw.Client.Get(ctx, types.NamespacedName{Name: req.Name, Namespace: req.Namespace}, eg)
-	if err != nil {
-		if !errors.IsNotFound(err) {
-			return webhook.Denied(fmt.Sprintf("failed to obtain the EgressGateway: %v", err))
-		}
-	}
-
-	// it should be denied when the single IPv4 or IPv6 is updated to the other type
-	if req.Operation == v1.Update {
-		if len(eg.Spec.Ippools.IPv4) == 0 && len(newEg.Spec.Ippools.IPv4) > 0 {
-			return webhook.Denied("the 'spec.Ippools.IPv4' field cannot to be modified when it is empty")
-		}
-		if len(eg.Spec.Ippools.IPv6) == 0 && len(newEg.Spec.Ippools.IPv6) > 0 {
-			return webhook.Denied("the 'spec.Ippools.IPv6' field cannot to be modified when it is empty")
-		}
-	}
-
-	// Check whether the IP address to be deleted has been allocated
-	for _, item := range eg.Status.NodeList {
-		for _, eip := range item.Eips {
-			// skip the cases of using useNodeIP
-			if eip.IPv4 == "" && eip.IPv6 == "" {
-				continue
-			}
-
-			result, err := ip.IsIPIncludedRange(constant.IPv4, eip.IPv4, ipv4Ranges)
-			if err != nil {
-				return webhook.Denied(fmt.Sprintf("Failed to check IP: %v", err))
-			}
-
-			if !result {
-				return webhook.Denied(fmt.Sprintf("%v has been allocated and cannot be deleted", eip.IPv4))
-			}
-		}
-	}
-
 	// Check the defaultEIP
 	if len(newEg.Spec.Ippools.Ipv4DefaultEIP) != 0 {
 		result, err := ip.IsIPIncludedRange(constant.IPv4, newEg.Spec.Ippools.Ipv4DefaultEIP, ipv4Ranges)
 		if err != nil {
-			return webhook.Denied(fmt.Sprintf("Failed to check Ipv4DefaultEIP: %v", err))
+			return webhook.Denied(fmt.Sprintf("Failed to check ipv4DefaultEIP: %v", err))
 		}
 		if !result {
-			return webhook.Denied(fmt.Sprintf("%v is not covered by Ippools", newEg.Spec.Ippools.Ipv4DefaultEIP))
+			return webhook.Denied(fmt.Sprintf("%v is not covered by IPPools", newEg.Spec.Ippools.Ipv4DefaultEIP))
 		}
 	}
 
 	if len(newEg.Spec.Ippools.Ipv6DefaultEIP) != 0 {
 		result, err := ip.IsIPIncludedRange(constant.IPv6, newEg.Spec.Ippools.Ipv6DefaultEIP, ipv6Ranges)
 		if err != nil {
-			return webhook.Denied(fmt.Sprintf("Failed to check Ipv6DefaultEIP: %v", err))
+			return webhook.Denied(fmt.Sprintf("Failed to check ipv6DefaultEIP: %v", err))
 		}
 		if !result {
 			return webhook.Denied(fmt.Sprintf("%v is not covered by Ippools", newEg.Spec.Ippools.Ipv6DefaultEIP))
 		}
 	}
 
+	// check if the current egw ip pool is duplicated by other egw ip pools
+	egwList := &egress.EgressGatewayList{}
+	err = egw.Client.List(ctx, egwList)
+	if err != nil {
+		return webhook.Denied(fmt.Sprintf("Failed to get EgressGatewayList: %v", err))
+	}
+	clusterMap, err := buildClusterIPMap(egwList)
+	if err != nil {
+		return webhook.Denied(fmt.Sprintf("Failed to build cluster EgressGateway IP map: %v", err))
+	}
+	err = checkDupIP(ipv4s, ipv6s, clusterMap)
+	if err != nil {
+		return webhook.Denied(err.Error())
+	}
+
+	// only for update
+	if req.Operation == v1.Update {
+		oldEgressGateway := new(egress.EgressGateway)
+		err = egw.Client.Get(ctx, types.NamespacedName{Name: req.Name, Namespace: req.Namespace}, oldEgressGateway)
+		if err != nil {
+			if !errors.IsNotFound(err) {
+				return webhook.Denied(fmt.Sprintf("failed to obtain the EgressGateway: %v", err))
+			}
+		}
+
+		// it should be denied when the single IPv4 or IPv6 is updated to the other type
+		if len(oldEgressGateway.Spec.Ippools.IPv4) == 0 && len(newEg.Spec.Ippools.IPv4) > 0 {
+			return webhook.Denied("the 'spec.Ippools.IPv4' field cannot to be modified when it is empty")
+		}
+		if len(oldEgressGateway.Spec.Ippools.IPv6) == 0 && len(newEg.Spec.Ippools.IPv6) > 0 {
+			return webhook.Denied("the 'spec.Ippools.IPv6' field cannot to be modified when it is empty")
+		}
+
+		// check if the IP to be deleted is already assigned
+		for _, item := range oldEgressGateway.Status.NodeList {
+			for _, eip := range item.Eips {
+				// skip the cases of using useNodeIP
+				if eip.IPv4 == "" && eip.IPv6 == "" {
+					continue
+				}
+
+				if eip.IPv4 != "" {
+					result, err := ip.IsIPIncludedRange(constant.IPv4, eip.IPv4, ipv4Ranges)
+					if err != nil {
+						return webhook.Denied(fmt.Sprintf("Failed to check IPv4: %v", err))
+					}
+					if !result {
+						return webhook.Denied(fmt.Sprintf("%v has been allocated and cannot be deleted", eip.IPv4))
+					}
+				}
+				if eip.IPv6 != "" {
+					result, err := ip.IsIPIncludedRange(constant.IPv6, eip.IPv6, ipv6Ranges)
+					if err != nil {
+						return webhook.Denied(fmt.Sprintf("Failed to check IPv6: %v", err))
+					}
+					if !result {
+						return webhook.Denied(fmt.Sprintf("%v has been allocated and cannot be deleted", eip.IPv6))
+					}
+				}
+			}
+		}
+	}
+
 	return webhook.Allowed("checked")
+}
+
+func buildClusterIPMap(egwList *egress.EgressGatewayList) (map[string]map[string]struct{}, error) {
+	res := make(map[string]map[string]struct{})
+	for _, item := range egwList.Items {
+		var ipv4s, ipv6s []net.IP
+		ipv4Ranges, err := ip.MergeIPRanges(constant.IPv4, item.Spec.Ippools.IPv4)
+		if err != nil {
+			return nil, err
+		}
+		ipv6Ranges, err := ip.MergeIPRanges(constant.IPv6, item.Spec.Ippools.IPv6)
+		if err != nil {
+			return nil, err
+		}
+		ipv4s, err = ip.ParseIPRanges(constant.IPv4, ipv4Ranges)
+		if err != nil {
+			return nil, err
+		}
+		ipv6s, err = ip.ParseIPRanges(constant.IPv6, ipv6Ranges)
+		if err != nil {
+			return nil, err
+		}
+		m := make(map[string]struct{})
+		for _, v := range ipv4s {
+			m[v.String()] = struct{}{}
+		}
+		for _, v := range ipv6s {
+			m[v.String()] = struct{}{}
+		}
+		res[item.Name] = m
+	}
+	return res, nil
+}
+
+func checkDupIP(currentIPv4List, currentIPv6List []net.IP, clusterIPMap map[string]map[string]struct{}) error {
+	for _, v := range currentIPv4List {
+		addr := v.String()
+		for gwName, gw := range clusterIPMap {
+			if _, ok := gw[addr]; ok {
+				return fmt.Errorf("find duplicate IPv4 %s in EgressGateway %s", v.String(), gwName)
+			}
+		}
+	}
+	for _, v := range currentIPv6List {
+		addr := v.String()
+		for gwName, gw := range clusterIPMap {
+			if _, ok := gw[addr]; ok {
+				return fmt.Errorf("find duplicate IPv6 %s in EgressGateway %s", v.String(), gwName)
+			}
+		}
+	}
+	return nil
 }
 
 func (egw *EgressGatewayWebhook) EgressGatewayMutate(ctx context.Context, req webhook.AdmissionRequest) webhook.AdmissionResponse {
