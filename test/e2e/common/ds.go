@@ -13,6 +13,8 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+
+	. "github.com/onsi/ginkgo/v2"
 )
 
 func CreateDaemonSet(ctx context.Context, cli client.Client, name string, image string, timeout time.Duration) (*appsv1.DaemonSet, error) {
@@ -63,6 +65,10 @@ func CreateDaemonSet(ctx context.Context, cli client.Client, name string, image 
 			a := res.Status.CurrentNumberScheduled
 			b := res.Status.DesiredNumberScheduled
 			c := res.Status.NumberAvailable
+
+			GinkgoWriter.Printf("=======sundebug========res.Status.CurrentNumberScheduled: %v\n", res.Status.CurrentNumberScheduled)
+			GinkgoWriter.Printf("=======sundebug========res.Status.DesiredNumberScheduled: %v\n", res.Status.DesiredNumberScheduled)
+			GinkgoWriter.Printf("=======sundebug========res.Status.NumberAvailable: %v\n", res.Status.NumberAvailable)
 
 			if a == b && b == c && a > 0 {
 				return res, nil
