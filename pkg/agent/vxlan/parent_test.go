@@ -176,3 +176,102 @@ func case2() TestCase {
 		},
 	}
 }
+
+func Test_GetParentByDefaultRoute(t *testing.T) {
+	mockLink := NetLink{
+		RouteListFiltered: func(family int, filter *netlink.Route, filterMask uint64) ([]netlink.Route, error) {
+			return nil, errors.New("failed to get routes")
+		},
+		LinkByIndex: func(index int) (netlink.Link, error) {
+			return nil, errors.New("failed to get link by index")
+		},
+		AddrList: func(link netlink.Link, family int) ([]netlink.Addr, error) {
+			return nil, errors.New("failed to list link addrs")
+		},
+	}
+
+	// error for getting route list
+	_, err := GetParentByDefaultRoute(mockLink)(4)
+	assert.Error(t, err)
+
+	// error for linking
+	mockLink.RouteListFiltered = func(family int, filter *netlink.Route, filterMask uint64) ([]netlink.Route, error) {
+		routes := []netlink.Route{
+			{
+				Family:    netlink.FAMILY_V4,
+				LinkIndex: 1,
+			},
+		}
+		return routes, nil
+	}
+	_, err = GetParentByDefaultRoute(mockLink)(4)
+	assert.Error(t, err)
+
+	// error for addrList
+	mockLink.LinkByIndex = func(index int) (netlink.Link, error) {
+		link := &netlink.Dummy{}
+		return link, nil
+	}
+
+	_, err = GetParentByDefaultRoute(mockLink)(4)
+	assert.Error(t, err)
+
+	// error to find parent interface
+	mockLink.AddrList = func(link netlink.Link, family int) ([]netlink.Addr, error) {
+		addrs := []netlink.Addr{
+			{
+				IPNet: &net.IPNet{
+					IP:   net.ParseIP("192.168.0"),
+					Mask: net.CIDRMask(24, 32),
+				},
+			},
+		}
+		return addrs, nil
+	}
+
+	_, err = GetParentByDefaultRoute(mockLink)(4)
+	assert.Error(t, err)
+}
+
+func Test_GetParentByName(t *testing.T) {
+	mockLink := NetLink{
+		LinkByName: func(name string) (netlink.Link, error) {
+			return nil, errors.New("failed to get link by name")
+		},
+		AddrList: func(link netlink.Link, family int) ([]netlink.Addr, error) {
+			return nil, errors.New("failed to list link addrs")
+		},
+	}
+
+	// error to LinkByName
+	_, err := GetParentByName(mockLink, "eth0")(4)
+	assert.Error(t, err)
+
+	// error to AddrList
+	mockLink.LinkByName = func(name string) (netlink.Link, error) {
+		link := &netlink.Dummy{}
+		return link, nil
+	}
+
+	_, err = GetParentByName(mockLink, "eth0")(4)
+	assert.Error(t, err)
+
+	// error to get parent interface
+	mockLink.AddrList = func(link netlink.Link, family int) ([]netlink.Addr, error) {
+		addrs := []netlink.Addr{
+			{
+				IPNet: &net.IPNet{
+					IP:   net.ParseIP("192.168.0"),
+					Mask: net.CIDRMask(24, 32),
+				},
+			},
+		}
+		return addrs, nil
+	}
+
+	_, err = GetParentByName(mockLink, "eth0")(4)
+	assert.Error(t, err)
+
+	_, err = GetParentByName(mockLink, "eth0")(6)
+	assert.Error(t, err)
+}

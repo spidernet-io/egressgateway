@@ -88,18 +88,18 @@ func (r *RuleRoute) Ensure(linkName string, ipv4, ipv6 *net.IP, table int, mark 
 
 	log.V(1).Info("get link")
 
-	err = r.ensureRoute(link, ipv4, netlink.FAMILY_V4, table, log)
+	err = r.EnsureRoute(link, ipv4, netlink.FAMILY_V4, table, log)
 	if err != nil {
 		return err
 	}
-	err = r.ensureRoute(link, ipv6, netlink.FAMILY_V6, table, log)
+	err = r.EnsureRoute(link, ipv6, netlink.FAMILY_V6, table, log)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func (r *RuleRoute) ensureRoute(link netlink.Link, ip *net.IP, family int, table int, log logr.Logger) error {
+func (r *RuleRoute) EnsureRoute(link netlink.Link, ip *net.IP, family int, table int, log logr.Logger) error {
 	log = log.WithValues("family", family, "ip", ip)
 	log.V(1).Info("ensure route")
 
