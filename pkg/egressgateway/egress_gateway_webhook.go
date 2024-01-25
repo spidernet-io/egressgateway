@@ -137,7 +137,7 @@ func (egw *EgressGatewayWebhook) EgressGatewayValidate(ctx context.Context, req 
 	if err != nil {
 		return webhook.Denied(fmt.Sprintf("Failed to get EgressGatewayList: %v", err))
 	}
-	clusterMap, err := buildClusterIPMap(egwList)
+	clusterMap, err := buildClusterIPMap(egwList, newEg.Name)
 	if err != nil {
 		return webhook.Denied(fmt.Sprintf("Failed to build cluster EgressGateway IP map: %v", err))
 	}
@@ -197,9 +197,13 @@ func (egw *EgressGatewayWebhook) EgressGatewayValidate(ctx context.Context, req 
 	return webhook.Allowed("checked")
 }
 
-func buildClusterIPMap(egwList *egress.EgressGatewayList) (map[string]map[string]struct{}, error) {
+func buildClusterIPMap(egwList *egress.EgressGatewayList, skipName string) (map[string]map[string]struct{}, error) {
 	res := make(map[string]map[string]struct{})
 	for _, item := range egwList.Items {
+		if item.Name == skipName {
+			continue
+		}
+
 		var ipv4s, ipv6s []net.IP
 		ipv4Ranges, err := ip.MergeIPRanges(constant.IPv4, item.Spec.Ippools.IPv4)
 		if err != nil {
