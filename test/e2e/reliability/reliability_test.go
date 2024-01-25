@@ -53,7 +53,7 @@ var _ = Describe("Reliability", Serial, Label("Reliability"), func() {
 			}).WithTimeout(time.Second * 6).WithPolling(time.Second * 2).Should(Succeed())
 
 			ipNum = 3
-			pool, err = common.GenIPPools(ctx, cli, egressConfig.EnableIPv4, egressConfig.EnableIPv6, int64(ipNum), 2)
+			pool, err = common.GenIPPools(ctx, cli, egressConfig.EnableIPv4, egressConfig.EnableIPv6, int64(ipNum), 6)
 			Expect(err).NotTo(HaveOccurred())
 
 			egw, err = common.CreateGatewayNew(ctx, cli, "egw-"+uuid.NewString(), pool, selector)
@@ -92,7 +92,7 @@ var _ = Describe("Reliability", Serial, Label("Reliability"), func() {
 			Expect(err).NotTo(HaveOccurred())
 
 			GinkgoWriter.Println("delete gateway")
-			err = common.DeleteObj(ctx, cli, egw)
+			err = common.DeleteEgressGateway(ctx, cli, egw, time.Minute/2)
 			Expect(err).NotTo(HaveOccurred())
 
 			// start up all nodes if some nodes not ready
@@ -346,7 +346,7 @@ var _ = Describe("Reliability", Serial, Label("Reliability"), func() {
 			GinkgoWriter.Printf("succeeded to create the deploy %s\n", deploy.Name)
 
 			// create EgressGateway
-			pool, err = common.GenIPPools(ctx, cli, egressConfig.EnableIPv4, egressConfig.EnableIPv6, int64(ipNum), 1)
+			pool, err = common.GenIPPools(ctx, cli, egressConfig.EnableIPv4, egressConfig.EnableIPv6, int64(ipNum), 7)
 			Expect(err).NotTo(HaveOccurred())
 			nodeSelector := egressv1.NodeSelector{Selector: &v1.LabelSelector{MatchLabels: nodeLabel}}
 

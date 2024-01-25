@@ -29,7 +29,7 @@ var _ = Describe("Egressendpointslice", func() {
 		4. Verify the status of EndpointSlices and the egress IP of Pods.
 		5. When deleting all Pods, EndpointSlices should be deleted as well.
 	*/
-	Context("After performing several rounds of creating and deleting pods, check the status of the egress endpointSlice and the exported IP of the pod", Label("S00001"), func() {
+	Context("After performing several rounds of creating and deleting pods, check the status of the egress endpointSlice and the exported IP of the pod", Serial, Label("S00001"), func() {
 		// deploy
 		var (
 			deploy *appsv1.Deployment
@@ -59,7 +59,7 @@ var _ = Describe("Egressendpointslice", func() {
 
 			nodeSelector := egressv1.NodeSelector{Selector: &metav1.LabelSelector{MatchLabels: nodeLabel}}
 
-			egw, err = common.CreateGatewayNew(ctx, cli, "egw-"+uuid.NewString(), pool, nodeSelector)
+			egw, err = common.CreateGatewayNew(ctx, cli, egwName, pool, nodeSelector)
 			Expect(err).NotTo(HaveOccurred(), "failed to create egressGateway %s\n", egwName)
 
 			DeferCleanup(func() {
@@ -84,7 +84,7 @@ var _ = Describe("Egressendpointslice", func() {
 				// delete the egressGateway if its exists
 				if egw != nil {
 					GinkgoWriter.Printf("delete the gatgeway %s if its exists\n", egw.Name)
-					Expect(common.DeleteObj(ctx, cli, egw)).NotTo(HaveOccurred())
+					Expect(common.DeleteEgressGateway(ctx, cli, egw, time.Minute/2)).NotTo(HaveOccurred())
 				}
 			})
 		})
