@@ -35,7 +35,7 @@ var _ = Describe("IP Allocation", Label("Reliability_IP"), func() {
 
 	BeforeEach(func() {
 		ctx = context.Background()
-		IPNum = 100
+		IPNum = 50
 		extraNum = 20
 
 		// create EgressGateway and pods
@@ -109,6 +109,17 @@ var _ = Describe("IP Allocation", Label("Reliability_IP"), func() {
 		Expect(err).NotTo(HaveOccurred())
 		creationTime := time.Since(creationStart)
 
+		// check egessgateway ip number
+		if egressConfig.EnableIPv4 {
+			Expect(egw.Status.IPUsage.IPv4Free).To(BeZero())
+			Expect(egw.Status.IPUsage.IPv4Total).To(Equal(int(IPNum)))
+		}
+
+		if egressConfig.EnableIPv6 {
+			Expect(egw.Status.IPUsage.IPv6Free).To(BeZero())
+			Expect(egw.Status.IPUsage.IPv6Total).To(Equal(int(IPNum)))
+		}
+
 		// check eip
 		By("check eip of pods")
 		Expect(common.CheckPodsEgressIP(ctx, config, p2p, egressConfig.EnableIPv4, egressConfig.EnableIPv6, true)).NotTo(HaveOccurred(), "failed check eip")
@@ -129,6 +140,17 @@ var _ = Describe("IP Allocation", Label("Reliability_IP"), func() {
 		err = common.WaitEGWSyncedWithEGP(cli, egw, egressConfig.EnableIPv4, egressConfig.EnableIPv6, 0, deletionThresholdTime)
 		Expect(err).NotTo(HaveOccurred())
 		deletionTime := time.Since(deletionStart)
+
+		// check egessgateway ip number
+		if egressConfig.EnableIPv4 {
+			Expect(egw.Status.IPUsage.IPv4Free).To(Equal(int(IPNum)))
+			Expect(egw.Status.IPUsage.IPv4Total).To(Equal(int(IPNum)))
+		}
+
+		if egressConfig.EnableIPv6 {
+			Expect(egw.Status.IPUsage.IPv6Free).To(Equal(int(IPNum)))
+			Expect(egw.Status.IPUsage.IPv6Total).To(Equal(int(IPNum)))
+		}
 
 		By("check eip of pods")
 		Expect(common.CheckPodsEgressIP(ctx, config, p2p, egressConfig.EnableIPv4, egressConfig.EnableIPv6, false)).NotTo(HaveOccurred(), "failed check eip")
