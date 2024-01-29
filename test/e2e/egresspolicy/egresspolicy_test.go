@@ -39,7 +39,7 @@ var _ = Describe("EgressPolicy", Serial, func() {
 		ipNum = 3
 
 		// create EgressGateway
-		pool, err = common.GenIPPools(ctx, cli, egressConfig.EnableIPv4, egressConfig.EnableIPv6, int64(ipNum), 1)
+		pool, err = common.GenIPPools(ctx, cli, egressConfig.EnableIPv4, egressConfig.EnableIPv6, int64(ipNum), 3)
 		Expect(err).NotTo(HaveOccurred())
 		nodeSelector := egressv1.NodeSelector{Selector: &metav1.LabelSelector{MatchLabels: nodeLabel}}
 
@@ -50,7 +50,7 @@ var _ = Describe("EgressPolicy", Serial, func() {
 		DeferCleanup(func() {
 			// delete EgressGateway
 			if egw != nil {
-				err = common.DeleteObj(ctx, cli, egw)
+				err = common.DeleteEgressGateway(ctx, cli, egw, time.Minute/2)
 				Expect(err).NotTo(HaveOccurred())
 			}
 		})
@@ -357,6 +357,11 @@ var _ = Describe("EgressPolicy", Serial, func() {
 			// delete the policy if it is existed
 			if egp != nil {
 				err = common.WaitEgressPoliciesDeleted(ctx, cli, []*egressv1.EgressPolicy{egp}, time.Second*5)
+				Expect(err).NotTo(HaveOccurred())
+			}
+			// delete the cluster policy if it is existed
+			if egcp != nil {
+				err = common.WaitEgressClusterPoliciesDeleted(ctx, cli, []*egressv1.EgressClusterPolicy{egcp}, time.Second*5)
 				Expect(err).NotTo(HaveOccurred())
 			}
 		})
@@ -940,7 +945,7 @@ var _ = Describe("EgressPolicy", Serial, func() {
 		The policy and clusterPolicy should be created successfully, and the spec.egressGatewayName should be set to the cluster's default gateway. Verify that the status is correct.
 		Create a namespace-level default gateway. Create a policy in this namespace without specifying the gatewayName. It is expected to use the default gateway of this namespace, and verify that the status is correct.
 	*/
-	Context("Test cluster-level default-egressgateway and namesapce-level default-egressgateway", func() {
+	Context("Test cluster-level default-egressgateway and namesapce-level default-egressgateway", Serial, func() {
 		var ctx context.Context
 		var err error
 		// gateway
@@ -969,7 +974,7 @@ var _ = Describe("EgressPolicy", Serial, func() {
 
 			// create cluster-level egressgateway
 			ipNum = 3
-			pool, err = common.GenIPPools(ctx, cli, egressConfig.EnableIPv4, egressConfig.EnableIPv6, int64(ipNum), 1)
+			pool, err = common.GenIPPools(ctx, cli, egressConfig.EnableIPv4, egressConfig.EnableIPv6, int64(ipNum), 4)
 			Expect(err).NotTo(HaveOccurred())
 			nodeSelector := egressv1.NodeSelector{Selector: &metav1.LabelSelector{MatchLabels: nodeLabel}}
 
@@ -1000,10 +1005,10 @@ var _ = Describe("EgressPolicy", Serial, func() {
 
 				// delete gateway if it exists
 				if defaultClusterEgw != nil {
-					Expect(common.DeleteObj(ctx, cli, defaultClusterEgw)).NotTo(HaveOccurred())
+					Expect(common.DeleteEgressGateway(ctx, cli, defaultClusterEgw, time.Minute/2)).NotTo(HaveOccurred())
 				}
 				if defaultNamespaceEgw != nil {
-					Expect(common.DeleteObj(ctx, cli, defaultNamespaceEgw)).NotTo(HaveOccurred())
+					Expect(common.DeleteEgressGateway(ctx, cli, defaultNamespaceEgw, time.Minute/2)).NotTo(HaveOccurred())
 				}
 			})
 		})
@@ -1074,7 +1079,7 @@ var _ = Describe("EgressPolicy", Serial, func() {
 			createNamespaceLevelPolicyAndCheck(ctx, defaultClusterEgw, pool, ipNum, podLabels, testNS)
 
 			// create namespace-default-gateway
-			pool, err = common.GenIPPools(ctx, cli, egressConfig.EnableIPv4, egressConfig.EnableIPv6, int64(ipNum), 1)
+			pool, err = common.GenIPPools(ctx, cli, egressConfig.EnableIPv4, egressConfig.EnableIPv6, int64(ipNum), 5)
 			Expect(err).NotTo(HaveOccurred())
 			nodeSelector := egressv1.NodeSelector{Selector: &metav1.LabelSelector{MatchLabels: nodeLabel}}
 

@@ -352,7 +352,7 @@ var _ = Describe("Operate EgressGateway", Label("EgressGateway"), Ordered, func(
 			DeferCleanup(func() {
 				// delete EgressGateway
 				if egw != nil {
-					err := common.DeleteObj(ctx, cli, egw)
+					err := common.DeleteEgressGateway(ctx, cli, egw, time.Minute/2)
 					Expect(err).NotTo(HaveOccurred())
 				}
 			})
@@ -544,7 +544,7 @@ var _ = Describe("Operate EgressGateway", Label("EgressGateway"), Ordered, func(
 				// delete egw
 				time.Sleep(time.Second)
 				GinkgoWriter.Printf("Delete egw: %s\n", egw.Name)
-				Expect(common.DeleteObj(ctx, cli, egw)).NotTo(HaveOccurred())
+				Expect(common.DeleteEgressGateway(ctx, cli, egw, time.Minute/2)).NotTo(HaveOccurred())
 			})
 		})
 
@@ -687,7 +687,7 @@ var _ = Describe("Operate EgressGateway", Label("EgressGateway"), Ordered, func(
 				// delete the egw if it exists
 				if egw != nil {
 					GinkgoWriter.Printf("Delete egw: %s\n", egw.Name)
-					Expect(common.DeleteObj(ctx, cli, egw)).NotTo(HaveOccurred())
+					Expect(common.DeleteEgressGateway(ctx, cli, egw, time.Minute/2)).NotTo(HaveOccurred())
 				}
 			})
 		})
@@ -727,7 +727,7 @@ var _ = Describe("Operate EgressGateway", Label("EgressGateway"), Ordered, func(
 func createEgressGateway(ctx context.Context) (egw *egressv1.EgressGateway) {
 	// create gateway
 	GinkgoWriter.Println("Create EgressGateway")
-	pool, err := common.GenIPPools(ctx, cli, egressConfig.EnableIPv4, egressConfig.EnableIPv6, 3, 1)
+	pool, err := common.GenIPPools(ctx, cli, egressConfig.EnableIPv4, egressConfig.EnableIPv6, 3, 2)
 	Expect(err).NotTo(HaveOccurred())
 	nodeSelector := egressv1.NodeSelector{Selector: &metav1.LabelSelector{MatchLabels: node1.Labels}}
 	egw, err = common.CreateGatewayNew(ctx, cli, "egw-"+uuid.NewString(), pool, nodeSelector)
