@@ -39,7 +39,7 @@ jobs:
       crd: ${{ env.RUN_CRD_CHECK }}
     steps:
       - name: Check Go Code Changes
-        uses: dorny/paths-filter@v2.11.1
+        uses: dorny/paths-filter@v3.0.0
         if: ${{ github.event_name == 'pull_request' }}
         id: filter_pr
         with:
