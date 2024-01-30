@@ -66,6 +66,7 @@ func Test_eciReconciler_Reconcile(t *testing.T) {
 			getReqFunc:    mock_request_calico,
 			setReconciler: mock_eciReconciler_info_AutoDetect_PodCidrMode_calico,
 			patchFunc:     mock_Reconciler_Reconcile_failed_Update,
+			expErr:        false,
 			expRequeue:    true,
 		},
 	}
@@ -73,12 +74,7 @@ func Test_eciReconciler_Reconcile(t *testing.T) {
 	builder := fake.NewClientBuilder()
 	builder.WithScheme(schema.GetScheme())
 
-	// objs = append(objs, egci)
-	// 		builder.WithObjects(objs...)
-	// 		builder.WithStatusSubresource(objs...)
-
 	r := &eciReconciler{
-		// mgr:           mgr,
 		eci:           new(egressv1.EgressClusterInfo),
 		log:           logr.Logger{},
 		k8sPodCidr:    make(map[string]egressv1.IPListPair),
@@ -93,13 +89,9 @@ func Test_eciReconciler_Reconcile(t *testing.T) {
 				tc.setReconciler(r)
 			}
 
+			patches := make([]gomonkey.Patches, 0)
 			if tc.patchFunc != nil {
-				patches := tc.patchFunc(r)
-				defer func() {
-					for _, p := range patches {
-						p.Reset()
-					}
-				}()
+				patches = tc.patchFunc(r)
 			}
 
 			req := tc.getReqFunc()
@@ -114,9 +106,12 @@ func Test_eciReconciler_Reconcile(t *testing.T) {
 			if tc.expRequeue {
 				assert.True(t, res.Requeue)
 			}
+
+			for _, p := range patches {
+				p.Reset()
+			}
 		})
 	}
-
 }
 
 func Test_eciReconciler_reconcileEgressClusterInfo(t *testing.T) {
