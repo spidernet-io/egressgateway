@@ -416,13 +416,6 @@
   
 </li>
       
-        <li class="md-nav__item">
-  <a href="#uninstalling-egressgateway" class="md-nav__link">
-    Uninstalling EgressGateway
-  </a>
-  
-</li>
-      
     </ul>
   
 </nav>
@@ -1111,13 +1104,6 @@
   
 </li>
       
-        <li class="md-nav__item">
-  <a href="#uninstalling-egressgateway" class="md-nav__link">
-    Uninstalling EgressGateway
-  </a>
-  
-</li>
-      
     </ul>
   
 </nav>
@@ -1398,11 +1384,6 @@ Note that EgressPolicy objects are tenant-level, so they must be created under t
 </span></code></pre></div></p>
 </li>
 </ol>
-<h2 id="uninstalling-egressgateway">Uninstalling EgressGateway</h2>
-<p>In order to ensure uninterrupted business flow, the <code>egressgateway</code> incorporates a finalizer mechanism. When deleting the <code>egressgateway</code>, if there are <code>policies</code> referencing it, the <code>egressgateway</code> will remain in the "deleting" state until all <code>policies</code> are deleted, and the finalizer will be automatically removed.<br />
-  Therefore, if you want to delete the <code>egressgateway</code>, it is recommended to follow these steps:<br />
-  1. Delete all <code>policies</code> that reference the <code>egressgateway</code>.<br />
-  2. Delete the <code>egressgateway</code>.</p>
 
 
 
