@@ -153,7 +153,7 @@ spec:
             - name: HEALTH_PROBE_BIND_ADDRESS
               value: :{{ .Values.agent.healthServer.port }}
             - name: PYROSCOPE_SERVER_ADDR
-              value: {{ .Values.controller.debug.pyroscopeServerAddr | quote }}
+              value: {{ .Values.agent.debug.pyroscopeServerAddr | quote }}
             - name: GOPS_PORT
               value: {{ .Values.agent.debug.gopsPort | quote }}
             - name: CONFIGMAP_PATH
