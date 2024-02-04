@@ -217,11 +217,6 @@ func Test_EnsureLink(t *testing.T) {
 			if tc.patchFunc != nil {
 				patchess := tc.patchFunc(dev)
 				patches = append(patches, patchess...)
-				defer func() {
-					for _, p := range patches {
-						p.Reset()
-					}
-				}()
 			}
 
 			name, vni, port, mac, mtu, ipv4, ipv6, disableChecksumOffload := tc.prepare()
@@ -230,6 +225,9 @@ func Test_EnsureLink(t *testing.T) {
 				assert.Error(t, err)
 			} else {
 				assert.NoError(t, err)
+			}
+			for _, p := range patches {
+				p.Reset()
 			}
 		})
 	}
@@ -285,11 +283,6 @@ func Test_ensureLink(t *testing.T) {
 			if tc.patchFunc != nil {
 				patchess := tc.patchFunc()
 				patches = append(patches, patchess...)
-				defer func() {
-					for _, p := range patches {
-						p.Reset()
-					}
-				}()
 			}
 
 			_, err = dev.ensureLink(vxlan)
@@ -297,6 +290,10 @@ func Test_ensureLink(t *testing.T) {
 				assert.Error(t, err)
 			} else {
 				assert.NoError(t, err)
+			}
+
+			for _, p := range patches {
+				p.Reset()
 			}
 		})
 	}
@@ -339,11 +336,6 @@ func Test_ListNeigh(t *testing.T) {
 			if tc.patchFunc != nil {
 				patchess := tc.patchFunc(dev)
 				patches = append(patches, patchess...)
-				defer func() {
-					for _, p := range patches {
-						p.Reset()
-					}
-				}()
 			}
 
 			_, err = dev.ListNeigh()
@@ -351,6 +343,9 @@ func Test_ListNeigh(t *testing.T) {
 				assert.Error(t, err)
 			} else {
 				assert.NoError(t, err)
+			}
+			for _, p := range patches {
+				p.Reset()
 			}
 		})
 	}
@@ -402,11 +397,6 @@ func Test_Add(t *testing.T) {
 			if tc.patchFunc != nil {
 				patchess := tc.patchFunc(dev)
 				patches = append(patches, patchess...)
-				defer func() {
-					for _, p := range patches {
-						p.Reset()
-					}
-				}()
 			}
 
 			err = dev.Add(peer)
@@ -414,6 +404,9 @@ func Test_Add(t *testing.T) {
 				assert.Error(t, err)
 			} else {
 				assert.NoError(t, err)
+			}
+			for _, p := range patches {
+				p.Reset()
 			}
 		})
 	}
@@ -450,11 +443,6 @@ func Test_add(t *testing.T) {
 			if tc.patchFunc != nil {
 				patchess := tc.patchFunc(dev)
 				patches = append(patches, patchess...)
-				defer func() {
-					for _, p := range patches {
-						p.Reset()
-					}
-				}()
 			}
 
 			err = dev.add(mac, ip)
@@ -462,6 +450,10 @@ func Test_add(t *testing.T) {
 				assert.Error(t, err)
 			} else {
 				assert.NoError(t, err)
+			}
+
+			for _, p := range patches {
+				p.Reset()
 			}
 		})
 	}
@@ -500,11 +492,6 @@ func Test_Del(t *testing.T) {
 			if tc.patchFunc != nil {
 				patchess := tc.patchFunc(dev)
 				patches = append(patches, patchess...)
-				defer func() {
-					for _, p := range patches {
-						p.Reset()
-					}
-				}()
 			}
 
 			err = dev.Del(neigh)
@@ -512,6 +499,9 @@ func Test_Del(t *testing.T) {
 				assert.Error(t, err)
 			} else {
 				assert.NoError(t, err)
+			}
+			for _, p := range patches {
+				p.Reset()
 			}
 		})
 	}
@@ -567,11 +557,6 @@ func Test_ensureAddr(t *testing.T) {
 			if tc.patchFunc != nil {
 				patchess := tc.patchFunc()
 				patches = append(patches, patchess...)
-				defer func() {
-					for _, p := range patches {
-						p.Reset()
-					}
-				}()
 			}
 
 			err = dev.ensureAddr(ipn, link, family)
@@ -579,6 +564,9 @@ func Test_ensureAddr(t *testing.T) {
 				assert.Error(t, err)
 			} else {
 				assert.NoError(t, err)
+			}
+			for _, p := range patches {
+				p.Reset()
 			}
 		})
 	}
@@ -626,11 +614,6 @@ func Test_writeProcSys(t *testing.T) {
 			if tc.patchFunc != nil {
 				patchess := tc.patchFunc()
 				patches = append(patches, patchess...)
-				defer func() {
-					for _, p := range patches {
-						p.Reset()
-					}
-				}()
 			}
 
 			err = writeProcSys(path, value)
@@ -638,6 +621,9 @@ func Test_writeProcSys(t *testing.T) {
 				assert.Error(t, err)
 			} else {
 				assert.NoError(t, err)
+			}
+			for _, p := range patches {
+				p.Reset()
 			}
 		})
 	}
