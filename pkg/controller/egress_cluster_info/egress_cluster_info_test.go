@@ -203,13 +203,9 @@ func Test_eciReconciler_reconcileEgressClusterInfo(t *testing.T) {
 				tc.setReconciler(r)
 			}
 
+			patches := make([]gomonkey.Patches, 0)
 			if tc.patchFunc != nil {
-				patches := tc.patchFunc(r)
-				defer func() {
-					for _, p := range patches {
-						p.Reset()
-					}
-				}()
+				patches = tc.patchFunc(r)
 			}
 
 			ctx := context.TODO()
@@ -219,6 +215,10 @@ func Test_eciReconciler_reconcileEgressClusterInfo(t *testing.T) {
 				assert.Error(t, err)
 			} else {
 				assert.NoError(t, err)
+			}
+
+			for _, p := range patches {
+				p.Reset()
 			}
 		})
 	}
@@ -280,13 +280,9 @@ func Test_eciReconciler_reconcileCalicoIPPool(t *testing.T) {
 				tc.setReconciler(r)
 			}
 
+			patches := make([]gomonkey.Patches, 0)
 			if tc.patchFunc != nil {
-				patches := tc.patchFunc(r)
-				defer func() {
-					for _, p := range patches {
-						p.Reset()
-					}
-				}()
+				patches = tc.patchFunc(r)
 			}
 
 			ctx := context.TODO()
@@ -296,6 +292,9 @@ func Test_eciReconciler_reconcileCalicoIPPool(t *testing.T) {
 				assert.Error(t, err)
 			} else {
 				assert.NoError(t, err)
+			}
+			for _, p := range patches {
+				p.Reset()
 			}
 		})
 	}
@@ -356,13 +355,9 @@ func Test_eciReconciler_reconcileNode(t *testing.T) {
 				tc.setReconciler(r)
 			}
 
+			patches := make([]gomonkey.Patches, 0)
 			if tc.patchFunc != nil {
-				patches := tc.patchFunc(r)
-				defer func() {
-					for _, p := range patches {
-						p.Reset()
-					}
-				}()
+				patches = tc.patchFunc(r)
 			}
 
 			ctx := context.TODO()
@@ -372,6 +367,9 @@ func Test_eciReconciler_reconcileNode(t *testing.T) {
 				assert.Error(t, err)
 			} else {
 				assert.NoError(t, err)
+			}
+			for _, p := range patches {
+				p.Reset()
 			}
 		})
 	}
@@ -454,13 +452,9 @@ func Test_eciReconciler_listCalicoIPPools(t *testing.T) {
 				tc.setReconciler(r)
 			}
 
+			patches := make([]gomonkey.Patches, 0)
 			if tc.patchFunc != nil {
-				patches := tc.patchFunc(r)
-				defer func() {
-					for _, p := range patches {
-						p.Reset()
-					}
-				}()
+				patches = tc.patchFunc(r)
 			}
 
 			ctx := context.TODO()
@@ -470,6 +464,10 @@ func Test_eciReconciler_listCalicoIPPools(t *testing.T) {
 				assert.Error(t, err)
 			} else {
 				assert.NoError(t, err)
+			}
+
+			for _, p := range patches {
+				p.Reset()
 			}
 		})
 	}
@@ -535,13 +533,9 @@ func Test_eciReconciler_getCalicoIPPools(t *testing.T) {
 				tc.setReconciler(r)
 			}
 
+			patches := make([]gomonkey.Patches, 0)
 			if tc.patchFunc != nil {
-				patches := tc.patchFunc(r)
-				defer func() {
-					for _, p := range patches {
-						p.Reset()
-					}
-				}()
+				patches = tc.patchFunc(r)
 			}
 
 			ctx := context.TODO()
@@ -551,6 +545,9 @@ func Test_eciReconciler_getCalicoIPPools(t *testing.T) {
 				assert.Error(t, err)
 			} else {
 				assert.NoError(t, err)
+			}
+			for _, p := range patches {
+				p.Reset()
 			}
 		})
 	}
@@ -601,13 +598,9 @@ func Test_eciReconciler_listNodeIPs(t *testing.T) {
 				tc.setReconciler(r)
 			}
 
+			patches := make([]gomonkey.Patches, 0)
 			if tc.patchFunc != nil {
-				patches := tc.patchFunc(r)
-				defer func() {
-					for _, p := range patches {
-						p.Reset()
-					}
-				}()
+				patches = tc.patchFunc(r)
 			}
 
 			ctx := context.TODO()
@@ -617,6 +610,10 @@ func Test_eciReconciler_listNodeIPs(t *testing.T) {
 				assert.Error(t, err)
 			} else {
 				assert.NoError(t, err)
+			}
+
+			for _, p := range patches {
+				p.Reset()
 			}
 		})
 	}
@@ -667,13 +664,9 @@ func Test_eciReconciler_getNodeIPs(t *testing.T) {
 				tc.setReconciler(r)
 			}
 
+			patches := make([]gomonkey.Patches, 0)
 			if tc.patchFunc != nil {
-				patches := tc.patchFunc(r)
-				defer func() {
-					for _, p := range patches {
-						p.Reset()
-					}
-				}()
+				patches = tc.patchFunc(r)
 			}
 
 			ctx := context.TODO()
@@ -683,6 +676,9 @@ func Test_eciReconciler_getNodeIPs(t *testing.T) {
 				assert.Error(t, err)
 			} else {
 				assert.NoError(t, err)
+			}
+			for _, p := range patches {
+				p.Reset()
 			}
 		})
 	}
@@ -885,13 +881,9 @@ func Test_eciReconciler_checkSomeCniExists(t *testing.T) {
 				tc.setReconciler(r)
 			}
 
+			patches := make([]gomonkey.Patches, 0)
 			if tc.patchFunc != nil {
-				patches := tc.patchFunc(r)
-				defer func() {
-					for _, p := range patches {
-						p.Reset()
-					}
-				}()
+				patches = tc.patchFunc(r)
 			}
 
 			err := r.checkSomeCniExists()
@@ -899,6 +891,9 @@ func Test_eciReconciler_checkSomeCniExists(t *testing.T) {
 				assert.Error(t, err)
 			} else {
 				assert.NoError(t, err)
+			}
+			for _, p := range patches {
+				p.Reset()
 			}
 		})
 	}

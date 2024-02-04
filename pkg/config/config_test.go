@@ -179,17 +179,15 @@ func Test_LoadConfig(t *testing.T) {
 
 			patchess := tc.patchFunc()
 			patches = append(patches, patchess...)
-			defer func() {
-				for _, p := range patches {
-					p.Reset()
-				}
-			}()
 
 			_, err := LoadConfig(tc.setParams())
 			if tc.expErr {
 				assert.Error(t, err)
 			} else {
 				assert.NoError(t, err)
+			}
+			for _, p := range patches {
+				p.Reset()
 			}
 		})
 

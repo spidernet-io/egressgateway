@@ -52,12 +52,6 @@ func Test_NewAllocatorMarkRange(t *testing.T) {
 			patches := make([]gomonkey.Patches, 0)
 			if tc.patchFunc != nil {
 				patches = tc.patchFunc()
-
-				defer func() {
-					for _, p := range patches {
-						p.Reset()
-					}
-				}()
 			}
 
 			_, err := NewAllocatorMarkRange(mark)
@@ -65,6 +59,10 @@ func Test_NewAllocatorMarkRange(t *testing.T) {
 				assert.Error(t, err)
 			} else {
 				assert.NoError(t, err)
+			}
+
+			for _, p := range patches {
+				p.Reset()
 			}
 		})
 	}
@@ -102,12 +100,6 @@ func Test_RangeSize(t *testing.T) {
 			patches := make([]gomonkey.Patches, 0)
 			if tc.patchFunc != nil {
 				patches = tc.patchFunc()
-
-				defer func() {
-					for _, p := range patches {
-						p.Reset()
-					}
-				}()
 			}
 
 			_, _, err := RangeSize(mark)
@@ -115,6 +107,9 @@ func Test_RangeSize(t *testing.T) {
 				assert.Error(t, err)
 			} else {
 				assert.NoError(t, err)
+			}
+			for _, p := range patches {
+				p.Reset()
 			}
 		})
 	}
@@ -149,12 +144,6 @@ func Test_Range_Allocate(t *testing.T) {
 			patches := make([]gomonkey.Patches, 0)
 			if tc.patchFunc != nil {
 				patches = tc.patchFunc(&r)
-
-				defer func() {
-					for _, p := range patches {
-						p.Reset()
-					}
-				}()
 			}
 
 			err := r.Allocate(mark)
@@ -162,6 +151,9 @@ func Test_Range_Allocate(t *testing.T) {
 				assert.Error(t, err)
 			} else {
 				assert.NoError(t, err)
+			}
+			for _, p := range patches {
+				p.Reset()
 			}
 		})
 	}
@@ -191,12 +183,6 @@ func Test_Range_AllocateNext(t *testing.T) {
 			patches := make([]gomonkey.Patches, 0)
 			if tc.patchFunc != nil {
 				patches = tc.patchFunc(&r)
-
-				defer func() {
-					for _, p := range patches {
-						p.Reset()
-					}
-				}()
 			}
 
 			_, err := r.AllocateNext()
@@ -204,6 +190,9 @@ func Test_Range_AllocateNext(t *testing.T) {
 				assert.Error(t, err)
 			} else {
 				assert.NoError(t, err)
+			}
+			for _, p := range patches {
+				p.Reset()
 			}
 		})
 	}
@@ -230,12 +219,6 @@ func Test_Range_Release(t *testing.T) {
 			patches := make([]gomonkey.Patches, 0)
 			if tc.patchFunc != nil {
 				patches = tc.patchFunc(&r)
-
-				defer func() {
-					for _, p := range patches {
-						p.Reset()
-					}
-				}()
 			}
 
 			err := r.Release(mark)
@@ -243,6 +226,9 @@ func Test_Range_Release(t *testing.T) {
 				assert.Error(t, err)
 			} else {
 				assert.NoError(t, err)
+			}
+			for _, p := range patches {
+				p.Reset()
 			}
 		})
 	}
@@ -269,17 +255,14 @@ func Test_Range_Has(t *testing.T) {
 			patches := make([]gomonkey.Patches, 0)
 			if tc.patchFunc != nil {
 				patches = tc.patchFunc(&r)
-
-				defer func() {
-					for _, p := range patches {
-						p.Reset()
-					}
-				}()
 			}
 
 			b := r.Has(mark)
 			if tc.expOK {
 				assert.False(t, b)
+			}
+			for _, p := range patches {
+				p.Reset()
 			}
 		})
 	}
@@ -302,17 +285,14 @@ func Test_Range_contains(t *testing.T) {
 			patches := make([]gomonkey.Patches, 0)
 			if tc.patchFunc != nil {
 				patches = tc.patchFunc(&r)
-
-				defer func() {
-					for _, p := range patches {
-						p.Reset()
-					}
-				}()
 			}
 
 			b, _ := r.contains(mark)
 			if tc.expOK {
 				assert.False(t, b)
+			}
+			for _, p := range patches {
+				p.Reset()
 			}
 		})
 	}
