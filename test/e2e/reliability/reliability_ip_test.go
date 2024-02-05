@@ -13,6 +13,7 @@ import (
 	. "github.com/onsi/gomega"
 
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/types"
 
 	egressv1 "github.com/spidernet-io/egressgateway/pkg/k8s/apis/v1beta1"
 	"github.com/spidernet-io/egressgateway/test/e2e/common"
@@ -137,11 +138,19 @@ var _ = Describe("IP Allocation", Label("Reliability_IP"), func() {
 
 		// check eip after policies deleted
 		By("check egressgateway status should be empty")
-		err = common.WaitEGWSyncedWithEGP(cli, egw, egressConfig.EnableIPv4, egressConfig.EnableIPv6, 0, deletionThresholdTime)
-		Expect(err).NotTo(HaveOccurred())
+		Eventually(ctx, func() []egressv1.Eips {
+			eips := make([]egressv1.Eips, 0)
+			_ = cli.Get(ctx, types.NamespacedName{Namespace: egw.Namespace, Name: egw.Name}, egw)
+			for _, eipStatus := range egw.Status.NodeList {
+				eips = append(eips, eipStatus.Eips...)
+			}
+			return eips
+		}).WithTimeout(time.Minute*2).WithPolling(time.Second*2).Should(BeEmpty(),
+			fmt.Sprintf("failed to wait the egressgateway: %s status to be empty, egressgateway yaml: %v", egw.Name, egw))
 		deletionTime := time.Since(deletionStart)
 
 		// check egessgateway ip number
+		By("check egressgateway status IPUsage")
 		if egressConfig.EnableIPv4 {
 			Expect(egw.Status.IPUsage.IPv4Free).To(Equal(int(IPNum)))
 			Expect(egw.Status.IPUsage.IPv4Total).To(Equal(int(IPNum)))
