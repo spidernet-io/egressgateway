@@ -173,7 +173,7 @@ github.com/gorilla/handlers
 # github.com/gorilla/websocket v1.5.1
 ## explicit; go 1.20
 github.com/gorilla/websocket
-# github.com/grafana/pyroscope-go v1.1.0
+# github.com/grafana/pyroscope-go v1.1.1
 ## explicit; go 1.17
 github.com/grafana/pyroscope-go
 github.com/grafana/pyroscope-go/internal/flameql
