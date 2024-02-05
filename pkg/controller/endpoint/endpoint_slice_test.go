@@ -708,19 +708,18 @@ func Test_NewEgressEndpointSliceController(t *testing.T) {
 			}
 
 			// patch
+			patches := make([]gomonkey.Patches, 0)
 			if tc.patchFun != nil {
-				patches := tc.patchFun(t, r, mgr, log)
-				defer func() {
-					for _, p := range patches {
-						p.Reset()
-					}
-				}()
+				patches = tc.patchFun(t, r, mgr, log)
 			}
 
 			err = NewEgressEndpointSliceController(mgr, log, cfg)
 
 			if tc.expErr {
 				assert.Error(t, err)
+			}
+			for _, p := range patches {
+				p.Reset()
 			}
 		})
 	}
@@ -850,19 +849,18 @@ func Test_endpointReconciler_Reconcile(t *testing.T) {
 			}
 
 			// patch
+			patches := make([]gomonkey.Patches, 0)
 			if tc.patchFun != nil {
-				patches := tc.patchFun(t, r, mgr, log)
-				defer func() {
-					for _, p := range patches {
-						p.Reset()
-					}
-				}()
+				patches = tc.patchFun(t, r, mgr, log)
 			}
 
 			_, err = r.Reconcile(context.TODO(), req)
 
 			if tc.expErr {
 				assert.Error(t, err)
+			}
+			for _, p := range patches {
+				p.Reset()
 			}
 		})
 	}
@@ -1004,13 +1002,9 @@ func Test_listPodsByPolicy(t *testing.T) {
 			cli := builder.Build()
 
 			// patch
+			patches := make([]gomonkey.Patches, 0)
 			if tc.patchFun != nil {
-				patches := tc.patchFun(cli)
-				defer func() {
-					for _, p := range patches {
-						p.Reset()
-					}
-				}()
+				patches = tc.patchFun(cli)
 			}
 
 			policy := tc.setParams()
@@ -1018,6 +1012,9 @@ func Test_listPodsByPolicy(t *testing.T) {
 
 			if tc.expErr {
 				assert.Error(t, err)
+			}
+			for _, p := range patches {
+				p.Reset()
 			}
 		})
 	}
@@ -1159,13 +1156,9 @@ func Test_enqueuePod(t *testing.T) {
 			cli := builder.Build()
 
 			// patch
+			patches := make([]gomonkey.Patches, 0)
 			if tc.patchFun != nil {
-				patches := tc.patchFun(cli)
-				defer func() {
-					for _, p := range patches {
-						p.Reset()
-					}
-				}()
+				patches = tc.patchFun(cli)
 			}
 
 			resF := enqueuePod(cli)
@@ -1173,6 +1166,9 @@ func Test_enqueuePod(t *testing.T) {
 
 			if tc.expErr {
 				assert.Nil(t, res)
+			}
+			for _, p := range patches {
+				p.Reset()
 			}
 		})
 	}
