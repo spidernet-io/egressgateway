@@ -223,14 +223,14 @@ jobs:
           cd ..
 
       - name: Upload artifact digests
-        uses: actions/upload-artifact@v3.1.3
+        uses: actions/upload-artifact@v4.3.1
         with:
           name: image-digest-${{ matrix.name }}-${{ env.RUN_IMAGE_TAG }}
           path: image-digest-output.txt
           retention-days: 1
 
       - name: Upload artifact digests
-        uses: actions/upload-artifact@v3.1.3
+        uses: actions/upload-artifact@v4.3.1
         with:
           name: makefile-digest-${{ matrix.name }}-${{ env.RUN_IMAGE_TAG }}
           path: Makefile.digests
@@ -239,7 +239,7 @@ jobs:
       # Upload artifact race images tar
       - name: Upload image artifact
         if: ${{ env.RUN_UPLOAD == 'true' }}
-        uses: actions/upload-artifact@v3.1.3
+        uses: actions/upload-artifact@v4.3.1
         with:
           name: image-tar-${{ env.RUN_IMAGE_SUFFIX }}
           path: /tmp/${{ env.RUN_IMAGE_SUFFIX }}.tar
