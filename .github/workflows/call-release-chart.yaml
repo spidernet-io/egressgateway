@@ -93,7 +93,7 @@ jobs:
         uses: azure/setup-helm@v3.5
 
       - name: Download Chart Artifact
-        uses: actions/download-artifact@v3.0.2
+        uses: actions/download-artifact@v4.1.2
         with:
           name: chart_package_artifact
           path: charts

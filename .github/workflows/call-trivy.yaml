@@ -21,7 +21,7 @@ jobs:
 
       # download all artifact
       - name: Download images
-        uses: actions/download-artifact@v3.0.2
+        uses: actions/download-artifact@v4.1.2
         with:
           path: output/artifact-trivy
 
