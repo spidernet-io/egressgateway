@@ -397,6 +397,10 @@ e2e_run:
 e2e_clean:
 	make -C test clean
 
+.PHONY: clean_e2e_egress
+clean_e2e_egress:
+	-$(QUIET) make -C test uninstall_egress
+
 
 #============ doc
 

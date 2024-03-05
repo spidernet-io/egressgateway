@@ -144,9 +144,9 @@ jobs:
               -e E2E_GINKGO_LABELS=${E2E_LABELS} \
               -e E2E_IP_FAMILY=${{ inputs.ipfamily }} -e CNI=${{ env.cni }}} || RESULT=1
           if ((RESULT==0)) ; then
-              echo "RUN_PASS=true" >> $GITHUB_ENV
+              echo "RUN_E2E_PASS=true" >> $GITHUB_ENV
           else
-              echo "RUN_PASS=false" >> $GITHUB_ENV
+              echo "RUN_E2E_PASS=false" >> $GITHUB_ENV
           fi
           if [ -f "${{ env.E2E_LOG_PATH }}" ] ; then
               echo "RUN_UPLOAD_LOG=true" >> $GITHUB_ENV
@@ -174,9 +174,20 @@ jobs:
           path: ${{ env.E2E_GINKGO_REPORT_PATH }}
           retention-days: 30
 
+      - name: helm uninstalls egress
+        id: clean
+        run: |
+          RESULT=0
+          make clean_e2e_egress -e E2E_KIND_CLUSTER_NAME=${{ env.RUN_KIND_CLUSTER_NAME }} || RESULT=1
+          if ((RESULT==0)) ; then
+              echo "CLEAN_E2E_PASS=true" >> $GITHUB_ENV
+          else
+              echo "CLEAN_E2E_PASS=false" >> $GITHUB_ENV
+          fi
+
       - name: Show e2e Result
         run: |
-          if ${{ env.RUN_PASS == 'true' }} ;then
+          if ${{ env.RUN_E2E_PASS == 'true' && env.CLEAN_E2E_PASS == 'true'}} ;then
               exit 0
           else
               exit 1
