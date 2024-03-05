@@ -99,6 +99,16 @@ type EgressIPStatus struct {
 	Status string `json:"status,omitempty"`
 }
 
+func (status *EgressGatewayStatus) ReadyCount() int {
+	res := 0
+	for _, node := range status.NodeList {
+		if EgressTunnelReady.IsEqual(node.Status) {
+			res++
+		}
+	}
+	return res
+}
+
 type Eips struct {
 	// +kubebuilder:validation:Optional
 	IPv4 string `json:"ipv4,omitempty"`
