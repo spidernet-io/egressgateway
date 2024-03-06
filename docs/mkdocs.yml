@@ -87,6 +87,7 @@ nav:
       - Namespace Default EgressGateway: usage/NamespaceDefaultEgressGateway.md
       - Cluster Default EgressGateway: usage/ClusterDefaultEgressGateway.md
       - Failover: usage/EgressGatewayFailover.md
+      - Move EgressIP: usage/MoveIP.md
   - Concepts:
       - Architecture: concepts/Architecture.md
       - Datapath: concepts/Datapath.md
@@ -98,6 +99,7 @@ nav:
       - CRD EgressEndpointSlice: reference/EgressEndpointSlice.md
       - CRD EgressClusterEndpointSlice: reference/EgressClusterEndpointSlice.md
       - CRD EgressClusterInfo: reference/EgressClusterInfo.md
+      - egctl cli: reference/egctl.md
   - Troubleshooting: Troubleshooting.md
   - Development:
       - DataFlow: develop/Dataflow.md
