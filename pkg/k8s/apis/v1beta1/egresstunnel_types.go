@@ -68,6 +68,18 @@ type Parent struct {
 
 type EgressTunnelPhase string
 
+func (e EgressTunnelPhase) String() string {
+	return string(e)
+}
+
+func (e EgressTunnelPhase) IsEqual(s string) bool {
+	return string(e) == s
+}
+
+func (e EgressTunnelPhase) IsNotEqual(s string) bool {
+	return string(e) != s
+}
+
 const (
 	// EgressTunnelPending wait for tunnel address available
 	EgressTunnelPending EgressTunnelPhase = "Pending"
