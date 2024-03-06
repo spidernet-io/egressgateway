@@ -87,6 +87,7 @@ nav:
       - Namespace Default EgressGateway: usage/NamespaceDefaultEgressGateway.md
       - Cluster Default EgressGateway: usage/ClusterDefaultEgressGateway.md
       - Failover: usage/EgressGatewayFailover.md
+      - Move EgressIP: usage/MoveIP.md
   - Concepts:
       - Architecture: concepts/Architecture.md
       - Datapath: concepts/Datapath.md
