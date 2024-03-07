@@ -133,7 +133,7 @@ func (r *egReconciler) reconcileEGN(ctx context.Context, req reconcile.Request, 
 			// For the existence of Node, when the user manually deletes EgressTunnel,
 			// we first release the EgressTunnel and then regenerate it.
 			err := r.releaseEgressTunnel(*egresstunnel, log, func() error {
-				cleanFinalizers(egresstunnel)
+				utils.RemoveFinalizers(&egresstunnel.ObjectMeta, egressTunnelFinalizers)
 				err = r.client.Update(context.Background(), egresstunnel)
 				if err != nil {
 					return err
@@ -154,14 +154,6 @@ func (r *egReconciler) reconcileEGN(ctx context.Context, req reconcile.Request, 
 	}
 
 	return reconcile.Result{Requeue: false}, nil
-}
-
-func cleanFinalizers(node *egressv1.EgressTunnel) {
-	for i, item := range node.Finalizers {
-		if item == egressTunnelFinalizers {
-			node.Finalizers = append(node.Finalizers[:i], node.Finalizers[i+1:]...)
-		}
-	}
 }
 
 // reconcileNode reconcile node

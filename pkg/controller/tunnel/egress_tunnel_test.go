@@ -194,37 +194,6 @@ func TestEgressTunnelCtrlForNode(t *testing.T) {
 	}
 }
 
-func TestCleanFinalizers(t *testing.T) {
-	tests := []struct {
-		name           string
-		node           *egressv1.EgressTunnel
-		wantFinalizers []string
-	}{
-		{
-			name: "remove egressTunnelFinalizers",
-			node: &egressv1.EgressTunnel{
-				ObjectMeta: v1.ObjectMeta{
-					Finalizers: []string{
-						"keep-this",
-						"keep-that",
-						"egressgateway.spidernet.io/egresstunnel",
-					},
-				},
-			},
-			wantFinalizers: []string{"keep-this", "keep-that"},
-		},
-	}
-
-	for _, tc := range tests {
-		t.Run(tc.name, func(t *testing.T) {
-			cleanFinalizers(tc.node)
-			if !slicesEqual(tc.node.Finalizers, tc.wantFinalizers) {
-				t.Errorf("cleanFinalizers() got = %v, want %v", tc.node.Finalizers, tc.wantFinalizers)
-			}
-		})
-	}
-}
-
 func slicesEqual(a, b []string) bool {
 	if len(a) != len(b) {
 		return false
