@@ -1021,6 +1021,7 @@ func assignIP(from *egress.EgressGateway, req reconcile.Request, specEgressIP eg
 						Policies: []egress.Policy{{Name: req.Name, Namespace: req.Namespace}},
 					},
 				)
+				assignedIP.Node = node.Name
 			}
 		}
 		if assignedIP.Node == "" {
