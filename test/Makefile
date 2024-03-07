@@ -23,7 +23,7 @@ init_kind_env:
 init_one_kind: KIND_CONFIG_PATH ?=
 init_one_kind: KIND_CLUSTER_NAME ?=
 init_one_kind: KIND_KUBECONFIG ?=
-init_one_kind: checkBin clean
+init_one_kind: checkBin cleanCluster
 	@echo "================== init kind cluster $(KIND_CLUSTER_NAME) KIND_CONFIG_PATH=$(KIND_CONFIG_PATH) KIND_KUBECONFIG=$(KIND_KUBECONFIG) E2E_IP_FAMILY=$(E2E_IP_FAMILY)"
 	[ -n $(KIND_CLUSTER_NAME) ] || { echo "error, miss KIND_CLUSTER_NAME " ; exit 1 ; }
 	[ -f $(KIND_CONFIG_PATH) ] || { echo "error, miss file KIND_CONFIG_PATH=$(KIND_CONFIG_PATH)" ; exit 1 ; }
@@ -315,11 +315,16 @@ install_example_app:
 
 
 .PHONY: clean
-clean:
+clean: cleanCluster  cleanImage
+
+.PHONY: cleanCluster
+cleanCluster:
 	-@ kind delete cluster --name $(E2E_KIND_CLUSTER_NAME)
 	-@ rm -rf $(E2E_RUNTIME_DIR)
 	-@ docker stop $(PYROSCOPE_CONTAINER_NAME) &>/dev/null
 	-@ docker rm $(PYROSCOPE_CONTAINER_NAME) &>/dev/null
+
+cleanImage:
 	-@ docker images | grep egressgateway | awk '{print $$3}' | xargs -I {} docker rmi {}
 
 
