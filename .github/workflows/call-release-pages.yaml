@@ -172,7 +172,7 @@ jobs:
       # Allow auto-merge on general
       - name: Create Pull Request
         id: create_pr
-        uses: peter-evans/create-pull-request@v5.0.2
+        uses: peter-evans/create-pull-request@v6.0.1
         with:
           title: "robot update website from ${{ needs.package.outputs.ref }} to branch ${{ env.MERGE_BRANCH }} with tag ${{ needs.package.outputs.doc_tag }}"
           commit-message: "robot update website from  ${{ needs.package.outputs.ref }} to branch ${{ env.MERGE_BRANCH }} with tag ${{ needs.package.outputs.doc_tag }} "
