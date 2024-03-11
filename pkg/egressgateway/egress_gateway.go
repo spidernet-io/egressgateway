@@ -30,7 +30,6 @@ import (
 	egress "github.com/spidernet-io/egressgateway/pkg/k8s/apis/v1beta1"
 	"github.com/spidernet-io/egressgateway/pkg/utils"
 	"github.com/spidernet-io/egressgateway/pkg/utils/ip"
-	"github.com/spidernet-io/egressgateway/pkg/utils/slice"
 )
 
 type egnReconciler struct {
@@ -438,9 +437,8 @@ func (r *egnReconciler) reconcileGateway(ctx context.Context, req reconcile.Requ
 			return reconcile.Result{Requeue: true}, err
 		}
 		if count == 0 && egw.Name != "" {
-			log.Info("remove the egressGatewayFinalizer")
-			removeEgressGatewayFinalizer(egw)
 			log.V(1).Info("remove the egressGatewayFinalizer", "ObjectMeta", egw.ObjectMeta)
+			utils.RemoveFinalizers(&egw.ObjectMeta, egressGatewayFinalizers)
 			err = r.client.Update(ctx, egw)
 			if err != nil {
 				log.Error(err, "remove the egressGatewayFinalizer", "ObjectMeta", egw.ObjectMeta)
@@ -1280,13 +1278,6 @@ func countGatewayIP(egw *egress.EgressGateway) (ipv4sFree, ipv6sFree, ipv4sTotal
 	return
 }
 
-// removeEgressGatewayFinalizer if the egress gateway is being deleted
-func removeEgressGatewayFinalizer(egw *egress.EgressGateway) {
-	if containsEgressGatewayFinalizer(egw, egressGatewayFinalizers) {
-		egw.Finalizers = slice.RemoveElement(egw.Finalizers, egressGatewayFinalizers)
-	}
-}
-
 func getPolicyCountByGatewayName(ctx context.Context, client client.Client, name string) (int, error) {
 	var num int
 
@@ -1313,15 +1304,6 @@ func getPolicyCountByGatewayName(ctx context.Context, client client.Client, name
 	}
 
 	return num, nil
-}
-
-func containsEgressGatewayFinalizer(gateway *egress.EgressGateway, finalizer string) bool {
-	for _, f := range gateway.ObjectMeta.Finalizers {
-		if f == finalizer {
-			return true
-		}
-	}
-	return false
 }
 
 type egressPolicyPredicate struct{}
@@ -1376,6 +1358,9 @@ func (p egressGatewayPredicate) Update(updateEvent event.UpdateEvent) bool {
 	newObj, ok := updateEvent.ObjectNew.(*egress.EgressGateway)
 	if !ok {
 		return false
+	}
+	if !reflect.DeepEqual(oldObj.ObjectMeta, newObj.ObjectMeta) {
+		return true
 	}
 	if !reflect.DeepEqual(oldObj.Spec, newObj.Spec) {
 		return true
