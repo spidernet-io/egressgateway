@@ -544,17 +544,17 @@ func (r *policeReconciler) buildPolicyRule(policyName string, mark uint32, versi
 func buildNatStaticRule(base uint32) map[string][]iptables.Rule {
 	res := map[string][]iptables.Rule{"POSTROUTING": {
 		{
-			Match:  iptables.MatchCriteria{}.MarkMatchesWithMask(base, 0xffffffff),
-			Action: iptables.AcceptAction{},
-			Comment: []string{
-				"Accept for egress traffic from pod going to EgressTunnel",
-			},
-		},
-		{
 			Match:  iptables.MatchCriteria{},
 			Action: iptables.JumpAction{Target: "EGRESSGATEWAY-SNAT-EIP"},
 			Comment: []string{
 				"SNAT for egress traffic",
+			},
+		},
+		{
+			Match:  iptables.MatchCriteria{}.MarkMatchesWithMask(base, 0xffffffff),
+			Action: iptables.AcceptAction{},
+			Comment: []string{
+				"Accept for egress traffic from pod going to EgressTunnel",
 			},
 		},
 	}}
@@ -774,15 +774,7 @@ func buildMangleStaticRule(base uint32,
 		},
 	}}
 
-	prerouting := []iptables.Rule{
-		{
-			Match:  iptables.MatchCriteria{},
-			Action: iptables.JumpAction{Target: "EGRESSGATEWAY-MARK-REQUEST"},
-			Comment: []string{
-				"Checking for EgressPolicy matched traffic",
-			},
-		},
-	}
+	prerouting := make([]iptables.Rule, 0)
 
 	if isEgressNode && enableGatewayReplyRoute {
 		prerouting = []iptables.Rule{
