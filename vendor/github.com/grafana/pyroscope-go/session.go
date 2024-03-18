@@ -163,6 +163,7 @@ func (ps *Session) takeSnapshots() {
 			if ps.isCPUEnabled() {
 				ps.cpu.Stop()
 			}
+			return
 		}
 	}
 }

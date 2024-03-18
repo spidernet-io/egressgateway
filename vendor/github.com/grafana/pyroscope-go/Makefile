@@ -3,7 +3,7 @@ TEST_PACKAGES := ./... ./godeltaprof/compat/... ./godeltaprof/...
 
 .PHONY: test
 test:
-	go test -race $(shell go list $(TEST_PACKAGES))
+	go test -race $(shell go list $(TEST_PACKAGES) | grep -v /example)
 
 .PHONY: go/mod
 go/mod:
