@@ -2,16 +2,22 @@ package ndp
 
 import (
 	"bytes"
+	"crypto/rand"
+	"crypto/subtle"
 	"encoding/binary"
+	"encoding/hex"
 	"errors"
 	"fmt"
 	"io"
+	"math"
 	"net"
+	"net/netip"
+	"net/url"
 	"strings"
 	"time"
 	"unicode"
 
-	"gitlab.com/golang-commonmark/puny"
+	"golang.org/x/net/idna"
 )
 
 // Infinity indicates that a prefix is valid for an infinite amount of time,
@@ -32,9 +38,13 @@ const (
 	optTargetLLA         = 2
 	optPrefixInformation = 3
 	optMTU               = 5
+	optNonce             = 14
 	optRouteInformation  = 24
 	optRDNSS             = 25
+	optRAFlagsExtension  = 26
 	optDNSSL             = 31
+	optCaptivePortal     = 37
+	optPREF64            = 38
 )
 
 // A Direction specifies the direction of a LinkLayerAddress Option as a source
@@ -81,7 +91,7 @@ func (lla *LinkLayerAddress) marshal() ([]byte, error) {
 	}
 
 	if len(lla.Addr) != ethAddrLen {
-		return nil, fmt.Errorf("ndp: invalid link-layer address: %q", lla.Addr.String())
+		return nil, fmt.Errorf("ndp: invalid link-layer address: %q", lla.Addr)
 	}
 
 	raw := &RawOption{
@@ -118,15 +128,14 @@ func (lla *LinkLayerAddress) unmarshal(b []byte) error {
 
 var _ Option = new(MTU)
 
-// TODO(mdlayher): decide if this should just be a struct type instead.
-
 // An MTU is an MTU option, as described in RFC 4861, Section 4.6.1.
-type MTU uint32
+type MTU struct {
+	MTU uint32
+}
 
 // NewMTU creates an MTU Option from an MTU value.
 func NewMTU(mtu uint32) *MTU {
-	m := MTU(mtu)
-	return &m
+	return &MTU{MTU: mtu}
 }
 
 // Code implements Option.
@@ -140,7 +149,7 @@ func (m *MTU) marshal() ([]byte, error) {
 		Value: make([]byte, 6),
 	}
 
-	binary.BigEndian.PutUint32(raw.Value[2:6], uint32(*m))
+	binary.BigEndian.PutUint32(raw.Value[2:6], uint32(m.MTU))
 
 	return raw.marshal()
 }
@@ -151,7 +160,7 @@ func (m *MTU) unmarshal(b []byte) error {
 		return err
 	}
 
-	*m = MTU(binary.BigEndian.Uint32(raw.Value[2:6]))
+	*m = MTU{MTU: binary.BigEndian.Uint32(raw.Value[2:6])}
 
 	return nil
 }
@@ -165,7 +174,7 @@ type PrefixInformation struct {
 	AutonomousAddressConfiguration bool
 	ValidLifetime                  time.Duration
 	PreferredLifetime              time.Duration
-	Prefix                         net.IP
+	Prefix                         netip.Addr
 }
 
 // Code implements Option.
@@ -178,9 +187,10 @@ func (pi *PrefixInformation) marshal() ([]byte, error) {
 	//
 	// Therefore, any prefix, when masked with its specified length, should be
 	// identical to the prefix itself for it to be valid.
-	mask := net.CIDRMask(int(pi.PrefixLength), 128)
-	if masked := pi.Prefix.Mask(mask); !pi.Prefix.Equal(masked) {
-		return nil, fmt.Errorf("ndp: invalid prefix information: %s/%d", pi.Prefix.String(), pi.PrefixLength)
+	p := netip.PrefixFrom(pi.Prefix, int(pi.PrefixLength))
+	if masked := p.Masked(); pi.Prefix != masked.Addr() {
+		return nil, fmt.Errorf("ndp: invalid prefix information: %s/%d",
+			pi.Prefix, pi.PrefixLength)
 	}
 
 	raw := &RawOption{
@@ -207,7 +217,7 @@ func (pi *PrefixInformation) marshal() ([]byte, error) {
 
 	// 4 bytes reserved.
 
-	copy(raw.Value[14:30], pi.Prefix)
+	copy(raw.Value[14:30], pi.Prefix.AsSlice())
 
 	return raw.marshal()
 }
@@ -231,26 +241,28 @@ func (pi *PrefixInformation) unmarshal(b []byte) error {
 		preferred = time.Duration(binary.BigEndian.Uint32(raw.Value[6:10])) * time.Second
 	)
 
-	// Skip reserved area.
-	addr := net.IP(raw.Value[14:30])
-	if err := checkIPv6(addr); err != nil {
+	// Skip to address.
+	addr := raw.Value[14:30]
+	ip, ok := netip.AddrFromSlice(addr)
+	if !ok {
+		panicf("ndp: invalid IPv6 address slice: %v", addr)
+	}
+	if err := checkIPv6(ip); err != nil {
 		return err
 	}
 
 	// Per the RFC, bits in prefix past prefix length are ignored by the
 	// receiver.
-	l := raw.Value[0]
-	mask := net.CIDRMask(int(l), 128)
-	addr = addr.Mask(mask)
+	pl := raw.Value[0]
+	p := netip.PrefixFrom(ip, int(pl)).Masked()
 
 	*pi = PrefixInformation{
-		PrefixLength:                   l,
+		PrefixLength:                   pl,
 		OnLink:                         oFlag,
 		AutonomousAddressConfiguration: aFlag,
 		ValidLifetime:                  valid,
 		PreferredLifetime:              preferred,
-		// raw.Value is already a copy of b, so just point to the address.
-		Prefix: addr,
+		Prefix:                         p.Addr(),
 	}
 
 	return nil
@@ -264,7 +276,7 @@ type RouteInformation struct {
 	PrefixLength  uint8
 	Preference    Preference
 	RouteLifetime time.Duration
-	Prefix        net.IP
+	Prefix        netip.Addr
 }
 
 // Code implements Option.
@@ -277,9 +289,9 @@ func (ri *RouteInformation) marshal() ([]byte, error) {
 	//
 	// Therefore, any prefix, when masked with its specified length, should be
 	// identical to the prefix itself for it to be valid.
-	err := fmt.Errorf("ndp: invalid route information: %s/%d", ri.Prefix.String(), ri.PrefixLength)
-	mask := net.CIDRMask(int(ri.PrefixLength), 128)
-	if masked := ri.Prefix.Mask(mask); !ri.Prefix.Equal(masked) {
+	err := fmt.Errorf("ndp: invalid route information: %s/%d", ri.Prefix, ri.PrefixLength)
+	p := netip.PrefixFrom(ri.Prefix, int(ri.PrefixLength))
+	if masked := p.Masked(); ri.Prefix != masked.Addr() {
 		return nil, err
 	}
 
@@ -316,7 +328,7 @@ func (ri *RouteInformation) marshal() ([]byte, error) {
 	lt := ri.RouteLifetime.Seconds()
 	binary.BigEndian.PutUint32(raw.Value[2:6], uint32(lt))
 
-	copy(raw.Value[6:], ri.Prefix)
+	copy(raw.Value[6:], ri.Prefix.AsSlice())
 
 	return raw.marshal()
 }
@@ -330,25 +342,25 @@ func (ri *RouteInformation) unmarshal(b []byte) error {
 	// Verify the option's length against prefix length using the rules defined
 	// in the RFC.
 	l := raw.Value[0]
-	err := fmt.Errorf("ndp: invalid route information for /%d prefix", l)
+	rerr := fmt.Errorf("ndp: invalid route information for /%d prefix", l)
 
 	switch {
 	case l == 0:
 		if raw.Length < 1 || raw.Length > 3 {
-			return err
+			return rerr
 		}
 	case l > 0 && l < 65:
 		// Some devices will use length 3 anyway for a route that fits in /64.
 		if raw.Length != 2 && raw.Length != 3 {
-			return err
+			return rerr
 		}
 	case l > 64 && l < 129:
 		if raw.Length != 3 {
-			return err
+			return rerr
 		}
 	default:
 		// Invalid IPv6 prefix.
-		return err
+		return rerr
 	}
 
 	// Unpack preference (with adjacent reserved bits) and lifetime values.
@@ -361,15 +373,20 @@ func (ri *RouteInformation) unmarshal(b []byte) error {
 		return err
 	}
 
+	// Take up to the specified number of IP bytes into the prefix.
+	var (
+		addr [16]byte
+		buf  = raw.Value[6 : 6+(l/8)]
+	)
+
+	copy(addr[:], buf)
+
 	*ri = RouteInformation{
 		PrefixLength:  l,
 		Preference:    pref,
 		RouteLifetime: lt,
-		Prefix:        make(net.IP, net.IPv6len),
+		Prefix:        netip.AddrFrom16(addr),
 	}
-
-	// Copy up to the specified number of IP bytes into the prefix.
-	copy(ri.Prefix, raw.Value[6:6+(l/8)])
 
 	return nil
 }
@@ -378,7 +395,7 @@ func (ri *RouteInformation) unmarshal(b []byte) error {
 // RFC 8106, Section 5.1.
 type RecursiveDNSServer struct {
 	Lifetime time.Duration
-	Servers  []net.IP
+	Servers  []netip.Addr
 }
 
 // Code implements Option.
@@ -423,7 +440,7 @@ func (r *RecursiveDNSServer) marshal() ([]byte, error) {
 			end   = rdnssServersOff + net.IPv6len + (i * net.IPv6len)
 		)
 
-		copy(raw.Value[start:end], r.Servers[i])
+		copy(raw.Value[start:end], r.Servers[i].AsSlice())
 	}
 
 	return raw.marshal()
@@ -456,7 +473,7 @@ func (r *RecursiveDNSServer) unmarshal(b []byte) error {
 		return errRDNSSNoServers
 	}
 
-	servers := make([]net.IP, 0, count)
+	servers := make([]netip.Addr, 0, count)
 	for i := 0; i < count; i++ {
 		// Determine the start and end byte offsets for each address,
 		// effectively iterating 16 bytes at a time to fetch an address.
@@ -465,9 +482,12 @@ func (r *RecursiveDNSServer) unmarshal(b []byte) error {
 			end   = rdnssServersOff + net.IPv6len + (i * net.IPv6len)
 		)
 
-		// The RawOption already made a copy of this data, so convert it
-		// directly to an IPv6 address with no further copying needed.
-		servers = append(servers, net.IP(raw.Value[start:end]))
+		s, ok := netip.AddrFromSlice(raw.Value[start:end])
+		if !ok {
+			return errRDNSSBadServer
+		}
+
+		servers = append(servers, s)
 	}
 
 	*r = RecursiveDNSServer{
@@ -517,7 +537,12 @@ func (d *DNSSearchList) marshal() ([]byte, error) {
 	// https://tools.ietf.org/html/rfc1035#section-3.1.
 	for _, dn := range d.DomainNames {
 		// All unicode names must be converted to punycode.
-		for _, label := range strings.Split(puny.ToASCII(dn), ".") {
+		dn, err := idna.ToASCII(dn)
+		if err != nil {
+			return nil, errDNSSLBadDomains
+		}
+
+		for _, label := range strings.Split(dn, ".") {
 			// Label must be convertable to valid Punycode.
 			if !isASCII(label) {
 				return nil, errDNSSLBadDomains
@@ -595,7 +620,10 @@ func (d *DNSSearchList) unmarshal(b []byte) error {
 		}
 
 		// Verify that the Punycode label decodes to something sane.
-		label = puny.ToUnicode(label)
+		label, err := idna.ToUnicode(label)
+		if err != nil {
+			return errDNSSLBadDomains
+		}
 
 		// TODO(mdlayher): much smarter validation.
 		if label == "" || hasUnicodeReplacement(label) || strings.Contains(label, ".") || strings.Contains(label, " ") {
@@ -610,7 +638,12 @@ func (d *DNSSearchList) unmarshal(b []byte) error {
 		if raw.Value[i] == 0 {
 			i++
 
-			domains = append(domains, puny.ToUnicode(strings.Join(labels, ".")))
+			domain, err := idna.ToUnicode(strings.Join(labels, "."))
+			if err != nil {
+				return errDNSSLBadDomains
+			}
+
+			domains = append(domains, domain)
 			labels = []string{}
 
 			// Have we reached the end of the value slice?
@@ -631,6 +664,349 @@ func (d *DNSSearchList) unmarshal(b []byte) error {
 		DomainNames: domains,
 	}
 
+	return nil
+}
+
+// Unrestricted is the IANA-assigned URI for a network with no captive portal
+// restrictions, as specified in RFC 8910, Section 2.
+const Unrestricted = "urn:ietf:params:capport:unrestricted"
+
+// A CaptivePortal is a Captive-Portal option, as described in RFC 8910, Section
+// 2.3.
+type CaptivePortal struct {
+	URI string
+}
+
+// NewCaptivePortal produces a CaptivePortal Option for the input URI string. As
+// a special case, if uri is empty, Unrestricted is used as the CaptivePortal
+// OptionURI.
+//
+// If uri is an IP address literal, an error is returned. Per RFC 8910, uri
+// "SHOULD NOT" be an IP address, but there are circumstances where this
+// behavior may be useful. In that case, the caller can bypass NewCaptivePortal
+// and construct a CaptivePortal Option directly.
+func NewCaptivePortal(uri string) (*CaptivePortal, error) {
+	if uri == "" {
+		return &CaptivePortal{URI: Unrestricted}, nil
+	}
+
+	// Try to comply with the max limit for DHCPv4.
+	if len(uri) > 255 {
+		return nil, errors.New("ndp: captive portal option URI is too long")
+	}
+
+	// TODO(mdlayher): a URN is almost a URL, but investigate compliance with
+	// https://datatracker.ietf.org/doc/html/rfc8141. In particular there are
+	// some tricky rules around case-sensitivity.
+	urn, err := url.Parse(uri)
+	if err != nil {
+		return nil, err
+	}
+
+	// "The URI SHOULD NOT contain an IP address literal."
+	//
+	// Since this is a constructor and there's nothing stopping the user from
+	// manually creating this string if they so choose, we'll return an error
+	// IP addresses. This includes bare IP addresses or IP addresses with some
+	// kind of path appended.
+	for _, s := range strings.Split(urn.Path, "/") {
+		if ip, err := netip.ParseAddr(s); err == nil {
+			return nil, fmt.Errorf("ndp: captive portal option URIs should not contain IP addresses: %s", ip)
+		}
+	}
+
+	return &CaptivePortal{URI: urn.String()}, nil
+}
+
+// Code implements Option.
+func (*CaptivePortal) Code() byte { return optCaptivePortal }
+
+func (cp *CaptivePortal) marshal() ([]byte, error) {
+	if len(cp.URI) == 0 {
+		return nil, errors.New("ndp: captive portal option requires a non-empty URI")
+	}
+
+	// Pad up to next unit of 8 bytes including 2 bytes for code, length, and
+	// bytes for the URI string. Extra bytes will be null.
+	l := len(cp.URI)
+	if r := (l + 2) % 8; r != 0 {
+		l += 8 - r
+	}
+
+	value := make([]byte, l)
+	copy(value, []byte(cp.URI))
+
+	raw := &RawOption{
+		Type:   cp.Code(),
+		Length: (uint8(l) + 2) / 8,
+		Value:  value,
+	}
+
+	return raw.marshal()
+}
+
+func (cp *CaptivePortal) unmarshal(b []byte) error {
+	raw := new(RawOption)
+	if err := raw.unmarshal(b); err != nil {
+		return err
+	}
+
+	// Don't allow a null URI.
+	if len(raw.Value) == 0 || raw.Value[0] == 0x00 {
+		return errors.New("ndp: captive portal URI is null")
+	}
+
+	// Find any trailing null bytes and trim them away before setting the URI.
+	i := bytes.Index(raw.Value, []byte{0x00})
+	if i == -1 {
+		i = len(raw.Value)
+	}
+
+	// Our constructor does validation of URIs, but we treat the URI as opaque
+	// for parsing, since we likely have to interop with other implementations.
+	*cp = CaptivePortal{URI: string(raw.Value[:i])}
+
+	return nil
+}
+
+// PREF64 is a PREF64 option, as described in RFC 8781, Section 4. The prefix
+// must have a prefix length of 96, 64, 56, 40, or 32. The lifetime is used to
+// indicate to clients how long the PREF64 prefix is valid for. A lifetime of 0
+// indicates the prefix is no longer valid. If unsure, refer to RFC 8781
+// Section 4.1 for how to calculate an appropriate lifetime.
+type PREF64 struct {
+	Lifetime time.Duration
+	Prefix   netip.Prefix
+}
+
+func (p *PREF64) Code() byte { return optPREF64 }
+
+func (p *PREF64) marshal() ([]byte, error) {
+	var plc uint8
+	switch p.Prefix.Bits() {
+	case 96:
+		plc = 0
+	case 64:
+		plc = 1
+	case 56:
+		plc = 2
+	case 48:
+		plc = 3
+	case 40:
+		plc = 4
+	case 32:
+		plc = 5
+	default:
+		return nil, errors.New("ndp: invalid pref64 prefix size")
+	}
+
+	scaledLifetime := uint16(math.Round(p.Lifetime.Seconds() / 8))
+
+	// The scaled lifetime must be less than the maximum of 8191.
+	if scaledLifetime > 8191 {
+		return nil, errors.New("ndp: pref64 scaled lifetime is too large")
+	}
+
+	value := []byte{}
+
+	// The scaled lifetime and PLC values live within the same 16-bit field.
+	// Here we move the scaled lifetime to the left-most 13 bits and place the
+	// PLC at the last 3 bits of the 16-bit field.
+	value = binary.BigEndian.AppendUint16(
+		value,
+		(scaledLifetime<<3&(0xffff^0b111))|uint16(plc&0b111),
+	)
+
+	allPrefixBits := p.Prefix.Masked().Addr().As16()
+	optionPrefixBits := allPrefixBits[:96/8]
+	value = append(value, optionPrefixBits...)
+
+	raw := &RawOption{
+		Type:   p.Code(),
+		Length: (uint8(len(value)) + 2) / 8,
+		Value:  value,
+	}
+
+	return raw.marshal()
+}
+
+func (p *PREF64) unmarshal(b []byte) error {
+	raw := new(RawOption)
+	if err := raw.unmarshal(b); err != nil {
+		return err
+	}
+
+	if raw.Type != optPREF64 {
+		return errors.New("ndp: invalid pref64 type")
+	}
+
+	if len(raw.Value) != (96/8)+2 {
+		return errors.New("ndp: invalid pref64 message length")
+	}
+
+	lifetimeAndPlc := binary.BigEndian.Uint16(raw.Value[:2])
+	plc := uint8(lifetimeAndPlc & 0b111)
+
+	var prefixSize int
+	switch plc {
+	case 0:
+		prefixSize = 96
+	case 1:
+		prefixSize = 64
+	case 2:
+		prefixSize = 56
+	case 3:
+		prefixSize = 48
+	case 4:
+		prefixSize = 40
+	case 5:
+		prefixSize = 32
+	default:
+		return errors.New("ndp: invalid pref64 prefix length code")
+	}
+
+	addr := [16]byte{}
+	copy(addr[:], raw.Value[2:])
+	prefix, err := netip.AddrFrom16(addr).Prefix(int(prefixSize))
+	if err != nil {
+		return err
+	}
+
+	scaledLifetime := (lifetimeAndPlc & (0xffff ^ 0b111)) >> 3
+	lifetime := time.Duration(scaledLifetime) * 8 * time.Second
+
+	*p = PREF64{
+		Lifetime: lifetime,
+		Prefix:   prefix,
+	}
+
+	return nil
+}
+
+// A RAFlagsExtension is a Router Advertisement Flags Extension (or Expansion)
+// option, as described in RFC 5175, Section 4.
+type RAFlagsExtension struct {
+	Flags RAFlags
+}
+
+// RAFlags is a bitmask of Router Advertisement flags contained within an
+// RAFlagsExtension.
+type RAFlags []byte
+
+// Code implements Option.
+func (*RAFlagsExtension) Code() byte { return optRAFlagsExtension }
+
+func (ra *RAFlagsExtension) marshal() ([]byte, error) {
+	// "MUST NOT be added to a Router Advertisement message if no flags in the
+	// option are set."
+	//
+	// TODO(mdlayher): replace with slices.IndexFunc when we raise the minimum
+	// Go version.
+	var found bool
+	for _, b := range ra.Flags {
+		if b != 0x00 {
+			found = true
+			break
+		}
+	}
+	if !found {
+		return nil, errors.New("ndp: RA flags extension requires one or more flags to be set")
+	}
+
+	// Enforce the option size matches the next unit of 8 bytes including 2
+	// bytes for code and length.
+	l := len(ra.Flags)
+	if r := (l + 2) % 8; r != 0 {
+		return nil, errors.New("ndp: RA flags extension length is invalid")
+	}
+
+	value := make([]byte, l)
+	copy(value, ra.Flags)
+
+	raw := &RawOption{
+		Type:   ra.Code(),
+		Length: (uint8(l) + 2) / 8,
+		Value:  value,
+	}
+
+	return raw.marshal()
+}
+
+func (ra *RAFlagsExtension) unmarshal(b []byte) error {
+	raw := new(RawOption)
+	if err := raw.unmarshal(b); err != nil {
+		return err
+	}
+
+	// Don't allow short bytes.
+	if len(raw.Value) < 6 {
+		return errors.New("ndp: RA Flags Extension too short")
+	}
+
+	// raw already made a copy.
+	ra.Flags = raw.Value
+	return nil
+}
+
+// A Nonce is a Nonce option, as described in RFC 3971, Section 5.3.2.
+type Nonce struct {
+	b []byte
+}
+
+// NewNonce creates a Nonce option with an opaque random value.
+func NewNonce() *Nonce {
+	// Minimum is 6 bytes, and this is also the only value that the Linux kernel
+	// recognizes as of kernel 5.17.
+	const n = 6
+	b := make([]byte, n)
+	if _, err := rand.Read(b); err != nil {
+		panicf("ndp: failed to generate nonce bytes: %v", err)
+	}
+
+	return &Nonce{b: b}
+}
+
+// Equal reports whether n and x are the same nonce.
+func (n *Nonce) Equal(x *Nonce) bool { return subtle.ConstantTimeCompare(n.b, x.b) == 1 }
+
+// Code implements Option.
+func (*Nonce) Code() byte { return optNonce }
+
+// String returns the string representation of a Nonce.
+func (n *Nonce) String() string { return hex.EncodeToString(n.b) }
+
+func (n *Nonce) marshal() ([]byte, error) {
+	if len(n.b) == 0 {
+		return nil, errors.New("ndp: nonce option requires a non-empty nonce value")
+	}
+
+	// Enforce the nonce size matches the next unit of 8 bytes including 2 bytes
+	// for code and length.
+	l := len(n.b)
+	if r := (l + 2) % 8; r != 0 {
+		return nil, errors.New("ndp: nonce size is invalid")
+	}
+
+	value := make([]byte, l)
+	copy(value, n.b)
+
+	raw := &RawOption{
+		Type:   n.Code(),
+		Length: (uint8(l) + 2) / 8,
+		Value:  value,
+	}
+
+	return raw.marshal()
+}
+
+func (n *Nonce) unmarshal(b []byte) error {
+	raw := new(RawOption)
+	if err := raw.unmarshal(b); err != nil {
+		return err
+	}
+
+	// raw already made a copy.
+	n.b = raw.Value
 	return nil
 }
 
@@ -732,8 +1108,16 @@ func parseOptions(b []byte) ([]Option, error) {
 			o = new(RouteInformation)
 		case optRDNSS:
 			o = new(RecursiveDNSServer)
+		case optRAFlagsExtension:
+			o = new(RAFlagsExtension)
 		case optDNSSL:
 			o = new(DNSSearchList)
+		case optCaptivePortal:
+			o = new(CaptivePortal)
+		case optPREF64:
+			o = new(PREF64)
+		case optNonce:
+			o = new(Nonce)
 		default:
 			o = new(RawOption)
 		}

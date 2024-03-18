@@ -1,18 +1,12 @@
-# ndp [![builds.sr.ht status](https://builds.sr.ht/~mdlayher/ndp.svg)](https://builds.sr.ht/~mdlayher/ndp?) [![GoDoc](https://godoc.org/github.com/mdlayher/ndp?status.svg)](https://godoc.org/github.com/mdlayher/ndp) [![Go Report Card](https://goreportcard.com/badge/github.com/mdlayher/ndp)](https://goreportcard.com/report/github.com/mdlayher/ndp)
+# ndp [![Test Status](https://github.com/mdlayher/ndp/workflows/Test/badge.svg)](https://github.com/mdlayher/ndp/actions) [![Go Reference](https://pkg.go.dev/badge/github.com/mdlayher/ndp.svg)](https://pkg.go.dev/github.com/mdlayher/ndp) [![Go Report Card](https://goreportcard.com/badge/github.com/mdlayher/ndp)](https://goreportcard.com/report/github.com/mdlayher/ndp)
 
 Package `ndp` implements the Neighbor Discovery Protocol, as described in
 [RFC 4861](https://tools.ietf.org/html/rfc4861).  MIT Licensed.
 
 The command `ndp` is a utility for working with the Neighbor Discovery Protocol.
 
-Install the package and utility using `go get`:
-
-```none
-$ go get github.com/mdlayher/ndp/...
-```
-
 To learn more about NDP, and how to use this package, check out my blog:
-[Network Protocol Breakdown:  NDP and Go](https://medium.com/@mdlayher/network-protocol-breakdown-ndp-and-go-3dc2900b1c20).
+[Network Protocol Breakdown: NDP and Go](https://mdlayher.com/blog/network-protocol-breakdown-ndp-and-go/).
 
 ## Examples
 
