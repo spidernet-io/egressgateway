@@ -135,7 +135,7 @@ jobs:
       - name: Run golangci-lint
         id: golangci_lint
         continue-on-error: true
-        uses: golangci/golangci-lint-action@v3
+        uses: golangci/golangci-lint-action@v4
         with:
           version: latest
 
