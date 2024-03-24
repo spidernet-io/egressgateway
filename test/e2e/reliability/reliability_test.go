@@ -290,13 +290,13 @@ var _ = Describe("Reliability", Serial, Label("Reliability"), func() {
 			Expect(err).NotTo(HaveOccurred())
 			Expect(nowEgep.Endpoints).Should(Equal(beforeEgep.Endpoints), fmt.Sprintf("expect:\n%v\ngot:\n %v\n", beforeEgep.Endpoints, nowEgep.Endpoints))
 		},
-			Entry("restart kube-controller-manager", constant.KubeControllerManagerLabel, time.Minute*2),
-			Entry("restart kube-apiserver", constant.KubeApiServerLabel, time.Minute*2),
-			Entry("restart etcd", constant.KubeEtcdLabel, time.Minute*2),
-			Entry("restart kube-scheduler", constant.KubeSchedulerLabel, time.Minute*2),
-			Entry("restart kube-proxy", constant.KubeProxyLabel, time.Minute*2),
-			Entry("restart calico-node", constant.CalicoNodeLabel, time.Minute*2),
-			Entry("restart calico-kube-controllers", constant.CalicoControllerLabel, time.Minute*2),
+			Entry("restart kube-controller-manager", Serial, constant.KubeControllerManagerLabel, time.Minute*2),
+			Entry("restart kube-apiserver", Serial, constant.KubeApiServerLabel, time.Minute*2),
+			Entry("restart etcd", Serial, constant.KubeEtcdLabel, time.Minute*2),
+			Entry("restart kube-scheduler", Serial, constant.KubeSchedulerLabel, time.Minute*2),
+			Entry("restart kube-proxy", Label("xxx"), Serial, constant.KubeProxyLabel, time.Minute*2),
+			Entry("restart calico-node", Serial, constant.CalicoNodeLabel, time.Minute*2),
+			Entry("restart calico-kube-controllers", Serial, constant.CalicoControllerLabel, time.Minute*2),
 		)
 	})
 
