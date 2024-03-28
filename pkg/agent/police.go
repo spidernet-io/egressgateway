@@ -775,24 +775,22 @@ func buildMangleStaticRule(base uint32,
 	}}
 
 	prerouting := make([]iptables.Rule, 0)
+	prerouting = append(prerouting, iptables.Rule{
+		Match:  iptables.MatchCriteria{},
+		Action: iptables.JumpAction{Target: "EGRESSGATEWAY-MARK-REQUEST"},
+		Comment: []string{
+			"Checking for EgressPolicy matched traffic",
+		},
+	})
 
 	if isEgressNode && enableGatewayReplyRoute {
-		prerouting = []iptables.Rule{
-			{
-				Match:  iptables.MatchCriteria{},
-				Action: iptables.JumpAction{Target: "EGRESSGATEWAY-REPLY-ROUTING"},
-				Comment: []string{
-					"egressGateway Reply datapath rule, rule is from the EgressGateway",
-				},
+		prerouting = append(prerouting, iptables.Rule{
+			Match:  iptables.MatchCriteria{},
+			Action: iptables.JumpAction{Target: "EGRESSGATEWAY-REPLY-ROUTING"},
+			Comment: []string{
+				"egressGateway Reply datapath rule, rule is from the EgressGateway",
 			},
-			{
-				Match:  iptables.MatchCriteria{},
-				Action: iptables.JumpAction{Target: "EGRESSGATEWAY-MARK-REQUEST"},
-				Comment: []string{
-					"Checking for EgressPolicy matched traffic",
-				},
-			},
-		}
+		})
 		postrouting = append(postrouting, iptables.Rule{
 			Match:  iptables.MatchCriteria{}.MarkMatchesWithMask(replyMark, 0xffffffff),
 			Action: iptables.SetMaskedMarkAction{Mark: 0x00000000, Mask: 0xffffffff},
