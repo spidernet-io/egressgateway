@@ -47,7 +47,7 @@ github.com/felixge/httpsnoop
 # github.com/fsnotify/fsnotify v1.7.0
 ## explicit; go 1.17
 github.com/fsnotify/fsnotify
-# github.com/go-faker/faker/v4 v4.3.0
+# github.com/go-faker/faker/v4 v4.4.0
 ## explicit; go 1.18
 github.com/go-faker/faker/v4
 github.com/go-faker/faker/v4/pkg/errors
