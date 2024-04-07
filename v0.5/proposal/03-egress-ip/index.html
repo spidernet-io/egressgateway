@@ -1,0 +1,1505 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+        <link rel="canonical" href="https://spidernet-io.github.io/egressgateway/v0.5/proposal/03-egress-ip/">
+      
+      
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.5.2, mkdocs-material-9.2.8">
+    
+    
+      
+        <title>Egress IP - EgressGateway</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.046329b4.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.85d0ee34.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce((e,_)=>(e<<5)-e+_.charCodeAt(0),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+    
+  </head>
+  
+  
+    
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="#4478D1" data-md-color-accent="indigo">
+  
+    
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#egress-ip" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+      <div data-md-color-scheme="default" data-md-component="outdated" hidden>
+        
+      </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="EgressGateway" class="md-header__button md-logo" aria-label="EgressGateway" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54Z"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3V6m0 5h18v2H3v-2m0 5h18v2H3v-2Z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            EgressGateway
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Egress IP
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+    
+    
+      <div class="md-header__option">
+  <div class="md-select">
+    
+    <button class="md-header__button md-icon" aria-label="Select language">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m12.87 15.07-2.54-2.51.03-.03A17.52 17.52 0 0 0 14.07 6H17V4h-7V2H8v2H1v2h11.17C11.5 7.92 10.44 9.75 9 11.35 8.07 10.32 7.3 9.19 6.69 8h-2c.73 1.63 1.73 3.17 2.98 4.56l-5.09 5.02L4 19l5-5 3.11 3.11.76-2.04M18.5 10h-2L12 22h2l1.12-3h4.75L21 22h2l-4.5-12m-2.62 7 1.62-4.33L19.12 17h-3.24Z"/></svg>
+    </button>
+    <div class="md-select__inner">
+      <ul class="md-select__list">
+        
+          <li class="md-select__item">
+            <a href="./" hreflang="en" class="md-select__link">
+              English
+            </a>
+          </li>
+        
+          <li class="md-select__item">
+            <a href="../../zh/proposal/03-egress-ip/" hreflang="zh" class="md-select__link">
+              中文
+            </a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</div>
+    
+    
+      <label class="md-header__button md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
+      </label>
+      <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12Z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41Z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/spidernet-io/egressgateway" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.4.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2023 Fonticons, Inc.--><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81z"/></svg>
+  </div>
+  <div class="md-source__repository">
+    spidernet-io/egressgateway
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="EgressGateway" class="md-nav__button md-logo" aria-label="EgressGateway" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54Z"/></svg>
+
+    </a>
+    EgressGateway
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/spidernet-io/egressgateway" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.4.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2023 Fonticons, Inc.--><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81z"/></svg>
+  </div>
+  <div class="md-source__repository">
+    spidernet-io/egressgateway
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Overview
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" >
+        
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Getting started
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            Getting started
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../usage/Install/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Install
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../usage/Upgrade/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Upgrade
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../usage/Uninstall/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Uninstall
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Usage
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            Usage
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../usage/NamespaceDefaultEgressGateway/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Namespace Default EgressGateway
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../usage/ClusterDefaultEgressGateway/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Cluster Default EgressGateway
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../usage/EgressGatewayFailover/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Failover
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../usage/MoveIP/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Move EgressIP
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Concepts
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            Concepts
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../concepts/Architecture/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Architecture
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../concepts/Datapath/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Datapath
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
+        
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Reference
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            Reference
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/EgressTunnel/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    CRD EgressTunnel
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/EgressGateway/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    CRD EgressGateway
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/EgressPolicy/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    CRD EgressPolicy
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/EgressClusterPolicy/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    CRD EgressClusterPolicy
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/EgressEndpointSlice/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    CRD EgressEndpointSlice
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/EgressClusterEndpointSlice/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    CRD EgressClusterEndpointSlice
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/EgressClusterInfo/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    CRD EgressClusterInfo
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/egctl/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    egctl cli
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../Troubleshooting/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Troubleshooting
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" >
+        
+          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Development
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7">
+            <span class="md-nav__icon md-icon"></span>
+            Development
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../develop/Dataflow/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    DataFlow
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../develop/Contribute/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Contribute
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../develop/Release/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Release
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_8" >
+        
+          <label class="md-nav__link" for="__nav_8" id="__nav_8_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Community
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_8_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_8">
+            <span class="md-nav__icon md-icon"></span>
+            Community
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../develop/Roadmap/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Roadmap
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#summary" class="md-nav__link">
+    Summary
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#motivation" class="md-nav__link">
+    Motivation
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#objectives" class="md-nav__link">
+    Objectives
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#non-target" class="md-nav__link">
+    Non-target
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#design" class="md-nav__link">
+    Design
+  </a>
+  
+    <nav class="md-nav" aria-label="Design">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#crd" class="md-nav__link">
+    CRD
+  </a>
+  
+    <nav class="md-nav" aria-label="CRD">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#egresstunnel" class="md-nav__link">
+    EgressTunnel
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#egressgateway" class="md-nav__link">
+    EgressGateway
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#egressgatewaypolicy" class="md-nav__link">
+    EgressGatewayPolicy
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#egressendpointslice" class="md-nav__link">
+    EgressEndpointSlice
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#data-plane-rules" class="md-nav__link">
+    Data plane rules
+  </a>
+  
+    <nav class="md-nav" aria-label="Data plane rules">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#all-nodes" class="md-nav__link">
+    All nodes
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#non-egress-gateway-node-relative-to-eip" class="md-nav__link">
+    Non-Egress Gateway node relative to EIP
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#egress-gateway-node-relative-to-eip" class="md-nav__link">
+    Egress Gateway node relative to EIP
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#egressgatewaypolicy-selection-of-gateway-nodes-and-eip-assignment-logic" class="md-nav__link">
+    EgressGatewayPolicy Selection of gateway nodes and EIP assignment logic
+  </a>
+  
+    <nav class="md-nav" aria-label="EgressGatewayPolicy Selection of gateway nodes and EIP assignment logic">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#policy-mode-of-selecting-gateway-nodes" class="md-nav__link">
+    policy Mode of selecting gateway nodes
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#eip-allocation-logic" class="md-nav__link">
+    EIP allocation logic
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#eip-recycling-logic" class="md-nav__link">
+    EIP Recycling Logic
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#others" class="md-nav__link">
+    Others
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#code-design" class="md-nav__link">
+    Code Design
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+  
+  
+
+
+<h1 id="egress-ip">Egress IP</h1>
+<h2 id="summary">Summary</h2>
+<p>Updated EgressGateway CRD field to support setting EIP ranges, adjusted EgressGatewayEgressPolicy to tenant level, can select referenced EgressGateway, EgressGateway CRD added field to limit referenced tenants. The above adjustments allow different EgressGatewayPolicy to be assigned to different EIPs, which allows flexible planning of services according to different needs and flexible planning of cluster egress networks, and tenant-level resources allow different roles to carry out egress policy management. Add EgressEndpointSlice CRD to aggregate workloads in cluster policy matching to improve the scalability and performance of EgressGateway.</p>
+<h2 id="motivation">Motivation</h2>
+<p>The current release of EgressGateway v0.1.0 supports the use of Egress Gateway's node IPs as egress IPs, which fulfills the ability to aggregate traffic for services that need to go out of the cluster. In a cluster, there are usually dozens or even hundreds of non-accessible services, in which many applications need to access different external networks, and a single EIP is overstretched under certain restrictions or rules, such as different EIPs have non-accessible firewall policies, and different EIPs have different access bandwidths. Different EIPs with different access bandwidths can be assigned to different applications or services through EgressGatewayPolicy, which can be managed at a fine-grained level to avoid potential security issues.</p>
+<h2 id="objectives">Objectives</h2>
+<ul>
+<li>Support setting Egress IP ranges.</li>
+<li>Support setting tenant-level EgressGatewayPolicy.</li>
+<li>Improve the performance and scalability of EgressGateway.</li>
+<li>Update of configuration parameters involved in the change</li>
+</ul>
+<h2 id="non-target">Non-target</h2>
+<ul>
+<li>Improve data plane forwarding performance</li>
+<li>Update the project document structure</li>
+</ul>
+<h2 id="design">Design</h2>
+<h3 id="crd">CRD</h3>
+<h4 id="egresstunnel">EgressTunnel</h4>
+<p>Used to record tunnel NIC information for cross-node communication. Cluster-level resource that corresponds one-to-one with the Kubernetes Node resource name.</p>
+<div class="language-yaml highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nt">apiVersion</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">egressgateway.spidernet.io/v1beta1</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="nt">kind</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">EgressTunnel</span>
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="nt">metadata</span><span class="p">:</span>
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="w">   </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;node1&quot;</span>
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="nt">status</span><span class="p">:</span>
+</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="w">   </span><span class="nt">tunnel</span><span class="p">:</span>
+</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="w">      </span><span class="nt">ipv4</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;192.200.222.157&quot;</span><span class="w">  </span><span class="c1"># 1</span>
+</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a><span class="w">      </span><span class="nt">ipv6</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;fd01::f2&quot;</span><span class="w">         </span><span class="c1"># 2        </span>
+</span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="w">      </span><span class="nt">mac</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;66:50:85:cb:b2:bf&quot;</span><span class="w"> </span><span class="c1"># 3</span>
+</span><span id="__span-0-10"><a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a><span class="w">      </span><span class="nt">parent</span><span class="p">:</span>
+</span><span id="__span-0-11"><a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a><span class="w">         </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;ens160&quot;</span><span class="w">        </span><span class="c1"># 4</span>
+</span><span id="__span-0-12"><a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a><span class="w">         </span><span class="nt">ipv4</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;10.6.1.21/16&quot;</span><span class="w">  </span><span class="c1"># 5</span>
+</span><span id="__span-0-13"><a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a><span class="w">         </span><span class="nt">ipv6</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;fd00::21/112&quot;</span><span class="w">  </span><span class="c1"># 6</span>
+</span><span id="__span-0-14"><a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a><span class="w">   </span><span class="nt">phase</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;Ready&quot;</span><span class="w">              </span><span class="c1"># 7</span>
+</span><span id="__span-0-15"><a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a><span class="w">   </span><span class="nt">mark</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;0x26000000&quot;</span><span class="w">          </span><span class="c1"># 8</span>
+</span></code></pre></div>
+<ol>
+<li>tunnel IPv4 address</li>
+<li>tunnel IPv6 address</li>
+<li>tunnel MAC address</li>
+<li>tunnel parent NIC</li>
+<li>the IPv4 address of the tunnel's parent NIC</li>
+<li>the IPv6 address of the tunnel's parent NIC</li>
+<li>current tunnel readiness stage</li>
+<li>mark address, this is a new segment, generated at creation. Each node has a globally unique label. The label is generated by prefix + unique identifier. The format of the tag is <code>NODE_MARK = 0x26 + value + 0000</code>, <code>value</code> is 16 bits and the total number of supported nodes is <code>2^16</code>. The label that is applied when issuing a policy rule depends on the nodes on which the rule's EIP is in effect.</li>
+</ol>
+<h4 id="egressgateway">EgressGateway</h4>
+<p>Used to select a set of nodes to be the Egress gateway nodes, the Egress IP can float in this range. Cluster-level resources.</p>
+<div class="language-yaml highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="nt">apiVersion</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">egressgateway.spidernet.io/v1beta1</span>
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="nt">kind</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">EgressGateway</span>
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="nt">metadata</span><span class="p">:</span>
+</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="w">  </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;eg1&quot;</span>
+</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="nt">spec</span><span class="p">:</span><span class="w">                            </span><span class="c1"># 1</span>
+</span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="w">  </span><span class="nt">ranges</span><span class="p">:</span>
+</span><span id="__span-1-7"><a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a><span class="w">   </span><span class="nt">policy</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;Random&quot;</span><span class="w">              </span><span class="c1"># 2</span>
+</span><span id="__span-1-8"><a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a><span class="w">   </span><span class="nt">ipv4</span><span class="p">:</span>
+</span><span id="__span-1-9"><a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a><span class="w">   </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">&quot;&quot;</span>
+</span><span id="__span-1-10"><a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a><span class="w">   </span><span class="nt">ipv6</span><span class="p">:</span>
+</span><span id="__span-1-11"><a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a><span class="w">   </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">&quot;&quot;</span>
+</span><span id="__span-1-12"><a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a><span class="w">  </span><span class="nt">nodeSelector</span><span class="p">:</span><span class="w">                  </span><span class="c1"># 3</span>
+</span><span id="__span-1-13"><a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a><span class="w">    </span><span class="nt">selector</span><span class="p">:</span><span class="w"> </span>
+</span><span id="__span-1-14"><a id="__codelineno-1-14" name="__codelineno-1-14" href="#__codelineno-1-14"></a><span class="w">      </span><span class="nt">matchLabels</span><span class="p">:</span>
+</span><span id="__span-1-15"><a id="__codelineno-1-15" name="__codelineno-1-15" href="#__codelineno-1-15"></a><span class="w">        </span><span class="nt">egress</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;true&quot;</span>
+</span><span id="__span-1-16"><a id="__codelineno-1-16" name="__codelineno-1-16" href="#__codelineno-1-16"></a><span class="w">    </span><span class="nt">policy</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;AverageSelecton&quot;</span><span class="w">    </span><span class="c1"># 4</span>
+</span><span id="__span-1-17"><a id="__codelineno-1-17" name="__codelineno-1-17" href="#__codelineno-1-17"></a><span class="nt">status</span><span class="p">:</span>
+</span><span id="__span-1-18"><a id="__codelineno-1-18" name="__codelineno-1-18" href="#__codelineno-1-18"></a><span class="w">  </span><span class="nt">nodeList</span><span class="p">:</span><span class="w">                 </span><span class="c1"># 5</span>
+</span><span id="__span-1-19"><a id="__codelineno-1-19" name="__codelineno-1-19" href="#__codelineno-1-19"></a><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">node1</span><span class="w">             </span><span class="c1"># 6</span>
+</span><span id="__span-1-20"><a id="__codelineno-1-20" name="__codelineno-1-20" href="#__codelineno-1-20"></a><span class="w">    </span><span class="nt">eips</span><span class="p">:</span><span class="w">                   </span>
+</span><span id="__span-1-21"><a id="__codelineno-1-21" name="__codelineno-1-21" href="#__codelineno-1-21"></a><span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">ipv4</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;&quot;</span><span class="w">              </span><span class="c1"># 7</span>
+</span><span id="__span-1-22"><a id="__codelineno-1-22" name="__codelineno-1-22" href="#__codelineno-1-22"></a><span class="w">      </span><span class="nt">ipv6</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;&quot;</span>
+</span><span id="__span-1-23"><a id="__codelineno-1-23" name="__codelineno-1-23" href="#__codelineno-1-23"></a><span class="w">      </span><span class="nt">policies</span><span class="p">:</span><span class="w">             </span><span class="c1"># 8</span>
+</span><span id="__span-1-24"><a id="__codelineno-1-24" name="__codelineno-1-24" href="#__codelineno-1-24"></a><span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">&quot;&quot;</span>
+</span></code></pre></div>
+<ol>
+<li>Set the range of Egress IP;</li>
+<li>Supports 3 ways to set a single IP <code>10.6.0.1</code>, and segments <code>10.6.0.1-10.6.0.10</code>, CIDR <code>10.6.0.1/26</code>;</li>
+<li>If the dual-stack requirement is enabled, the number of IPv4 and IPv6 are the same. For this reason, the above CIDRs may not be practical, so the first two are prioritized for implementation;</li>
+<li>the allocation policy of EIP, for the time being, it only supports <code>Random</code> random allocation.</li>
+<li>set the node range and policy for EgressGateway IP to float. 4. policy select the nodes of the gateway;</li>
+<li>policy for selecting nodes, only `AverageSelecton' is supported for the time being.</li>
+<li>Egress Gateway Controller is used to record and display the nodes matched by nodeSelector, for Node update Label or nodeSelector change will cause this field to change, Agent is the consumer of this field, will set the IP of the node belonging to their own node to the default name of <code>egress. eip</code> NIC. eip` NIC;</li>
+<li>the node selected by the EgressGatewayPolicy that references this EgressGateway as the gateway;</li>
+<li>the effective EIP, or null if useNodeIP is <code>true</code> in the EgressGatewayPolicy;</li>
+<li>the field by which the Agent determines which nodes are gateway and non-gateway nodes for which EgressGatewayPolicy.</li>
+</ol>
+<h4 id="egressgatewaypolicy">EgressGatewayPolicy</h4>
+<p>Used to specify which Pods walk the Egress policy and the IP address used by Egress. Tenant-Level Resources.</p>
+<div class="language-yaml highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="nt">apiVersion</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">egressgateway.spidernet.io/v1beta1</span>
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="nt">kind</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">EgressGatewayPolicy</span>
+</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="nt">metadata</span><span class="p">:</span>
+</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="w">  </span><span class="nt">namespace</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;default&quot;</span>
+</span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="w">  </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;policy-test&quot;</span>
+</span><span id="__span-2-6"><a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a><span class="nt">spec</span><span class="p">:</span>
+</span><span id="__span-2-7"><a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a><span class="w">  </span><span class="nt">egressGatewayName</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;eg1&quot;</span><span class="w">  </span><span class="c1"># 1</span>
+</span><span id="__span-2-8"><a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a><span class="w">  </span><span class="nt">egressIP</span><span class="p">:</span><span class="w">                 </span><span class="c1"># 2</span>
+</span><span id="__span-2-9"><a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a><span class="w">    </span><span class="nt">ipv4</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;&quot;</span><span class="w">                            </span>
+</span><span id="__span-2-10"><a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a><span class="w">    </span><span class="nt">ipv6</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;&quot;</span>
+</span><span id="__span-2-11"><a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a><span class="w">    </span><span class="nt">useNodeIP</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">false</span><span class="w">        </span><span class="c1"># 3</span>
+</span><span id="__span-2-12"><a id="__codelineno-2-12" name="__codelineno-2-12" href="#__codelineno-2-12"></a><span class="w">  </span><span class="nt">appliedTo</span><span class="p">:</span><span class="w">                </span><span class="c1"># 4</span>
+</span><span id="__span-2-13"><a id="__codelineno-2-13" name="__codelineno-2-13" href="#__codelineno-2-13"></a><span class="w">    </span><span class="nt">podSelector</span><span class="p">:</span><span class="w">            </span><span class="c1"># 4-a </span>
+</span><span id="__span-2-14"><a id="__codelineno-2-14" name="__codelineno-2-14" href="#__codelineno-2-14"></a><span class="w">      </span><span class="nt">matchLabels</span><span class="p">:</span><span class="w">    </span>
+</span><span id="__span-2-15"><a id="__codelineno-2-15" name="__codelineno-2-15" href="#__codelineno-2-15"></a><span class="w">        </span><span class="nt">app</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;shopping&quot;</span>
+</span><span id="__span-2-16"><a id="__codelineno-2-16" name="__codelineno-2-16" href="#__codelineno-2-16"></a><span class="w">    </span><span class="nt">podSubnet</span><span class="p">:</span><span class="w">              </span><span class="c1"># 4-b</span>
+</span><span id="__span-2-17"><a id="__codelineno-2-17" name="__codelineno-2-17" href="#__codelineno-2-17"></a><span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">&quot;172.29.16.0/24&quot;</span>
+</span><span id="__span-2-18"><a id="__codelineno-2-18" name="__codelineno-2-18" href="#__codelineno-2-18"></a><span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">&#39;fd00:1/126&#39;</span>
+</span><span id="__span-2-19"><a id="__codelineno-2-19" name="__codelineno-2-19" href="#__codelineno-2-19"></a><span class="w">  </span><span class="nt">destSubnet</span><span class="p">:</span><span class="w">               </span><span class="c1"># 5</span>
+</span><span id="__span-2-20"><a id="__codelineno-2-20" name="__codelineno-2-20" href="#__codelineno-2-20"></a><span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">&quot;10.6.1.92/32&quot;</span>
+</span><span id="__span-2-21"><a id="__codelineno-2-21" name="__codelineno-2-21" href="#__codelineno-2-21"></a><span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">&quot;fd00::92/128&quot;</span>
+</span></code></pre></div>
+<ol>
+<li>select the EgressGateway referenced by the policy;</li>
+<li>the Egress IP access policy;</li>
+<li>If an <code>ipv4</code> or <code>ipv6</code> address is defined at the time of creation, an IP address is assigned from the EgressGateway's <code>.ranges</code>. If a user applies the IP addresses <code>10.6.1.21</code> and <code>fd00:1</code> in policy1 and then creates policy2 with the IP addresses <code>10.6.1.21</code> and <code>fd00:2</code>, an error is reported and policy2 fails to be assigned. .1.21<code>and</code>fd00:2`, then an error is reported and policy2 fails to be assigned;</li>
+<li>If the <code>ipv4</code> or <code>ipv6</code> address is not defined and <code>useNodeIP</code> is true, the IP of the Node in the match of the referenced EgressGateway is used as the Egress address.</li>
+<li>If an <code>ipv4</code> or <code>ipv6</code> address is not defined at creation and <code>useNodeIP</code> is <code>false</code>.<ul>
+<li>An IP address is automatically assigned from the EgressGateway's <code>.ranges</code> (when IPv6 is turned on. request an IPv4 and an IPv6 address);</li>
+</ul>
+</li>
+<li>If <code>egressGatewayName</code> is undefined;<ul>
+<li>Continue to see if the current Namespace label key <code>egressgateway.spidernet.io/default</code> has the default EgressGateway set, and if it does and this tenant is allowed to use it, assign EgressIP from there;</li>
+<li>Continue to see if there is a name for the <code>default</code> global default EgressGateway, and if there is and this tenant is allowed to use it, assign EgressIP from there.</li>
+</ul>
+</li>
+<li>supports the use of node IPs as Egress IPs (only one selection is allowed);</li>
+<li>select the Pod to which the Egress Gateway Policy needs to be applied;
+   a. Select by Label
+   b. directly specify the network segment of the Pod (a and b cannot be used at the same time)</li>
+<li>Specify the destination address for accessing Egress. If no destination address is specified, all the policy bits in effect will be forwarded to the Egress node if the destination address is not a CIDR in the cluster.</li>
+</ol>
+<h4 id="egressendpointslice">EgressEndpointSlice</h4>
+<p>Aggregates endpoints in an EgressGatewayPolicy match to improve scalability, only supported if the EgressGatewayPolicy matches Pods using the <code>podSelector</code> method. The number of Endpoints in each EgressEndpointSlice does not exceed 100 by default, and the maximum value can be set. It is a dependent resource of EgressGatewayPolicy.</p>
+<div class="language-yaml highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="nt">apiVersion</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">egressgateway.spidernet.io/v1beta1</span>
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="nt">kind</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">EgressEndpointSlice</span>
+</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="nt">metadata</span><span class="p">:</span>
+</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="w">  </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;policy-test-dx66t&quot;</span><span class="w">     </span><span class="c1"># 1</span>
+</span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a><span class="w">  </span><span class="nt">namespace</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;default&quot;</span><span class="w">         </span>
+</span><span id="__span-3-6"><a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a><span class="w">  </span><span class="nt">labels</span><span class="p">:</span>
+</span><span id="__span-3-7"><a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a><span class="w">    </span><span class="nt">egressgateway.spidernet.io/egressgatewaypolicy</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;policy-test&quot;</span><span class="w">  </span><span class="c1"># 2</span>
+</span><span id="__span-3-8"><a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a><span class="w">  </span><span class="nt">ownerReferences</span><span class="p">:</span><span class="w">   </span><span class="c1"># 3</span>
+</span><span id="__span-3-9"><a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">apiVersion</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">egressgateway.spidernet.io/v1beta1</span>
+</span><span id="__span-3-10"><a id="__codelineno-3-10" name="__codelineno-3-10" href="#__codelineno-3-10"></a><span class="w">    </span><span class="nt">blockOwnerDeletion</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+</span><span id="__span-3-11"><a id="__codelineno-3-11" name="__codelineno-3-11" href="#__codelineno-3-11"></a><span class="w">    </span><span class="nt">controller</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+</span><span id="__span-3-12"><a id="__codelineno-3-12" name="__codelineno-3-12" href="#__codelineno-3-12"></a><span class="w">    </span><span class="nt">kind</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">EgressGatewayPolicy</span>
+</span><span id="__span-3-13"><a id="__codelineno-3-13" name="__codelineno-3-13" href="#__codelineno-3-13"></a><span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;policy-test&quot;</span>
+</span><span id="__span-3-14"><a id="__codelineno-3-14" name="__codelineno-3-14" href="#__codelineno-3-14"></a><span class="w">    </span><span class="nt">uid</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1b2ec0a8-b929-4528-8f99-499f981d319e</span>
+</span><span id="__span-3-15"><a id="__codelineno-3-15" name="__codelineno-3-15" href="#__codelineno-3-15"></a><span class="nt">data</span><span class="p">:</span>
+</span><span id="__span-3-16"><a id="__codelineno-3-16" name="__codelineno-3-16" href="#__codelineno-3-16"></a><span class="w">  </span><span class="nt">endpoints</span><span class="p">:</span><span class="w">                   </span><span class="c1"># 4</span>
+</span><span id="__span-3-17"><a id="__codelineno-3-17" name="__codelineno-3-17" href="#__codelineno-3-17"></a><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">podName</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;web-app&quot;</span><span class="w">         </span>
+</span><span id="__span-3-18"><a id="__codelineno-3-18" name="__codelineno-3-18" href="#__codelineno-3-18"></a><span class="w">    </span><span class="nt">ipv4List</span><span class="p">:</span>
+</span><span id="__span-3-19"><a id="__codelineno-3-19" name="__codelineno-3-19" href="#__codelineno-3-19"></a><span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">&quot;172.29.30.123&quot;</span><span class="w"> </span>
+</span><span id="__span-3-20"><a id="__codelineno-3-20" name="__codelineno-3-20" href="#__codelineno-3-20"></a><span class="w">    </span><span class="nt">ipv6List</span><span class="p">:</span>
+</span><span id="__span-3-21"><a id="__codelineno-3-21" name="__codelineno-3-21" href="#__codelineno-3-21"></a><span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">&quot;xxx&quot;</span><span class="w">         </span>
+</span><span id="__span-3-22"><a id="__codelineno-3-22" name="__codelineno-3-22" href="#__codelineno-3-22"></a><span class="w">    </span><span class="nt">nodeName</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;node1&quot;</span><span class="w">          </span><span class="c1"># 5</span>
+</span><span id="__span-3-23"><a id="__codelineno-3-23" name="__codelineno-3-23" href="#__codelineno-3-23"></a><span class="w">    </span><span class="nt">uuid</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;&quot;</span>
+</span></code></pre></div>
+<ol>
+<li>the name consists of <code>policy-name-xxxxx</code> followed by 5 randomly generated digits;</li>
+<li>the name of the EgressGatewayPolicy to which it belongs; 3. the ownerReferences are set synchronously at creation time; and</li>
+<li>the ownerReferences are set synchronously upon creation; 4. a list of endpoints in the match; and</li>
+<li>a list of matched endpoints. 5. the node where the Pod is located;</li>
+<li>the node where the Pod is located.</li>
+</ol>
+<h3 id="data-plane-rules">Data plane rules</h3>
+<p>The rules to be validated are categorized into three types: all nodes, gateway nodes relative to the EgressGatewayPolicy, and non-gateway nodes.</p>
+<h4 id="all-nodes">All nodes</h4>
+<ol>
+<li>The rules for tunneling between nodes will not be expanded. 2;</li>
+<li>relabel the traffic that the policy hits. The first time a node becomes a gateway node, it is updated, or it is done once when the node joins, but not later;</li>
+</ol>
+<div class="language-shell highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>iptables<span class="w"> </span>-t<span class="w"> </span>mangle<span class="w"> </span>-N<span class="w"> </span>EGRESSGATEWAY-RESET-MARK
+</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>iptables<span class="w"> </span>-t<span class="w"> </span>mangle<span class="w"> </span>-I<span class="w"> </span>FORWARD<span class="w"> </span><span class="m">1</span><span class="w">  </span>-j<span class="w"> </span>EGRESSGATEWAY-RESET-MARK<span class="w"> </span>-m<span class="w"> </span>comment<span class="w"> </span>--comment<span class="w"> </span><span class="s2">&quot;egress gateway: mark egress packet&quot;</span>
+</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>
+</span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a>iptables<span class="w"> </span>-t<span class="w"> </span>mangle<span class="w"> </span>-A<span class="w"> </span>EGRESSGATEWAY-RESET-MARK<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-4-5"><a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a><span class="w">    </span>-m<span class="w"> </span>mark<span class="w"> </span>--mark<span class="w"> </span><span class="nv">$NODE_MARK</span>/0x26000000<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-4-6"><a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a><span class="w">    </span>-j<span class="w"> </span>MARK<span class="w"> </span>--set-mark<span class="w"> </span>0x12000000<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-4-7"><a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a><span class="w">    </span>-m<span class="w"> </span>comment<span class="w"> </span>--comment<span class="w"> </span><span class="s2">&quot;egress gateway: change mark&quot;</span>
+</span></code></pre></div>
+<ol>
+<li>Maintain the labeling of policy hit flows. It is created directly once and does not need to be updated;</li>
+</ol>
+<div class="language-shell highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>iptables<span class="w"> </span>-t<span class="w"> </span>filter<span class="w"> </span>-I<span class="w"> </span>FORWARD<span class="w"> </span><span class="m">1</span><span class="w"> </span>-m<span class="w"> </span>mark<span class="w"> </span>--mark<span class="w"> </span>0x12000000<span class="w"> </span>-j<span class="w"> </span>ACCEPT<span class="w"> </span>-m<span class="w"> </span>comment<span class="w"> </span>--comment<span class="w"> </span><span class="s2">&quot;egress gateway: keep mark&quot;</span>
+</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>iptables<span class="w"> </span>-t<span class="w"> </span>filter<span class="w"> </span>-I<span class="w"> </span>OUTPUT<span class="w"> </span><span class="m">1</span><span class="w"> </span>-m<span class="w"> </span>mark<span class="w"> </span>--mark<span class="w"> </span>0x12000000<span class="w"> </span>-j<span class="w"> </span>ACCEPT<span class="w"> </span>-m<span class="w"> </span>comment<span class="w"> </span>--comment<span class="w"> </span><span class="s2">&quot;egress gateway: keep mark&quot;</span>
+</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a>iptables<span class="w"> </span>-t<span class="w"> </span>mangle<span class="w"> </span>-I<span class="w"> </span>POSTROUTING<span class="w"> </span><span class="m">1</span><span class="w"> </span>-m<span class="w"> </span>mark<span class="w"> </span>--mark<span class="w"> </span>0x12000000<span class="w"> </span>-j<span class="w"> </span>ACCEPT<span class="w"> </span>-m<span class="w"> </span>comment<span class="w"> </span>--comment<span class="w"> </span><span class="s2">&quot;egress gateway: keep mark&quot;</span>
+</span></code></pre></div>
+<ol>
+<li>policy hits the source IP, destination IP of the ipset;</li>
+</ol>
+<div class="language-shell highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="nv">IPSET_RULE_DEST_NAME</span><span class="o">=</span>egress-dest-uuid
+</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>ipset<span class="w"> </span>x<span class="w"> </span><span class="nv">$IPSET_RULE_DEST_NAME</span>
+</span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>ipset<span class="w"> </span>create<span class="w"> </span><span class="nv">$IPSET_RULE_DEST_NAME</span><span class="w"> </span>hash:net
+</span><span id="__span-6-4"><a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a>ipset<span class="w"> </span>add<span class="w"> </span><span class="nv">$IPSET_RULE_DEST_NAME</span><span class="w"> </span><span class="m">10</span>.6.105.150/32
+</span><span id="__span-6-5"><a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a>
+</span><span id="__span-6-6"><a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a><span class="nv">IPSET_RULE_SRC_NAME</span><span class="o">=</span>egress-src-uuid
+</span><span id="__span-6-7"><a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a>ipset<span class="w"> </span>x<span class="w"> </span><span class="nv">$IPSET_RULE_SRC_NAME</span>
+</span><span id="__span-6-8"><a id="__codelineno-6-8" name="__codelineno-6-8" href="#__codelineno-6-8"></a>ipset<span class="w"> </span>create<span class="w"> </span><span class="nv">$IPSET_RULE_SRC_NAME</span><span class="w"> </span>hash:net
+</span><span id="__span-6-9"><a id="__codelineno-6-9" name="__codelineno-6-9" href="#__codelineno-6-9"></a>ipset<span class="w"> </span>add<span class="w"> </span><span class="nv">$IPSET_RULE_SRC_NAME</span><span class="w"> </span><span class="m">172</span>.29.234.173/32
+</span></code></pre></div>
+<ol>
+<li>Aggregation policy Hits traffic-tagged chains. It is created directly once and does not need to be updated;</li>
+</ol>
+<div class="language-shell highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>iptables<span class="w"> </span>-t<span class="w"> </span>mangle<span class="w"> </span>-N<span class="w"> </span>EGRESSGATEWAY-MARK-REQUEST
+</span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>iptables<span class="w"> </span>-t<span class="w"> </span>mangle<span class="w"> </span>-I<span class="w"> </span>PREROUTING<span class="w"> </span><span class="m">1</span><span class="w"> </span>-j<span class="w"> </span>EGRESSGATEWAY-MARK-REQUEST<span class="w"> </span>-m<span class="w"> </span>comment<span class="w"> </span>--comment<span class="w"> </span><span class="s2">&quot;egress gateway: mark egress packet&quot;</span>
+</span></code></pre></div>
+<ol>
+<li>Aggregate chains that do not require SNAT rules. It is created directly once and does not need to be updated;</li>
+</ol>
+<div class="language-shell highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>iptables<span class="w"> </span>-t<span class="w"> </span>nat<span class="w"> </span>-N<span class="w"> </span>EGRESSGATEWAY-NO-SNAT
+</span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a>iptables<span class="w"> </span>-t<span class="w"> </span>nat<span class="w"> </span>-I<span class="w"> </span>POSTROUTING<span class="w"> </span><span class="m">1</span><span class="w">  </span>-j<span class="w"> </span>EGRESSGATEWAY-NO-SNAT<span class="w"> </span>-m<span class="w"> </span>comment<span class="w"> </span>--comment<span class="w"> </span><span class="s2">&quot;egress gateway: no snat&quot;</span>
+</span><span id="__span-8-3"><a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a>
+</span><span id="__span-8-4"><a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a>iptables<span class="w"> </span>-t<span class="w"> </span>nat<span class="w"> </span>-A<span class="w"> </span>EGRESSGATEWAY-NO-SNAT<span class="w"> </span>-m<span class="w"> </span>mark<span class="w"> </span>--mark<span class="w"> </span>0x12000000<span class="w"> </span>-j<span class="w"> </span>ACCEPT<span class="w"> </span>-m<span class="w"> </span>comment<span class="w"> </span>--comment<span class="w"> </span><span class="s2">&quot;egress gateway: no snat&quot;</span>
+</span></code></pre></div>
+<ol>
+<li>Aggregate chains that require SNAT rules. It is created directly once and does not need to be updated.</li>
+</ol>
+<p><code>`shell
+   iptables -t nat -N EGRESSGATEWAY-SNAT-EIP
+   # Need to insert after rules that don't require SNAT to keep the chain at the top
+   iptables -t nat -I POSTROUTING 1 -j EGRESSGATEWAY-SNAT-EIP -m comment --comment "egress gateway: snat EIP"</code></p>
+<h4 id="non-egress-gateway-node-relative-to-eip">Non-Egress Gateway node relative to EIP</h4>
+<ol>
+<li>policy hit traffic is labeled to ensure that it can go through the tunnel. where the value of NODE_MARK is determined by the node where the policy corresponds to the EIP.</li>
+</ol>
+<div class="language-shell highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>iptables<span class="w"> </span>-A<span class="w"> </span>EGRESSGATEWAY-MARK-REQUEST<span class="w"> </span>-t<span class="w"> </span>mangle<span class="w"> </span>-m<span class="w"> </span>conntrack<span class="w"> </span>--ctdir<span class="w"> </span>ORIGINAL<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-9-2"><a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a>-m<span class="w"> </span><span class="nb">set</span><span class="w"> </span>--match-set<span class="w"> </span><span class="nv">$IPSET_RULE_DEST_NAME</span><span class="w"> </span>dst<span class="w">  </span><span class="se">\</span>
+</span><span id="__span-9-3"><a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a>-m<span class="w"> </span><span class="nb">set</span><span class="w"> </span>--match-set<span class="w"> </span><span class="nv">$IPSET_RULE_SRC_NAME</span><span class="w"> </span>src<span class="w">  </span><span class="se">\</span>
+</span><span id="__span-9-4"><a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a>-j<span class="w"> </span>MARK<span class="w"> </span>--set-mark<span class="w"> </span><span class="nv">$NODE_MARK</span><span class="w"> </span>-m<span class="w"> </span>comment<span class="w"> </span>--comment<span class="w"> </span><span class="s2">&quot;rule uuid: mark request packet&quot;</span>
+</span></code></pre></div>
+<ol>
+<li>Policy routing rules</li>
+</ol>
+<div class="language-shell highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a>ip<span class="w"> </span>rule<span class="w"> </span>add<span class="w"> </span>fwmark<span class="w"> </span><span class="nv">$NODE_MARK</span><span class="w"> </span>table<span class="w"> </span><span class="nv">$TABLE_NUM</span>
+</span></code></pre></div>
+<ol>
+<li>adapting Weave to avoid doing SNAT into the IP of the Egress tunnel. make the switch</li>
+</ol>
+<div class="language-shell highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a>iptables<span class="w"> </span>-t<span class="w"> </span>nat<span class="w"> </span>-A<span class="w"> </span>EGRESSGATEWAY-NO-SNAT<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-11-2"><a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a>-m<span class="w"> </span><span class="nb">set</span><span class="w"> </span>--match-set<span class="w"> </span><span class="nv">$IPSET_RULE_DEST_NAME</span><span class="w"> </span>dst<span class="w">  </span><span class="se">\</span>
+</span><span id="__span-11-3"><a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a>-m<span class="w"> </span><span class="nb">set</span><span class="w"> </span>--match-set<span class="w"> </span><span class="nv">$IPSET_RULE_SRC_NAME</span><span class="w"> </span>src<span class="w">  </span><span class="se">\</span>
+</span><span id="__span-11-4"><a id="__codelineno-11-4" name="__codelineno-11-4" href="#__codelineno-11-4"></a>-j<span class="w"> </span>ACCEPT<span class="w"> </span>-m<span class="w"> </span>comment<span class="w"> </span>--comment<span class="w"> </span><span class="s2">&quot;egress gateway: weave does not do SNAT&quot;</span>
+</span></code></pre></div>
+<h4 id="egress-gateway-node-relative-to-eip">Egress Gateway node relative to EIP</h4>
+<ol>
+<li>policy hit traffic. SNAT is done on the way out of the gateway. real-time updates.</li>
+</ol>
+<div class="language-shell highlight"><pre><span></span><code><span id="__span-12-1"><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a>iptables<span class="w"> </span>-t<span class="w"> </span>nat<span class="w"> </span>-A<span class="w"> </span>EGRESSGATEWAY-SNAT-EIP<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-12-2"><a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a><span class="w">    </span>-m<span class="w"> </span><span class="nb">set</span><span class="w"> </span>--match-set<span class="w"> </span><span class="nv">$IPSET_RULE_SRC_NAME</span><span class="w"> </span>src<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-12-3"><a id="__codelineno-12-3" name="__codelineno-12-3" href="#__codelineno-12-3"></a><span class="w">    </span>-m<span class="w"> </span><span class="nb">set</span><span class="w"> </span>--match-set<span class="w"> </span><span class="nv">$IPSET_RULE_DST_NAME</span><span class="w"> </span>dst<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-12-4"><a id="__codelineno-12-4" name="__codelineno-12-4" href="#__codelineno-12-4"></a><span class="w">    </span>-j<span class="w"> </span>SNAT<span class="w"> </span>--to-source<span class="w"> </span><span class="nv">$EIP</span>
+</span></code></pre></div>
+<h3 id="egressgatewaypolicy-selection-of-gateway-nodes-and-eip-assignment-logic">EgressGatewayPolicy Selection of gateway nodes and EIP assignment logic</h3>
+<p>A policy selects a node as a gateway node based on a gateway node selection policy. The decision to assign an EIP is then based on whether or not to use it, and the assigned EIP is bound to the selected gateway node.</p>
+<p>The allocation logic is all for a single EgressGateway, not all EgressGateways.</p>
+<h4 id="policy-mode-of-selecting-gateway-nodes">policy Mode of selecting gateway nodes</h4>
+<ul>
+<li>Average selection: when a gateway node needs to be selected, select the node with the least number of nodes as gateway nodes.</li>
+<li>Minimum node selection: try to select the same node as a gateway node.</li>
+<li>Limit selection: a node can only be the gateway node of several policies at most, the limit can be set, the default is 5. Before the limit is reached, the node is preferred to be selected, and other nodes are selected when the limit is reached, and if all the limits are reached, the nodes will be selected randomly.</li>
+</ul>
+<h4 id="eip-allocation-logic">EIP allocation logic</h4>
+<ul>
+<li>Random allocation: choose one randomly among all EIPs, no matter whether the EIP has been allocated or not</li>
+<li>Priority use of unallocated EIPs: use unallocated EIPs first, and then randomly allocate a used EIP if they are all used.</li>
+<li>Limit selection: an EIP can only be used by several policies at most, the limit can be set, the default is 5, before the limit is reached, the EIP will be assigned first, and if the limit is reached, then other EIPs will be selected; if the limit is reached, then the EIPs will be assigned randomly.</li>
+</ul>
+<h4 id="eip-recycling-logic">EIP Recycling Logic</h4>
+<p>When an EIP is not used by a policy, it will be recycled, recycling means delete the EIP field in eips.</p>
+<h4 id="others">Others</h4>
+<ol>
+<li>dummy card and EIP: each node has only one dummy card named <code>egress.eip</code>, all EIPs are valid on this node.</li>
+</ol>
+<div class="language-shell highlight"><pre><span></span><code><span id="__span-13-1"><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a><span class="c1"># Create the dummy NIC</span>
+</span><span id="__span-13-2"><a id="__codelineno-13-2" name="__codelineno-13-2" href="#__codelineno-13-2"></a>ip<span class="w"> </span>link<span class="w"> </span>add<span class="w"> </span>egress.eip<span class="w"> </span><span class="nb">type</span><span class="w"> </span>dummy
+</span><span id="__span-13-3"><a id="__codelineno-13-3" name="__codelineno-13-3" href="#__codelineno-13-3"></a>ip<span class="w"> </span>link<span class="w"> </span><span class="nb">set</span><span class="w"> </span>egress.eip<span class="w"> </span>up
+</span><span id="__span-13-4"><a id="__codelineno-13-4" name="__codelineno-13-4" href="#__codelineno-13-4"></a>
+</span><span id="__span-13-5"><a id="__codelineno-13-5" name="__codelineno-13-5" href="#__codelineno-13-5"></a><span class="c1"># Set EIP</span>
+</span><span id="__span-13-6"><a id="__codelineno-13-6" name="__codelineno-13-6" href="#__codelineno-13-6"></a>ip<span class="w"> </span>addr<span class="w"> </span>add<span class="w"> </span><span class="m">10</span>.6.168.100<span class="w"> </span>dev<span class="w"> </span>egress.eip
+</span></code></pre></div>
+<ol>
+<li>Since the EIP is active on the dummy card, you need to configure ARP answering.</li>
+</ol>
+<div class="language-shell highlight"><pre><span></span><code><span id="__span-14-1"><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a>sysctl<span class="w"> </span>-w<span class="w"> </span>net.ipv4.conf.all.arp_ignore<span class="o">=</span><span class="m">0</span>
+</span><span id="__span-14-2"><a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a>
+</span><span id="__span-14-3"><a id="__codelineno-14-3" name="__codelineno-14-3" href="#__codelineno-14-3"></a><span class="c1"># All physical NICs need to be set up for surrogate answering, not sure what kind of NIC they go out from</span>
+</span><span id="__span-14-4"><a id="__codelineno-14-4" name="__codelineno-14-4" href="#__codelineno-14-4"></a>sysctl<span class="w"> </span>-w<span class="w"> </span>net.ipv4.conf.xxx.arp_ignore<span class="o">=</span><span class="m">0</span>
+</span></code></pre></div>
+<ol>
+<li>mangle-FORWARD match Re-tag because <code>NODE_MARK = 0x26 + value + 0000</code>, so just match the first 16 bits.</li>
+</ol>
+<div class="language-shell highlight"><pre><span></span><code><span id="__span-15-1"><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a>iptables<span class="w"> </span>-t<span class="w"> </span>mangle<span class="w"> </span>-I<span class="w"> </span>FORWARD<span class="w"> </span><span class="m">1</span><span class="w"> </span>-m<span class="w"> </span>mark<span class="w"> </span>--mark<span class="w"> </span>0x26000000/0x26000000<span class="w"> </span>-j<span class="w"> </span>MARK<span class="w"> </span>--set-mark<span class="w"> </span>0x12000000<span class="w"> </span>-m<span class="w"> </span>comment<span class="w"> </span>--comment<span class="w"> </span><span class="s2">&quot;egress gateway: change mark&quot;</span>
+</span></code></pre></div>
+<ol>
+<li>Update the ipset content, the CRD aggregates the latest IP content, you can create a temporary ipset and then swap it, which greatly simplifies the ipset operation and improves efficiency.</li>
+</ol>
+<div class="language-shell highlight"><pre><span></span><code><span id="__span-16-1"><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a>ipset<span class="w"> </span>create<span class="w"> </span>egress-dst-v4-xxx-tmp<span class="w"> </span>
+</span><span id="__span-16-2"><a id="__codelineno-16-2" name="__codelineno-16-2" href="#__codelineno-16-2"></a>ipset<span class="w"> </span>add<span class="w"> </span>egress-dst-v4-xxx-tmp<span class="w"> </span><span class="nv">$NEW_IP_RANGE</span>
+</span><span id="__span-16-3"><a id="__codelineno-16-3" name="__codelineno-16-3" href="#__codelineno-16-3"></a>ipset<span class="w"> </span>swap<span class="w"> </span>egress-dst-v4-xxx<span class="w"> </span>egress-dst-v4-xxx-tmp<span class="w"> </span>
+</span></code></pre></div>
+<h4 id="code-design">Code Design</h4>
+<p><img alt="arch" src="arch.png" /></p>
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+  <script>var tabs=__md_get("__tabs");if(Array.isArray(tabs))e:for(var set of document.querySelectorAll(".tabbed-set")){var tab,labels=set.querySelector(".tabbed-labels");for(tab of tabs)for(var label of labels.getElementsByTagName("label"))if(label.innerText.trim()===tab){var input=document.getElementById(label.htmlFor);input.checked=!0;continue e}}</script>
+
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    <script id="__config" type="application/json">{"base": "../..", "features": ["content.code.annotate", "content.tabs.link"], "search": "../../assets/javascripts/workers/search.dfff1995.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"provider": "mike"}}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.dff1b7c8.min.js"></script>
+      
+    
+  </body>
+</html>

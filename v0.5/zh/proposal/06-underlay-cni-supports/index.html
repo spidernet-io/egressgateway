@@ -1,0 +1,1164 @@
+
+<!doctype html>
+<html lang="zh" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+        <link rel="canonical" href="https://spidernet-io.github.io/egressgateway/v0.5/zh/proposal/06-underlay-cni-supports/">
+      
+      
+      
+      
+      <link rel="icon" href="../../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.5.2, mkdocs-material-9.2.8">
+    
+    
+      
+        <title>Underlay CNI supports - EgressGateway</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../../assets/stylesheets/main.046329b4.min.css">
+      
+        
+        <link rel="stylesheet" href="../../../assets/stylesheets/palette.85d0ee34.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../../..",location),__md_hash=e=>[...e].reduce((e,_)=>(e<<5)-e+_.charCodeAt(0),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+    
+  </head>
+  
+  
+    
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="#4478D1" data-md-color-accent="indigo">
+  
+    
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#underlay-cni-supports" class="md-skip">
+          跳转至
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+      <div data-md-color-scheme="default" data-md-component="outdated" hidden>
+        
+      </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="页眉">
+    <a href="../../" title="EgressGateway" class="md-header__button md-logo" aria-label="EgressGateway" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54Z"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3V6m0 5h18v2H3v-2m0 5h18v2H3v-2Z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            EgressGateway
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Underlay CNI supports
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+    
+    
+      <div class="md-header__option">
+  <div class="md-select">
+    
+    <button class="md-header__button md-icon" aria-label="选择当前语言">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m12.87 15.07-2.54-2.51.03-.03A17.52 17.52 0 0 0 14.07 6H17V4h-7V2H8v2H1v2h11.17C11.5 7.92 10.44 9.75 9 11.35 8.07 10.32 7.3 9.19 6.69 8h-2c.73 1.63 1.73 3.17 2.98 4.56l-5.09 5.02L4 19l5-5 3.11 3.11.76-2.04M18.5 10h-2L12 22h2l1.12-3h4.75L21 22h2l-4.5-12m-2.62 7 1.62-4.33L19.12 17h-3.24Z"/></svg>
+    </button>
+    <div class="md-select__inner">
+      <ul class="md-select__list">
+        
+          <li class="md-select__item">
+            <a href="../../../proposal/06-underlay-cni-supports/" hreflang="en" class="md-select__link">
+              English
+            </a>
+          </li>
+        
+          <li class="md-select__item">
+            <a href="./" hreflang="zh" class="md-select__link">
+              中文
+            </a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</div>
+    
+    
+      <label class="md-header__button md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
+      </label>
+      <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="搜索" placeholder="搜索" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12Z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="查找">
+        
+        <button type="reset" class="md-search__icon md-icon" title="清空当前内容" aria-label="清空当前内容" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41Z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            正在初始化搜索引擎
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/spidernet-io/egressgateway" title="前往仓库" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.4.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2023 Fonticons, Inc.--><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81z"/></svg>
+  </div>
+  <div class="md-source__repository">
+    spidernet-io/egressgateway
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="导航栏" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../../" title="EgressGateway" class="md-nav__button md-logo" aria-label="EgressGateway" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54Z"/></svg>
+
+    </a>
+    EgressGateway
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/spidernet-io/egressgateway" title="前往仓库" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.4.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2023 Fonticons, Inc.--><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81z"/></svg>
+  </div>
+  <div class="md-source__repository">
+    spidernet-io/egressgateway
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Overview
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" >
+        
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Getting started
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            Getting started
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../usage/Install/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Install
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../usage/Upgrade/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Upgrade
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../usage/Uninstall/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Uninstall
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Usage
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            Usage
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../usage/NamespaceDefaultEgressGateway/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Namespace Default EgressGateway
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../usage/ClusterDefaultEgressGateway/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Cluster Default EgressGateway
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../usage/EgressGatewayFailover/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Failover
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../usage/MoveIP/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Move EgressIP
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Concepts
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            Concepts
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../concepts/Architecture/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Architecture
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../concepts/Datapath/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Datapath
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
+        
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Reference
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            Reference
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/EgressTunnel/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    CRD EgressTunnel
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/EgressGateway/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    CRD EgressGateway
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/EgressPolicy/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    CRD EgressPolicy
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/EgressClusterPolicy/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    CRD EgressClusterPolicy
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/EgressEndpointSlice/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    CRD EgressEndpointSlice
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/EgressClusterEndpointSlice/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    CRD EgressClusterEndpointSlice
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/EgressClusterInfo/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    CRD EgressClusterInfo
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/egctl/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    egctl cli
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../Troubleshooting/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Troubleshooting
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" >
+        
+          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Development
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7">
+            <span class="md-nav__icon md-icon"></span>
+            Development
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../develop/Dataflow/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    DataFlow
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../develop/Contribute/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Contribute
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../develop/Release/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Release
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_8" >
+        
+          <label class="md-nav__link" for="__nav_8" id="__nav_8_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Community
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_8_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_8">
+            <span class="md-nav__icon md-icon"></span>
+            Community
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../develop/Roadmap/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Roadmap
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="目录">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      目录
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#motivation" class="md-nav__link">
+    Motivation
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#target" class="md-nav__link">
+    Target
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#problems-to-be-solved" class="md-nav__link">
+    Problems to be solved
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#hijack-a-pod-message-that-matches-the-egressgateway-policy-to-the-host-on-which-it-resides" class="md-nav__link">
+    Hijack a Pod message that matches the EgressGateway policy to the host on which it resides
+  </a>
+  
+    <nav class="md-nav" aria-label="Hijack a Pod message that matches the EgressGateway policy to the host on which it resides">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#send-datapath" class="md-nav__link">
+    Send datapath
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#reply-datapath" class="md-nav__link">
+    Reply datapath
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#returned-message-routing-asymmetry-problem" class="md-nav__link">
+    Returned message routing asymmetry problem
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#summary" class="md-nav__link">
+    Summary
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+  
+  
+
+
+<h1 id="underlay-cni-supports">Underlay CNI supports</h1>
+<h2 id="motivation">Motivation</h2>
+<p>EgressGateway is not available in an Underlay CNI environment.</p>
+<h2 id="target">Target</h2>
+<p>EgressGateway supports nanotube traffic in an Underlay CNI environment.</p>
+<h2 id="problems-to-be-solved">Problems to be solved</h2>
+<p>As shown in the diagram, the datapath for the round-trip Underlay access to the external Server is: "Process &lt;-&gt; A &lt;-&gt; B &lt;-&gt; Server".</p>
+<p><img alt="datapath" src="../../../proposal/06-underlay-cni-supports/underlay_datapath.png" /></p>
+<p>The EgressGateway's rules don't work at all, and in order to pipe the Underlay traffic, two things need to be addressed, hijacking the traffic to the Pod's host and avoiding routing asymmetric messages from being dropped when the answering traffic arrives at the Pod's host</p>
+<h2 id="hijack-a-pod-message-that-matches-the-egressgateway-policy-to-the-host-on-which-it-resides">Hijack a Pod message that matches the EgressGateway policy to the host on which it resides</h2>
+<p>There are two things you need to do to solve this problem:
+1, open the channel between the Pod and the host.
+2, so that messages matching the policy are forwarded to the host through the channel.</p>
+<p>First, overlay + underlay can be realized with the help of the overlay NIC. For a single underlay, when the Pod is created, use a veth pair with one end on the host and the other end plugged into the Pod's network namespace. To accomplish the above, a kubelet call to CNI during pod creation can do it, a spiderpool plugin can just do it, or a privileged agent Pod can do it (the path is a bit wild).</p>
+<p>Thing 2, you can route, iptables, etc. to forward the matched traffic to the host via the veth pair in front of you. This can be done by setting spiderpool crd spidercoordinators.spec.hijackCIDR, and spiderpool will set the appropriate route. The rules can also be set via sidecar.</p>
+<h3 id="send-datapath">Send datapath</h3>
+<p>As shown in the figure, by adding a new veth pair and routing the traffic through the veth to the host, the datapath is actually the same as the overlay.</p>
+<p><img alt="send-datapath" src="../../../proposal/06-underlay-cni-supports/underlay_send_datapath.png" /></p>
+<h3 id="reply-datapath">Reply datapath</h3>
+<p>As shown in the figure, the datapath returned is "Server-&gt;D-&gt;C-&gt;B-&gt;E-&gt;Process"</p>
+<p><img alt="reply" src="../../../proposal/06-underlay-cni-supports/underlay_error_reply_datapath.png" /></p>
+<ul>
+<li>The srcIP=ServerIP, dstIP=EIP of the message as it passes through the D-segment datapath to the EgressGateway.</li>
+<li>The C datapath looks up the connection tracking table and NATs the message, srcIP=ServerIP, dstIP=PodIP.</li>
+<li>B segment datapath, because it is an underlay environment, so the EgressNode can communicate directly with the Pod, through the switch or router, the message goes directly to the Pod, you can see that at this time does not go through the host's network namespace. You can see that the message does not go through the host's network namespace at this time. This will lead to routing asymmetry problems</li>
+</ul>
+<h2 id="returned-message-routing-asymmetry-problem">Returned message routing asymmetry problem</h2>
+<p>Here's a quick rundown of why the problem occurs:</p>
+<ul>
+<li>The first message of the three-way handshake, SYN, arrives at the host from the Pod, passes through the host's network stack, and is packetized and forwarded out.</li>
+<li>The second message of the three handshakes, SYN+ACK, arrives at the EgressNode node, then goes directly to the physical NIC of the node where the Pod is located, and then arrives directly at the Pod, without going through the host's network stack, resulting in inconsistent routing.</li>
+<li>The third message of the three handshakes, ACK, arrives at the host from the Pod, because it does not receive the SYN+ACK message, but directly receives the ACK message, which is considered to be an invalid packet, and thus is discarded by one of the kube-proxy's DROP rules, resulting in the failure of the three handshakes.</li>
+</ul>
+<div class="language-shell highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>Chain<span class="w"> </span>KUBE-FORWARD<span class="w"> </span><span class="o">(</span><span class="m">1</span><span class="w"> </span>references<span class="o">)</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="w"> </span>pkts<span class="w"> </span>bytes<span class="w"> </span>target<span class="w"> </span>prot<span class="w"> </span>opt<span class="w"> </span><span class="k">in</span><span class="w"> </span>out<span class="w"> </span><span class="nb">source</span><span class="w"> </span>destination
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="w">    </span><span class="m">0</span><span class="w"> </span><span class="m">0</span><span class="w"> </span>DROP<span class="w"> </span>all<span class="w"> </span>--<span class="w"> </span>*<span class="w"> </span>*<span class="w"> </span>*<span class="w"> </span><span class="m">0</span>.0.0.0/0<span class="w"> </span><span class="m">0</span>.0.0.0/0<span class="w"> </span>ctstate<span class="w"> </span>INVALID
+</span></code></pre></div>
+<p>To solve this problem, you need to ensure that the return packet also passes through the network namespace of the host where the Pod is located in order to avoid the above problem. Instead of returning the packet directly to the Pod, the packet can be tunneled back through the EgressGateway to the node where the Service Pod resides by setting up the appropriate rules on the egress gateway node. this can be accomplished as follows:</p>
+<div class="language-shell highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>On<span class="w"> </span>the<span class="w"> </span>egress<span class="w"> </span>gateway<span class="w"> </span>node,<span class="w"> </span>new<span class="w"> </span>connections<span class="w"> </span>coming<span class="w"> </span>through<span class="w"> </span>the<span class="w"> </span>tunnel<span class="w"> </span>are<span class="w"> </span>marked<span class="w"> </span>as<span class="w"> </span>EgressGateway<span class="w"> </span>hits.
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>iptables<span class="w"> </span>-t<span class="w"> </span>mangle<span class="w"> </span>-A<span class="w"> </span>PREROUTING<span class="w"> </span>-i<span class="w"> </span>egress.vxlan<span class="w"> </span>-m<span class="w"> </span>conntrack<span class="w"> </span>--ctstate<span class="w"> </span>NEW<span class="w"> </span>-j<span class="w"> </span>MARK<span class="w"> </span>--set-mark<span class="w"> </span>0x27
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>
+</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>Add<span class="w"> </span>mark<span class="w"> </span>to<span class="w"> </span>the<span class="w"> </span>connection<span class="w"> </span>tracking<span class="w"> </span>table<span class="w"> </span><span class="k">for</span><span class="w"> </span>recovery<span class="w"> </span>on<span class="w"> </span>packet<span class="w"> </span><span class="k">return</span>
+</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>iptables<span class="w"> </span>-t<span class="w"> </span>mangle<span class="w"> </span>-A<span class="w"> </span>PREROUTING<span class="w"> </span>-m<span class="w"> </span>mark<span class="w"> </span>--mark<span class="w"> </span>0x27<span class="w"> </span>-j<span class="w"> </span>CONNMARK<span class="w"> </span>--save-mark
+</span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>
+</span><span id="__span-1-7"><a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>
+</span><span id="__span-1-8"><a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a>ESTABLISHED<span class="w"> </span>connections,<span class="w"> </span>packets<span class="w"> </span>need<span class="w"> </span>to<span class="w"> </span>be<span class="w"> </span>recovered<span class="w"> </span>based<span class="w"> </span>on<span class="w"> </span>the<span class="w"> </span>contents<span class="w"> </span>of<span class="w"> </span>the<span class="w"> </span>connection<span class="w"> </span>tracking<span class="w"> </span>table<span class="w"> </span>Mark
+</span><span id="__span-1-9"><a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a>iptables<span class="w"> </span>-t<span class="w"> </span>mangle<span class="w"> </span>-A<span class="w"> </span>PREROUTING<span class="w"> </span>-m<span class="w"> </span>conntrack<span class="w"> </span>--ctstate<span class="w"> </span>ESTABLISHED<span class="w"> </span>-j<span class="w"> </span>CONNMARK<span class="w"> </span>--restore-mark
+</span><span id="__span-1-10"><a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a>
+</span><span id="__span-1-11"><a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a>
+</span><span id="__span-1-12"><a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a>Add<span class="w"> </span>routes<span class="w"> </span>to<span class="w"> </span>tunnel<span class="w"> </span>the<span class="w"> </span>packets<span class="w"> </span>back,<span class="w"> </span>one<span class="w"> </span><span class="k">for</span><span class="w"> </span>each<span class="w"> </span>of<span class="w"> </span>them
+</span><span id="__span-1-13"><a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a>ip<span class="w"> </span>rule<span class="w"> </span>add<span class="w"> </span>from<span class="w"> </span>all<span class="w"> </span>fwmark<span class="w"> </span>0x27<span class="w"> </span>lookup<span class="w"> </span><span class="m">600</span>
+</span><span id="__span-1-14"><a id="__codelineno-1-14" name="__codelineno-1-14" href="#__codelineno-1-14"></a>ip<span class="w"> </span>r<span class="w"> </span>add<span class="w"> </span>&lt;Pod<span class="w"> </span>IP&gt;<span class="w"> </span>via<span class="w"> </span>&lt;Pod<span class="w"> </span>Node&gt;<span class="w"> </span>dev<span class="w"> </span>egress.vxlan<span class="w"> </span>t<span class="w"> </span><span class="m">600</span>
+</span><span id="__span-1-15"><a id="__codelineno-1-15" name="__codelineno-1-15" href="#__codelineno-1-15"></a>
+</span><span id="__span-1-16"><a id="__codelineno-1-16" name="__codelineno-1-16" href="#__codelineno-1-16"></a>Clear<span class="w"> </span>the<span class="w"> </span>mark<span class="w"> </span>of<span class="w"> </span>the<span class="w"> </span>inner<span class="w"> </span>packets<span class="w"> </span>to<span class="w"> </span>avoid<span class="w"> </span>interfering<span class="w"> </span>with<span class="w"> </span>the<span class="w"> </span>outer<span class="w"> </span>packets
+</span><span id="__span-1-17"><a id="__codelineno-1-17" name="__codelineno-1-17" href="#__codelineno-1-17"></a>iptables<span class="w"> </span>-t<span class="w"> </span>mangle<span class="w"> </span>-A<span class="w"> </span>POSTROUTING<span class="w"> </span>-m<span class="w"> </span>mark<span class="w"> </span>--mark<span class="w"> </span>0x27<span class="w"> </span>-j<span class="w"> </span>MARK<span class="w"> </span>--set-mark<span class="w"> </span>0x00
+</span></code></pre></div>
+<p>As shown in the figure, after the above rule, the new answer datapath is "Server-&gt;D-&gt;C-&gt;B-&gt;A-&gt;Process"</p>
+<p><img alt="reply" src="../../../proposal/06-underlay-cni-supports/underlay_reply_datapath.png" /></p>
+<p>The biggest difference is that from the gateway node to the node where the Pod is located, it is through the EgressGateway tunnel, and after the message arrives at the node where the Pod is located, it is forwarded to the Pod from the veth pair through the route, and the spiderpool will send out the corresponding route when it creates the veth pair for the Pod, or it can send out the corresponding route through the agent. The spiderpool will issue the corresponding route while creating the veth pair for the Pod, or it can issue the corresponding routing rules through the agent. Because it passes through the host's network stack. This avoids the routing asymmetry problem.</p>
+<h2 id="summary">Summary</h2>
+<p>Except for the rules that need to be issued at the gateway node so that the answer message can be returned to the Pod through the EgressGateway, everything else that needs to be done can be accomplished with the help of the spiderpool configuration.</p>
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+  <script>var tabs=__md_get("__tabs");if(Array.isArray(tabs))e:for(var set of document.querySelectorAll(".tabbed-set")){var tab,labels=set.querySelector(".tabbed-labels");for(tab of tabs)for(var label of labels.getElementsByTagName("label"))if(label.innerText.trim()===tab){var input=document.getElementById(label.htmlFor);input.checked=!0;continue e}}</script>
+
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    <script id="__config" type="application/json">{"base": "../../..", "features": ["content.code.annotate", "content.tabs.link"], "search": "../../../assets/javascripts/workers/search.dfff1995.min.js", "translations": {"clipboard.copied": "\u5df2\u590d\u5236", "clipboard.copy": "\u590d\u5236", "search.result.more.one": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.more.other": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 # \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.none": "\u6ca1\u6709\u627e\u5230\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.one": "\u627e\u5230 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.other": "# \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.placeholder": "\u952e\u5165\u4ee5\u5f00\u59cb\u641c\u7d22", "search.result.term.missing": "\u7f3a\u5c11", "select.version": "\u9009\u62e9\u5f53\u524d\u7248\u672c"}, "version": {"provider": "mike"}}</script>
+    
+    
+      <script src="../../../assets/javascripts/bundle.dff1b7c8.min.js"></script>
+      
+    
+  </body>
+</html>
