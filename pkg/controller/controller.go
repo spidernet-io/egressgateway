@@ -6,9 +6,6 @@ package controller
 import (
 	"context"
 	"fmt"
-	"github.com/spidernet-io/egressgateway/pkg/controller/endpoint"
-	"github.com/spidernet-io/egressgateway/pkg/controller/policy"
-	"github.com/spidernet-io/egressgateway/pkg/controller/tunnel"
 
 	"github.com/go-logr/logr"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -19,7 +16,9 @@ import (
 
 	"github.com/spidernet-io/egressgateway/pkg/config"
 	egressclusterinfo "github.com/spidernet-io/egressgateway/pkg/controller/egress_cluster_info"
+	"github.com/spidernet-io/egressgateway/pkg/controller/endpoint"
 	"github.com/spidernet-io/egressgateway/pkg/controller/metrics"
+	"github.com/spidernet-io/egressgateway/pkg/controller/tunnel"
 	"github.com/spidernet-io/egressgateway/pkg/controller/webhook"
 	"github.com/spidernet-io/egressgateway/pkg/egressgateway"
 	"github.com/spidernet-io/egressgateway/pkg/logger"
@@ -61,25 +60,20 @@ func New(cfg *config.Config) (types.Service, error) {
 		return nil, fmt.Errorf("failed to create manager: %w", err)
 	}
 
+	cli, err := client.New(cfg.KubeConfig, client.Options{Scheme: schema.GetScheme()})
+	if err != nil {
+		return nil, err
+	}
+
 	if err = setManger(mgr, cfg, log); err != nil {
 		return nil, err
 	}
 
 	metrics.RegisterMetricCollectors()
 
-	err = egressgateway.NewEgressGatewayController(mgr, log, cfg)
+	err = egressgateway.NewEgressGatewayController(mgr, log, cfg, cli)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create egress gateway controller: %w", err)
-	}
-
-	err = policy.NewEgressPolicyController(mgr, log, cfg)
-	if err != nil {
-		return nil, fmt.Errorf("failed to create egress policy controller: %w", err)
-	}
-
-	err = policy.NewEgressClusterPolicyController(mgr, log, cfg)
-	if err != nil {
-		return nil, fmt.Errorf("failed to create egress cluster policy controller: %w", err)
 	}
 
 	err = tunnel.NewEgressTunnelController(mgr, log, cfg)

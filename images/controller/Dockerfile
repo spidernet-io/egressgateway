@@ -21,7 +21,7 @@ WORKDIR /src
 RUN  make GOARCH=${TARGETARCH}   \
         RACE=${RACE} NOSTRIP=${NOSTRIP} NOOPT=${NOOPT} \
         DESTDIR_BIN=/tmp/install/${TARGETOS}/${TARGETARCH}/bin \
-        build_controller_bin
+        build_controller_bin build_egctl_bin
 
 
 
@@ -46,4 +46,3 @@ ENV ENV_VERSION=${VERSION}
 COPY --from=builder /tmp/install/${TARGETOS}/${TARGETARCH}/bin/*   /usr/bin/
 
 CMD ["/usr/bin/controller"]
-

@@ -476,7 +476,7 @@ func (r *policeReconciler) getPolicySrcIPs(policyNs, policyName string, filter f
 }
 
 func buildEipRule(policyName string, eip IP, version uint8, isIgnoreInternalCIDR bool) *iptables.Rule {
-	if eip.V4 == "" && eip.V6 == "" {
+	if (version == 4 && eip.V4 == "") || (version == 6 && eip.V6 == "") {
 		return nil
 	}
 
@@ -544,17 +544,17 @@ func (r *policeReconciler) buildPolicyRule(policyName string, mark uint32, versi
 func buildNatStaticRule(base uint32) map[string][]iptables.Rule {
 	res := map[string][]iptables.Rule{"POSTROUTING": {
 		{
-			Match:  iptables.MatchCriteria{}.MarkMatchesWithMask(base, 0xffffffff),
-			Action: iptables.AcceptAction{},
-			Comment: []string{
-				"Accept for egress traffic from pod going to EgressTunnel",
-			},
-		},
-		{
 			Match:  iptables.MatchCriteria{},
 			Action: iptables.JumpAction{Target: "EGRESSGATEWAY-SNAT-EIP"},
 			Comment: []string{
 				"SNAT for egress traffic",
+			},
+		},
+		{
+			Match:  iptables.MatchCriteria{}.MarkMatchesWithMask(base, 0xffffffff),
+			Action: iptables.AcceptAction{},
+			Comment: []string{
+				"Accept for egress traffic from pod going to EgressTunnel",
 			},
 		},
 	}}
@@ -774,33 +774,23 @@ func buildMangleStaticRule(base uint32,
 		},
 	}}
 
-	prerouting := []iptables.Rule{
-		{
-			Match:  iptables.MatchCriteria{},
-			Action: iptables.JumpAction{Target: "EGRESSGATEWAY-MARK-REQUEST"},
-			Comment: []string{
-				"Checking for EgressPolicy matched traffic",
-			},
+	prerouting := make([]iptables.Rule, 0)
+	prerouting = append(prerouting, iptables.Rule{
+		Match:  iptables.MatchCriteria{},
+		Action: iptables.JumpAction{Target: "EGRESSGATEWAY-MARK-REQUEST"},
+		Comment: []string{
+			"Checking for EgressPolicy matched traffic",
 		},
-	}
+	})
 
 	if isEgressNode && enableGatewayReplyRoute {
-		prerouting = []iptables.Rule{
-			{
-				Match:  iptables.MatchCriteria{},
-				Action: iptables.JumpAction{Target: "EGRESSGATEWAY-REPLY-ROUTING"},
-				Comment: []string{
-					"egressGateway Reply datapath rule, rule is from the EgressGateway",
-				},
+		prerouting = append(prerouting, iptables.Rule{
+			Match:  iptables.MatchCriteria{},
+			Action: iptables.JumpAction{Target: "EGRESSGATEWAY-REPLY-ROUTING"},
+			Comment: []string{
+				"egressGateway Reply datapath rule, rule is from the EgressGateway",
 			},
-			{
-				Match:  iptables.MatchCriteria{},
-				Action: iptables.JumpAction{Target: "EGRESSGATEWAY-MARK-REQUEST"},
-				Comment: []string{
-					"Checking for EgressPolicy matched traffic",
-				},
-			},
-		}
+		})
 		postrouting = append(postrouting, iptables.Rule{
 			Match:  iptables.MatchCriteria{}.MarkMatchesWithMask(replyMark, 0xffffffff),
 			Action: iptables.SetMaskedMarkAction{Mark: 0x00000000, Mask: 0xffffffff},
@@ -1121,7 +1111,7 @@ func newPolicyController(mgr manager.Manager, log logr.Logger, cfg *config.Confi
 		filterTables = append(filterTables, filterTable)
 	}
 	if cfg.FileConfig.EnableIPv6 {
-		mangle, err := iptables.NewTable("mangle", 6, "egw:-", opt, log)
+		mangle, err := iptables.NewTable("mangle", 6, "egw:", opt, log)
 		if err != nil {
 			return err
 		}

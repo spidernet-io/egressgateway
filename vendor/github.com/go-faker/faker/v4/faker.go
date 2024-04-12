@@ -94,15 +94,17 @@ const (
 	RussianLastNameMaleTag    = "russian_last_name_male"
 	RussianFirstNameFemaleTag = "russian_first_name_female"
 	RussianLastNameFemaleTag  = "russian_last_name_female"
+	BloodTypeTag              = "blood_type"
+	CountryInfoTag            = "country_info"
 )
 
 // PriorityTags define the priority order of the tag
 var PriorityTags = []string{ID, HyphenatedID, EmailTag, MacAddressTag, DomainNameTag, UserNameTag, URLTag, IPV4Tag,
-	IPV6Tag, PASSWORD, JWT, LATITUDE, LONGITUDE, CreditCardNumber, CreditCardType, PhoneNumber, TollFreeNumber,
+	IPV6Tag, PASSWORD, JWT, CountryInfoTag, LATITUDE, LONGITUDE, CreditCardNumber, CreditCardType, PhoneNumber, TollFreeNumber,
 	E164PhoneNumberTag, TitleMaleTag, TitleFemaleTag, FirstNameTag, FirstNameMaleTag, FirstNameFemaleTag, LastNameTag,
 	NAME, ChineseFirstNameTag, ChineseLastNameTag, ChineseNameTag, GENDER, UnixTimeTag, DATE, TIME, MonthNameTag,
 	YEAR, DayOfWeekTag, DayOfMonthTag, TIMESTAMP, CENTURY, TIMEZONE, TimePeriodTag, WORD, SENTENCE, PARAGRAPH,
-	CurrencyTag, AmountTag, AmountWithCurrencyTag, SKIP, Length, SliceLength, Language, BoundaryStart, BoundaryEnd, ONEOF,
+	CurrencyTag, AmountTag, AmountWithCurrencyTag, SKIP, Length, SliceLength, Language, BoundaryStart, BoundaryEnd, ONEOF, BloodTypeTag,
 }
 
 type mapperTagCustom struct {
@@ -132,6 +134,7 @@ func (m *mapperTagCustom) Store(key string, taggedFunc interfaces.TaggedFunction
 var defaultTag = sync.Map{}
 
 func initDefaultTag() {
+	defaultTag.Store(BloodTypeTag, BloodTypeTag)
 	defaultTag.Store(EmailTag, EmailTag)
 	defaultTag.Store(MacAddressTag, MacAddressTag)
 	defaultTag.Store(DomainNameTag, DomainNameTag)
@@ -143,6 +146,7 @@ func initDefaultTag() {
 	defaultTag.Store(JWT, JWT)
 	defaultTag.Store(CreditCardType, CreditCardType)
 	defaultTag.Store(CreditCardNumber, CreditCardNumber)
+	defaultTag.Store(CountryInfoTag, CountryInfoTag)
 	defaultTag.Store(LATITUDE, LATITUDE)
 	defaultTag.Store(LONGITUDE, LONGITUDE)
 	defaultTag.Store(RealAddressTag, RealAddressTag)
@@ -190,6 +194,7 @@ var mapperTag = mapperTagCustom{}
 func initMappertTagDefault() {
 	mapperTag.Store(CreditCardType, GetPayment().CreditCardType)
 	mapperTag.Store(CreditCardNumber, GetPayment().CreditCardNumber)
+	mapperTag.Store(CountryInfoTag, GetAddress().CountryInfo)
 	mapperTag.Store(LATITUDE, GetAddress().Latitude)
 	mapperTag.Store(LONGITUDE, GetAddress().Longitude)
 	mapperTag.Store(RealAddressTag, GetAddress().RealWorld)
@@ -230,6 +235,7 @@ func initMappertTagDefault() {
 	mapperTag.Store(RussianFirstNameFemaleTag, GetPerson().RussianFirstNameFemale)
 	mapperTag.Store(RussianLastNameMaleTag, GetPerson().RussianLastNameMale)
 	mapperTag.Store(RussianLastNameFemaleTag, GetPerson().RussianLastNameFemale)
+	mapperTag.Store(BloodTypeTag, GetBlood().BloodGroup)
 }
 
 // Compiled regexp
@@ -880,6 +886,18 @@ func userDefinedArray(v reflect.Value, tag string, opt options.Options) error {
 	tag = findSliceLenReg.ReplaceAllString(tag, "")
 	array := reflect.MakeSlice(v.Type(), sliceLen, sliceLen)
 	for i := 0; i < array.Len(); i++ {
+		k := v.Type().Elem().Kind()
+		if k == reflect.Pointer || k == reflect.Struct {
+			res, err := getFakedValue(array.Index(i).Interface(), &opt)
+			if err != nil {
+				return err
+			}
+			if res.Kind() == reflect.Invalid {
+				return fmt.Errorf("got invalid reflect value")
+			}
+			array.Index(i).Set(res)
+			continue
+		}
 		if tag == "" {
 			res, err := getValueWithNoTag(v.Type().Elem(), opt)
 			if err != nil {
