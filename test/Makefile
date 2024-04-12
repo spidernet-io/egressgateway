@@ -23,7 +23,7 @@ init_kind_env:
 init_one_kind: KIND_CONFIG_PATH ?=
 init_one_kind: KIND_CLUSTER_NAME ?=
 init_one_kind: KIND_KUBECONFIG ?=
-init_one_kind: checkBin clean
+init_one_kind: checkBin cleanCluster
 	@echo "================== init kind cluster $(KIND_CLUSTER_NAME) KIND_CONFIG_PATH=$(KIND_CONFIG_PATH) KIND_KUBECONFIG=$(KIND_KUBECONFIG) E2E_IP_FAMILY=$(E2E_IP_FAMILY)"
 	[ -n $(KIND_CLUSTER_NAME) ] || { echo "error, miss KIND_CLUSTER_NAME " ; exit 1 ; }
 	[ -f $(KIND_CONFIG_PATH) ] || { echo "error, miss file KIND_CONFIG_PATH=$(KIND_CONFIG_PATH)" ; exit 1 ; }
@@ -170,6 +170,7 @@ run_nettool_server: load_nettool_image
 	echo "run nettool server container"
 	{ docker run -itd --name $(NETTOOLS_SERVER_A)  --network kind $(NETTOOLS_IMAGE) $(NETTOOLS_SERVER_BIN) -protocol $(MOD) -tcpPort $(TCP_PORT) --udpPort $(UDP_PORT) -webPort $(WEB_PORT) & } || { echo "failed to run nettools server a"; exit 1; }; \
 	{ docker run -itd --name $(NETTOOLS_SERVER_B)  --network kind $(NETTOOLS_IMAGE) $(NETTOOLS_SERVER_BIN) -protocol $(MOD) -tcpPort $(TCP_PORT) --udpPort $(UDP_PORT) -webPort $(WEB_PORT) & } || { echo "failed to run nettools server b"; exit 1; }; \
+	sleep 6
 	make check_netttool_server
 
 # kind load nettool image
@@ -281,6 +282,14 @@ deploy_project:
 				|| { KIND_CLUSTER_NAME=$(KIND_CLUSTER_NAME) ./scripts/debugCluster.sh $(KIND_KUBECONFIG) "detail"  $(E2E_NAMESPACE) ; exit 1 ; } ; \
 		exit 0
 
+.PHONY: uninstall_egress
+uninstall_egress: KIND_KUBECONFIG ?= $(E2E_KIND_KUBECONFIG_PATH)
+uninstall_egress: KIND_CLUSTER_NAME ?= $(E2E_KIND_CLUSTER_NAME)
+uninstall_egress:
+	@echo -e "\033[35m [helm uninstall egress] \033[0m"
+	helm uninstall project --wait --debug -n $(E2E_NAMESPACE) \
+	     --kubeconfig=$(KIND_KUBECONFIG)  || { $(KIND_CLUSTER_NAME) ./scripts/debugCluster.sh $(KIND_KUBECONFIG) "detail" $(E2E_NAMESPACE) ; exit 1 ; } ; \
+	kubectl --kubeconfig=$(KIND_KUBECONFIG) get all --all-namespaces  | grep -q "egressgateway"` && { echo "error: found egressgateway resources" ; exit 1 ; }
 
 # test kind is ok
 .PHONY: install_example_app
@@ -307,11 +316,16 @@ install_example_app:
 
 
 .PHONY: clean
-clean:
+clean: cleanCluster  cleanImage
+
+.PHONY: cleanCluster
+cleanCluster:
 	-@ kind delete cluster --name $(E2E_KIND_CLUSTER_NAME)
 	-@ rm -rf $(E2E_RUNTIME_DIR)
 	-@ docker stop $(PYROSCOPE_CONTAINER_NAME) &>/dev/null
 	-@ docker rm $(PYROSCOPE_CONTAINER_NAME) &>/dev/null
+
+cleanImage:
 	-@ docker images | grep egressgateway | awk '{print $$3}' | xargs -I {} docker rmi {}
 
 
@@ -323,7 +337,7 @@ e2e_test:
 	@echo -e "\033[35mRun e2e testing on the cluster $(KIND_CLUSTER_NAME) \033[0m"
 	@echo -e "\033[35m label=$(E2E_GINKGO_LABELS)\n timeout=$(E2E_TIMEOUT) \n options=$(E2E_GINKGO_OPTION) \n egress_namespace=$(E2E_NAMESPACE) \033[0m"
 	@echo -e "\033[35m[STEP1]\033[0m check KUBECONFIG file path"; \
-		export KUBECONFIG=$(KIND_KUBECONFIG) ; [ -f "$(KIND_KUBECONFIG)" ] || { echo -e "error, does not exist KUBECONFIG $(E2E_KUBECONFIG)" ; exit 1 ; } ; \
+		export KUBECONFIG=$(KIND_KUBECONFIG) ; [ -f "$(KIND_KUBECONFIG)" ] || { echo -e "error, does not exist KUBECONFIG $(KIND_KUBECONFIG)" ; exit 1 ; } ; \
 		echo -e "success" ; \
 		echo -e "\033[35m[STEP2]\033[0m clean old e2e log file"; \
 		[ -f "$(E2E_LOG_FILE)" ] && rm -f "$(E2E_LOG_FILE)"; \

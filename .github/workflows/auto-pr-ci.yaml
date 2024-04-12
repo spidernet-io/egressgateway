@@ -62,7 +62,7 @@ jobs:
       JustE2E: ${{ env.RUN_JustE2E }}
     steps:
       - name: Check Code Changes
-        uses: dorny/paths-filter@v2.11.1
+        uses: dorny/paths-filter@v3.0.2
         if: ${{ github.event_name == 'pull_request_target' }}
         id: filter_pr
         with:

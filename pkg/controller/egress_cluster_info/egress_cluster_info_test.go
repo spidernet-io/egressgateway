@@ -66,6 +66,7 @@ func Test_eciReconciler_Reconcile(t *testing.T) {
 			getReqFunc:    mock_request_calico,
 			setReconciler: mock_eciReconciler_info_AutoDetect_PodCidrMode_calico,
 			patchFunc:     mock_Reconciler_Reconcile_failed_Update,
+			expErr:        false,
 			expRequeue:    true,
 		},
 	}
@@ -73,12 +74,7 @@ func Test_eciReconciler_Reconcile(t *testing.T) {
 	builder := fake.NewClientBuilder()
 	builder.WithScheme(schema.GetScheme())
 
-	// objs = append(objs, egci)
-	// 		builder.WithObjects(objs...)
-	// 		builder.WithStatusSubresource(objs...)
-
 	r := &eciReconciler{
-		// mgr:           mgr,
 		eci:           new(egressv1.EgressClusterInfo),
 		log:           logr.Logger{},
 		k8sPodCidr:    make(map[string]egressv1.IPListPair),
@@ -93,13 +89,9 @@ func Test_eciReconciler_Reconcile(t *testing.T) {
 				tc.setReconciler(r)
 			}
 
+			patches := make([]gomonkey.Patches, 0)
 			if tc.patchFunc != nil {
-				patches := tc.patchFunc(r)
-				defer func() {
-					for _, p := range patches {
-						p.Reset()
-					}
-				}()
+				patches = tc.patchFunc(r)
 			}
 
 			req := tc.getReqFunc()
@@ -114,9 +106,12 @@ func Test_eciReconciler_Reconcile(t *testing.T) {
 			if tc.expRequeue {
 				assert.True(t, res.Requeue)
 			}
+
+			for _, p := range patches {
+				p.Reset()
+			}
 		})
 	}
-
 }
 
 func Test_eciReconciler_reconcileEgressClusterInfo(t *testing.T) {
@@ -208,13 +203,9 @@ func Test_eciReconciler_reconcileEgressClusterInfo(t *testing.T) {
 				tc.setReconciler(r)
 			}
 
+			patches := make([]gomonkey.Patches, 0)
 			if tc.patchFunc != nil {
-				patches := tc.patchFunc(r)
-				defer func() {
-					for _, p := range patches {
-						p.Reset()
-					}
-				}()
+				patches = tc.patchFunc(r)
 			}
 
 			ctx := context.TODO()
@@ -224,6 +215,10 @@ func Test_eciReconciler_reconcileEgressClusterInfo(t *testing.T) {
 				assert.Error(t, err)
 			} else {
 				assert.NoError(t, err)
+			}
+
+			for _, p := range patches {
+				p.Reset()
 			}
 		})
 	}
@@ -285,13 +280,9 @@ func Test_eciReconciler_reconcileCalicoIPPool(t *testing.T) {
 				tc.setReconciler(r)
 			}
 
+			patches := make([]gomonkey.Patches, 0)
 			if tc.patchFunc != nil {
-				patches := tc.patchFunc(r)
-				defer func() {
-					for _, p := range patches {
-						p.Reset()
-					}
-				}()
+				patches = tc.patchFunc(r)
 			}
 
 			ctx := context.TODO()
@@ -301,6 +292,9 @@ func Test_eciReconciler_reconcileCalicoIPPool(t *testing.T) {
 				assert.Error(t, err)
 			} else {
 				assert.NoError(t, err)
+			}
+			for _, p := range patches {
+				p.Reset()
 			}
 		})
 	}
@@ -361,13 +355,9 @@ func Test_eciReconciler_reconcileNode(t *testing.T) {
 				tc.setReconciler(r)
 			}
 
+			patches := make([]gomonkey.Patches, 0)
 			if tc.patchFunc != nil {
-				patches := tc.patchFunc(r)
-				defer func() {
-					for _, p := range patches {
-						p.Reset()
-					}
-				}()
+				patches = tc.patchFunc(r)
 			}
 
 			ctx := context.TODO()
@@ -377,6 +367,9 @@ func Test_eciReconciler_reconcileNode(t *testing.T) {
 				assert.Error(t, err)
 			} else {
 				assert.NoError(t, err)
+			}
+			for _, p := range patches {
+				p.Reset()
 			}
 		})
 	}
@@ -459,13 +452,9 @@ func Test_eciReconciler_listCalicoIPPools(t *testing.T) {
 				tc.setReconciler(r)
 			}
 
+			patches := make([]gomonkey.Patches, 0)
 			if tc.patchFunc != nil {
-				patches := tc.patchFunc(r)
-				defer func() {
-					for _, p := range patches {
-						p.Reset()
-					}
-				}()
+				patches = tc.patchFunc(r)
 			}
 
 			ctx := context.TODO()
@@ -475,6 +464,10 @@ func Test_eciReconciler_listCalicoIPPools(t *testing.T) {
 				assert.Error(t, err)
 			} else {
 				assert.NoError(t, err)
+			}
+
+			for _, p := range patches {
+				p.Reset()
 			}
 		})
 	}
@@ -540,13 +533,9 @@ func Test_eciReconciler_getCalicoIPPools(t *testing.T) {
 				tc.setReconciler(r)
 			}
 
+			patches := make([]gomonkey.Patches, 0)
 			if tc.patchFunc != nil {
-				patches := tc.patchFunc(r)
-				defer func() {
-					for _, p := range patches {
-						p.Reset()
-					}
-				}()
+				patches = tc.patchFunc(r)
 			}
 
 			ctx := context.TODO()
@@ -556,6 +545,9 @@ func Test_eciReconciler_getCalicoIPPools(t *testing.T) {
 				assert.Error(t, err)
 			} else {
 				assert.NoError(t, err)
+			}
+			for _, p := range patches {
+				p.Reset()
 			}
 		})
 	}
@@ -606,13 +598,9 @@ func Test_eciReconciler_listNodeIPs(t *testing.T) {
 				tc.setReconciler(r)
 			}
 
+			patches := make([]gomonkey.Patches, 0)
 			if tc.patchFunc != nil {
-				patches := tc.patchFunc(r)
-				defer func() {
-					for _, p := range patches {
-						p.Reset()
-					}
-				}()
+				patches = tc.patchFunc(r)
 			}
 
 			ctx := context.TODO()
@@ -622,6 +610,10 @@ func Test_eciReconciler_listNodeIPs(t *testing.T) {
 				assert.Error(t, err)
 			} else {
 				assert.NoError(t, err)
+			}
+
+			for _, p := range patches {
+				p.Reset()
 			}
 		})
 	}
@@ -672,13 +664,9 @@ func Test_eciReconciler_getNodeIPs(t *testing.T) {
 				tc.setReconciler(r)
 			}
 
+			patches := make([]gomonkey.Patches, 0)
 			if tc.patchFunc != nil {
-				patches := tc.patchFunc(r)
-				defer func() {
-					for _, p := range patches {
-						p.Reset()
-					}
-				}()
+				patches = tc.patchFunc(r)
 			}
 
 			ctx := context.TODO()
@@ -688,6 +676,9 @@ func Test_eciReconciler_getNodeIPs(t *testing.T) {
 				assert.Error(t, err)
 			} else {
 				assert.NoError(t, err)
+			}
+			for _, p := range patches {
+				p.Reset()
 			}
 		})
 	}
@@ -742,6 +733,8 @@ func Test_eciReconciler_checkCalicoExists(t *testing.T) {
 			})
 
 			time.Sleep(time.Second * 3)
+			patch1.Reset()
+
 			patch2 := gomonkey.ApplyPrivateMethod(r, "listCalicoIPPools", func(_ *eciReconciler) (map[string]egressv1.IPListPair, error) {
 				return nil, nil
 			})
@@ -750,7 +743,6 @@ func Test_eciReconciler_checkCalicoExists(t *testing.T) {
 			patch3 := gomonkey.ApplyFuncReturn(watchSource, nil)
 			patches = append(patches, *patch3)
 
-			patch1.Reset()
 		}()
 
 		time.Sleep(time.Second)
@@ -759,37 +751,72 @@ func Test_eciReconciler_checkCalicoExists(t *testing.T) {
 
 	})
 
-	t.Run("failed listCalicoIPPools", func(t *testing.T) {
+	t.Run("failed watchSource", func(t *testing.T) {
+		calicoIPPoolV4 := &calicov1.IPPool{
+			ObjectMeta: metav1.ObjectMeta{
+				Name: "test-ippool-v4",
+			},
+			Spec: calicov1.IPPoolSpec{
+				// CIDR: "xxx",
+				CIDR: "10.10.0.0/18",
+			},
+		}
+		calicoIPPoolV6 := &calicov1.IPPool{
+			ObjectMeta: metav1.ObjectMeta{
+				Name: "test-ippool-v6",
+			},
+			Spec: calicov1.IPPoolSpec{
+				CIDR: "fdee:120::/120",
+			},
+		}
+
+		var objs []client.Object
+
+		builder := fake.NewClientBuilder()
+		builder.WithScheme(schema.GetScheme())
+		objs = append(objs, calicoIPPoolV4, calicoIPPoolV6)
+		builder.WithObjects(objs...)
+		builder.WithStatusSubresource(objs...)
+		cli := builder.Build()
+
+		mgrOpts := manager.Options{
+			Scheme: schema.GetScheme(),
+			NewClient: func(config *rest.Config, options client.Options) (client.Client, error) {
+				return cli, nil
+			},
+		}
+
+		mgr, _ := ctrl.NewManager(&rest.Config{}, mgrOpts)
+
+		r := &eciReconciler{
+			mgr:           mgr,
+			eci:           new(egressv1.EgressClusterInfo),
+			log:           logr.Logger{},
+			k8sPodCidr:    make(map[string]egressv1.IPListPair),
+			v4ClusterCidr: make([]string, 0),
+			v6ClusterCidr: make([]string, 0),
+			client:        cli,
+		}
+		c, _ := controller.New("egressClusterInfo", mgr,
+			controller.Options{Reconciler: r})
+		r.c = c
+
 		r.isWatchCalico.Store(true)
 
 		var patches []gomonkey.Patches
-		defer func() {
-			for _, p := range patches {
-				p.Reset()
-			}
-		}()
 
-		go func() {
-			patch1 := gomonkey.ApplyPrivateMethod(r, "listCalicoIPPools", func(_ *eciReconciler) (map[string]egressv1.IPListPair, error) {
-				return nil, nil
-			})
-			patches = append(patches, *patch1)
-
-			patch2 := gomonkey.ApplyFuncReturn(watchSource, ErrForMock)
-			time.Sleep(time.Second * 3)
-
-			patch3 := gomonkey.ApplyFuncReturn(watchSource, nil)
-			patches = append(patches, *patch3)
-
-			patch2.Reset()
-		}()
-
-		time.Sleep(time.Second)
+		patch2 := gomonkey.ApplyFuncSeq(watchSource, []gomonkey.OutputCell{
+			{Values: gomonkey.Params{ErrForMock}, Times: 3},
+			{Values: gomonkey.Params{nil}, Times: 3},
+		})
+		patches = append(patches, *patch2)
 
 		r.checkCalicoExists()
 
+		for _, p := range patches {
+			p.Reset()
+		}
 	})
-
 }
 
 func Test_eciReconciler_getServiceClusterIPRange(t *testing.T) {
@@ -890,13 +917,9 @@ func Test_eciReconciler_checkSomeCniExists(t *testing.T) {
 				tc.setReconciler(r)
 			}
 
+			patches := make([]gomonkey.Patches, 0)
 			if tc.patchFunc != nil {
-				patches := tc.patchFunc(r)
-				defer func() {
-					for _, p := range patches {
-						p.Reset()
-					}
-				}()
+				patches = tc.patchFunc(r)
 			}
 
 			err := r.checkSomeCniExists()
@@ -904,6 +927,9 @@ func Test_eciReconciler_checkSomeCniExists(t *testing.T) {
 				assert.Error(t, err)
 			} else {
 				assert.NoError(t, err)
+			}
+			for _, p := range patches {
+				p.Reset()
 			}
 		})
 	}

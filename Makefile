@@ -23,6 +23,7 @@ endef
 build_all_bin:
 	make build_controller_bin
 	make build_agent_bin
+	make build_egctl_bin
 
 
 .PHONY: build_controller_bin
@@ -33,6 +34,11 @@ build_controller_bin:
 .PHONY: build_agent_bin
 build_agent_bin: CMD_BIN_DIR := $(ROOT_DIR)/cmd/agent
 build_agent_bin:
+	$(BUILD_BIN)
+
+.PHONY: build_egctl_bin
+build_egctl_bin: CMD_BIN_DIR := $(ROOT_DIR)/cmd/egctl
+build_egctl_bin:
 	$(BUILD_BIN)
 
 # ------------
@@ -396,6 +402,10 @@ e2e_run:
 .PHONY: e2e_clean
 e2e_clean:
 	make -C test clean
+
+.PHONY: clean_e2e_egress
+clean_e2e_egress:
+	-$(QUIET) make -C test uninstall_egress
 
 
 #============ doc

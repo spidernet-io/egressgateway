@@ -675,19 +675,18 @@ func Test_NewEgressClusterEpSliceController(t *testing.T) {
 			}
 
 			// patch
+			patches := make([]gomonkey.Patches, 0)
 			if tc.patchFun != nil {
-				patches := tc.patchFun(t, r, mgr, log)
-				defer func() {
-					for _, p := range patches {
-						p.Reset()
-					}
-				}()
+				patches = tc.patchFun(t, r, mgr, log)
 			}
 
 			err = NewEgressClusterEpSliceController(mgr, log, cfg)
 
 			if tc.expErr {
 				assert.Error(t, err)
+			}
+			for _, p := range patches {
+				p.Reset()
 			}
 		})
 	}
@@ -816,19 +815,18 @@ func Test_Reconcile(t *testing.T) {
 			}
 
 			// patch
+			patches := make([]gomonkey.Patches, 0)
 			if tc.patchFun != nil {
-				patches := tc.patchFun(t, r, mgr, log)
-				defer func() {
-					for _, p := range patches {
-						p.Reset()
-					}
-				}()
+				patches = tc.patchFun(t, r, mgr, log)
 			}
 
 			_, err = r.Reconcile(context.TODO(), req)
 
 			if tc.expErr {
 				assert.Error(t, err)
+			}
+			for _, p := range patches {
+				p.Reset()
 			}
 		})
 	}
@@ -891,13 +889,9 @@ func Test_listPodsByClusterPolicy(t *testing.T) {
 			cli := builder.Build()
 
 			// patch
+			patches := make([]gomonkey.Patches, 0)
 			if tc.patchFun != nil {
-				patches := tc.patchFun(cli)
-				defer func() {
-					for _, p := range patches {
-						p.Reset()
-					}
-				}()
+				patches = tc.patchFun(cli)
 			}
 
 			policy := tc.setParams()
@@ -905,6 +899,9 @@ func Test_listPodsByClusterPolicy(t *testing.T) {
 
 			if tc.expErr {
 				assert.Error(t, err)
+			}
+			for _, p := range patches {
+				p.Reset()
 			}
 		})
 	}
@@ -1031,13 +1028,9 @@ func Test_enqueueNS(t *testing.T) {
 			cli := builder.Build()
 
 			// patch
+			patches := make([]gomonkey.Patches, 0)
 			if tc.patchFun != nil {
-				patches := tc.patchFun(cli)
-				defer func() {
-					for _, p := range patches {
-						p.Reset()
-					}
-				}()
+				patches = tc.patchFun(cli)
 			}
 
 			resF := enqueueNS(cli)
@@ -1045,6 +1038,9 @@ func Test_enqueueNS(t *testing.T) {
 
 			if tc.expErr {
 				assert.Nil(t, res)
+			}
+			for _, p := range patches {
+				p.Reset()
 			}
 		})
 	}
@@ -1266,13 +1262,9 @@ func Test_enqueueEGCP(t *testing.T) {
 			cli := builder.Build()
 
 			// patch
+			patches := make([]gomonkey.Patches, 0)
 			if tc.patchFun != nil {
-				patches := tc.patchFun(cli)
-				defer func() {
-					for _, p := range patches {
-						p.Reset()
-					}
-				}()
+				patches = tc.patchFun(cli)
 			}
 
 			resF := enqueueEGCP(cli)
@@ -1280,6 +1272,9 @@ func Test_enqueueEGCP(t *testing.T) {
 
 			if tc.expErr {
 				assert.Nil(t, res)
+			}
+			for _, p := range patches {
+				p.Reset()
 			}
 		})
 	}

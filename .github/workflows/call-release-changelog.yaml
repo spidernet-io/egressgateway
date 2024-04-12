@@ -131,12 +131,20 @@ jobs:
           name: changelog_artifact
           path: ${{ env.DEST_DIRECTORY }}
 
+      - uses: crazy-max/ghaction-import-gpg@v6
+        with:
+          gpg_private_key: ${{ secrets.GPG_PRIVATE_KEY }}
+          passphrase: ${{ secrets.GPG_PASSPHRASE }}
+          git_user_signingkey: true
+          git_commit_gpgsign: true
+
       - name: Create Pull Request
         id: create_pr
-        uses: peter-evans/create-pull-request@v5.0.2
+        uses: peter-evans/create-pull-request@v6.0.1
         with:
           title: "robot update changelog with tag ${{ needs.generate_changelog.outputs.dest_tag }} to branch ${{ env.DEST_BRANCH }} "
           commit-message: "robot update changelog from tag ${{ needs.generate_changelog.outputs.begin_tag }} to tag ${{ needs.generate_changelog.outputs.dest_tag }} "
+          committer: ty-dc <tao.yang@daocloud.io>
           branch-suffix: timestamp
           branch: robot/update_changelog
           delete-branch: true

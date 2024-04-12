@@ -60,11 +60,6 @@ func TestPurgeStaleRules(t *testing.T) {
 			if tc.prepare != nil {
 				patchess := tc.prepare()
 				patches = append(patches, patchess...)
-				defer func() {
-					for _, p := range patches {
-						p.Reset()
-					}
-				}()
 			}
 			if tc.expErr {
 				err = ruleRoute.PurgeStaleRules(marks, baseMark)
@@ -72,6 +67,9 @@ func TestPurgeStaleRules(t *testing.T) {
 			} else {
 				err = ruleRoute.PurgeStaleRules(marks, baseMark)
 				assert.NoError(t, err)
+			}
+			for _, p := range patches {
+				p.Reset()
 			}
 		})
 	}
@@ -124,11 +122,6 @@ func TestEnsure(t *testing.T) {
 			if tc.makePatch != nil {
 				patchess := tc.makePatch(ruleRoute)
 				patches = append(patches, patchess...)
-				defer func() {
-					for _, p := range patches {
-						p.Reset()
-					}
-				}()
 			}
 
 			name, ipv4, ipv6, table, mark := tc.prepare()
@@ -138,6 +131,10 @@ func TestEnsure(t *testing.T) {
 			} else {
 				err = ruleRoute.Ensure(name, ipv4, ipv6, table, mark)
 				assert.NoError(t, err)
+			}
+
+			for _, p := range patches {
+				p.Reset()
 			}
 		})
 	}
@@ -183,11 +180,6 @@ func TestEnsureRoute(t *testing.T) {
 			if tc.makePatch != nil {
 				patchess := tc.makePatch()
 				patches = append(patches, patchess...)
-				defer func() {
-					for _, p := range patches {
-						p.Reset()
-					}
-				}()
 			}
 
 			name, ip, family, table, log := tc.prepare()
@@ -197,6 +189,10 @@ func TestEnsureRoute(t *testing.T) {
 			} else {
 				err = ruleRoute.EnsureRoute(name, ip, family, table, log)
 				assert.NoError(t, err)
+			}
+
+			for _, p := range patches {
+				p.Reset()
 			}
 		})
 	}
@@ -246,11 +242,6 @@ func TestEnsureRule(t *testing.T) {
 			if tc.makePatch != nil {
 				patchess := tc.makePatch()
 				patches = append(patches, patchess...)
-				defer func() {
-					for _, p := range patches {
-						p.Reset()
-					}
-				}()
 			}
 
 			family, table, mark, log := tc.prepare()
@@ -260,6 +251,9 @@ func TestEnsureRule(t *testing.T) {
 			} else {
 				err = ruleRoute.EnsureRule(family, table, mark, log)
 				assert.NoError(t, err)
+			}
+			for _, p := range patches {
+				p.Reset()
 			}
 		})
 	}

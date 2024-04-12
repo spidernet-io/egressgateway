@@ -21,6 +21,7 @@ import (
 	"github.com/spidernet-io/egressgateway/pkg/config"
 	egressv1 "github.com/spidernet-io/egressgateway/pkg/k8s/apis/v1beta1"
 	"github.com/spidernet-io/egressgateway/pkg/layer2"
+	"github.com/spidernet-io/egressgateway/pkg/utils"
 )
 
 type eip struct {
@@ -32,37 +33,98 @@ type eip struct {
 }
 
 func (r *eip) Reconcile(ctx context.Context, req reconcile.Request) (reconcile.Result, error) {
-	log := r.log.WithValues("name", req.Name, "kind", "EgressGateway")
+	kind, newReq, err := utils.ParseKindWithReq(req)
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+	log := r.log.WithValues("kind", kind)
+	var res reconcile.Result
+	switch kind {
+	case "EgressClusterPolicy":
+		res, err = r.reconcileClusterPolicy(ctx, newReq, log)
+	case "EgressPolicy":
+		res, err = r.reconcilePolicy(ctx, newReq, log)
+	default:
+		return reconcile.Result{}, nil
+	}
+	return res, err
+}
+
+func (r *eip) reconcilePolicy(ctx context.Context, req reconcile.Request, log logr.Logger) (reconcile.Result, error) {
+	log = log.WithValues("name", req.Name, "namespace", req.Namespace)
 	log.V(1).Info("reconcile")
 
 	deleted := false
-	gateway := new(egressv1.EgressGateway)
-	err := r.client.Get(ctx, req.NamespacedName, gateway)
+	policy := new(egressv1.EgressPolicy)
+	err := r.client.Get(ctx, req.NamespacedName, policy)
 	if err != nil {
 		if !errors.IsNotFound(err) {
 			return reconcile.Result{}, err
 		}
 		deleted = true
 	}
-	deleted = deleted || !gateway.GetDeletionTimestamp().IsZero()
+	deleted = deleted || !policy.GetDeletionTimestamp().IsZero()
 
 	if deleted {
-		r.announce.DeleteBalancer(req.NamespacedName.Name)
+		r.announce.DeleteBalancer(req.NamespacedName.String())
 		return reconcile.Result{}, nil
 	}
 
-	ips := gateway.Status.GetNodeIPs(r.cfg.NodeName)
-	for _, status := range ips {
-		ip := net.ParseIP(status.IPv4)
-		if ip.To4() != nil {
-			adv := layer2.NewIPAdvertisement(ip, true, sets.Set[string]{})
-			r.announce.SetBalancer(gateway.Name, adv)
+	if policy.Status.Node != r.cfg.NodeName {
+		r.announce.DeleteBalancer(req.NamespacedName.String())
+		return reconcile.Result{}, nil
+	}
+
+	ip := net.ParseIP(policy.Status.Eip.Ipv4)
+	if ip.To4() != nil {
+		adv := layer2.NewIPAdvertisement(ip, true, sets.Set[string]{})
+		r.announce.SetBalancer(req.NamespacedName.String(), adv)
+	}
+
+	ip = net.ParseIP(policy.Status.Eip.Ipv6)
+	if ip.To16() != nil {
+		adv := layer2.NewIPAdvertisement(ip, true, sets.Set[string]{})
+		r.announce.SetBalancer(req.NamespacedName.String(), adv)
+	}
+
+	return reconcile.Result{}, nil
+}
+
+func (r *eip) reconcileClusterPolicy(ctx context.Context, req reconcile.Request, log logr.Logger) (reconcile.Result, error) {
+	log = log.WithValues("name", req.Name)
+	log.V(1).Info("reconcile")
+
+	deleted := false
+	policy := new(egressv1.EgressClusterPolicy)
+	err := r.client.Get(ctx, req.NamespacedName, policy)
+	if err != nil {
+		if !errors.IsNotFound(err) {
+			return reconcile.Result{}, err
 		}
-		ip = net.ParseIP(status.IPv6)
-		if ip.To16() != nil {
-			adv := layer2.NewIPAdvertisement(ip, true, sets.Set[string]{})
-			r.announce.SetBalancer(gateway.Name, adv)
-		}
+		deleted = true
+	}
+	deleted = deleted || !policy.GetDeletionTimestamp().IsZero()
+
+	if deleted {
+		r.announce.DeleteBalancer(req.NamespacedName.String())
+		return reconcile.Result{}, nil
+	}
+
+	if policy.Status.Node != r.cfg.NodeName {
+		r.announce.DeleteBalancer(req.NamespacedName.String())
+		return reconcile.Result{}, nil
+	}
+
+	ip := net.ParseIP(policy.Status.Eip.Ipv4)
+	if ip.To4() != nil {
+		adv := layer2.NewIPAdvertisement(ip, true, sets.Set[string]{})
+		r.announce.SetBalancer(req.NamespacedName.String(), adv)
+	}
+
+	ip = net.ParseIP(policy.Status.Eip.Ipv6)
+	if ip.To16() != nil {
+		adv := layer2.NewIPAdvertisement(ip, true, sets.Set[string]{})
+		r.announce.SetBalancer(req.NamespacedName.String(), adv)
 	}
 
 	return reconcile.Result{}, nil
@@ -87,9 +149,14 @@ func newEipCtrl(mgr manager.Manager, log logr.Logger, cfg *config.Config) error 
 		return err
 	}
 
-	if err = c.Watch(source.Kind(mgr.GetCache(), &egressv1.EgressGateway{}),
-		&handler.EnqueueRequestForObject{}); err != nil {
-		return fmt.Errorf("failed to watch EgressGateway: %v", err)
+	if err := c.Watch(source.Kind(mgr.GetCache(), &egressv1.EgressPolicy{}),
+		handler.EnqueueRequestsFromMapFunc(utils.KindToMapFlat("EgressPolicy"))); err != nil {
+		return fmt.Errorf("failed to watch EgressPolicy: %w", err)
+	}
+
+	if err := c.Watch(source.Kind(mgr.GetCache(), &egressv1.EgressClusterPolicy{}),
+		handler.EnqueueRequestsFromMapFunc(utils.KindToMapFlat("EgressClusterPolicy"))); err != nil {
+		return fmt.Errorf("failed to watch EgressClusterPolicy: %w", err)
 	}
 
 	return nil
