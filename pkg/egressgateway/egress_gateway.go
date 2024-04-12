@@ -97,7 +97,7 @@ func (r *egnReconciler) reconcileTunnel(ctx context.Context, req reconcile.Reque
 				}
 			}
 			if len(needMoveIPs) > 0 {
-				moveEipToReadyNode(&egw, needMoveIPs)
+				moveEipToReadyNode(&egw, &needMoveIPs)
 			}
 			if needUpdate {
 				err := updateGatewayStatusWithUsage(ctx, r.client, &egw)
@@ -106,6 +106,10 @@ func (r *egnReconciler) reconcileTunnel(ctx context.Context, req reconcile.Reque
 				}
 				// sync all policy status
 				err = updateAllPolicyStatus(ctx, r.client, &egw)
+				if err != nil {
+					return reconcile.Result{Requeue: true}, err
+				}
+				err = cleanPolicyStatus(ctx, r.client, needMoveIPs)
 				if err != nil {
 					return reconcile.Result{Requeue: true}, err
 				}
@@ -161,7 +165,7 @@ func (r *egnReconciler) reconcileTunnel(ctx context.Context, req reconcile.Reque
 			}
 		}
 		if len(needMoveIPs) > 0 {
-			moveEipToReadyNode(&egw, needMoveIPs)
+			moveEipToReadyNode(&egw, &needMoveIPs)
 		}
 		if needUpdate {
 			err := updateGatewayStatusWithUsage(ctx, r.client, &egw)
@@ -170,6 +174,10 @@ func (r *egnReconciler) reconcileTunnel(ctx context.Context, req reconcile.Reque
 			}
 			// sync all policy status
 			err = updateAllPolicyStatus(ctx, r.client, &egw)
+			if err != nil {
+				return reconcile.Result{Requeue: true}, err
+			}
+			err = cleanPolicyStatus(ctx, r.client, needMoveIPs)
 			if err != nil {
 				return reconcile.Result{Requeue: true}, err
 			}
@@ -309,6 +317,7 @@ func (r *egnReconciler) reconcileNode(ctx context.Context, req reconcile.Request
 		}
 		//
 		needUpdate := false
+		var needMoveIPs []egress.Eips
 		if selector.Matches(labels.Set(node.Labels)) {
 			// case2.1: label match
 			// case2.1.1: not in list, add it
@@ -349,7 +358,6 @@ func (r *egnReconciler) reconcileNode(ctx context.Context, req reconcile.Request
 			// case2.2: label not match
 			// case2.2.1: not in list, do nothing
 			// case2.2.1: already int list, delete it
-			var needMoveIPs []egress.Eips
 			for nodeIndex, item := range egw.Status.NodeList {
 				if item.Name == node.Name {
 					needUpdate = true
@@ -358,9 +366,9 @@ func (r *egnReconciler) reconcileNode(ctx context.Context, req reconcile.Request
 					break
 				}
 			}
-			if len(needMoveIPs) > 0 {
-				moveEipToReadyNode(&egw, needMoveIPs)
-			}
+		}
+		if len(needMoveIPs) > 0 {
+			moveEipToReadyNode(&egw, &needMoveIPs)
 		}
 		if needUpdate {
 			err := updateGatewayStatusWithUsage(ctx, r.client, &egw)
@@ -369,6 +377,10 @@ func (r *egnReconciler) reconcileNode(ctx context.Context, req reconcile.Request
 			}
 			// sync all policy status
 			err = updateAllPolicyStatus(ctx, r.client, &egw)
+			if err != nil {
+				return reconcile.Result{Requeue: true}, err
+			}
+			err = cleanPolicyStatus(ctx, r.client, needMoveIPs)
 			if err != nil {
 				return reconcile.Result{Requeue: true}, err
 			}
@@ -410,6 +422,38 @@ func updateAllPolicyStatus(ctx context.Context, cli client.Client, egw *egress.E
 					if err != nil {
 						return err
 					}
+				}
+			}
+		}
+	}
+	return nil
+}
+
+func cleanPolicyStatus(ctx context.Context, cli client.Client, eips []egress.Eips) error {
+	assignedIP := &AssignedIP{}
+	for _, eip := range eips {
+		for _, p := range eip.Policies {
+			if p.Namespace != "" {
+				policy := new(egress.EgressPolicy)
+				err := cli.Get(ctx, types.NamespacedName{Namespace: p.Namespace, Name: p.Name}, policy)
+				if err != nil {
+					return err
+				}
+				assignedIP.UseNodeIP = policy.Spec.EgressIP.UseNodeIP
+				err = updateEgressPolicyStatusIfNeed(ctx, cli, policy, assignedIP)
+				if err != nil {
+					return err
+				}
+			} else {
+				policy := new(egress.EgressClusterPolicy)
+				err := cli.Get(ctx, types.NamespacedName{Namespace: p.Namespace, Name: p.Name}, policy)
+				if err != nil {
+					return err
+				}
+				assignedIP.UseNodeIP = policy.Spec.EgressIP.UseNodeIP
+				err = updateEgressClusterPolicyStatusIfNeed(ctx, cli, policy, assignedIP)
+				if err != nil {
+					return err
 				}
 			}
 		}
@@ -531,7 +575,7 @@ func (r *egnReconciler) reconcileGateway(ctx context.Context, req reconcile.Requ
 	}
 
 	if len(needMoveIPs) > 0 {
-		moveEipToReadyNode(egw, needMoveIPs)
+		moveEipToReadyNode(egw, &needMoveIPs)
 	}
 
 	if beforeReadyCount == 0 {
@@ -552,12 +596,16 @@ func (r *egnReconciler) reconcileGateway(ctx context.Context, req reconcile.Requ
 		if err != nil {
 			return reconcile.Result{Requeue: true}, err
 		}
+		err = cleanPolicyStatus(ctx, r.client, needMoveIPs)
+		if err != nil {
+			return reconcile.Result{Requeue: true}, err
+		}
 	}
 
 	return reconcile.Result{}, nil
 }
 
-func moveEipToReadyNode(gateway *egress.EgressGateway, needMoveIPs []egress.Eips) {
+func moveEipToReadyNode(gateway *egress.EgressGateway, needMoveIPs *[]egress.Eips) {
 	if gateway.Status.ReadyCount() <= 0 {
 		return
 	}
@@ -582,7 +630,7 @@ func moveEipToReadyNode(gateway *egress.EgressGateway, needMoveIPs []egress.Eips
 	}
 
 	if minEipNodeIndex != -1 {
-		for _, eip := range needMoveIPs {
+		for _, eip := range *needMoveIPs {
 			if eip.IPv4 == "" && eip.IPv6 == "" {
 				// case 1: move user node ip case
 				if useNodeIPIndex != -1 {
@@ -604,8 +652,8 @@ func moveEipToReadyNode(gateway *egress.EgressGateway, needMoveIPs []egress.Eips
 				gateway.Status.NodeList[minEipNodeIndex].Eips = append(gateway.Status.NodeList[minEipNodeIndex].Eips, eip)
 			}
 		}
+		*needMoveIPs = nil
 	}
-
 	// case: no healthy nodes to move(migrate) eip, do nothing
 }
 

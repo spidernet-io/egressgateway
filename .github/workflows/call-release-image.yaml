@@ -97,7 +97,7 @@ jobs:
         if: ${{ env.RUN_PUSH == 'true' }}
         uses: sigstore/cosign-installer@main
         with:
-          cosign-release: 'v2.0.1' #do not upgrade, or else go error
+          cosign-release: 'v2.2.3' #do not upgrade, or else go error
 
       - name: Getting Build Arg
         id: arg
