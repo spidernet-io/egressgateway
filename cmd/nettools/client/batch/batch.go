@@ -55,7 +55,13 @@ func Batch(ctx context.Context, config flag.Config) error {
 }
 
 func tcp(ctx context.Context, config flag.Config) error {
-	addrStr := fmt.Sprintf("%s:%s", *config.Addr, *config.TcpPort)
+	ip := net.ParseIP(*config.Addr)
+	var addrStr string
+	if ip.To4() == nil {
+		addrStr = fmt.Sprintf("[%s]:%s", *config.Addr, *config.TcpPort)
+	} else {
+		addrStr = fmt.Sprintf("%s:%s", *config.Addr, *config.TcpPort)
+	}
 	dialer := net.Dialer{Timeout: 3 * time.Second}
 	conn, err := dialer.DialContext(ctx, "tcp", addrStr)
 	if err != nil {
