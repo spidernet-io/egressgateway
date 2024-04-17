@@ -585,6 +585,12 @@ func (r *egnReconciler) reconcileGateway(ctx context.Context, req reconcile.Requ
 		}
 	}
 
+	// first create egw update usage
+	if (egw.Status.IPUsage.IPv4Total == 0 && len(egw.Spec.Ippools.IPv4) != 0) ||
+		(egw.Status.IPUsage.IPv6Total == 0 || len(egw.Spec.Ippools.IPv6) != 0) {
+		needUpdate = true
+	}
+
 	if needUpdate {
 		// update
 		err := updateGatewayStatusWithUsage(ctx, r.client, egw)

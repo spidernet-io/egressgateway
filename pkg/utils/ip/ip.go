@@ -256,7 +256,7 @@ func IPsDiffSet(ips1, ips2 []net.IP, sorted bool) []net.IP {
 // to [172.18.40.1-172.18.40.5]. The overlapping part of two IP ranges will
 // be ignored.
 func MergeIPRanges(version constant.IPVersion, ipRanges []string) ([]string, error) {
-	ips, err := ParseIPRanges(version, ipRanges)
+	ips, err := ConvertCidrOrIPrangeToIPs(ipRanges, version)
 	if err != nil {
 		return nil, err
 	}
