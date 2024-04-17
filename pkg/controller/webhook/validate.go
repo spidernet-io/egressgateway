@@ -17,7 +17,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
 
 	"github.com/spidernet-io/egressgateway/pkg/config"
-	"github.com/spidernet-io/egressgateway/pkg/constant"
 	"github.com/spidernet-io/egressgateway/pkg/egressgateway"
 	egressv1 "github.com/spidernet-io/egressgateway/pkg/k8s/apis/v1beta1"
 	"github.com/spidernet-io/egressgateway/pkg/utils/ip"
@@ -334,42 +333,6 @@ func checkEIPIncluded(client client.Client, ctx context.Context, ipv4, ipv6, egw
 		}
 	}
 	return true, nil
-}
-
-func countGatewayAvailableIP(egw *egressv1.EgressGateway) (int, int, error) {
-	// check has free egress ip
-	ipv4Ranges, err := ip.MergeIPRanges(constant.IPv4, egw.Spec.Ippools.IPv4)
-	if err != nil {
-		return 0, 0, err
-	}
-	ipv6Ranges, err := ip.MergeIPRanges(constant.IPv6, egw.Spec.Ippools.IPv6)
-	if err != nil {
-		return 0, 0, err
-	}
-	useIpv4s := make([]net.IP, 0)
-	useIpv6s := make([]net.IP, 0)
-	for _, node := range egw.Status.NodeList {
-		for _, eip := range node.Eips {
-			if len(eip.IPv4) != 0 {
-				useIpv4s = append(useIpv4s, net.ParseIP(eip.IPv4))
-			}
-			if len(eip.IPv6) != 0 {
-				useIpv6s = append(useIpv6s, net.ParseIP(eip.IPv6))
-			}
-		}
-	}
-	ipv4s, err := ip.ParseIPRanges(constant.IPv4, ipv4Ranges)
-	if err != nil {
-		return 0, 0, err
-	}
-	ipv6s, err := ip.ParseIPRanges(constant.IPv6, ipv6Ranges)
-	if err != nil {
-		return 0, 0, err
-	}
-	freeIpv4s := ip.IPsDiffSet(ipv4s, useIpv4s, false)
-	freeIpv6s := ip.IPsDiffSet(ipv6s, useIpv6s, false)
-
-	return len(freeIpv4s), len(freeIpv6s), nil
 }
 
 func validateSubnet(subnet []string) webhook.AdmissionResponse {
