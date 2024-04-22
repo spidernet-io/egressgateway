@@ -38,7 +38,7 @@ require (
 	k8s.io/client-go v0.29.3
 	k8s.io/utils v0.0.0-20230726121419-3b25d923346b
 	modernc.org/memory v1.7.2
-	sigs.k8s.io/cluster-api-provider-azure v1.14.1
+	sigs.k8s.io/cluster-api-provider-azure v1.14.2
 	sigs.k8s.io/controller-runtime v0.16.5
 	sigs.k8s.io/controller-tools v0.12.1
 	sigs.k8s.io/yaml v1.4.0
