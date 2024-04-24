@@ -724,6 +724,71 @@ var _ = Describe("Operate EgressGateway", Label("EgressGateway"), Ordered, func(
 	})
 })
 
+var _ = Describe("Check EgressGateway usage when not mach node", Label("EgressGateway", "EgressGatewayUsage"), Ordered, func() {
+	var gateway *egressv1.EgressGateway
+	var singleIpv4Pool, singleIpv6Pool []string
+	var expIPv4Count, expIPv6Count int
+	var err error
+
+	BeforeEach(func() {
+		if egressConfig.EnableIPv4 {
+			singleIpv4Pool = []string{"10.6.1.21", "10.6.1.11-10.6.1.20"}
+			expIPv4Count = 11
+		}
+		if egressConfig.EnableIPv6 {
+			singleIpv6Pool = []string{"fd00::1", "fd01::1-fd01::a"}
+			expIPv6Count = 11
+		}
+		gateway, err = common.CreateGatewayCustom(context.Background(), cli, func(egw *egressv1.EgressGateway) {
+			egw.Spec.NodeSelector = egressv1.NodeSelector{
+				Policy: common.AVERAGE_SELECTION,
+				Selector: &metav1.LabelSelector{
+					MatchLabels: map[string]string{"not-match-label": "not-match-label"},
+				},
+			}
+			egw.Spec.Ippools.IPv4 = singleIpv4Pool
+			egw.Spec.Ippools.IPv6 = singleIpv6Pool
+		})
+		Expect(err).NotTo(HaveOccurred())
+		DeferCleanup(func() {
+			if gateway != nil {
+				GinkgoWriter.Printf("Delete egw: %s\n", gateway.Name)
+				Expect(common.DeleteEgressGateway(context.Background(), cli, gateway, time.Minute/2)).NotTo(HaveOccurred())
+			}
+		})
+	})
+
+	It("should correctly manage gateway IP usage", func() {
+		ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
+		defer cancel()
+		for {
+			var pass bool
+			select {
+			case <-ctx.Done():
+				err = fmt.Errorf("check egw timeout")
+				break
+			default:
+				err = cli.Get(ctx, types.NamespacedName{Name: gateway.Name}, gateway)
+				Expect(err).NotTo(HaveOccurred())
+				if egressConfig.EnableIPv4 && gateway.Status.IPUsage.IPv4Total != expIPv4Count {
+					time.Sleep(time.Second)
+					continue
+				}
+				if egressConfig.EnableIPv6 && gateway.Status.IPUsage.IPv6Total != expIPv6Count {
+					time.Sleep(time.Second)
+					continue
+				}
+				pass = true
+				break
+			}
+			Expect(err).NotTo(HaveOccurred())
+			if pass {
+				break
+			}
+		}
+	})
+})
+
 func createEgressGateway(ctx context.Context) (egw *egressv1.EgressGateway) {
 	// create gateway
 	GinkgoWriter.Println("Create EgressGateway")
