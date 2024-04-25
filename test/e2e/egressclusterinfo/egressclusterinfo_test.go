@@ -5,6 +5,8 @@ package egressclusterinfo_test
 
 import (
 	"context"
+	goerrors "errors"
+	"os"
 	"strings"
 
 	. "github.com/onsi/ginkgo/v2"
@@ -14,6 +16,7 @@ import (
 	calicov1 "github.com/tigera/operator/pkg/apis/crd.projectcalico.org/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/client/apiutil"
 
 	egressv1 "github.com/spidernet-io/egressgateway/pkg/k8s/apis/v1beta1"
 	"github.com/spidernet-io/egressgateway/test/e2e/common"
@@ -41,8 +44,12 @@ var _ = Describe("EgressClusterInfo", Label("EgressClusterInfo"), Serial, func()
 
 			list := &calicov1.IPPoolList{}
 			err := cli.List(ctx, list)
-			Expect(err).NotTo(HaveOccurred())
-
+			if err != nil {
+				rdfErr := &apiutil.ErrResourceDiscoveryFailed{}
+				if !goerrors.As(err, &rdfErr) {
+					Expect(err).NotTo(HaveOccurred())
+				}
+			}
 			for _, p := range list.Items {
 				if strings.Contains(p.Name, calicoIPv4Prefix) ||
 					strings.Contains(p.Name, calicoIPv6Prefix) {
@@ -67,6 +74,9 @@ var _ = Describe("EgressClusterInfo", Label("EgressClusterInfo"), Serial, func()
 	})
 
 	It("Create or update calico IPPool", Serial, Label("I00006"), func() {
+		if os.Getenv("cni") != "calico" {
+			Skip("test only for calico")
+		}
 		if egressConfig.EnableIPv6 {
 			createOrUpdateCalicoIPPoolAndCheck(
 				ctx, cli, eci, calicoIPv6Prefix, "112", common.RandomIPPoolV6Cidr)

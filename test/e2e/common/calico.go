@@ -5,10 +5,12 @@ package common
 
 import (
 	"context"
+	goerrors "errors"
 	"github.com/go-faker/faker/v4"
 	calicov1 "github.com/tigera/operator/pkg/apis/crd.projectcalico.org/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/client/apiutil"
 )
 
 func CreateCalicoIPPool(ctx context.Context, cli client.Client,
@@ -49,7 +51,10 @@ func ListCalicoIPPool(ctx context.Context, cli client.Client) ([]string, error) 
 	list := &calicov1.IPPoolList{}
 	err := cli.List(ctx, list)
 	if err != nil {
-		return res, err
+		rdfErr := &apiutil.ErrResourceDiscoveryFailed{}
+		if !goerrors.As(err, &rdfErr) {
+			return res, err
+		}
 	}
 
 	for _, item := range list.Items {
