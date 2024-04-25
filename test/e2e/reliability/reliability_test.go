@@ -330,6 +330,7 @@ var _ = Describe("Reliability", Serial, Label("Reliability"), func() {
 		)
 
 		BeforeEach(func() {
+			Skip("kwok not support egress agent mock")
 			ctx = context.Background()
 			kNodesNum = 10
 			// deploy
