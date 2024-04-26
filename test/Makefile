@@ -261,26 +261,37 @@ deploy_project:
 		done ; \
 	fi
 	- helm --kubeconfig=$(KIND_KUBECONFIG) uninstall -n $(E2E_NAMESPACE) project || true
-	HELM_OPTION="" ; \
-    	if [ -n "$(PYROSCOPE_LOCAL_PORT)" ] ; then \
-			echo "add env" ; \
-			ServerAddress=$$(docker network inspect kind -f {{\(index\ $$.IPAM.Config\ 0\).Gateway}}) ; \
-			HELM_OPTION+=" --set agent.debug.pyroscopeServerAddr=http://$${ServerAddress}:$(PYROSCOPE_LOCAL_PORT) " ; \
-			HELM_OPTION+=" --set controller.debug.pyroscopeServerAddr=http://$${ServerAddress}:$(PYROSCOPE_LOCAL_PORT) " ; \
-		fi ; \
-		HELM_OPTION+=" --set agent.prometheus.enabled=true --set controller.prometheus.enabled=true  " ; \
-		HELM_OPTION+=" --set agent.debug.logLevel=debug --set controller.debug.logLevel=debug " ; \
-		HELM_OPTION+=" --set controller.affinity.nodeAffinity.requiredDuringSchedulingIgnoredDuringExecution.nodeSelectorTerms[0].matchExpressions[0].key=node-role.kubernetes.io/control-plane  " ; \
-		HELM_OPTION+=" --set controller.affinity.nodeAffinity.requiredDuringSchedulingIgnoredDuringExecution.nodeSelectorTerms[0].matchExpressions[0].operator=Exists  " ; \
-		if [ "$(E2E_IP_FAMILY)" == "dual" ] ; then HELM_OPTION+=" --set feature.enableIPv4=true --set feature.enableIPv6=true" ; fi ; \
-		if [ "$(E2E_IP_FAMILY)" == "ipv4" ] ; then HELM_OPTION+=" --set feature.enableIPv4=true --set feature.enableIPv6=false" ; fi ; \
-		if [ "$(E2E_IP_FAMILY)" == "ipv6" ] ; then HELM_OPTION+=" --set feature.enableIPv4=false --set feature.enableIPv6=true" ; fi ; \
-		helm --kubeconfig=$(KIND_KUBECONFIG) install project $(ROOT_DIR)/charts \
-				-n $(E2E_NAMESPACE) --create-namespace --wait --debug \
-				--set global.imageTagOverride=$(PROJECT_IMAGE_VERSION) \
-				$${HELM_OPTION} \
-				|| { KIND_CLUSTER_NAME=$(KIND_CLUSTER_NAME) ./scripts/debugCluster.sh $(KIND_KUBECONFIG) "detail"  $(E2E_NAMESPACE) ; exit 1 ; } ; \
-		exit 0
+	@echo "" > config.yaml
+	@if [ -z '$(PYROSCOPE_LOCAL_PORT)' ]; then \
+		echo "PYROSCOPE_LOCAL_PORT is not set. Skipping setting pyroscopeServerAddr."; \
+	else \
+		yq e '.agent.debug.pyroscopeServerAddr = "http://${ServerAddress}:$(PYROSCOPE_LOCAL_PORT)"' -i config.yaml; \
+		yq e '.controller.debug.pyroscopeServerAddr = "http://${ServerAddress}:$(PYROSCOPE_LOCAL_PORT)"' -i config.yaml; \
+	fi
+	yq e '.agent.prometheus.enabled = "true"' -i config.yaml
+	yq e '.controller.prometheus.enabled = "true"' -i config.yaml
+	yq e '.agent.debug.logLevel = "debug"' -i config.yaml
+	yq e '.controller.debug.logLevel = "debug"' -i config.yaml
+	@if [ "$(E2E_IP_FAMILY)" = "dual" ]; then \
+		yq e '.feature.enableIPv4 = true' -i config.yaml; \
+		yq e '.feature.enableIPv6 = true' -i config.yaml; \
+	elif [ "$(E2E_IP_FAMILY)" = "ipv4" ]; then \
+		yq e '.feature.enableIPv4 = true' -i config.yaml; \
+		yq e '.feature.enableIPv6 = false' -i config.yaml; \
+	elif [ "$(E2E_IP_FAMILY)" = "ipv6" ]; then \
+		yq e '.feature.enableIPv4 = false' -i config.yaml; \
+		yq e '.feature.enableIPv6 = true' -i config.yaml; \
+	else \
+		echo "Unknown IP family $(E2E_IP_FAMILY)"; \
+		exit 1; \
+	fi
+	yq e '.controller.nodeSelector."kubernetes.io/hostname" = "$(KIND_CLUSTER_NAME)-control-plane"' -i config.yaml
+	HELM_OPTION+=" --set controller.nodeSelector."kubernetes.io/hostname"=$(KIND_CLUSTER_NAME)-control-plane" ; \
+	helm --kubeconfig=$(KIND_KUBECONFIG) install project $(ROOT_DIR)/charts \
+			-n $(E2E_NAMESPACE) --create-namespace --wait --debug \
+			--set global.imageTagOverride=$(PROJECT_IMAGE_VERSION) --values config.yaml \
+			|| { KIND_CLUSTER_NAME=$(KIND_CLUSTER_NAME) ./scripts/debugCluster.sh $(KIND_KUBECONFIG) "detail"  $(E2E_NAMESPACE) ; exit 1 ; } ; \
+	exit 0
 
 .PHONY: uninstall_egress
 uninstall_egress: KIND_KUBECONFIG ?= $(E2E_KIND_KUBECONFIG_PATH)
@@ -289,7 +300,7 @@ uninstall_egress:
 	@echo -e "\033[35m [helm uninstall egress] \033[0m"
 	helm uninstall project --wait --debug -n $(E2E_NAMESPACE) \
 	     --kubeconfig=$(KIND_KUBECONFIG)  || { $(KIND_CLUSTER_NAME) ./scripts/debugCluster.sh $(KIND_KUBECONFIG) "detail" $(E2E_NAMESPACE) ; exit 1 ; } ; \
-	kubectl --kubeconfig=$(KIND_KUBECONFIG) get all --all-namespaces  | grep -q "egressgateway"` && { echo "error: found egressgateway resources" ; exit 1 ; }
+	kubectl --kubeconfig=$(KIND_KUBECONFIG) get all --all-namespaces  | grep -q "egressgateway" && { echo "error: found egressgateway resources" ; exit 1 ; }
 
 # test kind is ok
 .PHONY: install_example_app
