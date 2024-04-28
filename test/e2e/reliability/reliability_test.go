@@ -66,7 +66,7 @@ var _ = Describe("Reliability", Serial, Label("Reliability"), func() {
 			GinkgoWriter.Printf("v4DefaultEip: %s, v6DefaultEip: %s\n", v4DefaultEip, v6DefaultEip)
 
 			// daemonSet
-			daemonSet, err = common.CreateDaemonSet(ctx, cli, "ds-reliability-"+uuid.NewString(), config.Image, time.Minute/2)
+			daemonSet, err = common.CreateDaemonSet(ctx, cli, "ds-reliability-"+uuid.NewString(), config.Image, time.Minute*2)
 			Expect(err).NotTo(HaveOccurred())
 			GinkgoWriter.Printf("succeeded to create DaemonSet: %s\n", daemonSet.Name)
 

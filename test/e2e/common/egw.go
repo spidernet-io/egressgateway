@@ -5,6 +5,7 @@ package common
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"reflect"
 	"sort"
@@ -270,15 +271,24 @@ func DeleteEgressGateway(ctx context.Context, cli client.Client, egw *egressv1.E
 		return err
 	}
 
+	log := NewLogger()
+
 	for {
 		select {
 		case <-ctx.Done():
-			return e2eerr.ErrTimeout
+			log.Log("check delete egress gateway object timeout")
+			return fmt.Errorf(log.Save())
 		default:
 			err = cli.Get(ctx, types.NamespacedName{Name: egw.Name}, egw)
 			if apierrors.IsNotFound(err) {
 				return nil
 			}
+			if err != nil {
+				log.Log("--------------------------")
+				log.Log(err.Error())
+			}
+			raw, _ := json.Marshal(egw)
+			log.Log(string(raw))
 			time.Sleep(time.Second / 2)
 		}
 	}

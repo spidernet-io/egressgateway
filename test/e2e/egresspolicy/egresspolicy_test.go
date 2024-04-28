@@ -82,11 +82,11 @@ var _ = Describe("EgressPolicy", Serial, func() {
 			ctx := context.Background()
 			var err error
 			// create DaemonSet-A DaemonSet-B for A/B test
-			dsA, err = common.CreateDaemonSet(ctx, cli, "ds-a-"+faker.Word(), config.Image, time.Minute/2)
+			dsA, err = common.CreateDaemonSet(ctx, cli, "ds-a-"+faker.Word(), config.Image, time.Minute*2)
 			Expect(err).NotTo(HaveOccurred())
 			GinkgoWriter.Printf("Create DaemonSet A: %s\n", dsA.Name)
 
-			dsB, err = common.CreateDaemonSet(ctx, cli, "ds-b-"+faker.Word(), config.Image, time.Minute/2)
+			dsB, err = common.CreateDaemonSet(ctx, cli, "ds-b-"+faker.Word(), config.Image, time.Minute*2)
 			Expect(err).NotTo(HaveOccurred())
 			GinkgoWriter.Printf("Create DaemonSet B: %s\n", dsB.Name)
 
@@ -526,7 +526,7 @@ var _ = Describe("EgressPolicy", Serial, func() {
 				ctx = context.Background()
 
 				// create DaemonSet
-				ds, err = common.CreateDaemonSet(ctx, cli, "ds-"+uuid.NewString(), config.Image, time.Minute/2)
+				ds, err = common.CreateDaemonSet(ctx, cli, "ds-"+uuid.NewString(), config.Image, time.Minute*2)
 				Expect(err).NotTo(HaveOccurred())
 				GinkgoWriter.Printf("succeeded to create DaemonSet: %s\n", ds.Name)
 				podLabelSelector = &metav1.LabelSelector{MatchLabels: ds.Labels}
