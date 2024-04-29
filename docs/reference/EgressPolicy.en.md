@@ -7,32 +7,54 @@ metadata:
   namespace: "default"
   name: "policy-test"
 spec:
-  egressGatewayName: "eg1"  # (1)
-  egressIP:                 # (2)
+  egressGatewayName: "eg1" 
+  egressIP:
     ipv4: ""                            
     ipv6: ""
-    useNodeIP: false        # (3)
+    useNodeIP: false       
   appliedTo:                
-    podSelector:            # (4) 
-      matchLabels:    
+    podSelector:
+      matchLabels:
         app: "shopping"
-    podSubnet:              # (5)
+    podSubnet:              
     - "172.29.16.0/24"
     - 'fd00:1/126'
-  destSubnet:               # (6)
+  destSubnet:
     - "10.6.1.92/32"
     - "fd00::92/128"
-  priority: 100             # (7)
+  priority: 100
 ```
 
-1. Select the EgressGateway referenced by the EgressPolicy.
-2. Egress IP represents the EgressIP settings used by the EgressPolicy:
-    * If `ipv4` or `ipv6` addresses are defined when creating, an IP address will be allocated from the EgressGateway's `.ippools`. If policy1 requests `10.6.1.21` and `fd00:1` and then policy2 requests `10.6.1.21` and `fd00:2`, an error will occur, causing policy2 allocation to fail.
-    * If `ipv4` or `ipv6` addresses are not defined and `useNodeIP` is true, the Egress address will be the Node IP of the referenced EgressGateway.
-    * If `ipv4` or `ipv6` addresses are not defined when creating and `useNodeIP` is `false`, an IP address will be automatically allocated from the EgressGateway's `.ranges` (when IPv6 is enabled, both an IPv4 and IPv6 address will be requested).
-    * `egressGatewayName` must not be empty.
-3. Support using the Node IP as the Egress IP (only one option can be chosen).
-4. Select the Pods to which the EgressPolicy should be applied by using Label.
-5. Select the Pods to which the EgressPolicy should be applied by specifying the Pod subnet directly (options 4 and 5 cannot be used simultaneously)
-6. When specifying the destination addresses for Egress access, if no specific destination address is provided, the following policy will be enforced: requests with destination addresses outside of the cluster's internal CIDR range will be forwarded to the Egress node.
-7. Priority of the policy.
+## Definition
+
+### Metadata
+
+| Field     | Description                                | Schema | Validation |
+|-----------|--------------------------------------------|--------|------------|
+| namespace | The namespace of the EgressPolicy resource | string | required   |
+| name      | The name of the EgressPolicy resource      | string | required   |
+
+### Spec
+
+| Field             | Description                                                                                                                                                                                                                                                    | Schema                  | Validation | Values        | Default |
+|-------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|-------------------------|------------|---------------|---------|
+| egressGatewayName | Reference to the EgressGateway to use                                                                                                                                                                                                                          | string                  | required   |               |         |
+| egressIP          | Configuration for the egress IP settings                                                                                                                                                                                                                       | [egressIP](#egressIP)   | optional   |               |         |
+| appliedTo         | Selector for the Pods to which the EgressPolicy should be applied                                                                                                                                                                                              | [appliedTo](#appliedTo) | required   |               |         |
+| destSubnet        | When accessing the subnets in this list, use the Egress IP. If `feature.clusterCIDR.autoDetect` was enabled during installation and `destSubnet` is not configured, then access to external networks outside the cluster will automatically use the Egress IP. | []string                | optional   | CIDR notation |         |
+| priority          | Priority of the policy                                                                                                                                                                                                                                         | integer                 | optional   |               |         |
+
+#### egressIP
+
+| Field     | Description                                                                                               | Schema   | Validation | Values      | Default |
+|-----------|-----------------------------------------------------------------------------------------------------------|----------|------------|-------------|---------|
+| ipv4      | Specific IPv4 address to use if defined                                                                   | string   | optional   | valid IPv4  |         |
+| ipv6      | Specific IPv6 address to use if defined                                                                   | string   | optional   | valid IPv6  |         |
+| useNodeIP | Flag to indicate if the Node IP should be used as the Egress IP when no specific IP address is defined    | bool     | optional   | true/false  | false   |
+
+#### appliedTo
+
+| Field       | Description                                                   | Schema            | Validation | Values | Default |
+|-------------|---------------------------------------------------------------|-------------------|------------|--------|---------|
+| podSelector | Use Egress Policy on Pods Matched by Selector                 | map[string]string | optional   |        |         |
+| podSubnet   | Use Egress Policy on Pods Matched by Subnet (Not Implemented) | []string          | optional   | CIDR   |         |
