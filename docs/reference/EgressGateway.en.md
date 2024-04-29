@@ -6,47 +6,90 @@ kind: EgressGateway
 metadata:
   name: "eg1"
 spec:
-  ippools:                      # (1)
-    ipv4:                       # (2)
+  ippools:                     
+    ipv4:                       
       - "10.6.1.55"
       - "10.6.1.60-10.6.1.65"
       - "10.6.1.70/28"
-    ipv6:                       # (3)
+    ipv6:                      
       - ""
-    ipv4DefaultEIP: ""          # (4)
-    ipv6DefaultEIP: ""          # (5)
-  nodeSelector:                 # (6)
-    selector:                   # (7)
+    ipv4DefaultEIP: ""
+    ipv6DefaultEIP: ""
+  nodeSelector:
+    selector:
       matchLabels:
         egress: "true"
-    policy: "doing"             # (8)
-status:                         
-  nodeList:                     # (9)
-    - name: "node1"             # (10)
-      status: "Ready"           # (11)
-      epis:                     # (12)
-        - ipv4: "10.6.1.55"     # (13)
-          ipv6: "fd00::55"      # (14)
-          policies:             # (15)
-            - name: "app"         # (16)
-              namespace: "default"  # (17)
+    policy: "doing"
+status:
+  nodeList:
+    - name: "node1"
+      status: "Ready"
+      epis:
+        - ipv4: "10.6.1.55"
+          ipv6: "fd00::55"
+          policies:
+            - name: "app"
+              namespace: "default"
 ```
 
-1. Set the range of egress IP pool that EgressGateway can use;
-2. Egress IPv4 pool support three methods: single IP `10.6.0.1`, range `10.6.0.1-10.6.0.10`, and CIDR `10.6.0.1/26`;
-3. Egress IPv6 pool. If dual-stack requirements are enabled, the number of IPv4 and IPv6 must be consistent, and the format is the same as IPv4;
-4. The default IPv4 EIP. If the EgressPolicy does not specify EIP and the EIP assignment policy is `default`, the EIP assigned to this EgressPolicy will be `ipv4DefaultEIP`;
-5. The default IPv6 EIP. The rules are the same as `ipv6DefaultEIP`;
-6. Set the matching conditions and policy for egress nodes;
-7. Select a group of nodes as egress gateway nodes through Selector, and egress IP can fall within this range;
-8. The policy for EgressGateway to select Egress nodes, currently only supports average selection;
-9. The egress nodes selected by node selector, as well as the effective egress IP on the node, and the EgressPolicy that uses this egress IP;
-10. The name of the Egress node;
-11. The status of the Egress node;
-12. The effective EIP information on this gateway node;
-13. Egress IPv4. If EgressPolicy and EgressClusterPolicy use node IP, this field is empty;
-14. Egress IPv6. In the dual-stack situation, IPv4 and IPv6 are one-to-one corresponding;
-15. Define which policies are using the effective Egress IP on this node;
-16. Name of the Policy using the Egress IP;
-17. Namespace of the Policy using the Egress IP.
+## Definition
 
+### Metadata
+
+| Field | Description                             | Schema | Validation |
+|-------|-----------------------------------------|--------|------------|
+| name  | The name of this EgressGateway resource | string | required   |
+
+### Spec
+
+| Field          | Description                                                | Schema                        | Validation | Values     | Default |
+|----------------|------------------------------------------------------------|-------------------------------|------------|------------|---------|
+| ippools        | Set the range of egress IP pool that EgressGateway can use | [ippools](#ippools)           | optional   |            |         |
+| nodeSelector   | Match egress nodes by label                                | [nodeSelector](#nodeSelector) | require    |            |         |
+| clusterDefault | Default EgressGateway for the cluster                      | bool                          | optional   | true/false | false   |
+
+#### ippools
+
+| Field          | Description                                                                                                                                                              | Schema   | Validation | Values                                          | Default |
+|----------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------|----------|------------|-------------------------------------------------|---------|
+| ipv4           | IPv4 pool                                                                                                                                                                | []string | optional   | `10.6.0.1` `10.6.0.1-10.6.0.10` ``10.6.0.1/26`` |         |
+| ipv6           | IPv6 pool                                                                                                                                                                | []string | optional   | `fd::01` `fd01::01-fd01:0a` `fd10:01/64`        |         |
+| ipv4DefaultEIP | Default egress IPv4, if the EgressPolicy does not specify EIP and the EIP assignment policy is `default`, the EIP assigned to this EgressPolicy will be `ipv4DefaultEIP` | string   | optional   |                                                 |         |
+| ipv6DefaultEIP | Default egress IPv6, the rules are the same as `ipv6DefaultEIP`                                                                                                          | string   | optional   |                                                 |         |
+
+### nodeSelector
+
+| Field                | Description       | Schema            | Validation | Values | Default |
+|----------------------|-------------------|-------------------|------------|--------|---------|
+| selector.matchLabels | Node match labels | map[string]string | optional   |        |         |
+
+
+### Status (subresource)
+
+| Field    | Description     | Schema                | Validation | Values | Default |
+|----------|-----------------|-----------------------|------------|--------|---------|
+| nodeList | Match node list | [nodeList](#nodeList) | optional   |        |         |
+
+
+#### nodeList
+
+| Field  | Description                | Schema        | Validation | Values              | Default |
+|--------|----------------------------|---------------|------------|---------------------|---------|
+| name   | Name of the node           | string        | optional   |                     |         |
+| status | Current status of the node | string        | optional   | `Ready`, `NotReady` |         |
+| epis   | List of endpoint IPs       | [epis](#epis) | optional   |                     |         |
+
+##### epis
+
+| Field    | Description                                                               | Schema                | Validation | Values | Default |
+|----------|---------------------------------------------------------------------------|-----------------------|------------|--------|---------|
+| ipv4     | If EgressPolicy and EgressClusterPolicy use node IP, this field is empty. | string                | optional   |        |         |
+| ipv6     | In the dual-stack situation, IPv4 and IPv6 are one-to-one corresponding.  | string                | optional   |        |         |
+| policies | Policy list of the node                                                   | [policies](#policies) | optional   |        |         |
+
+##### policies
+
+| Field      | Description                  | Schema     | Validation | Values     | Default |
+|------------|------------------------------|------------|------------|------------|---------|
+| name       | Name of the policy           | string     | optional   |            |         |
+| namespace  | Namespace of the policy      | string     | optional   |            |         |
