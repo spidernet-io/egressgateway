@@ -1,6 +1,6 @@
 
 <!doctype html>
-<html lang="en" class="no-js">
+<html lang="zh" class="no-js">
   <head>
     
       <meta charset="utf-8">
@@ -8,28 +8,28 @@
       
       
       
-        <link rel="canonical" href="https://spidernet-io.github.io/egressgateway/v0.5/reference/EgressEndpointSlice/">
+        <link rel="canonical" href="https://spidernet-io.github.io/egressgateway/v0.5/zh/reference/metrics/">
       
       
-        <link rel="prev" href="../EgressClusterPolicy/">
+        <link rel="prev" href="../egctl/">
       
       
-        <link rel="next" href="../EgressClusterEndpointSlice/">
+        <link rel="next" href="../../Troubleshooting/">
       
       
-      <link rel="icon" href="../../assets/images/favicon.png">
+      <link rel="icon" href="../../../assets/images/favicon.png">
       <meta name="generator" content="mkdocs-1.5.2, mkdocs-material-9.2.8">
     
     
       
-        <title>CRD EgressEndpointSlice - EgressGateway</title>
+        <title>metrics - EgressGateway</title>
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/main.046329b4.min.css">
+      <link rel="stylesheet" href="../../../assets/stylesheets/main.046329b4.min.css">
       
         
-        <link rel="stylesheet" href="../../assets/stylesheets/palette.85d0ee34.min.css">
+        <link rel="stylesheet" href="../../../assets/stylesheets/palette.85d0ee34.min.css">
       
       
 
@@ -48,7 +48,7 @@
       
     
     
-    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce((e,_)=>(e<<5)-e+_.charCodeAt(0),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    <script>__md_scope=new URL("../../..",location),__md_hash=e=>[...e].reduce((e,_)=>(e<<5)-e+_.charCodeAt(0),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
     
       
 
@@ -72,6 +72,11 @@
     <label class="md-overlay" for="__drawer"></label>
     <div data-md-component="skip">
       
+        
+        <a href="#controller-metrics" class="md-skip">
+          跳转至
+        </a>
+      
     </div>
     <div data-md-component="announce">
       
@@ -87,8 +92,8 @@
   
 
 <header class="md-header md-header--shadow" data-md-component="header">
-  <nav class="md-header__inner md-grid" aria-label="Header">
-    <a href="../.." title="EgressGateway" class="md-header__button md-logo" aria-label="EgressGateway" data-md-component="logo">
+  <nav class="md-header__inner md-grid" aria-label="页眉">
+    <a href="../../" title="EgressGateway" class="md-header__button md-logo" aria-label="EgressGateway" data-md-component="logo">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54Z"/></svg>
@@ -108,7 +113,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              CRD EgressEndpointSlice
+              metrics
             
           </span>
         </div>
@@ -121,20 +126,20 @@
       <div class="md-header__option">
   <div class="md-select">
     
-    <button class="md-header__button md-icon" aria-label="Select language">
+    <button class="md-header__button md-icon" aria-label="选择当前语言">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m12.87 15.07-2.54-2.51.03-.03A17.52 17.52 0 0 0 14.07 6H17V4h-7V2H8v2H1v2h11.17C11.5 7.92 10.44 9.75 9 11.35 8.07 10.32 7.3 9.19 6.69 8h-2c.73 1.63 1.73 3.17 2.98 4.56l-5.09 5.02L4 19l5-5 3.11 3.11.76-2.04M18.5 10h-2L12 22h2l1.12-3h4.75L21 22h2l-4.5-12m-2.62 7 1.62-4.33L19.12 17h-3.24Z"/></svg>
     </button>
     <div class="md-select__inner">
       <ul class="md-select__list">
         
           <li class="md-select__item">
-            <a href="./" hreflang="en" class="md-select__link">
+            <a href="../../../reference/metrics/" hreflang="en" class="md-select__link">
               English
             </a>
           </li>
         
           <li class="md-select__item">
-            <a href="../../zh/reference/EgressEndpointSlice/" hreflang="zh" class="md-select__link">
+            <a href="./" hreflang="zh" class="md-select__link">
               中文
             </a>
           </li>
@@ -153,16 +158,16 @@
   <label class="md-search__overlay" for="__search"></label>
   <div class="md-search__inner" role="search">
     <form class="md-search__form" name="search">
-      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <input type="text" class="md-search__input" name="query" aria-label="搜索" placeholder="搜索" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
       <label class="md-search__icon md-icon" for="__search">
         
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
         
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12Z"/></svg>
       </label>
-      <nav class="md-search__options" aria-label="Search">
+      <nav class="md-search__options" aria-label="查找">
         
-        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+        <button type="reset" class="md-search__icon md-icon" title="清空当前内容" aria-label="清空当前内容" tabindex="-1">
           
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41Z"/></svg>
         </button>
@@ -173,7 +178,7 @@
       <div class="md-search__scrollwrap" data-md-scrollfix>
         <div class="md-search-result" data-md-component="search-result">
           <div class="md-search-result__meta">
-            Initializing search
+            正在初始化搜索引擎
           </div>
           <ol class="md-search-result__list" role="presentation"></ol>
         </div>
@@ -184,7 +189,7 @@
     
     
       <div class="md-header__source">
-        <a href="https://github.com/spidernet-io/egressgateway" title="Go to repository" class="md-source" data-md-component="source">
+        <a href="https://github.com/spidernet-io/egressgateway" title="前往仓库" class="md-source" data-md-component="source">
   <div class="md-source__icon md-icon">
     
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.4.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2023 Fonticons, Inc.--><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81z"/></svg>
@@ -218,9 +223,9 @@
 
 
 
-<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+<nav class="md-nav md-nav--primary" aria-label="导航栏" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
-    <a href="../.." title="EgressGateway" class="md-nav__button md-logo" aria-label="EgressGateway" data-md-component="logo">
+    <a href="../../" title="EgressGateway" class="md-nav__button md-logo" aria-label="EgressGateway" data-md-component="logo">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54Z"/></svg>
@@ -230,7 +235,7 @@
   </label>
   
     <div class="md-nav__source">
-      <a href="https://github.com/spidernet-io/egressgateway" title="Go to repository" class="md-source" data-md-component="source">
+      <a href="https://github.com/spidernet-io/egressgateway" title="前往仓库" class="md-source" data-md-component="source">
   <div class="md-source__icon md-icon">
     
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.4.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2023 Fonticons, Inc.--><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81z"/></svg>
@@ -249,7 +254,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../.." class="md-nav__link">
+      <a href="../../" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -685,16 +690,9 @@
                 
   
   
-    
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../EgressEndpointSlice/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -703,7 +701,6 @@
   
 
       </a>
-      
     </li>
   
 
@@ -773,9 +770,27 @@
                 
   
   
+    
   
-    <li class="md-nav__item">
-      <a href="../metrics/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  <span class="md-ellipsis">
+    metrics
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         
   
   <span class="md-ellipsis">
@@ -784,6 +799,38 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="目录">
+  
+  
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      目录
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#controller-metrics" class="md-nav__link">
+    Controller metrics
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#agent-metrics" class="md-nav__link">
+    Agent metrics
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -990,10 +1037,32 @@
                   <div class="md-sidebar__inner">
                     
 
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+<nav class="md-nav md-nav--secondary" aria-label="目录">
   
   
   
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      目录
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#controller-metrics" class="md-nav__link">
+    Controller metrics
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#agent-metrics" class="md-nav__link">
+    Agent metrics
+  </a>
+  
+</li>
+      
+    </ul>
   
 </nav>
                   </div>
@@ -1011,42 +1080,608 @@
   
 
 
-  <h1>CRD EgressEndpointSlice</h1>
+  <h1>metrics</h1>
 
-<p>The EgressEndpointSlice CRD is used to aggregate address information of Pods matched by EgressPolicy. This resource is for internal use only, aiming to improve the performance of the control plane.</p>
-<div class="language-yaml highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nt">apiVersion</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">egressgateway.spidernet.io/v1beta1</span>
-</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="nt">kind</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">EgressEndpointSlice</span>
-</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="nt">metadata</span><span class="p">:</span>
-</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="w">  </span><span class="nt">generateName</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">ns-policy-</span>
-</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="w">  </span><span class="nt">labels</span><span class="p">:</span>
-</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="w">    </span><span class="nt">spidernet.io/policy-name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">ns-policy</span><span class="w">          </span><span class="c1"># (1)</span>
-</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="w">  </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">ns-policy-zp667</span>
-</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a><span class="w">  </span><span class="nt">ownerReferences</span><span class="p">:</span>
-</span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">apiVersion</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">egressgateway.spidernet.io/v1beta1</span><span class="w">  </span><span class="c1"># (2)</span>
-</span><span id="__span-0-10"><a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a><span class="w">      </span><span class="nt">blockOwnerDeletion</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
-</span><span id="__span-0-11"><a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a><span class="w">      </span><span class="nt">controller</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
-</span><span id="__span-0-12"><a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a><span class="w">      </span><span class="nt">kind</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">EgressPolicy</span>
-</span><span id="__span-0-13"><a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a><span class="w">      </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">ns-policy</span>
-</span><span id="__span-0-14"><a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a><span class="w">      </span><span class="nt">uid</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">fdca1dd5-9c3b-4d58-b043-451e10f15ea8</span>
-</span><span id="__span-0-15"><a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a><span class="nt">endpoints</span><span class="p">:</span><span class="w">                                             </span><span class="c1"># (3)</span>
-</span><span id="__span-0-16"><a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">ipv4</span><span class="p">:</span>
-</span><span id="__span-0-17"><a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a><span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">10.21.60.74</span><span class="w">                                    </span><span class="c1"># (4)</span>
-</span><span id="__span-0-18"><a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a><span class="w">    </span><span class="nt">ipv6</span><span class="p">:</span>
-</span><span id="__span-0-19"><a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a><span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">fd00:21::5328:9c2:3579:8cca</span><span class="w">                    </span><span class="c1"># (5)</span>
-</span><span id="__span-0-20"><a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a><span class="w">    </span><span class="nt">node</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">workstation3</span><span class="w">                                 </span><span class="c1"># (6)</span>
-</span><span id="__span-0-21"><a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a><span class="w">    </span><span class="nt">ns</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">ns1</span><span class="w">                                            </span><span class="c1"># (7)</span>
-</span><span id="__span-0-22"><a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a><span class="w">    </span><span class="nt">pod</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">ns2-mock-app-5c4cd6bb87-g4fdj</span><span class="w">                 </span><span class="c1"># (8)</span>
-</span></code></pre></div>
-<ol>
-<li>This label value indicates the EgressPolicy to which the EgressEndpointSlice belongs.</li>
-<li>By using <code>ownerReferences</code>, the CRD is associated with its parent resource, enabling automatic recycling of EgressEndpointSlice when the EgressPolicy is deleted.</li>
-<li>The EgressEndpointSlice object is used to summarize the address information of Pods matched by EgressPolicy. By default, a new EgressEndpointSlice is created when there are more than 100 matched results.</li>
-<li>The IPv4 address list of Pods.</li>
-<li>The IPv6 address list of Pods.</li>
-<li>Information about the node where the Pods are located.</li>
-<li>Information about the tenant to which the Pods belong.</li>
-<li>The names of the Pods.</li>
-</ol>
+<p>本章节全面介绍了 EgressGateway 导出的所有指标，并根据指标类型和描述解释了每个指标的含义。</p>
+<h2 id="controller-metrics">Controller metrics</h2>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>certwatcher_read_certificate_errors_total</code></td>
+<td>counter</td>
+<td>证书读取错误总数</td>
+</tr>
+<tr>
+<td><code>certwatcher_read_certificate_total</code></td>
+<td>counter</td>
+<td>证书读取总数</td>
+</tr>
+<tr>
+<td><code>controller_runtime_active_workers</code></td>
+<td>gauge</td>
+<td>每个 controller 当前使用的工作线程数</td>
+</tr>
+<tr>
+<td><code>controller_runtime_max_concurrent_reconciles</code></td>
+<td>gauge</td>
+<td>每个 controller 的最大并发 reconcile 数量</td>
+</tr>
+<tr>
+<td><code>controller_runtime_reconcile_errors_total</code></td>
+<td>counter</td>
+<td>每个 controller 的 reconcile 错误总数</td>
+</tr>
+<tr>
+<td><code>controller_runtime_reconcile_time_seconds</code></td>
+<td>histogram</td>
+<td>每个 controller 的对账时间长度</td>
+</tr>
+<tr>
+<td><code>controller_runtime_reconcile_total</code></td>
+<td>counter</td>
+<td>每个 controller 的对账总数</td>
+</tr>
+<tr>
+<td><code>controller_runtime_webhook_latency_seconds</code></td>
+<td>histogram</td>
+<td>处理准入请求的延迟的直方图</td>
+</tr>
+<tr>
+<td><code>controller_runtime_webhook_requests_in_flight</code></td>
+<td>gauge</td>
+<td>当前正在处理的准入请求数量</td>
+</tr>
+<tr>
+<td><code>controller_runtime_webhook_requests_total</code></td>
+<td>counter</td>
+<td>按 HTTP 状态码分类的准入请求总数</td>
+</tr>
+<tr>
+<td><code>egress_ip_allocate_next_restore_calls</code></td>
+<td>counter</td>
+<td>用于恢复操作的IP分配（allocate next）调用总数</td>
+</tr>
+<tr>
+<td><code>egress_ip_allocate_release_calls</code></td>
+<td>counter</td>
+<td>IP释放（release）调用总数</td>
+</tr>
+<tr>
+<td><code>egress_mark_allocate_next_calls</code></td>
+<td>counter</td>
+<td>标记分配（mark allocate next）计数调用总数</td>
+</tr>
+<tr>
+<td><code>egress_mark_release_calls</code></td>
+<td>counter</td>
+<td>标记释放（mark release）调用总数</td>
+</tr>
+<tr>
+<td><code>go_gc_duration_seconds</code></td>
+<td>summary</td>
+<td>垃圾收集周期暂停时间的总结</td>
+</tr>
+<tr>
+<td><code>go_goroutines</code></td>
+<td>gauge</td>
+<td>当前存在的goroutines数量</td>
+</tr>
+<tr>
+<td><code>go_info</code></td>
+<td>gauge</td>
+<td>Go 环境的信息</td>
+</tr>
+<tr>
+<td><code>go_memstats_alloc_bytes</code></td>
+<td>gauge</td>
+<td>已分配且仍在使用的字节数</td>
+</tr>
+<tr>
+<td><code>go_memstats_alloc_bytes_total</code></td>
+<td>counter</td>
+<td>总共分配的字节数，即使已释放</td>
+</tr>
+<tr>
+<td><code>go_memstats_buck_hash_sys_bytes</code></td>
+<td>gauge</td>
+<td>由分析桶哈希表使用的字节数</td>
+</tr>
+<tr>
+<td><code>go_memstats_frees_total</code></td>
+<td>counter</td>
+<td>总释放次数</td>
+</tr>
+<tr>
+<td><code>go_memstats_gc_sys_bytes</code></td>
+<td>gauge</td>
+<td>用于垃圾收集系统元数据的字节数</td>
+</tr>
+<tr>
+<td><code>go_memstats_heap_alloc_bytes</code></td>
+<td>gauge</td>
+<td>堆上已分配且仍在使用的字节数</td>
+</tr>
+<tr>
+<td><code>go_memstats_heap_idle_bytes</code></td>
+<td>gauge</td>
+<td>等待使用的堆字节数</td>
+</tr>
+<tr>
+<td><code>go_memstats_heap_inuse_bytes</code></td>
+<td>gauge</td>
+<td>正在使用的堆字节数</td>
+</tr>
+<tr>
+<td><code>go_memstats_heap_objects</code></td>
+<td>gauge</td>
+<td>已分配对象的数量</td>
+</tr>
+<tr>
+<td><code>go_memstats_heap_released_bytes</code></td>
+<td>gauge</td>
+<td>释放给操作系统的堆字节数</td>
+</tr>
+<tr>
+<td><code>go_memstats_heap_sys_bytes</code></td>
+<td>gauge</td>
+<td>从系统获得的堆字节数</td>
+</tr>
+<tr>
+<td><code>go_memstats_last_gc_time_seconds</code></td>
+<td>gauge</td>
+<td>上次垃圾收集以来的秒数（自 1970 年起）</td>
+</tr>
+<tr>
+<td><code>go_memstats_lookups_total</code></td>
+<td>counter</td>
+<td>指针查找的总数</td>
+</tr>
+<tr>
+<td><code>go_memstats_mallocs_total</code></td>
+<td>counter</td>
+<td>mallocs 的总数</td>
+</tr>
+<tr>
+<td><code>go_memstats_mcache_inuse_bytes</code></td>
+<td>gauge</td>
+<td>mcache 结构正在使用的字节数</td>
+</tr>
+<tr>
+<td><code>go_memstats_mcache_sys_bytes</code></td>
+<td>gauge</td>
+<td>从系统获取的用于 mcache 结构的字节数</td>
+</tr>
+<tr>
+<td><code>go_memstats_mspan_inuse_bytes</code></td>
+<td>gauge</td>
+<td>mspan 结构正在使用的字节数</td>
+</tr>
+<tr>
+<td><code>go_memstats_mspan_sys_bytes</code></td>
+<td>gauge</td>
+<td>从系统获取的用于 mspan 结构的字节数</td>
+</tr>
+<tr>
+<td><code>go_memstats_next_gc_bytes</code></td>
+<td>gauge</td>
+<td>下次垃圾收集将发生时的堆字节数</td>
+</tr>
+<tr>
+<td><code>go_memstats_other_sys_bytes</code></td>
+<td>gauge</td>
+<td>用于其他系统分配的字节数</td>
+</tr>
+<tr>
+<td><code>go_memstats_stack_inuse_bytes</code></td>
+<td>gauge</td>
+<td>栈分配器正在使用的字节数</td>
+</tr>
+<tr>
+<td><code>go_memstats_stack_sys_bytes</code></td>
+<td>gauge</td>
+<td>从系统获得的用于栈分配器的字节数</td>
+</tr>
+<tr>
+<td><code>go_memstats_sys_bytes</code></td>
+<td>gauge</td>
+<td>从系统获得的字节数</td>
+</tr>
+<tr>
+<td><code>go_threads</code></td>
+<td>gauge</td>
+<td>创建的操作系统线程数</td>
+</tr>
+<tr>
+<td><code>leader_election_master_status</code></td>
+<td>gauge</td>
+<td>报告系统是否为多副本选举主节点，0 表示备份，1 表示</td>
+</tr>
+<tr>
+<td><code>process_cpu_seconds_total</code></td>
+<td>counter</td>
+<td>在秒内消耗的总用户和系统 CPU 时间</td>
+</tr>
+<tr>
+<td><code>process_max_fds</code></td>
+<td>gauge</td>
+<td>最大打开文件描述符数量</td>
+</tr>
+<tr>
+<td><code>process_open_fds</code></td>
+<td>gauge</td>
+<td>打开的文件描述符数量</td>
+</tr>
+<tr>
+<td><code>process_resident_memory_bytes</code></td>
+<td>gauge</td>
+<td>常驻内存大小（字节）</td>
+</tr>
+<tr>
+<td><code>process_start_time_seconds</code></td>
+<td>gauge</td>
+<td>进程自 Unix 纪元以来的启动时间（秒）</td>
+</tr>
+<tr>
+<td><code>process_virtual_memory_bytes</code></td>
+<td>gauge</td>
+<td>虚拟内存大小（字节）</td>
+</tr>
+<tr>
+<td><code>process_virtual_memory_max_bytes</code></td>
+<td>gauge</td>
+<td>可用的最大虚拟内存量（字节）</td>
+</tr>
+<tr>
+<td><code>rest_client_requests_total</code></td>
+<td>counter</td>
+<td>按状态码、方法和主机划分的 HTTP 请求数量</td>
+</tr>
+<tr>
+<td><code>workqueue_adds_total</code></td>
+<td>counter</td>
+<td>由工作队列处理的添加操作总数</td>
+</tr>
+<tr>
+<td><code>workqueue_depth</code></td>
+<td>gauge</td>
+<td>工作队列的当前深度</td>
+</tr>
+<tr>
+<td><code>workqueue_longest_running_processor_seconds</code></td>
+<td>gauge</td>
+<td>工作队列中最长运行处理器运行的秒数</td>
+</tr>
+<tr>
+<td><code>workqueue_queue_duration_seconds</code></td>
+<td>histogram</td>
+<td>工作队列中的对象在被请求之前停留的秒数</td>
+</tr>
+<tr>
+<td><code>workqueue_retries_total</code></td>
+<td>counter</td>
+<td>由工作队列处理的重试总数</td>
+</tr>
+<tr>
+<td><code>workqueue_unfinished_work_seconds</code></td>
+<td>gauge</td>
+<td>正在进行且未被 work_duration 观察到的工作秒数</td>
+</tr>
+<tr>
+<td><code>workqueue_work_duration_seconds</code></td>
+<td>histogram</td>
+<td>从工作队列处理一个对象所需的秒数</td>
+</tr>
+</tbody>
+</table>
+<h2 id="agent-metrics">Agent metrics</h2>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>certwatcher_read_certificate_errors_total</code></td>
+<td>counter</td>
+<td>证书读取错误总数</td>
+</tr>
+<tr>
+<td><code>certwatcher_read_certificate_total</code></td>
+<td>counter</td>
+<td>证书读取总数</td>
+</tr>
+<tr>
+<td><code>controller_runtime_active_workers</code></td>
+<td>gauge</td>
+<td>每个 controller 当前使用的工作者数</td>
+</tr>
+<tr>
+<td><code>controller_runtime_max_concurrent_reconciles</code></td>
+<td>gauge</td>
+<td>每个 controller 允许的最大并发协调数</td>
+</tr>
+<tr>
+<td><code>controller_runtime_reconcile_errors_total</code></td>
+<td>counter</td>
+<td>每个 controller 的协调错误总数</td>
+</tr>
+<tr>
+<td><code>controller_runtime_reconcile_time_seconds</code></td>
+<td>histogram</td>
+<td>每个 controller 每次协调的时间长度</td>
+</tr>
+<tr>
+<td><code>controller_runtime_reconcile_total</code></td>
+<td>counter</td>
+<td>每个 controller 的协调总数</td>
+</tr>
+<tr>
+<td><code>go_gc_duration_seconds</code></td>
+<td>summary</td>
+<td>垃圾回收周期暂停持续时间的摘要</td>
+</tr>
+<tr>
+<td><code>go_goroutines</code></td>
+<td>gauge</td>
+<td>当前存在的 goroutine 数量</td>
+</tr>
+<tr>
+<td><code>go_info</code></td>
+<td>gauge</td>
+<td>Go 环境信息</td>
+</tr>
+<tr>
+<td><code>go_memstats_alloc_bytes</code></td>
+<td>gauge</td>
+<td>分配且仍在使用的字节数</td>
+</tr>
+<tr>
+<td><code>go_memstats_alloc_bytes_total</code></td>
+<td>counter</td>
+<td>分配的总字节数，即使已释放</td>
+</tr>
+<tr>
+<td><code>go_memstats_buck_hash_sys_bytes</code></td>
+<td>gauge</td>
+<td>分析桶哈希表使用的字节数</td>
+</tr>
+<tr>
+<td><code>go_memstats_frees_total</code></td>
+<td>counter</td>
+<td>释放的总次数</td>
+</tr>
+<tr>
+<td><code>go_memstats_gc_sys_bytes</code></td>
+<td>gauge</td>
+<td>用于垃圾回收系统元数据的字节数</td>
+</tr>
+<tr>
+<td><code>go_memstats_heap_alloc_bytes</code></td>
+<td>gauge</td>
+<td>堆分配且仍在使用的字节数</td>
+</tr>
+<tr>
+<td><code>go_memstats_heap_idle_bytes</code></td>
+<td>gauge</td>
+<td>等待使用的堆字节数</td>
+</tr>
+<tr>
+<td><code>go_memstats_heap_inuse_bytes</code></td>
+<td>gauge</td>
+<td>正在使用的堆字节数</td>
+</tr>
+<tr>
+<td><code>go_memstats_heap_objects</code></td>
+<td>gauge</td>
+<td>分配的对象数量</td>
+</tr>
+<tr>
+<td><code>go_memstats_heap_released_bytes</code></td>
+<td>gauge</td>
+<td>释放给操作系统的堆字节数</td>
+</tr>
+<tr>
+<td><code>go_memstats_heap_sys_bytes</code></td>
+<td>gauge</td>
+<td>从系统获得的堆字节数</td>
+</tr>
+<tr>
+<td><code>go_memstats_last_gc_time_seconds</code></td>
+<td>gauge</td>
+<td>上次垃圾回收以来的秒数（自1970年起）</td>
+</tr>
+<tr>
+<td><code>go_memstats_lookups_total</code></td>
+<td>counter</td>
+<td>指针查找总数</td>
+</tr>
+<tr>
+<td><code>go_memstats_mallocs_total</code></td>
+<td>counter</td>
+<td>malloc 的总次数</td>
+</tr>
+<tr>
+<td><code>go_memstats_mcache_inuse_bytes</code></td>
+<td>gauge</td>
+<td>mcache 结构使用的字节数</td>
+</tr>
+<tr>
+<td><code>go_memstats_mcache_sys_bytes</code></td>
+<td>gauge</td>
+<td>从系统获得的用于 mcache 结构的字节数</td>
+</tr>
+<tr>
+<td><code>go_memstats_mspan_inuse_bytes</code></td>
+<td>gauge</td>
+<td>mspan结构使用的字节数</td>
+</tr>
+<tr>
+<td><code>go_memstats_mspan_sys_bytes</code></td>
+<td>gauge</td>
+<td>从系统获得的用于 mspan 结构的字节数</td>
+</tr>
+<tr>
+<td><code>go_memstats_next_gc_bytes</code></td>
+<td>gauge</td>
+<td>下一次垃圾回收将发生时的堆字节数</td>
+</tr>
+<tr>
+<td><code>go_memstats_other_sys_bytes</code></td>
+<td>gauge</td>
+<td>用于其他系统分配的字节数</td>
+</tr>
+<tr>
+<td><code>go_memstats_stack_inuse_bytes</code></td>
+<td>gauge</td>
+<td>堆栈分配器使用的字节数</td>
+</tr>
+<tr>
+<td><code>go_memstats_stack_sys_bytes</code></td>
+<td>gauge</td>
+<td>从系统为堆栈分配器获得的字节数</td>
+</tr>
+<tr>
+<td><code>go_memstats_sys_bytes</code></td>
+<td>gauge</td>
+<td>从系统获得的字节数</td>
+</tr>
+<tr>
+<td><code>go_threads</code></td>
+<td>gauge</td>
+<td>创建的操作系统线程数</td>
+</tr>
+<tr>
+<td><code>iptables_chains</code></td>
+<td>gauge</td>
+<td>活动的 iptables 链数</td>
+</tr>
+<tr>
+<td><code>iptables_lines_executed</code></td>
+<td>counter</td>
+<td>执行的 iptables 规则更新次数</td>
+</tr>
+<tr>
+<td><code>iptables_lock_acquire_secs</code></td>
+<td>summary</td>
+<td>获取 iptables 锁所需的时间（秒）</td>
+</tr>
+<tr>
+<td><code>iptables_lock_retries</code></td>
+<td>counter</td>
+<td>iptables 锁被他人持有且需要重试的次数</td>
+</tr>
+<tr>
+<td><code>iptables_restore_calls</code></td>
+<td>counter</td>
+<td>iptables-restore 调用次数</td>
+</tr>
+<tr>
+<td><code>iptables_restore_errors</code></td>
+<td>counter</td>
+<td>iptables-restore 错误数</td>
+</tr>
+<tr>
+<td><code>iptables_rules</code></td>
+<td>gauge</td>
+<td>活动的 iptables 规则数</td>
+</tr>
+<tr>
+<td><code>iptables_save_calls</code></td>
+<td>counter</td>
+<td>iptables-save 调用次数</td>
+</tr>
+<tr>
+<td><code>iptables_save_errors</code></td>
+<td>counter</td>
+<td>iptables-save 错误数</td>
+</tr>
+<tr>
+<td><code>process_cpu_seconds_total</code></td>
+<td>counter</td>
+<td>用户和系统 CPU 时间总计（秒）</td>
+</tr>
+<tr>
+<td><code>process_max_fds</code></td>
+<td>gauge</td>
+<td>最大打开文件描述符数</td>
+</tr>
+<tr>
+<td><code>process_open_fds</code></td>
+<td>gauge</td>
+<td>打开的文件描述符数</td>
+</tr>
+<tr>
+<td><code>process_resident_memory_bytes</code></td>
+<td>gauge</td>
+<td>常驻内存大小（字节）</td>
+</tr>
+<tr>
+<td><code>process_start_time_seconds</code></td>
+<td>gauge</td>
+<td>进程自Unix纪元起的启动时间（秒）</td>
+</tr>
+<tr>
+<td><code>process_virtual_memory_bytes</code></td>
+<td>gauge</td>
+<td>虚拟内存大小（字节）</td>
+</tr>
+<tr>
+<td><code>process_virtual_memory_max_bytes</code></td>
+<td>gauge</td>
+<td>可用的最大虚拟内存量（字节）</td>
+</tr>
+<tr>
+<td><code>rest_client_requests_total</code></td>
+<td>counter</td>
+<td>按状态码、方法和主机划分的HTTP请求总数</td>
+</tr>
+<tr>
+<td><code>workqueue_adds_total</code></td>
+<td>counter</td>
+<td>workqueue 处理的添加总数</td>
+</tr>
+<tr>
+<td><code>workqueue_depth</code></td>
+<td>gauge</td>
+<td>workqueue 的当前深度</td>
+</tr>
+<tr>
+<td><code>workqueue_longest_running_processor_seconds</code></td>
+<td>gauge</td>
+<td>workqueue 中运行时间最长的处理器已运行的秒数</td>
+</tr>
+<tr>
+<td><code>workqueue_queue_duration_seconds</code></td>
+<td>histogram</td>
+<td>对象在 workqueue 中停留后被请求的秒数</td>
+</tr>
+<tr>
+<td><code>workqueue_retries_total</code></td>
+<td>counter</td>
+<td>workqueue 处理的重试总数</td>
+</tr>
+<tr>
+<td><code>workqueue_unfinished_work_seconds</code></td>
+<td>gauge</td>
+<td>workqueue 正在进行的工作已进行的秒数，但尚未由 work_duration 观察到</td>
+</tr>
+<tr>
+<td><code>workqueue_work_duration_seconds</code></td>
+<td>histogram</td>
+<td>从 workqueue 处理一个对象所需的时间（秒）</td>
+</tr>
+</tbody>
+</table>
 
 
 
@@ -1086,10 +1721,10 @@
       <div class="md-dialog__inner md-typeset"></div>
     </div>
     
-    <script id="__config" type="application/json">{"base": "../..", "features": ["content.code.annotate", "content.tabs.link"], "search": "../../assets/javascripts/workers/search.dfff1995.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"provider": "mike"}}</script>
+    <script id="__config" type="application/json">{"base": "../../..", "features": ["content.code.annotate", "content.tabs.link"], "search": "../../../assets/javascripts/workers/search.dfff1995.min.js", "translations": {"clipboard.copied": "\u5df2\u590d\u5236", "clipboard.copy": "\u590d\u5236", "search.result.more.one": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.more.other": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 # \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.none": "\u6ca1\u6709\u627e\u5230\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.one": "\u627e\u5230 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.other": "# \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.placeholder": "\u952e\u5165\u4ee5\u5f00\u59cb\u641c\u7d22", "search.result.term.missing": "\u7f3a\u5c11", "select.version": "\u9009\u62e9\u5f53\u524d\u7248\u672c"}, "version": {"provider": "mike"}}</script>
     
     
-      <script src="../../assets/javascripts/bundle.dff1b7c8.min.js"></script>
+      <script src="../../../assets/javascripts/bundle.dff1b7c8.min.js"></script>
       
     
   </body>
