@@ -85,7 +85,7 @@ helm install egressgateway egressgateway/egressgateway --namespace kube-system
 | `agent.resources.requests.cpu`                       | The cpu requests of egressgateway agent pod                                                                     | `100m`                             |
 | `agent.resources.requests.memory`                    | The memory requests of egressgateway agent pod                                                                  | `128Mi`                            |
 | `agent.securityContext`                              | The security Context of egressgateway agent pod                                                                 | `{}`                               |
-| `agent.healthServer.port`                            | The http port for health checking of the egressgateway agent.                                                   | `5810`                             |
+| `agent.healthServer.port`                            | The http port for health checking of the egressgateway agent.                                                   | `6610`                             |
 | `agent.healthServer.startupProbe.failureThreshold`   | The failure threshold of startup probe for egressgateway agent health checking                                  | `60`                               |
 | `agent.healthServer.startupProbe.periodSeconds`      | The period seconds of startup probe for egressgateway agent health checking                                     | `2`                                |
 | `agent.healthServer.livenessProbe.failureThreshold`  | The failure threshold of startup probe for egressgateway agent health checking                                  | `6`                                |

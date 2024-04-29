@@ -157,7 +157,7 @@ agent:
 
   healthServer:
     ## @param agent.healthServer.port The http port for health checking of the egressgateway agent.
-    port: 5810
+    port: 6610
     startupProbe:
       ## @param agent.healthServer.startupProbe.failureThreshold The failure threshold of startup probe for egressgateway agent health checking
       failureThreshold: 60
