@@ -2,8 +2,27 @@ apiVersion: v1
 entries:
   egressgateway:
   - apiVersion: v2
+    appVersion: 0.5.1
+    created: "2024-04-29T11:22:54.213721205Z"
+    description: egressgateway
+    digest: 49ea884bb175936206d3e93fee93a1ea3450eaf4faffa6ee93060219f27566d6
+    home: https://spidernet-io.github.io/agent
+    keywords:
+    - egressgateway
+    kubeVersion: '>= 1.16.0-0'
+    maintainers:
+    - name: spidernet-io
+      url: https://github.com/spidernet-io
+    name: egressgateway
+    sources:
+    - https://github.com/spidernet-io/egressgateway
+    type: application
+    urls:
+    - https://spidernet-io.github.io/egressgateway/charts/egressgateway-0.5.1.tgz
+    version: 0.5.1
+  - apiVersion: v2
     appVersion: 0.5.0
-    created: "2024-04-07T03:31:09.840442111Z"
+    created: "2024-04-29T11:22:54.211415899Z"
     description: egressgateway
     digest: 37cbe99dc4bf5ee80199beacebfd34b743ff0e1f895b61d010f355c17a8ae787
     home: https://spidernet-io.github.io/agent
@@ -22,7 +41,7 @@ entries:
     version: 0.5.0
   - apiVersion: v2
     appVersion: 0.4.2
-    created: "2024-04-07T03:31:09.839008229Z"
+    created: "2024-04-29T11:22:54.210055384Z"
     description: egressgateway
     digest: 16382392c5b1aff83135a6931418854cf3e49fe8b3d54f6c5ddb84173551d668
     home: https://spidernet-io.github.io/agent
@@ -41,7 +60,7 @@ entries:
     version: 0.4.2
   - apiVersion: v2
     appVersion: 0.4.1
-    created: "2024-04-07T03:31:09.83758667Z"
+    created: "2024-04-29T11:22:54.208669442Z"
     description: egressgateway
     digest: 6b0125d1d721452afe7a86da4fe671905b502e8f1a548bea18e4c19d85e44719
     home: https://spidernet-io.github.io/agent
@@ -60,7 +79,7 @@ entries:
     version: 0.4.1
   - apiVersion: v2
     appVersion: 0.4.0
-    created: "2024-04-07T03:31:09.836237947Z"
+    created: "2024-04-29T11:22:54.207323985Z"
     description: egressgateway
     digest: 665a4fc7df10021f39c69f2c8e6671d55b7c6ed60b76ac88613fc922a97d34ee
     home: https://spidernet-io.github.io/agent
@@ -79,7 +98,7 @@ entries:
     version: 0.4.0
   - apiVersion: v2
     appVersion: 0.3.0
-    created: "2024-04-07T03:31:09.834865951Z"
+    created: "2024-04-29T11:22:54.205905502Z"
     description: egressgateway
     digest: 8fd565ad0bb1af40ad0087aed9d1c7e685740d240a6c38b03f03ec1726068e05
     home: https://spidernet-io.github.io/agent
@@ -98,7 +117,7 @@ entries:
     version: 0.3.0
   - apiVersion: v2
     appVersion: 0.3.0-rc1
-    created: "2024-04-07T03:31:09.832386223Z"
+    created: "2024-04-29T11:22:54.203683798Z"
     description: egressgateway
     digest: 4689108d375324a7391ed2ee261d952f4ac3a0cf0db1c72aee7225ab88d169ab
     home: https://spidernet-io.github.io/agent
@@ -117,7 +136,7 @@ entries:
     version: 0.3.0-rc1
   - apiVersion: v2
     appVersion: 0.3.0-rc0
-    created: "2024-04-07T03:31:09.831017993Z"
+    created: "2024-04-29T11:22:54.202178884Z"
     description: egressgateway
     digest: e4ac2da6861ab32307cce49b56a2424baab68151df28221803db4c13b2495ca4
     home: https://spidernet-io.github.io/agent
@@ -136,7 +155,7 @@ entries:
     version: 0.3.0-rc0
   - apiVersion: v2
     appVersion: 0.2.0
-    created: "2024-04-07T03:31:09.829657568Z"
+    created: "2024-04-29T11:22:54.200847824Z"
     description: egressgateway
     digest: 16f30976755f2ed774707467e4044d5ccfa1e2535b94fc50674959903f6b52b9
     home: https://spidernet-io.github.io/agent
@@ -155,7 +174,7 @@ entries:
     version: 0.2.0
   - apiVersion: v2
     appVersion: 0.2.0-rc2
-    created: "2024-04-07T03:31:09.828326218Z"
+    created: "2024-04-29T11:22:54.199555186Z"
     description: egressgateway
     digest: 748bc8e4aaf4e78dc90c337d1452aec7a73ef9e4df51574ff5210510ee471120
     home: https://spidernet-io.github.io/agent
@@ -174,7 +193,7 @@ entries:
     version: 0.2.0-rc2
   - apiVersion: v2
     appVersion: 0.2.0-rc1
-    created: "2024-04-07T03:31:09.826989147Z"
+    created: "2024-04-29T11:22:54.198227092Z"
     description: egressgateway
     digest: 1acf5ac4830954225ba7b02831f7b408f3b5620958e80cff47a4e56f44afc1ad
     home: https://spidernet-io.github.io/agent
@@ -193,7 +212,7 @@ entries:
     version: 0.2.0-rc1
   - apiVersion: v2
     appVersion: 0.2.0-rc0
-    created: "2024-04-07T03:31:09.824594146Z"
+    created: "2024-04-29T11:22:54.196019376Z"
     description: egressgateway
     digest: 04a1a7d1a153fa14a6536c18dae1d30bc879268e683530f9af0d403e7b163eb9
     home: https://spidernet-io.github.io/agent
@@ -212,7 +231,7 @@ entries:
     version: 0.2.0-rc0
   - apiVersion: v2
     appVersion: 0.1.0
-    created: "2024-04-07T03:31:09.823162488Z"
+    created: "2024-04-29T11:22:54.194575526Z"
     description: egressgateway
     digest: c56cb553fcb5e8b76fa0eafcf8b314f32d88489706666ffd4c9377c345c1e1d0
     home: https://spidernet-io.github.io/agent
@@ -231,7 +250,7 @@ entries:
     version: 0.1.0
   - apiVersion: v2
     appVersion: 0.1.0-rc0
-    created: "2024-04-07T03:31:09.821715772Z"
+    created: "2024-04-29T11:22:54.193203439Z"
     description: egressgateway
     digest: 368ac7fae20203ccac3533a185f1d0681c55b615c4d4a6e6e4f67189977f2f9f
     home: https://spidernet-io.github.io/agent
@@ -248,4 +267,4 @@ entries:
     urls:
     - https://spidernet-io.github.io/egressgateway/charts/egressgateway-0.1.0-rc0.tgz
     version: 0.1.0-rc0
-generated: "2024-04-07T03:31:09.820186822Z"
+generated: "2024-04-29T11:22:54.19166929Z"
