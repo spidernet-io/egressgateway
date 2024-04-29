@@ -100,6 +100,7 @@ nav:
       - CRD EgressClusterEndpointSlice: reference/EgressClusterEndpointSlice.md
       - CRD EgressClusterInfo: reference/EgressClusterInfo.md
       - egctl cli: reference/egctl.md
+      - metrics: reference/metrics.md
   - Troubleshooting: Troubleshooting.md
   - Development:
       - DataFlow: develop/Dataflow.md
