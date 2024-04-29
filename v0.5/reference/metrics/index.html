@@ -8,13 +8,13 @@
       
       
       
-        <link rel="canonical" href="https://spidernet-io.github.io/egressgateway/v0.5/reference/EgressEndpointSlice/">
+        <link rel="canonical" href="https://spidernet-io.github.io/egressgateway/v0.5/reference/metrics/">
       
       
-        <link rel="prev" href="../EgressClusterPolicy/">
+        <link rel="prev" href="../egctl/">
       
       
-        <link rel="next" href="../EgressClusterEndpointSlice/">
+        <link rel="next" href="../../Troubleshooting/">
       
       
       <link rel="icon" href="../../assets/images/favicon.png">
@@ -22,7 +22,7 @@
     
     
       
-        <title>CRD EgressEndpointSlice - EgressGateway</title>
+        <title>metrics - EgressGateway</title>
       
     
     
@@ -72,6 +72,11 @@
     <label class="md-overlay" for="__drawer"></label>
     <div data-md-component="skip">
       
+        
+        <a href="#controller-metrics" class="md-skip">
+          Skip to content
+        </a>
+      
     </div>
     <div data-md-component="announce">
       
@@ -108,7 +113,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              CRD EgressEndpointSlice
+              metrics
             
           </span>
         </div>
@@ -134,7 +139,7 @@
           </li>
         
           <li class="md-select__item">
-            <a href="../../zh/reference/EgressEndpointSlice/" hreflang="zh" class="md-select__link">
+            <a href="../../zh/reference/metrics/" hreflang="zh" class="md-select__link">
               中文
             </a>
           </li>
@@ -685,16 +690,9 @@
                 
   
   
-    
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../EgressEndpointSlice/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -703,7 +701,6 @@
   
 
       </a>
-      
     </li>
   
 
@@ -773,9 +770,27 @@
                 
   
   
+    
   
-    <li class="md-nav__item">
-      <a href="../metrics/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  <span class="md-ellipsis">
+    metrics
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         
   
   <span class="md-ellipsis">
@@ -784,6 +799,38 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#controller-metrics" class="md-nav__link">
+    Controller metrics
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#agent-metrics" class="md-nav__link">
+    Agent metrics
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -995,6 +1042,28 @@
   
   
   
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#controller-metrics" class="md-nav__link">
+    Controller metrics
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#agent-metrics" class="md-nav__link">
+    Agent metrics
+  </a>
+  
+</li>
+      
+    </ul>
+  
 </nav>
                   </div>
                 </div>
@@ -1011,42 +1080,609 @@
   
 
 
-  <h1>CRD EgressEndpointSlice</h1>
+  <h1>metrics</h1>
 
-<p>The EgressEndpointSlice CRD is used to aggregate address information of Pods matched by EgressPolicy. This resource is for internal use only, aiming to improve the performance of the control plane.</p>
-<div class="language-yaml highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nt">apiVersion</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">egressgateway.spidernet.io/v1beta1</span>
-</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="nt">kind</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">EgressEndpointSlice</span>
-</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="nt">metadata</span><span class="p">:</span>
-</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="w">  </span><span class="nt">generateName</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">ns-policy-</span>
-</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="w">  </span><span class="nt">labels</span><span class="p">:</span>
-</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="w">    </span><span class="nt">spidernet.io/policy-name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">ns-policy</span><span class="w">          </span><span class="c1"># (1)</span>
-</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="w">  </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">ns-policy-zp667</span>
-</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a><span class="w">  </span><span class="nt">ownerReferences</span><span class="p">:</span>
-</span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">apiVersion</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">egressgateway.spidernet.io/v1beta1</span><span class="w">  </span><span class="c1"># (2)</span>
-</span><span id="__span-0-10"><a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a><span class="w">      </span><span class="nt">blockOwnerDeletion</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
-</span><span id="__span-0-11"><a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a><span class="w">      </span><span class="nt">controller</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
-</span><span id="__span-0-12"><a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a><span class="w">      </span><span class="nt">kind</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">EgressPolicy</span>
-</span><span id="__span-0-13"><a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a><span class="w">      </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">ns-policy</span>
-</span><span id="__span-0-14"><a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a><span class="w">      </span><span class="nt">uid</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">fdca1dd5-9c3b-4d58-b043-451e10f15ea8</span>
-</span><span id="__span-0-15"><a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a><span class="nt">endpoints</span><span class="p">:</span><span class="w">                                             </span><span class="c1"># (3)</span>
-</span><span id="__span-0-16"><a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">ipv4</span><span class="p">:</span>
-</span><span id="__span-0-17"><a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a><span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">10.21.60.74</span><span class="w">                                    </span><span class="c1"># (4)</span>
-</span><span id="__span-0-18"><a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a><span class="w">    </span><span class="nt">ipv6</span><span class="p">:</span>
-</span><span id="__span-0-19"><a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a><span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">fd00:21::5328:9c2:3579:8cca</span><span class="w">                    </span><span class="c1"># (5)</span>
-</span><span id="__span-0-20"><a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a><span class="w">    </span><span class="nt">node</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">workstation3</span><span class="w">                                 </span><span class="c1"># (6)</span>
-</span><span id="__span-0-21"><a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a><span class="w">    </span><span class="nt">ns</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">ns1</span><span class="w">                                            </span><span class="c1"># (7)</span>
-</span><span id="__span-0-22"><a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a><span class="w">    </span><span class="nt">pod</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">ns2-mock-app-5c4cd6bb87-g4fdj</span><span class="w">                 </span><span class="c1"># (8)</span>
-</span></code></pre></div>
-<ol>
-<li>This label value indicates the EgressPolicy to which the EgressEndpointSlice belongs.</li>
-<li>By using <code>ownerReferences</code>, the CRD is associated with its parent resource, enabling automatic recycling of EgressEndpointSlice when the EgressPolicy is deleted.</li>
-<li>The EgressEndpointSlice object is used to summarize the address information of Pods matched by EgressPolicy. By default, a new EgressEndpointSlice is created when there are more than 100 matched results.</li>
-<li>The IPv4 address list of Pods.</li>
-<li>The IPv6 address list of Pods.</li>
-<li>Information about the node where the Pods are located.</li>
-<li>Information about the tenant to which the Pods belong.</li>
-<li>The names of the Pods.</li>
-</ol>
+<p>This chapter comprehensively introduces all the metrics exported by EgressGateway,
+and explains the meaning of each metric based on the metric type and description.</p>
+<h2 id="controller-metrics">Controller metrics</h2>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>certwatcher_read_certificate_errors_total</code></td>
+<td>counter</td>
+<td>Total number of certificate read errors.</td>
+</tr>
+<tr>
+<td><code>certwatcher_read_certificate_total</code></td>
+<td>counter</td>
+<td>Total number of certificate reads.</td>
+</tr>
+<tr>
+<td><code>controller_runtime_active_workers</code></td>
+<td>gauge</td>
+<td>Number of currently used workers per controller.</td>
+</tr>
+<tr>
+<td><code>controller_runtime_max_concurrent_reconciles</code></td>
+<td>gauge</td>
+<td>Maximum number of concurrent reconciles per controller.</td>
+</tr>
+<tr>
+<td><code>controller_runtime_reconcile_errors_total</code></td>
+<td>counter</td>
+<td>Total number of reconciliation errors per controller.</td>
+</tr>
+<tr>
+<td><code>controller_runtime_reconcile_time_seconds</code></td>
+<td>histogram</td>
+<td>Length of time per reconciliation per controller.</td>
+</tr>
+<tr>
+<td><code>controller_runtime_reconcile_total</code></td>
+<td>counter</td>
+<td>Total number of reconciliations per controller.</td>
+</tr>
+<tr>
+<td><code>controller_runtime_webhook_latency_seconds</code></td>
+<td>histogram</td>
+<td>Histogram of the latency of processing admission requests.</td>
+</tr>
+<tr>
+<td><code>controller_runtime_webhook_requests_in_flight</code></td>
+<td>gauge</td>
+<td>Current number of admission requests being served.</td>
+</tr>
+<tr>
+<td><code>controller_runtime_webhook_requests_total</code></td>
+<td>counter</td>
+<td>Total number of admission requests by HTTP status code.</td>
+</tr>
+<tr>
+<td><code>egress_ip_allocate_next_restore_calls</code></td>
+<td>counter</td>
+<td>Total number of number of IP allocate next calls for restore operations.</td>
+</tr>
+<tr>
+<td><code>egress_ip_allocate_release_calls</code></td>
+<td>counter</td>
+<td>Total number of number of IP release calls.</td>
+</tr>
+<tr>
+<td><code>egress_mark_allocate_next_calls</code></td>
+<td>counter</td>
+<td>Total number of mark allocate next count calls.</td>
+</tr>
+<tr>
+<td><code>egress_mark_release_calls</code></td>
+<td>counter</td>
+<td>Total number of mark release calls.</td>
+</tr>
+<tr>
+<td><code>go_gc_duration_seconds</code></td>
+<td>summary</td>
+<td>A summary of the pause duration of garbage collection cycles.</td>
+</tr>
+<tr>
+<td><code>go_goroutines</code></td>
+<td>gauge</td>
+<td>Number of goroutines that currently exist.</td>
+</tr>
+<tr>
+<td><code>go_info</code></td>
+<td>gauge</td>
+<td>Information about the Go environment.</td>
+</tr>
+<tr>
+<td><code>go_memstats_alloc_bytes</code></td>
+<td>gauge</td>
+<td>Number of bytes allocated and still in use.</td>
+</tr>
+<tr>
+<td><code>go_memstats_alloc_bytes_total</code></td>
+<td>counter</td>
+<td>Total number of bytes allocated, even if freed.</td>
+</tr>
+<tr>
+<td><code>go_memstats_buck_hash_sys_bytes</code></td>
+<td>gauge</td>
+<td>Number of bytes used by the profiling bucket hash table.</td>
+</tr>
+<tr>
+<td><code>go_memstats_frees_total</code></td>
+<td>counter</td>
+<td>Total number of frees.</td>
+</tr>
+<tr>
+<td><code>go_memstats_gc_sys_bytes</code></td>
+<td>gauge</td>
+<td>Number of bytes used for garbage collection system metadata.</td>
+</tr>
+<tr>
+<td><code>go_memstats_heap_alloc_bytes</code></td>
+<td>gauge</td>
+<td>Number of heap bytes allocated and still in use.</td>
+</tr>
+<tr>
+<td><code>go_memstats_heap_idle_bytes</code></td>
+<td>gauge</td>
+<td>Number of heap bytes waiting to be used.</td>
+</tr>
+<tr>
+<td><code>go_memstats_heap_inuse_bytes</code></td>
+<td>gauge</td>
+<td>Number of heap bytes that are in use.</td>
+</tr>
+<tr>
+<td><code>go_memstats_heap_objects</code></td>
+<td>gauge</td>
+<td>Number of allocated objects.</td>
+</tr>
+<tr>
+<td><code>go_memstats_heap_released_bytes</code></td>
+<td>gauge</td>
+<td>Number of heap bytes released to OS.</td>
+</tr>
+<tr>
+<td><code>go_memstats_heap_sys_bytes</code></td>
+<td>gauge</td>
+<td>Number of heap bytes obtained from system.</td>
+</tr>
+<tr>
+<td><code>go_memstats_last_gc_time_seconds</code></td>
+<td>gauge</td>
+<td>Number of seconds since 1970 of last garbage collection.</td>
+</tr>
+<tr>
+<td><code>go_memstats_lookups_total</code></td>
+<td>counter</td>
+<td>Total number of pointer lookups.</td>
+</tr>
+<tr>
+<td><code>go_memstats_mallocs_total</code></td>
+<td>counter</td>
+<td>Total number of mallocs.</td>
+</tr>
+<tr>
+<td><code>go_memstats_mcache_inuse_bytes</code></td>
+<td>gauge</td>
+<td>Number of bytes in use by mcache structures.</td>
+</tr>
+<tr>
+<td><code>go_memstats_mcache_sys_bytes</code></td>
+<td>gauge</td>
+<td>Number of bytes used for mcache structures obtained from system.</td>
+</tr>
+<tr>
+<td><code>go_memstats_mspan_inuse_bytes</code></td>
+<td>gauge</td>
+<td>Number of bytes in use by mspan structures.</td>
+</tr>
+<tr>
+<td><code>go_memstats_mspan_sys_bytes</code></td>
+<td>gauge</td>
+<td>Number of bytes used for mspan structures obtained from system.</td>
+</tr>
+<tr>
+<td><code>go_memstats_next_gc_bytes</code></td>
+<td>gauge</td>
+<td>Number of heap bytes when next garbage collection will take place.</td>
+</tr>
+<tr>
+<td><code>go_memstats_other_sys_bytes</code></td>
+<td>gauge</td>
+<td>Number of bytes used for other system allocations.</td>
+</tr>
+<tr>
+<td><code>go_memstats_stack_inuse_bytes</code></td>
+<td>gauge</td>
+<td>Number of bytes in use by the stack allocator.</td>
+</tr>
+<tr>
+<td><code>go_memstats_stack_sys_bytes</code></td>
+<td>gauge</td>
+<td>Number of bytes obtained from system for stack allocator.</td>
+</tr>
+<tr>
+<td><code>go_memstats_sys_bytes</code></td>
+<td>gauge</td>
+<td>Number of bytes obtained from system.</td>
+</tr>
+<tr>
+<td><code>go_threads</code></td>
+<td>gauge</td>
+<td>Number of OS threads created.</td>
+</tr>
+<tr>
+<td><code>leader_election_master_status</code></td>
+<td>gauge</td>
+<td>Gauge of if the reporting system is master of the relevant lease, 0 indicates backup, 1 indicates master.</td>
+</tr>
+<tr>
+<td><code>process_cpu_seconds_total</code></td>
+<td>counter</td>
+<td>Total user and system CPU time spent in seconds.</td>
+</tr>
+<tr>
+<td><code>process_max_fds</code></td>
+<td>gauge</td>
+<td>Maximum number of open file descriptors.</td>
+</tr>
+<tr>
+<td><code>process_open_fds</code></td>
+<td>gauge</td>
+<td>Number of open file descriptors.</td>
+</tr>
+<tr>
+<td><code>process_resident_memory_bytes</code></td>
+<td>gauge</td>
+<td>Resident memory size in bytes.</td>
+</tr>
+<tr>
+<td><code>process_start_time_seconds</code></td>
+<td>gauge</td>
+<td>Start time of the process since unix epoch in seconds.</td>
+</tr>
+<tr>
+<td><code>process_virtual_memory_bytes</code></td>
+<td>gauge</td>
+<td>Virtual memory size in bytes.</td>
+</tr>
+<tr>
+<td><code>process_virtual_memory_max_bytes</code></td>
+<td>gauge</td>
+<td>Maximum amount of virtual memory available in bytes.</td>
+</tr>
+<tr>
+<td><code>rest_client_requests_total</code></td>
+<td>counter</td>
+<td>Number of HTTP requests, partitioned by status code, method, and host.</td>
+</tr>
+<tr>
+<td><code>workqueue_adds_total</code></td>
+<td>counter</td>
+<td>Total number of adds handled by workqueue.</td>
+</tr>
+<tr>
+<td><code>workqueue_depth</code></td>
+<td>gauge</td>
+<td>Current depth of workqueue.</td>
+</tr>
+<tr>
+<td><code>workqueue_longest_running_processor_seconds</code></td>
+<td>gauge</td>
+<td>How many seconds has the longest running processor for workqueue been running.</td>
+</tr>
+<tr>
+<td><code>workqueue_queue_duration_seconds</code></td>
+<td>histogram</td>
+<td>How long in seconds an item stays in workqueue before being requested.</td>
+</tr>
+<tr>
+<td><code>workqueue_retries_total</code></td>
+<td>counter</td>
+<td>Total number of retries handled by workqueue.</td>
+</tr>
+<tr>
+<td><code>workqueue_unfinished_work_seconds</code></td>
+<td>gauge</td>
+<td>How many seconds of work has been done that is in progress and hasn't been observed by work_duration.</td>
+</tr>
+<tr>
+<td><code>workqueue_work_duration_seconds</code></td>
+<td>histogram</td>
+<td>How long in seconds processing an item from workqueue takes.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="agent-metrics">Agent metrics</h2>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>certwatcher_read_certificate_errors_total</code></td>
+<td>counter</td>
+<td>Total number of certificate read errors</td>
+</tr>
+<tr>
+<td><code>certwatcher_read_certificate_total</code></td>
+<td>counter</td>
+<td>Total number of certificate reads</td>
+</tr>
+<tr>
+<td><code>controller_runtime_active_workers</code></td>
+<td>gauge</td>
+<td>Number of currently used workers per controller</td>
+</tr>
+<tr>
+<td><code>controller_runtime_max_concurrent_reconciles</code></td>
+<td>gauge</td>
+<td>Maximum number of concurrent reconciles per controller</td>
+</tr>
+<tr>
+<td><code>controller_runtime_reconcile_errors_total</code></td>
+<td>counter</td>
+<td>Total number of reconciliation errors per controller</td>
+</tr>
+<tr>
+<td><code>controller_runtime_reconcile_time_seconds</code></td>
+<td>histogram</td>
+<td>Length of time per reconciliation per controller</td>
+</tr>
+<tr>
+<td><code>controller_runtime_reconcile_total</code></td>
+<td>counter</td>
+<td>Total number of reconciliations per controller</td>
+</tr>
+<tr>
+<td><code>go_gc_duration_seconds</code></td>
+<td>summary</td>
+<td>A summary of the pause duration of garbage collection cycles</td>
+</tr>
+<tr>
+<td><code>go_goroutines</code></td>
+<td>gauge</td>
+<td>Number of goroutines that currently exist</td>
+</tr>
+<tr>
+<td><code>go_info</code></td>
+<td>gauge</td>
+<td>Information about the Go environment</td>
+</tr>
+<tr>
+<td><code>go_memstats_alloc_bytes</code></td>
+<td>gauge</td>
+<td>Number of bytes allocated and still in use</td>
+</tr>
+<tr>
+<td><code>go_memstats_alloc_bytes_total</code></td>
+<td>counter</td>
+<td>Total number of bytes allocated, even if freed</td>
+</tr>
+<tr>
+<td><code>go_memstats_buck_hash_sys_bytes</code></td>
+<td>gauge</td>
+<td>Number of bytes used by the profiling bucket hash table</td>
+</tr>
+<tr>
+<td><code>go_memstats_frees_total</code></td>
+<td>counter</td>
+<td>Total number of frees</td>
+</tr>
+<tr>
+<td><code>go_memstats_gc_sys_bytes</code></td>
+<td>gauge</td>
+<td>Number of bytes used for garbage collection system metadata</td>
+</tr>
+<tr>
+<td><code>go_memstats_heap_alloc_bytes</code></td>
+<td>gauge</td>
+<td>Number of heap bytes allocated and still in use</td>
+</tr>
+<tr>
+<td><code>go_memstats_heap_idle_bytes</code></td>
+<td>gauge</td>
+<td>Number of heap bytes waiting to be used</td>
+</tr>
+<tr>
+<td><code>go_memstats_heap_inuse_bytes</code></td>
+<td>gauge</td>
+<td>Number of heap bytes that are in use</td>
+</tr>
+<tr>
+<td><code>go_memstats_heap_objects</code></td>
+<td>gauge</td>
+<td>Number of allocated objects</td>
+</tr>
+<tr>
+<td><code>go_memstats_heap_released_bytes</code></td>
+<td>gauge</td>
+<td>Number of heap bytes released to OS</td>
+</tr>
+<tr>
+<td><code>go_memstats_heap_sys_bytes</code></td>
+<td>gauge</td>
+<td>Number of heap bytes obtained from system</td>
+</tr>
+<tr>
+<td><code>go_memstats_last_gc_time_seconds</code></td>
+<td>gauge</td>
+<td>Number of seconds since 1970 of last garbage collection</td>
+</tr>
+<tr>
+<td><code>go_memstats_lookups_total</code></td>
+<td>counter</td>
+<td>Total number of pointer lookups</td>
+</tr>
+<tr>
+<td><code>go_memstats_mallocs_total</code></td>
+<td>counter</td>
+<td>Total number of mallocs</td>
+</tr>
+<tr>
+<td><code>go_memstats_mcache_inuse_bytes</code></td>
+<td>gauge</td>
+<td>Number of bytes in use by mcache structures</td>
+</tr>
+<tr>
+<td><code>go_memstats_mcache_sys_bytes</code></td>
+<td>gauge</td>
+<td>Number of bytes used for mcache structures obtained from system</td>
+</tr>
+<tr>
+<td><code>go_memstats_mspan_inuse_bytes</code></td>
+<td>gauge</td>
+<td>Number of bytes in use by mspan structures</td>
+</tr>
+<tr>
+<td><code>go_memstats_mspan_sys_bytes</code></td>
+<td>gauge</td>
+<td>Number of bytes used for mspan structures obtained from system</td>
+</tr>
+<tr>
+<td><code>go_memstats_next_gc_bytes</code></td>
+<td>gauge</td>
+<td>Number of heap bytes when next garbage collection will take place</td>
+</tr>
+<tr>
+<td><code>go_memstats_other_sys_bytes</code></td>
+<td>gauge</td>
+<td>Number of bytes used for other system allocations</td>
+</tr>
+<tr>
+<td><code>go_memstats_stack_inuse_bytes</code></td>
+<td>gauge</td>
+<td>Number of bytes in use by the stack allocator</td>
+</tr>
+<tr>
+<td><code>go_memstats_stack_sys_bytes</code></td>
+<td>gauge</td>
+<td>Number of bytes obtained from system for stack allocator</td>
+</tr>
+<tr>
+<td><code>go_memstats_sys_bytes</code></td>
+<td>gauge</td>
+<td>Number of bytes obtained from system</td>
+</tr>
+<tr>
+<td><code>go_threads</code></td>
+<td>gauge</td>
+<td>Number of OS threads created</td>
+</tr>
+<tr>
+<td><code>iptables_chains</code></td>
+<td>gauge</td>
+<td>Number of active iptables chains</td>
+</tr>
+<tr>
+<td><code>iptables_lines_executed</code></td>
+<td>counter</td>
+<td>Number of iptables rule updates executed</td>
+</tr>
+<tr>
+<td><code>iptables_lock_acquire_secs</code></td>
+<td>summary</td>
+<td>Time in seconds that it took to acquire the iptables lock(s)</td>
+</tr>
+<tr>
+<td><code>iptables_lock_retries</code></td>
+<td>counter</td>
+<td>Number of times the iptables lock was held by someone else and retries were needed</td>
+</tr>
+<tr>
+<td><code>iptables_restore_calls</code></td>
+<td>counter</td>
+<td>Number of iptables-restore calls</td>
+</tr>
+<tr>
+<td><code>iptables_restore_errors</code></td>
+<td>counter</td>
+<td>Number of iptables-restore errors</td>
+</tr>
+<tr>
+<td><code>iptables_rules</code></td>
+<td>gauge</td>
+<td>Number of active iptables rules</td>
+</tr>
+<tr>
+<td><code>iptables_save_calls</code></td>
+<td>counter</td>
+<td>Number of iptables-save calls</td>
+</tr>
+<tr>
+<td><code>iptables_save_errors</code></td>
+<td>counter</td>
+<td>Number of iptables-save errors</td>
+</tr>
+<tr>
+<td><code>process_cpu_seconds_total</code></td>
+<td>counter</td>
+<td>Total user and system CPU time spent in seconds</td>
+</tr>
+<tr>
+<td><code>process_max_fds</code></td>
+<td>gauge</td>
+<td>Maximum number of open file descriptors</td>
+</tr>
+<tr>
+<td><code>process_open_fds</code></td>
+<td>gauge</td>
+<td>Number of open file descriptors</td>
+</tr>
+<tr>
+<td><code>process_resident_memory_bytes</code></td>
+<td>gauge</td>
+<td>Resident memory size in bytes</td>
+</tr>
+<tr>
+<td><code>process_start_time_seconds</code></td>
+<td>gauge</td>
+<td>Start time of the process since unix epoch in seconds</td>
+</tr>
+<tr>
+<td><code>process_virtual_memory_bytes</code></td>
+<td>gauge</td>
+<td>Virtual memory size in bytes</td>
+</tr>
+<tr>
+<td><code>process_virtual_memory_max_bytes</code></td>
+<td>gauge</td>
+<td>Maximum amount of virtual memory available in bytes</td>
+</tr>
+<tr>
+<td><code>rest_client_requests_total</code></td>
+<td>counter</td>
+<td>Number of HTTP requests, partitioned by status code, method, and host</td>
+</tr>
+<tr>
+<td><code>workqueue_adds_total</code></td>
+<td>counter</td>
+<td>Total number of adds handled by workqueue</td>
+</tr>
+<tr>
+<td><code>workqueue_depth</code></td>
+<td>gauge</td>
+<td>Current depth of workqueue</td>
+</tr>
+<tr>
+<td><code>workqueue_longest_running_processor_seconds</code></td>
+<td>gauge</td>
+<td>How many seconds has the longest running processor for workqueue been running</td>
+</tr>
+<tr>
+<td><code>workqueue_queue_duration_seconds</code></td>
+<td>histogram</td>
+<td>How long in seconds an item stays in workqueue before being requested</td>
+</tr>
+<tr>
+<td><code>workqueue_retries_total</code></td>
+<td>counter</td>
+<td>Total number of retries handled by workqueue</td>
+</tr>
+<tr>
+<td><code>workqueue_unfinished_work_seconds</code></td>
+<td>gauge</td>
+<td>How many seconds of work has been done that is in progress and hasn't been observed by work_duration</td>
+</tr>
+<tr>
+<td><code>workqueue_work_duration_seconds</code></td>
+<td>histogram</td>
+<td>How long in seconds processing an item from workqueue takes</td>
+</tr>
+</tbody>
+</table>
 
 
 
