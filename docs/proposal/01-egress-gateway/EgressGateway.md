@@ -90,7 +90,7 @@ spec:
 
 ### Datapath
 
-<img src="Egress-Gateway-Datapath.png" width="70%"></img>
+<img src="../../images/Egress-Gateway-Datapath.png" width="70%"></img>
 
 A combination of vxlan tunnel, ipset, iptables, route is required to complete policy control.
 
@@ -162,12 +162,12 @@ iptables -t nat -I POSTROUTING 1 -m mark --mark 0x12000000 -j ACCEPT -m comment 
 
 Controller consists of Webhook Validator and Reconcile Flow.
 
-<img src="Controller-Reconcile-Flow.png" width="70%"></img>
+<img src="../../images/Controller-Reconcile-Flow.png" width="70%"></img>
 
 Controller has 2 control processes, the first Watch cluster nodes, generate tunnel IP address and MAC address for Node, then `Create` or `Update` EgressTunnel CR Status. The second control flow watch `EgressTunnel` and `Egressgateway`, sync match node list from `labelSelector`, election egress gateway node.
 
 ### Agent
 
-<img src="Agent-Reconcile-Flow.png" width="70%"></img>
+<img src="../../images/Agent-Reconcile-Flow.png" width="70%"></img>
 
 Agent has two control processes, the first Watch `EgressTunnel` CR, which manages node tunnel, and node tunnel is a pluggable interface that can be replaced by Geneve. The second control process manages datapath policy, which watches `EgressTunnel`, `EgressGateway` and `Egresspolicy`, and sends them to the host through the police interface. It is currently implemented by a combination of *ipset*, *iptables*, and *route*, and it can be replaced by *eBPF*.

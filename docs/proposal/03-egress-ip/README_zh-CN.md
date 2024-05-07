@@ -315,5 +315,5 @@ data:
 
 #### 代码设计
 
-![arch](./arch.png)
+![arch](../../images/arch.png)
 

@@ -2,7 +2,7 @@
 
 EgressGateway consists of two parts: the control plane and the data plane. The control plane is composed of four control loops, and the data plane is composed of three. The control plane is deployed as a Deployment, supporting multiple replicas for high availability, and the data plane is deployed as a DaemonSet. The control loops are as follows in the diagram below:
 
-![arch](../proposal/03-egress-ip/arch.png)
+![arch](../images/arch.png)
 
 ## Controller
 

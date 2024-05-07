@@ -12,7 +12,7 @@ EgressGateway supports nanotube traffic in an Underlay CNI environment.
 
 As shown in the diagram, the datapath for the round-trip Underlay access to the external Server is: "Process <-> A <-> B <-> Server".
 
-![datapath](underlay_datapath.png)
+![datapath](../../images/underlay_datapath.png)
 
 The EgressGateway's rules don't work at all, and in order to pipe the Underlay traffic, two things need to be addressed, hijacking the traffic to the Pod's host and avoiding routing asymmetric messages from being dropped when the answering traffic arrives at the Pod's host
 
@@ -30,13 +30,13 @@ Thing 2, you can route, iptables, etc. to forward the matched traffic to the hos
 
 As shown in the figure, by adding a new veth pair and routing the traffic through the veth to the host, the datapath is actually the same as the overlay.
 
-![send-datapath](underlay_send_datapath.png)
+![send-datapath](../../images/underlay_send_datapath.png)
 
 ### Reply datapath
 
 As shown in the figure, the datapath returned is "Server->D->C->B->E->Process"
 
-![reply](underlay_error_reply_datapath.png)
+![reply](../../images/underlay_error_reply_datapath.png)
 
 - The srcIP=ServerIP, dstIP=EIP of the message as it passes through the D-segment datapath to the EgressGateway.
 - The C datapath looks up the connection tracking table and NATs the message, srcIP=ServerIP, dstIP=PodIP.
@@ -80,7 +80,7 @@ iptables -t mangle -A POSTROUTING -m mark --mark 0x27 -j MARK --set-mark 0x00
 
 As shown in the figure, after the above rule, the new answer datapath is "Server->D->C->B->A->Process"
 
-![reply](underlay_reply_datapath.png)
+![reply](../../images/underlay_reply_datapath.png)
 
 The biggest difference is that from the gateway node to the node where the Pod is located, it is through the EgressGateway tunnel, and after the message arrives at the node where the Pod is located, it is forwarded to the Pod from the veth pair through the route, and the spiderpool will send out the corresponding route when it creates the veth pair for the Pod, or it can send out the corresponding route through the agent. The spiderpool will issue the corresponding route while creating the veth pair for the Pod, or it can issue the corresponding routing rules through the agent. Because it passes through the host's network stack. This avoids the routing asymmetry problem.
 

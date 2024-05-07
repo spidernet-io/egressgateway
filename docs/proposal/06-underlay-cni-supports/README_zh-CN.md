@@ -11,7 +11,7 @@ EgressGateway 支持纳管 Underlay CNI 环境下的流量
 ## 需要解决的问题
 如图所示，Underlay 访问外部 Server 来回的 datapath 为："Process <-> A <-> B <-> Server"。
 
-<img src="./underlay_datapath.png" width="70%"></img>
+<img src="../../images/underlay_datapath.png" width="70%"></img>
 
 EgressGateway 的规则根本不生效，要想将 Underlay 的流量进行纳管，则需要解决两件事，将流量劫持到 Pod 的所在的主机上，及当应答的流量到达 Pod 所在主机时，避免路由不对称报文被丢弃
 
@@ -30,13 +30,13 @@ EgressGateway 的规则根本不生效，要想将 Underlay 的流量进行纳�
 
 如图所示，通过新增 veth pair，并通过路由将流量通过 veth 转发到主机上，此时的 datapath 与 overlay 其实是一样的。
 
-<img src="./underlay_send_datapath.png" width="70%"></img>
+<img src="../../images/underlay_send_datapath.png" width="70%"></img>
 
 ### 应答 datapath
 
 如图所示，返回的 datapath 为 "Server->D->C->B->E->Process"
 
-<img src="./underlay_error_reply_datapath.png" width="70%"></img>
+<img src="../../images/underlay_error_reply_datapath.png" width="70%"></img>
 
 - 报文经过 D 段 datapath 到达 EgressGateway 时的 srcIP=ServerIP、dstIP=EIP
 - C 段 datapath 会查询连接跟踪表，会将报文进行 NAT，srcIP=ServerIP、dstIP=PodIP
@@ -80,7 +80,7 @@ iptables -t mangle -A  POSTROUTING -m mark --mark 0x27 -j MARK --set-mark 0x00
 
 如图所示，经过上面的规则，新的应答 datapath 为 "Server->D->C->B->A->Process"
 
-<img src="./underlay_reply_datapath.png" width="70%"></img>
+<img src="../../images/underlay_reply_datapath.png" width="70%"></img>
 
 最大的不同就是，从网关节点到 Pod 所在节点，是通过 EgressGateway 隧道，报文到达 Pod 所在节点后，通过路由指定从 veth pair 转发给 Pod，spiderpool 在前面给 Pod 创建 veth pair 的同时，会下发对应的路由，或者可以通过 agent 下发相应的路由规则。因为经过了主机的网络协议栈。从而规避了路由不对称问题
 
