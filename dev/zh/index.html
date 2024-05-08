@@ -595,6 +595,26 @@
 
               
             
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="usage/Troubleshooting/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Troubleshooting
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -909,25 +929,6 @@
   
   
   
-    <li class="md-nav__item">
-      <a href="Troubleshooting/" class="md-nav__link">
-        
-  
-  <span class="md-ellipsis">
-    Troubleshooting
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-    
-      
-      
-  
-  
-  
     
     
     
@@ -937,9 +938,9 @@
         
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" >
         
-          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="0">
             
   
   <span class="md-ellipsis">
@@ -950,8 +951,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_7">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
             <span class="md-nav__icon md-icon"></span>
             Development
           </label>
@@ -1038,9 +1039,9 @@
         
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_8" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" >
         
-          <label class="md-nav__link" for="__nav_8" id="__nav_8_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="0">
             
   
   <span class="md-ellipsis">
@@ -1051,8 +1052,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_8_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_8">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7">
             <span class="md-nav__icon md-icon"></span>
             Community
           </label>
@@ -1188,7 +1189,7 @@
 <p>在 Kubernetes（k8s）集群中，Pod 访问外部服务时，其出口 IP 地址不是固定的。在 Overlay 网络中，出口 IP 地址为 Pod 所在节点的地址，而在 Underlay 网络中，Pod 直接使用自身的 IP 地址与外部通信。因此，当 Pod 发生新的调度时，无论哪种网络模式，Pod 与外部通信时的 IP 地址都会发生变化。这种不稳定性给系统维护人员带来了 IP 地址管理的挑战。特别是在集群规模扩大以及需要进行网络故障诊断时，在集群外部，基于 Pod 原本的出口 IP 来管控出口流量很难实现。
 为解决这个问题，EgressGateway 被引入到 k8s 集群中，它是一个开源的 Egress 网关，旨在解决在不同CNI网络模式下（Calico、Flannel、Weave、Spiderpool）出口 Egress IP 地址的问题。通过灵活配置和管理出口策略，为租户级或集群级工作负载设置 Egress IP，使得 Pod 访问外部网络时，系统会统一使用这个设置的 Egress IP 作为出口地址，从而提供了稳定的出口流量管理解决方案。</p>
 <h2 id="_1">架构</h2>
-<p><img alt="Architecture" src="../architecture02.png" /></p>
+<p><img alt="Architecture" src="../images/architecture02.png" /></p>
 <h2 id="egressgateway_1">为什么选择 EgressGateway</h2>
 <h3 id="_2">提供了一系列功能和优势</h3>
 <ul>

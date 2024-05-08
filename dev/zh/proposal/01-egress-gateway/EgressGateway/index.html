@@ -498,6 +498,26 @@
 
               
             
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../usage/Troubleshooting/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Troubleshooting
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -812,25 +832,6 @@
   
   
   
-    <li class="md-nav__item">
-      <a href="../../../Troubleshooting/" class="md-nav__link">
-        
-  
-  <span class="md-ellipsis">
-    Troubleshooting
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-    
-      
-      
-  
-  
-  
     
     
     
@@ -840,9 +841,9 @@
         
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" >
         
-          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="0">
             
   
   <span class="md-ellipsis">
@@ -853,8 +854,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_7">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
             <span class="md-nav__icon md-icon"></span>
             Development
           </label>
@@ -941,9 +942,9 @@
         
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_8" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" >
         
-          <label class="md-nav__link" for="__nav_8" id="__nav_8_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="0">
             
   
   <span class="md-ellipsis">
@@ -954,8 +955,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_8_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_8">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7">
             <span class="md-nav__icon md-icon"></span>
             Community
           </label>
@@ -1246,7 +1247,7 @@
 </li>
 </ul>
 <h3 id="datapath">Datapath</h3>
-<p><img src="Egress-Gateway-Datapath.png" width="70%"></img></p>
+<p><img src="../../images/Egress-Gateway-Datapath.png" width="70%"></img></p>
 <p>A combination of vxlan tunnel, ipset, iptables, route is required to complete policy control.</p>
 <h4 id="non-egress-node">Non Egress Node</h4>
 <h4 id="vxlan">VXLAN</h4>
@@ -1293,10 +1294,10 @@
 <h2 id="implementation">Implementation</h2>
 <h3 id="controller">Controller</h3>
 <p>Controller consists of Webhook Validator and Reconcile Flow.</p>
-<p><img src="Controller-Reconcile-Flow.png" width="70%"></img></p>
+<p><img src="../../images/Controller-Reconcile-Flow.png" width="70%"></img></p>
 <p>Controller has 2 control processes, the first Watch cluster nodes, generate tunnel IP address and MAC address for Node, then <code>Create</code> or <code>Update</code> EgressTunnel CR Status. The second control flow watch <code>EgressTunnel</code> and <code>Egressgateway</code>, sync match node list from <code>labelSelector</code>, election egress gateway node.</p>
 <h3 id="agent">Agent</h3>
-<p><img src="Agent-Reconcile-Flow.png" width="70%"></img></p>
+<p><img src="../../images/Agent-Reconcile-Flow.png" width="70%"></img></p>
 <p>Agent has two control processes, the first Watch <code>EgressTunnel</code> CR, which manages node tunnel, and node tunnel is a pluggable interface that can be replaced by Geneve. The second control process manages datapath policy, which watches <code>EgressTunnel</code>, <code>EgressGateway</code> and <code>Egresspolicy</code>, and sends them to the host through the police interface. It is currently implemented by a combination of <em>ipset</em>, <em>iptables</em>, and <em>route</em>, and it can be replaced by <em>eBPF</em>.</p>
 
 
