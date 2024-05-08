@@ -1,16 +1,16 @@
-## VXLAN Speed
+## VXLAN 速度
 
-EgressGateway uses the vxlan tunnel, and testing shows that vxlan loss is around 10%. If you find that the speed of EgressGateway does not meet the standard, you can follow these steps to check:
+EgressGateway 使用了 vxlan 隧道，经过测试 vxlan 损耗在 10% 左右。如果您发现 EgressGateway 的速度不达标，可以执行如下步骤检查：
 
-1. Confirm that the speed of the host-to-node matches the expected speed;
-    1. The offload setting of the network card used by vxlan on the host will have a small impact on the speed of the vxlan interface (there will only be a difference of 0.5 Gbits/sec in the 10G network card test), you can run `ethtool --offload host-interface-name rx on tx on` to turn on offload;
-2. The offload setting of the vxlan network card can significantly impact the speed of the vxlan interface. In 10G network card tests, the speed is 2.5 Gbits/sec without offload enabled, and 8.9 Gbits/sec with offload enabled. You can run `ethtool -k egress.vxlan` to check whether checksum offload is turned off, and you can enable offload by setting the `feature.vxlan.disableChecksumOffload` configuration in helm values to `false`.
+1. 确认宿主机节点到节点的速度符合预期；
+    1. vxlan 使用的宿主机的网卡的 offload 设置会对 vxlan 接口的速度产生较小的影响（在 10G 网卡测试中仅会有 0.5 Gbits/sec 的差距），可以执行 `ethtool --offload host-interface-name rx on tx on` 开启 offload。
+2. vxlan 网卡的 offload 设置可以对 vxlan 接口速度产生较大的影响（在 10G 网卡测试中，不开启 2.5 Gbits/sec，开启 8.9 Gbits/sec），你可以运行 `ethtool -k egress.vxlan` 检查 checksum offload 是否关闭，并通过 helm values 的配置 `feature.vxlan.disableChecksumOffload` 为 `false` 开启 offload。
 
 ### Benchmark
 
-#### Bare metal server
+#### 物理机
 
-The following are the data from our stress tests using bare metal servers.
+以下是我们使用物理服务器做压测的数据。
 
 | Name        | CPU                                       | MEM  | Interface    |
 |:------------|:------------------------------------------|:-----|:-------------|
@@ -24,11 +24,11 @@ The following are the data from our stress tests using bare metal servers.
 | case2 | egress vxlan -> egress vxlan | `9.11 Gbits/sec sender - 9.09 Gbits/sec receiver` |
 | case3 | pod -> egress node -> target | `9.01 Gbits/sec sender - 8.98 Gbits/sec receiver` |
 
-![egress-check](./speed.svg)
+![egress-check](../images/speed.svg)
 
-#### Virtual machine
+#### 虚拟机
 
-The following is a virtual machine using VMWare, which limits the data measured with Node specification of 4C8G.
+以下是使用 VMWare 的虚拟机，限制 Node 规格为 4C8G 压测的数据，
 
 | Name        | CPU                                         | MEM | Interface |
 |:------------|:--------------------------------------------|:----|:----------|
@@ -42,4 +42,3 @@ The following is a virtual machine using VMWare, which limits the data measured 
 | case1 | node -> node                 | `2.99 Gbits/sec sender - 2.99 Gbits/sec receiver` |
 | case2 | egress vxlan -> egress vxlan | `1.73 Gbits/sec sender - 1.71 Gbits/sec receiver` |
 | case3 | pod -> egress node -> target | `1.23 Gbits/sec sender - 1.22 Gbits/sec receiver` |
-

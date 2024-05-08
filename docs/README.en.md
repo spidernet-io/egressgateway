@@ -8,7 +8,7 @@ To solve this problem, EgressGateway has been introduced into the k8s cluster. I
 
 ## Architecture
 
-![Architecture](./architecture02.png)
+![Architecture](./images/architecture02.png)
 
 ## Why EgressGateway
 

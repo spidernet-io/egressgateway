@@ -338,4 +338,4 @@ When an EIP is not used by a policy, it will be recycled, recycling means delete
 
 #### Code Design
 
-![arch](./arch.png)
+![arch](../../images/arch.png)

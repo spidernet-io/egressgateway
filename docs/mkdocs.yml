@@ -89,6 +89,7 @@ nav:
       - Failover: usage/EgressGatewayFailover.md
       - Move EgressIP: usage/MoveIP.md
       - Run EgressGateway on Aliyun Cloud: usage/Aliyun.md
+      - Troubleshooting: usage/Troubleshooting.md
   - Concepts:
       - Architecture: concepts/Architecture.md
       - Datapath: concepts/Datapath.md
@@ -102,7 +103,6 @@ nav:
       - CRD EgressClusterInfo: reference/EgressClusterInfo.md
       - egctl cli: reference/egctl.md
       - metrics: reference/metrics.md
-  - Troubleshooting: Troubleshooting.md
   - Development:
       - DataFlow: develop/Dataflow.md
       - Contribute: develop/Contribute.md
