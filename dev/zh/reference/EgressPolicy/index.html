@@ -72,6 +72,11 @@
     <label class="md-overlay" for="__drawer"></label>
     <div data-md-component="skip">
       
+        
+        <a href="#_1" class="md-skip">
+          跳转至
+        </a>
+      
     </div>
     <div data-md-component="announce">
       
@@ -457,6 +462,46 @@
 
               
             
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../usage/MoveIP/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Move EgressIP
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../usage/Aliyun/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Run EgressGateway on Aliyun Cloud
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -634,6 +679,17 @@
       
       
       
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  <span class="md-ellipsis">
+    CRD EgressPolicy
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
       <a href="./" class="md-nav__link md-nav__link--active">
         
   
@@ -643,6 +699,70 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="目录">
+  
+  
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      目录
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#_1" class="md-nav__link">
+    定义
+  </a>
+  
+    <nav class="md-nav" aria-label="定义">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#metadata" class="md-nav__link">
+    metadata
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#spec" class="md-nav__link">
+    spec
+  </a>
+  
+    <nav class="md-nav" aria-label="spec">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#egressip" class="md-nav__link">
+    egressIP
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#appliedto" class="md-nav__link">
+    appliedTo
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
       
     </li>
   
@@ -720,6 +840,46 @@
   
   <span class="md-ellipsis">
     CRD EgressClusterInfo
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../egctl/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    egctl cli
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../metrics/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    metrics
   </span>
   
 
@@ -935,6 +1095,61 @@
   
   
   
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      目录
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#_1" class="md-nav__link">
+    定义
+  </a>
+  
+    <nav class="md-nav" aria-label="定义">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#metadata" class="md-nav__link">
+    metadata
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#spec" class="md-nav__link">
+    spec
+  </a>
+  
+    <nav class="md-nav" aria-label="spec">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#egressip" class="md-nav__link">
+    egressIP
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#appliedto" class="md-nav__link">
+    appliedTo
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
 </nav>
                   </div>
                 </div>
@@ -960,50 +1175,180 @@
 </span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="w">  </span><span class="nt">namespace</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;default&quot;</span>
 </span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="w">  </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;policy-test&quot;</span>
 </span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="nt">spec</span><span class="p">:</span>
-</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="w">  </span><span class="nt">egressGatewayName</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;eg1&quot;</span><span class="w">    </span><span class="c1"># (1)</span>
-</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a><span class="w">  </span><span class="nt">egressIP</span><span class="p">:</span><span class="w">                   </span><span class="c1"># (2)</span>
+</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="w">  </span><span class="nt">egressGatewayName</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;eg1&quot;</span><span class="w">    </span>
+</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a><span class="w">  </span><span class="nt">egressIP</span><span class="p">:</span><span class="w">                   </span>
 </span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="w">    </span><span class="nt">ipv4</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;&quot;</span><span class="w">                            </span>
 </span><span id="__span-0-10"><a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a><span class="w">    </span><span class="nt">ipv6</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;&quot;</span>
-</span><span id="__span-0-11"><a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a><span class="w">    </span><span class="nt">useNodeIP</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">false</span><span class="w">          </span><span class="c1"># (3)</span>
-</span><span id="__span-0-12"><a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a><span class="w">    </span><span class="nt">allocatorPolicy</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">default</span><span class="w">  </span><span class="c1"># (4)</span>
+</span><span id="__span-0-11"><a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a><span class="w">    </span><span class="nt">useNodeIP</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">false</span><span class="w">          </span>
+</span><span id="__span-0-12"><a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a><span class="w">    </span><span class="nt">allocatorPolicy</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">default</span><span class="w">  </span>
 </span><span id="__span-0-13"><a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a><span class="w">  </span><span class="nt">appliedTo</span><span class="p">:</span><span class="w">                </span>
-</span><span id="__span-0-14"><a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a><span class="w">    </span><span class="nt">podSelector</span><span class="p">:</span><span class="w">              </span><span class="c1"># (5) </span>
+</span><span id="__span-0-14"><a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a><span class="w">    </span><span class="nt">podSelector</span><span class="p">:</span><span class="w">             </span>
 </span><span id="__span-0-15"><a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a><span class="w">      </span><span class="nt">matchLabels</span><span class="p">:</span><span class="w">    </span>
 </span><span id="__span-0-16"><a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a><span class="w">        </span><span class="nt">app</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;shopping&quot;</span>
-</span><span id="__span-0-17"><a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a><span class="w">    </span><span class="nt">podSubnet</span><span class="p">:</span><span class="w">                </span><span class="c1"># (6)</span>
+</span><span id="__span-0-17"><a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a><span class="w">    </span><span class="nt">podSubnet</span><span class="p">:</span><span class="w">                </span>
 </span><span id="__span-0-18"><a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a><span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">&quot;172.29.16.0/24&quot;</span>
 </span><span id="__span-0-19"><a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a><span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">&#39;fd00:1/126&#39;</span>
-</span><span id="__span-0-20"><a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a><span class="w">  </span><span class="nt">destSubnet</span><span class="p">:</span><span class="w">                 </span><span class="c1"># (7)</span>
+</span><span id="__span-0-20"><a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a><span class="w">  </span><span class="nt">destSubnet</span><span class="p">:</span><span class="w">                </span>
 </span><span id="__span-0-21"><a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a><span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">&quot;10.6.1.92/32&quot;</span>
 </span><span id="__span-0-22"><a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a><span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">&quot;fd00::92/128&quot;</span>
-</span><span id="__span-0-23"><a id="__codelineno-0-23" name="__codelineno-0-23" href="#__codelineno-0-23"></a><span class="w">  </span><span class="nt">priority</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">100</span><span class="w">               </span><span class="c1"># (8)</span>
+</span><span id="__span-0-23"><a id="__codelineno-0-23" name="__codelineno-0-23" href="#__codelineno-0-23"></a><span class="w">  </span><span class="nt">priority</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">100</span><span class="w">              </span>
 </span><span id="__span-0-24"><a id="__codelineno-0-24" name="__codelineno-0-24" href="#__codelineno-0-24"></a><span class="nt">status</span><span class="p">:</span>
-</span><span id="__span-0-25"><a id="__codelineno-0-25" name="__codelineno-0-25" href="#__codelineno-0-25"></a><span class="w">  </span><span class="nt">eip</span><span class="p">:</span><span class="w">                        </span><span class="c1"># (9)</span>
+</span><span id="__span-0-25"><a id="__codelineno-0-25" name="__codelineno-0-25" href="#__codelineno-0-25"></a><span class="w">  </span><span class="nt">eip</span><span class="p">:</span><span class="w">                        </span>
 </span><span id="__span-0-26"><a id="__codelineno-0-26" name="__codelineno-0-26" href="#__codelineno-0-26"></a><span class="w">    </span><span class="nt">ipv4</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">172.18.1.2</span>
 </span><span id="__span-0-27"><a id="__codelineno-0-27" name="__codelineno-0-27" href="#__codelineno-0-27"></a><span class="w">    </span><span class="nt">ipv6</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">fc00:f853:ccd::9</span>
-</span><span id="__span-0-28"><a id="__codelineno-0-28" name="__codelineno-0-28" href="#__codelineno-0-28"></a><span class="w">  </span><span class="nt">node</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">egressgateway-worker</span><span class="w">  </span><span class="c1"># (10)</span>
+</span><span id="__span-0-28"><a id="__codelineno-0-28" name="__codelineno-0-28" href="#__codelineno-0-28"></a><span class="w">  </span><span class="nt">node</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">egressgateway-worker</span><span class="w">  </span>
 </span></code></pre></div>
-<ol>
-<li>选择 EgressPolicy 引用的 EgressGateway：</li>
-<li>Egress IP 表示 EgressPolicy 所使用的 EgressIP 设置：<ul>
-<li>若在创建时定义了 <code>ipv4</code> 或 <code>ipv6</code> 地址，则从 EgressGateway 的 <code>.ippools</code> 中分配一个 IP 地址，若在 policy1 中，申请使用了 IP 地址 <code>10.6.1.21</code> 和 <code>fd00:1</code> ，然后创建 policy2 中，申请使用了 IP 地址 <code>10.6.1.21</code> 和 <code>fd00:2</code>，则会报错，此时 policy2 会分配失败，因为已分配的 <code>ipv4</code> 与 <code>ipv6</code> 地址会一一绑定，再次使用时，需要同时使用。如果只指定一者，会自动使用对应的另一者；</li>
-<li>若未定义 <code>ipv4</code> 或 <code>ipv6</code> 地址，且 <code>useNodeIP</code> 为 true 时，则使用所引用的 EgressGateway 匹配的 Node IP 作为 Egress 地址；</li>
-<li><code>egressGatewayName</code> 不能为空。</li>
-</ul>
-</li>
-<li>支持使用节点 IP 作为 Egress IP（只允许选择一种）；</li>
-<li>默认为 <code>default</code> 模式，若未在创建时定义 <code>ipv4</code> 或 <code>ipv6</code> 地址，且 <code>useNodeIP</code> 为 <code>false</code> 时；<ul>
-<li>为 <code>default</code> 时，则使用 EgressGateway 的 <code>.ippools.ipv4DefaultEIP/ipv6DefaultEIP</code> 值作为 EIP</li>
-<li>为 <code>rr</code> 时，则从 EgressGateway 的 <code>.ippools</code> 中随机分配一个未使用的 IP 地址（开启 IPv6 时，请求分配一个 IPv4 和 一个 IPv6 地址）。如果所有 IP 地址都被使用时，则 EIP 分配失败。</li>
-</ul>
-</li>
-<li>以 Label 的方式选择需要应用 EgressPolicy 的 Pod；</li>
-<li>通过直接指定 Pod 的网段选择需要应用 EgressPolicy 的 Pod（4 和 5 不能同时使用）</li>
-<li>指定访问 Egress 的目标地址，若未指定目标地址，则以下策略将生效：对于那些目标地址不属于集群内部 CIDR 的请求，将全部转发到 Egress 节点。</li>
-<li>策略的优先级（未实现，保留字段）。</li>
-<li>该 EgressPolicy 所分配到的 EgressIP。</li>
-<li>该 EgressPolicy 的 EgressIP 所在的节点，同时也是该 EgressPolicy 的网关节点。</li>
-</ol>
+<h2 id="_1">定义</h2>
+<h3 id="metadata">metadata</h3>
+<table>
+<thead>
+<tr>
+<th>字段</th>
+<th>描述</th>
+<th>数据类型</th>
+<th>验证</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>namespace</td>
+<td>EgressPolicy 资源的命名空间</td>
+<td>字符串</td>
+<td>必填</td>
+</tr>
+<tr>
+<td>name</td>
+<td>EgressPolicy 资源的名称</td>
+<td>字符串</td>
+<td>必填</td>
+</tr>
+</tbody>
+</table>
+<h3 id="spec">spec</h3>
+<table>
+<thead>
+<tr>
+<th>字段</th>
+<th>描述</th>
+<th>数据类型</th>
+<th>验证</th>
+<th>可选值</th>
+<th>默认值</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>egressGatewayName</td>
+<td>使用的 EgressGateway 的引用</td>
+<td>字符串</td>
+<td>必填</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>egressIP</td>
+<td>出口 IP 设置的配置</td>
+<td><a href="#egressIP">egressIP</a></td>
+<td>可选</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>appliedTo</td>
+<td>应将 EgressPolicy 应用于哪些 Pods 的选择器</td>
+<td><a href="#appliedTo">appliedTo</a></td>
+<td>必填</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>destSubnet</td>
+<td>访问该列表的子网时使用 Egress IP，如果安装时开启了 <code>feature.clusterCIDR.autoDetect</code>，destSubnet 没设置时，则访问集群外网络自动使用 Egress IP。</td>
+<td>字符串数组</td>
+<td>可选</td>
+<td>CIDR 表示法</td>
+<td></td>
+</tr>
+<tr>
+<td>priority</td>
+<td>策略的优先级</td>
+<td>整数</td>
+<td>可选</td>
+<td></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<h4 id="egressip">egressIP</h4>
+<table>
+<thead>
+<tr>
+<th>字段</th>
+<th>描述</th>
+<th>数据类型</th>
+<th>验证</th>
+<th>可选值</th>
+<th>默认值</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>ipv4</td>
+<td>如果定义，则使用特定的 IPv4 地址</td>
+<td>string</td>
+<td>可选</td>
+<td>有效的 IPv4</td>
+<td></td>
+</tr>
+<tr>
+<td>ipv6</td>
+<td>如果定义，则使用特定的 IPv6 地址</td>
+<td>string</td>
+<td>可选</td>
+<td>有效的 IPv6</td>
+<td></td>
+</tr>
+<tr>
+<td>useNodeIP</td>
+<td>当没有定义特定的 IP 地址时，是否使用节点 IP 作为出口 IP 的标志</td>
+<td>bool</td>
+<td>可选</td>
+<td>true/false</td>
+<td>false</td>
+</tr>
+</tbody>
+</table>
+<h4 id="appliedto">appliedTo</h4>
+<table>
+<thead>
+<tr>
+<th>字段</th>
+<th>描述</th>
+<th>数据类型</th>
+<th>验证</th>
+<th>可选值</th>
+<th>默认值</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>podSelector</td>
+<td>通过 Selector 匹配实施 Egress 策略 Pod</td>
+<td>map[string]string</td>
+<td>可选</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>podSubnet</td>
+<td>通过 Subnet 匹配实施 Egress 策略 Pod（未实现）</td>
+<td>[]string</td>
+<td>可选</td>
+<td>CIDR</td>
+<td></td>
+</tr>
+</tbody>
+</table>
 
 
 
