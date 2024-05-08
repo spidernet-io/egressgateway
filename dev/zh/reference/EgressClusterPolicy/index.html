@@ -72,6 +72,11 @@
     <label class="md-overlay" for="__drawer"></label>
     <div data-md-component="skip">
       
+        
+        <a href="#_1" class="md-skip">
+          跳转至
+        </a>
+      
     </div>
     <div data-md-component="announce">
       
@@ -457,6 +462,46 @@
 
               
             
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../usage/MoveIP/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Move EgressIP
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../usage/Aliyun/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Run EgressGateway on Aliyun Cloud
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -654,6 +699,17 @@
       
       
       
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  <span class="md-ellipsis">
+    CRD EgressClusterPolicy
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
       <a href="./" class="md-nav__link md-nav__link--active">
         
   
@@ -663,6 +719,70 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="目录">
+  
+  
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      目录
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#_1" class="md-nav__link">
+    定义
+  </a>
+  
+    <nav class="md-nav" aria-label="定义">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#metadata" class="md-nav__link">
+    metadata
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#spec" class="md-nav__link">
+    spec
+  </a>
+  
+    <nav class="md-nav" aria-label="spec">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#egressip" class="md-nav__link">
+    egressIP
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#appliedto" class="md-nav__link">
+    appliedTo
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
       
     </li>
   
@@ -720,6 +840,46 @@
   
   <span class="md-ellipsis">
     CRD EgressClusterInfo
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../egctl/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    egctl cli
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../metrics/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    metrics
   </span>
   
 
@@ -935,6 +1095,61 @@
   
   
   
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      目录
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#_1" class="md-nav__link">
+    定义
+  </a>
+  
+    <nav class="md-nav" aria-label="定义">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#metadata" class="md-nav__link">
+    metadata
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#spec" class="md-nav__link">
+    spec
+  </a>
+  
+    <nav class="md-nav" aria-label="spec">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#egressip" class="md-nav__link">
+    egressIP
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#appliedto" class="md-nav__link">
+    appliedTo
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
 </nav>
                   </div>
                 </div>
@@ -985,9 +1200,165 @@
 </span><span id="__span-0-29"><a id="__codelineno-0-29" name="__codelineno-0-29" href="#__codelineno-0-29"></a><span class="w">    </span><span class="nt">ipv6</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">fc00:f853:ccd::9</span>
 </span><span id="__span-0-30"><a id="__codelineno-0-30" name="__codelineno-0-30" href="#__codelineno-0-30"></a><span class="w">  </span><span class="nt">node</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">egressgateway-worker</span>
 </span></code></pre></div>
-<ol>
-<li><code>namespaceSelector</code> 使用 selector 选择匹配的命名空间列表。在选定的命名空间范围内，使用 <code>podSelector</code> 选择匹配的 Pod，然后对这些选中的 Pod 应用 Egress 策略。</li>
-</ol>
+<h2 id="_1">定义</h2>
+<h3 id="metadata">metadata</h3>
+<table>
+<thead>
+<tr>
+<th>字段</th>
+<th>描述</th>
+<th>数据类型</th>
+<th>验证</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>namespace</td>
+<td>EgressPolicy 资源的命名空间</td>
+<td>字符串</td>
+<td>必填</td>
+</tr>
+<tr>
+<td>name</td>
+<td>EgressPolicy 资源的名称</td>
+<td>字符串</td>
+<td>必填</td>
+</tr>
+</tbody>
+</table>
+<h3 id="spec">spec</h3>
+<table>
+<thead>
+<tr>
+<th>字段</th>
+<th>描述</th>
+<th>数据类型</th>
+<th>验证</th>
+<th>可选值</th>
+<th>默认值</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>egressGatewayName</td>
+<td>使用的 EgressGateway 的引用</td>
+<td>字符串</td>
+<td>必填</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>egressIP</td>
+<td>出口 IP 设置的配置</td>
+<td><a href="#egressIP">egressIP</a></td>
+<td>可选</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>appliedTo</td>
+<td>应将 EgressPolicy 应用于哪些 Pods 的选择器</td>
+<td><a href="#appliedTo">appliedTo</a></td>
+<td>必填</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>destSubnet</td>
+<td>访问该列表的子网时使用 Egress IP，如果安装时开启了 <code>feature.clusterCIDR.autoDetect</code>，destSubnet 没设置时，则访问集群外网络自动使用 Egress IP。</td>
+<td>字符串数组</td>
+<td>可选</td>
+<td>CIDR 表示法</td>
+<td></td>
+</tr>
+<tr>
+<td>priority</td>
+<td>策略的优先级</td>
+<td>整数</td>
+<td>可选</td>
+<td></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<h4 id="egressip">egressIP</h4>
+<table>
+<thead>
+<tr>
+<th>字段</th>
+<th>描述</th>
+<th>数据类型</th>
+<th>验证</th>
+<th>可选值</th>
+<th>默认值</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>ipv4</td>
+<td>如果定义，则使用特定的 IPv4 地址</td>
+<td>string</td>
+<td>可选</td>
+<td>有效的 IPv4</td>
+<td></td>
+</tr>
+<tr>
+<td>ipv6</td>
+<td>如果定义，则使用特定的 IPv6 地址</td>
+<td>string</td>
+<td>可选</td>
+<td>有效的 IPv6</td>
+<td></td>
+</tr>
+<tr>
+<td>useNodeIP</td>
+<td>当没有定义特定的 IP 地址时，是否使用节点 IP 作为出口 IP 的标志</td>
+<td>bool</td>
+<td>可选</td>
+<td>true/false</td>
+<td>false</td>
+</tr>
+</tbody>
+</table>
+<h4 id="appliedto">appliedTo</h4>
+<table>
+<thead>
+<tr>
+<th>字段</th>
+<th>描述</th>
+<th>数据类型</th>
+<th>验证</th>
+<th>可选值</th>
+<th>默认值</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>podSelector</td>
+<td>通过 Selector 匹配实施 Egress 策略 Pod</td>
+<td>map[string]string</td>
+<td>可选</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>podSubnet</td>
+<td>通过 Subnet 匹配实施 Egress 策略 Pod（未实现）</td>
+<td>[]string</td>
+<td>可选</td>
+<td>CIDR</td>
+<td></td>
+</tr>
+<tr>
+<td>namespaceSelector</td>
+<td><code>namespaceSelector</code> 使用选择器来选择匹配的命名空间列表。在选定的命名空间范围内，使用 <code>podSelector</code> 选择匹配的 Pods，然后将 Egress 策略应用到这些选定的 Pods 上。</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+</tbody>
+</table>
 
 
 

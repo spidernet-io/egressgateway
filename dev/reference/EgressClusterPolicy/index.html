@@ -72,6 +72,11 @@
     <label class="md-overlay" for="__drawer"></label>
     <div data-md-component="skip">
       
+        
+        <a href="#definition" class="md-skip">
+          Skip to content
+        </a>
+      
     </div>
     <div data-md-component="announce">
       
@@ -457,6 +462,46 @@
 
               
             
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../usage/MoveIP/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Move EgressIP
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../usage/Aliyun/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Run EgressGateway on Aliyun Cloud
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -654,6 +699,17 @@
       
       
       
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  <span class="md-ellipsis">
+    CRD EgressClusterPolicy
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
       <a href="./" class="md-nav__link md-nav__link--active">
         
   
@@ -663,6 +719,70 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#definition" class="md-nav__link">
+    Definition
+  </a>
+  
+    <nav class="md-nav" aria-label="Definition">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#metadata" class="md-nav__link">
+    Metadata
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#spec" class="md-nav__link">
+    Spec
+  </a>
+  
+    <nav class="md-nav" aria-label="Spec">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#egressip" class="md-nav__link">
+    egressIP
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#appliedto" class="md-nav__link">
+    appliedTo
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
       
     </li>
   
@@ -720,6 +840,46 @@
   
   <span class="md-ellipsis">
     CRD EgressClusterInfo
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../egctl/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    egctl cli
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../metrics/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    metrics
   </span>
   
 
@@ -935,6 +1095,61 @@
   
   
   
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#definition" class="md-nav__link">
+    Definition
+  </a>
+  
+    <nav class="md-nav" aria-label="Definition">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#metadata" class="md-nav__link">
+    Metadata
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#spec" class="md-nav__link">
+    Spec
+  </a>
+  
+    <nav class="md-nav" aria-label="Spec">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#egressip" class="md-nav__link">
+    egressIP
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#appliedto" class="md-nav__link">
+    appliedTo
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
 </nav>
                   </div>
                 </div>
@@ -979,9 +1194,165 @@
 </span><span id="__span-0-23"><a id="__codelineno-0-23" name="__codelineno-0-23" href="#__codelineno-0-23"></a><span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">&quot;10.6.1.92/32&quot;</span>
 </span><span id="__span-0-24"><a id="__codelineno-0-24" name="__codelineno-0-24" href="#__codelineno-0-24"></a><span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">&quot;fd00::92/128&quot;</span>
 </span></code></pre></div>
-<ol>
-<li>The <code>namespaceSelector</code> uses a selector to select the list of matching namespaces. Within the selected namespace scope, use the <code>podSelector</code> to select the matching Pods, and then apply the Egress policy to these selected Pods.</li>
-</ol>
+<h2 id="definition">Definition</h2>
+<h3 id="metadata">Metadata</h3>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+<th>Schema</th>
+<th>Validation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>namespace</td>
+<td>The namespace of the EgressPolicy resource</td>
+<td>string</td>
+<td>required</td>
+</tr>
+<tr>
+<td>name</td>
+<td>The name of the EgressPolicy resource</td>
+<td>string</td>
+<td>required</td>
+</tr>
+</tbody>
+</table>
+<h3 id="spec">Spec</h3>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+<th>Schema</th>
+<th>Validation</th>
+<th>Values</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>egressGatewayName</td>
+<td>Reference to the EgressGateway to use</td>
+<td>string</td>
+<td>required</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>egressIP</td>
+<td>Configuration for the egress IP settings</td>
+<td><a href="#egressIP">egressIP</a></td>
+<td>optional</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>appliedTo</td>
+<td>Selector for the Pods to which the EgressPolicy should be applied</td>
+<td><a href="#appliedTo">appliedTo</a></td>
+<td>required</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>destSubnet</td>
+<td>When accessing the subnets in this list, use the Egress IP. If <code>feature.clusterCIDR.autoDetect</code> was enabled during installation and <code>destSubnet</code> is not configured, then access to external networks outside the cluster will automatically use the Egress IP.</td>
+<td>[]string</td>
+<td>optional</td>
+<td>CIDR notation</td>
+<td></td>
+</tr>
+<tr>
+<td>priority</td>
+<td>Priority of the policy</td>
+<td>integer</td>
+<td>optional</td>
+<td></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<h4 id="egressip">egressIP</h4>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+<th>Schema</th>
+<th>Validation</th>
+<th>Values</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>ipv4</td>
+<td>Specific IPv4 address to use if defined</td>
+<td>string</td>
+<td>optional</td>
+<td>valid IPv4</td>
+<td></td>
+</tr>
+<tr>
+<td>ipv6</td>
+<td>Specific IPv6 address to use if defined</td>
+<td>string</td>
+<td>optional</td>
+<td>valid IPv6</td>
+<td></td>
+</tr>
+<tr>
+<td>useNodeIP</td>
+<td>Flag to indicate if the Node IP should be used as the Egress IP when no specific IP address is defined</td>
+<td>bool</td>
+<td>optional</td>
+<td>true/false</td>
+<td>false</td>
+</tr>
+</tbody>
+</table>
+<h4 id="appliedto">appliedTo</h4>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+<th>Schema</th>
+<th>Validation</th>
+<th>Values</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>podSelector</td>
+<td>Use Egress Policy on Pods Matched by Selector</td>
+<td>map[string]string</td>
+<td>optional</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>podSubnet</td>
+<td>Use Egress Policy on Pods Matched by Subnet (Not Implemented)</td>
+<td>[]string</td>
+<td>optional</td>
+<td>CIDR</td>
+<td></td>
+</tr>
+<tr>
+<td>namespaceSelector</td>
+<td>The <code>namespaceSelector</code> uses a selector to select the list of matching namespaces. Within the selected namespace scope, use the <code>podSelector</code> to select the matching Pods, and then apply the Egress policy to these selected Pods.</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+</tbody>
+</table>
 
 
 
