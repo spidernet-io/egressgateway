@@ -339,7 +339,7 @@ github.com/pmezard/go-difflib/difflib
 # github.com/projectcalico/api v0.0.0-20230222223746-44aa60c2201f
 ## explicit; go 1.16
 github.com/projectcalico/api/pkg/lib/numorstring
-# github.com/prometheus/client_golang v1.19.0
+# github.com/prometheus/client_golang v1.19.1
 ## explicit; go 1.20
 github.com/prometheus/client_golang/prometheus
 github.com/prometheus/client_golang/prometheus/collectors
