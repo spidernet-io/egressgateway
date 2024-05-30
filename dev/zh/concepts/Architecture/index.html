@@ -11,7 +11,7 @@
         <link rel="canonical" href="https://spidernet-io.github.io/egressgateway/dev/zh/concepts/Architecture/">
       
       
-        <link rel="prev" href="../../usage/Aliyun/">
+        <link rel="prev" href="../../usage/Troubleshooting/">
       
       
         <link rel="next" href="../Datapath/">
@@ -493,6 +493,26 @@
   
   <span class="md-ellipsis">
     Run EgressGateway on Aliyun Cloud
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../usage/Troubleshooting/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Troubleshooting
   </span>
   
 
@@ -1003,25 +1023,6 @@
   
   
   
-    <li class="md-nav__item">
-      <a href="../../Troubleshooting/" class="md-nav__link">
-        
-  
-  <span class="md-ellipsis">
-    Troubleshooting
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-    
-      
-      
-  
-  
-  
     
     
     
@@ -1031,9 +1032,9 @@
         
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" >
         
-          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="0">
             
   
   <span class="md-ellipsis">
@@ -1044,8 +1045,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_7">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
             <span class="md-nav__icon md-icon"></span>
             Development
           </label>
@@ -1132,9 +1133,9 @@
         
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_8" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" >
         
-          <label class="md-nav__link" for="__nav_8" id="__nav_8_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="0">
             
   
   <span class="md-ellipsis">
@@ -1145,8 +1146,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_8_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_8">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7">
             <span class="md-nav__icon md-icon"></span>
             Community
           </label>
@@ -1373,7 +1374,7 @@
   <h1>Architecture</h1>
 
 <p>EgressGateway 由控制面和数据面 2 部分组成，控制面由 4 个控制循环组成，数据面由 3 个控制循环组成。控制面以 Deployment 方式部署，支持多副本高可用，数据面以 DaemonSet 的方式部署。控制循环具体如下图：</p>
-<p><img alt="arch" src="../../../proposal/03-egress-ip/arch.png" /></p>
+<p><img alt="arch" src="../../../images/arch.png" /></p>
 <h2 id="_1">控制器</h2>
 <h3 id="egresstunnel-a">EgressTunnel 调谐循环 (a)</h3>
 <h4 id="_2">初始化</h4>

@@ -602,6 +602,26 @@
 
               
             
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="usage/Troubleshooting/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Troubleshooting
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -916,25 +936,6 @@
   
   
   
-    <li class="md-nav__item">
-      <a href="Troubleshooting/" class="md-nav__link">
-        
-  
-  <span class="md-ellipsis">
-    Troubleshooting
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-    
-      
-      
-  
-  
-  
     
     
     
@@ -944,9 +945,9 @@
         
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" >
         
-          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="0">
             
   
   <span class="md-ellipsis">
@@ -957,8 +958,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_7">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
             <span class="md-nav__icon md-icon"></span>
             Development
           </label>
@@ -1045,9 +1046,9 @@
         
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_8" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" >
         
-          <label class="md-nav__link" for="__nav_8" id="__nav_8_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="0">
             
   
   <span class="md-ellipsis">
@@ -1058,8 +1059,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_8_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_8">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7">
             <span class="md-nav__icon md-icon"></span>
             Community
           </label>
@@ -1203,7 +1204,7 @@
 <p>In a Kubernetes (k8s) cluster, when Pods access external services, their Egress IP addresses are not fixed. In the Overlay network, the Egress IP address is determined by the node where the Pod resides. While in the Underlay network, Pods directly use their own IP addresses for external communication. Consequently, when Pods are rescheduled, regardless of the network mode, their IP addresses for external communication change. This instability poses a challenge for system administrators in managing IP addresses, especially as the cluster scales and during network fault diagnostics. Controlling egress traffic based on a Pod's original egress IP outside the cluster becomes difficult.</p>
 <p>To solve this problem, EgressGateway has been introduced into the k8s cluster. It is an open-source EgressGateway designed to resolve egress egress IP address issues across various CNI network modes, such as Calico, Flannel, Weave, and Spiderpool. Through flexible configuration and management of egress policies, EgressGateway allows setting egress IP addresses for tenant-level or cluster-level workloads. When Pods need to access the external network, the system consistently uses the configured Egress IP as the egress address, providing a stable solution for egress traffic management.</p>
 <h2 id="architecture">Architecture</h2>
-<p><img alt="Architecture" src="architecture02.png" /></p>
+<p><img alt="Architecture" src="images/architecture02.png" /></p>
 <h2 id="why-egressgateway">Why EgressGateway</h2>
 <h3 id="support-a-range-of-features-and-advantages">Support a range of features and advantages</h3>
 <ul>

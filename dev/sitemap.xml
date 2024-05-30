@@ -8,20 +8,6 @@
         <xhtml:link rel="alternate" hreflang="zh" href="https://spidernet-io.github.io/egressgateway/devzh/"/>
     </url>
     <url>
-        <loc>https://spidernet-io.github.io/egressgateway/dev/Troubleshooting/</loc>
-        <lastmod>2024-05-08</lastmod>
-        <changefreq>daily</changefreq>
-        <xhtml:link rel="alternate" hreflang="en" href="https://spidernet-io.github.io/egressgateway/dev/Troubleshooting/"/>
-        <xhtml:link rel="alternate" hreflang="zh" href="https://spidernet-io.github.io/egressgateway/devzh/Troubleshooting/"/>
-    </url>
-    <url>
-        <loc>https://spidernet-io.github.io/egressgateway/dev/backends/</loc>
-        <lastmod>2024-05-08</lastmod>
-        <changefreq>daily</changefreq>
-        <xhtml:link rel="alternate" hreflang="en" href="https://spidernet-io.github.io/egressgateway/dev/backends/"/>
-        <xhtml:link rel="alternate" hreflang="zh" href="https://spidernet-io.github.io/egressgateway/devzh/backends/"/>
-    </url>
-    <url>
         <loc>https://spidernet-io.github.io/egressgateway/dev/concepts/Architecture/</loc>
         <lastmod>2024-05-08</lastmod>
         <changefreq>daily</changefreq>
@@ -267,6 +253,13 @@
         <xhtml:link rel="alternate" hreflang="zh" href="https://spidernet-io.github.io/egressgateway/devzh/usage/NamespaceDefaultEgressGateway/"/>
     </url>
     <url>
+        <loc>https://spidernet-io.github.io/egressgateway/dev/usage/Troubleshooting/</loc>
+        <lastmod>2024-05-08</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://spidernet-io.github.io/egressgateway/dev/usage/Troubleshooting/"/>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://spidernet-io.github.io/egressgateway/devzh/usage/Troubleshooting/"/>
+    </url>
+    <url>
         <loc>https://spidernet-io.github.io/egressgateway/dev/usage/Uninstall/</loc>
         <lastmod>2024-05-08</lastmod>
         <changefreq>daily</changefreq>
@@ -300,20 +293,6 @@
         <changefreq>daily</changefreq>
         <xhtml:link rel="alternate" hreflang="zh" href="https://spidernet-io.github.io/egressgateway/dev/zh/"/>
         <xhtml:link rel="alternate" hreflang="en" href="https://spidernet-io.github.io/egressgateway/dev"/>
-    </url>
-    <url>
-        <loc>https://spidernet-io.github.io/egressgateway/dev/zh/Troubleshooting/</loc>
-        <lastmod>2024-05-08</lastmod>
-        <changefreq>daily</changefreq>
-        <xhtml:link rel="alternate" hreflang="zh" href="https://spidernet-io.github.io/egressgateway/dev/zh/Troubleshooting/"/>
-        <xhtml:link rel="alternate" hreflang="en" href="https://spidernet-io.github.io/egressgateway/devTroubleshooting/"/>
-    </url>
-    <url>
-        <loc>https://spidernet-io.github.io/egressgateway/dev/zh/backends/</loc>
-        <lastmod>2024-05-08</lastmod>
-        <changefreq>daily</changefreq>
-        <xhtml:link rel="alternate" hreflang="zh" href="https://spidernet-io.github.io/egressgateway/dev/zh/backends/"/>
-        <xhtml:link rel="alternate" hreflang="en" href="https://spidernet-io.github.io/egressgateway/devbackends/"/>
     </url>
     <url>
         <loc>https://spidernet-io.github.io/egressgateway/dev/zh/concepts/Architecture/</loc>
@@ -559,6 +538,13 @@
         <changefreq>daily</changefreq>
         <xhtml:link rel="alternate" hreflang="zh" href="https://spidernet-io.github.io/egressgateway/dev/zh/usage/NamespaceDefaultEgressGateway/"/>
         <xhtml:link rel="alternate" hreflang="en" href="https://spidernet-io.github.io/egressgateway/devusage/NamespaceDefaultEgressGateway/"/>
+    </url>
+    <url>
+        <loc>https://spidernet-io.github.io/egressgateway/dev/zh/usage/Troubleshooting/</loc>
+        <lastmod>2024-05-08</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://spidernet-io.github.io/egressgateway/dev/zh/usage/Troubleshooting/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://spidernet-io.github.io/egressgateway/devusage/Troubleshooting/"/>
     </url>
     <url>
         <loc>https://spidernet-io.github.io/egressgateway/dev/zh/usage/Uninstall/</loc>

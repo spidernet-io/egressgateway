@@ -498,6 +498,26 @@
 
               
             
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../usage/Troubleshooting/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Troubleshooting
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -812,25 +832,6 @@
   
   
   
-    <li class="md-nav__item">
-      <a href="../../Troubleshooting/" class="md-nav__link">
-        
-  
-  <span class="md-ellipsis">
-    Troubleshooting
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-    
-      
-      
-  
-  
-  
     
     
     
@@ -840,9 +841,9 @@
         
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" >
         
-          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="0">
             
   
   <span class="md-ellipsis">
@@ -853,8 +854,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_7">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
             <span class="md-nav__icon md-icon"></span>
             Development
           </label>
@@ -941,9 +942,9 @@
         
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_8" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" >
         
-          <label class="md-nav__link" for="__nav_8" id="__nav_8_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="0">
             
   
   <span class="md-ellipsis">
@@ -954,8 +955,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_8_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_8">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7">
             <span class="md-nav__icon md-icon"></span>
             Community
           </label>
@@ -1101,7 +1102,7 @@
 <p>EgressGateway supports nanotube traffic in an Underlay CNI environment.</p>
 <h2 id="problems-to-be-solved">Problems to be solved</h2>
 <p>As shown in the diagram, the datapath for the round-trip Underlay access to the external Server is: "Process &lt;-&gt; A &lt;-&gt; B &lt;-&gt; Server".</p>
-<p><img alt="datapath" src="underlay_datapath.png" /></p>
+<p><img alt="datapath" src="../../images/underlay_datapath.png" /></p>
 <p>The EgressGateway's rules don't work at all, and in order to pipe the Underlay traffic, two things need to be addressed, hijacking the traffic to the Pod's host and avoiding routing asymmetric messages from being dropped when the answering traffic arrives at the Pod's host</p>
 <h2 id="hijack-a-pod-message-that-matches-the-egressgateway-policy-to-the-host-on-which-it-resides">Hijack a Pod message that matches the EgressGateway policy to the host on which it resides</h2>
 <p>There are two things you need to do to solve this problem:
@@ -1111,10 +1112,10 @@
 <p>Thing 2, you can route, iptables, etc. to forward the matched traffic to the host via the veth pair in front of you. This can be done by setting spiderpool crd spidercoordinators.spec.hijackCIDR, and spiderpool will set the appropriate route. The rules can also be set via sidecar.</p>
 <h3 id="send-datapath">Send datapath</h3>
 <p>As shown in the figure, by adding a new veth pair and routing the traffic through the veth to the host, the datapath is actually the same as the overlay.</p>
-<p><img alt="send-datapath" src="underlay_send_datapath.png" /></p>
+<p><img alt="send-datapath" src="../../images/underlay_send_datapath.png" /></p>
 <h3 id="reply-datapath">Reply datapath</h3>
 <p>As shown in the figure, the datapath returned is "Server-&gt;D-&gt;C-&gt;B-&gt;E-&gt;Process"</p>
-<p><img alt="reply" src="underlay_error_reply_datapath.png" /></p>
+<p><img alt="reply" src="../../images/underlay_error_reply_datapath.png" /></p>
 <ul>
 <li>The srcIP=ServerIP, dstIP=EIP of the message as it passes through the D-segment datapath to the EgressGateway.</li>
 <li>The C datapath looks up the connection tracking table and NATs the message, srcIP=ServerIP, dstIP=PodIP.</li>
@@ -1151,7 +1152,7 @@
 </span><span id="__span-1-17"><a id="__codelineno-1-17" name="__codelineno-1-17" href="#__codelineno-1-17"></a>iptables<span class="w"> </span>-t<span class="w"> </span>mangle<span class="w"> </span>-A<span class="w"> </span>POSTROUTING<span class="w"> </span>-m<span class="w"> </span>mark<span class="w"> </span>--mark<span class="w"> </span>0x27<span class="w"> </span>-j<span class="w"> </span>MARK<span class="w"> </span>--set-mark<span class="w"> </span>0x00
 </span></code></pre></div>
 <p>As shown in the figure, after the above rule, the new answer datapath is "Server-&gt;D-&gt;C-&gt;B-&gt;A-&gt;Process"</p>
-<p><img alt="reply" src="underlay_reply_datapath.png" /></p>
+<p><img alt="reply" src="../../images/underlay_reply_datapath.png" /></p>
 <p>The biggest difference is that from the gateway node to the node where the Pod is located, it is through the EgressGateway tunnel, and after the message arrives at the node where the Pod is located, it is forwarded to the Pod from the veth pair through the route, and the spiderpool will send out the corresponding route when it creates the veth pair for the Pod, or it can send out the corresponding route through the agent. The spiderpool will issue the corresponding route while creating the veth pair for the Pod, or it can issue the corresponding routing rules through the agent. Because it passes through the host's network stack. This avoids the routing asymmetry problem.</p>
 <h2 id="summary">Summary</h2>
 <p>Except for the rules that need to be issued at the gateway node so that the answer message can be returned to the Pod through the EgressGateway, everything else that needs to be done can be accomplished with the help of the spiderpool configuration.</p>
