@@ -84,9 +84,29 @@ jobs:
       ipfamily: dual
       justE2E: 'true'
 
+  call_ci_v1_29:
+    # it races to upload images and artifacts when all jobs running , so just call_ci_latest build image
+    needs: [call_ci_latest]
+    uses: ./.github/workflows/auto-pr-ci.yaml
+    secrets: inherit
+    with:
+      kindNodeImage: kindest/node:v1.29.4
+      ipfamily: dual
+      justE2E: 'true'
+
+  call_ci_v1_30:
+    # it races to upload images and artifacts when all jobs running , so just call_ci_latest build image
+    needs: [call_ci_latest]
+    uses: ./.github/workflows/auto-pr-ci.yaml
+    secrets: inherit
+    with:
+      kindNodeImage: kindest/node:v1.30.0
+      ipfamily: dual
+      justE2E: 'true'
+
   creat_issue:
     runs-on: ubuntu-latest
-    needs: [call_ci_latest, call_ci_v1_22, call_ci_v1_23, call_ci_v1_24, call_ci_v1_25, call_ci_v1_26, call_ci_v1_27, call_ci_v1_28]
+    needs: [call_ci_latest, call_ci_v1_22, call_ci_v1_23, call_ci_v1_24, call_ci_v1_25, call_ci_v1_26, call_ci_v1_27, call_ci_v1_28, call_ci_v1_29, call_ci_v1_30]
     # https://docs.github.com/en/actions/learn-github-actions/contexts#jobs-context
     if: ${{ always() && ( needs.call_ci_latest.result == 'failure' || needs.call_ci_v1_22.result == 'failure' || needs.call_ci_v1_23.result == 'failure' || needs.call_ci_v1_24.result == 'failure' || needs.call_ci_v1_25.result == 'failure' || needs.call_ci_v1_26.result == 'failure' || needs.call_ci_v1_27.result == 'failure' || needs.call_ci_v1_28.result == 'failure') }}
     steps:
