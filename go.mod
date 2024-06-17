@@ -6,7 +6,7 @@ require (
 	github.com/agiledragon/gomonkey/v2 v2.11.0
 	github.com/asaskevich/govalidator v0.0.0-20230301143203-a9d515a09cc2
 	github.com/cilium/ipam v0.0.0-20220824141044-46ef3d556735
-	github.com/go-faker/faker/v4 v4.4.1
+	github.com/go-faker/faker/v4 v4.4.2
 	github.com/go-logr/logr v1.4.1
 	github.com/go-swagger/go-swagger v0.30.4
 	github.com/google/gops v0.3.27
@@ -133,7 +133,7 @@ require (
 	golang.org/x/oauth2 v0.16.0 // indirect
 	golang.org/x/sync v0.6.0 // indirect
 	golang.org/x/term v0.18.0 // indirect
-	golang.org/x/text v0.14.0 // indirect
+	golang.org/x/text v0.15.0 // indirect
 	golang.org/x/time v0.5.0 // indirect
 	golang.org/x/tools v0.17.0 // indirect
 	google.golang.org/appengine v1.6.8 // indirect
