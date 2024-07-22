@@ -16,6 +16,11 @@ import (
 	"time"
 
 	"github.com/go-logr/logr"
+	"github.com/spidernet-io/egressgateway/pkg/config"
+	"github.com/spidernet-io/egressgateway/pkg/ipset"
+	"github.com/spidernet-io/egressgateway/pkg/iptables"
+	egressv1 "github.com/spidernet-io/egressgateway/pkg/k8s/apis/v1beta1"
+	"github.com/spidernet-io/egressgateway/pkg/utils"
 	apierr "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
@@ -27,12 +32,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/handler"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
-
-	"github.com/spidernet-io/egressgateway/pkg/config"
-	"github.com/spidernet-io/egressgateway/pkg/ipset"
-	"github.com/spidernet-io/egressgateway/pkg/iptables"
-	egressv1 "github.com/spidernet-io/egressgateway/pkg/k8s/apis/v1beta1"
-	"github.com/spidernet-io/egressgateway/pkg/utils"
 )
 
 const (
@@ -81,6 +80,8 @@ func (r *policeReconciler) Reconcile(ctx context.Context, req reconcile.Request)
 		res, err = r.reconcilePolicy(ctx, newReq, log)
 	case "EgressClusterInfo":
 		res, err = r.reconcileClusterInfo(ctx, newReq, log)
+	case "EgressTunnel":
+		res, err = r.reconcileTunnel(ctx, newReq, log)
 	default:
 		return reconcile.Result{}, nil
 	}
@@ -91,6 +92,7 @@ type PolicyCommon struct {
 	NodeName   string
 	DestSubnet []string
 	IP         IP
+	UseNodeIP  bool
 }
 
 type IP struct {
@@ -132,10 +134,15 @@ func (r *policeReconciler) initApplyPolicy() error {
 			if list.Name == r.cfg.NodeName {
 				isEgressNode = true
 				for _, eip := range list.Eips {
+					useNodeIP := false
+					if eip.IPv4 == "" && eip.IPv6 == "" {
+						useNodeIP = true
+					}
 					for _, policy := range eip.Policies {
 						snatPolicies[policy] = &PolicyCommon{
-							NodeName: list.Name,
-							IP:       IP{V4: eip.IPv4, V6: eip.IPv6},
+							NodeName:  list.Name,
+							IP:        IP{V4: eip.IPv4, V6: eip.IPv6},
+							UseNodeIP: useNodeIP,
 						}
 					}
 				}
@@ -197,20 +204,6 @@ func (r *policeReconciler) initApplyPolicy() error {
 		}
 	}
 
-	// add forward rules for replay packet on gateway node, which should be enabled for spiderpool
-	//if isEgressNode && r.cfg.FileConfig.EnableGatewayReplyRoute {
-	//	gatewayReplyRouteMark := r.cfg.FileConfig.GatewayReplyRouteMark
-	//	dev := r.cfg.FileConfig.VXLAN.Name
-	//
-	//	for _, table := range r.mangleTables {
-	//		table.UpdateChain(&iptables.Chain{Name: "EGRESSGATEWAY-REPLY-ROUTING"})
-	//		chainMapRules := buildReplyRouteIptables(uint32(gatewayReplyRouteMark), dev)
-	//		for chain, rules := range chainMapRules {
-	//			table.InsertOrAppendRules(chain, rules)
-	//		}
-	//	}
-	//}
-
 	for _, table := range r.mangleTables {
 		rules := make([]iptables.Rule, 0)
 		for policy, val := range unSnatPolicies {
@@ -242,10 +235,37 @@ func (r *policeReconciler) initApplyPolicy() error {
 			Name:  "EGRESSGATEWAY-MARK-REQUEST",
 			Rules: rules,
 		})
+
+		tunnels := new(egressv1.EgressTunnelList)
+		err := r.client.List(ctx, tunnels)
+		if err != nil {
+			return err
+		}
+		rules = make([]iptables.Rule, 0)
+		for _, tunnel := range tunnels.Items {
+			if tunnel.Name == r.cfg.NodeName {
+				continue
+			}
+			if tunnel.Status.Mark == "" || tunnel.Status.Tunnel.MAC == "" {
+				continue
+			}
+			rule, err := buildPreroutingReplyRouting(r.cfg.FileConfig.VXLAN.Name, baseMark, tunnel.Status.Mark, tunnel.Status.Tunnel.MAC)
+			if err != nil {
+				return err
+			}
+			rules = append(rules, rule...)
+		}
+		restore := iptables.Rule{
+			Match:  iptables.MatchCriteria{}.CTDirectionOriginal(iptables.DirectionReply),
+			Action: iptables.RestoreConnMarkAction{RestoreMask: 0xffffffff},
+			Comment: []string{
+				"label for restoring connections, rule is from the EgressGateway",
+			},
+		}
+		rules = append(rules, restore)
 		table.UpdateChain(&iptables.Chain{
-			Name: "EGRESSGATEWAY-REPLY-ROUTING",
-			Rules: buildPreroutingReplyRouting(r.cfg.FileConfig.VXLAN.Name,
-				uint32(r.cfg.FileConfig.GatewayReplyRouteMark)),
+			Name:  "EGRESSGATEWAY-REPLY-ROUTING",
+			Rules: rules,
 		})
 	}
 
@@ -262,7 +282,7 @@ func (r *policeReconciler) initApplyPolicy() error {
 				isIgnoreInternalCIDR = true
 			}
 
-			rule := buildEipRule(policyName, val.IP, table.IPVersion, isIgnoreInternalCIDR)
+			rule := buildEipRule(policyName, val.IP, table.IPVersion, isIgnoreInternalCIDR, val.UseNodeIP)
 			if rule != nil {
 				rules = append(rules, *rule)
 			}
@@ -475,11 +495,7 @@ func (r *policeReconciler) getPolicySrcIPs(policyNs, policyName string, filter f
 	return ipv4List, ipv6List, nil
 }
 
-func buildEipRule(policyName string, eip IP, version uint8, isIgnoreInternalCIDR bool) *iptables.Rule {
-	if (version == 4 && eip.V4 == "") || (version == 6 && eip.V6 == "") {
-		return nil
-	}
-
+func buildEipRule(policyName string, eip IP, version uint8, isIgnoreInternalCIDR bool, useNodeIP bool) *iptables.Rule {
 	tmp := "v4-"
 	ip := eip.V4
 	ignoreName := EgressClusterCIDRIPv4
@@ -499,7 +515,11 @@ func buildEipRule(policyName string, eip IP, version uint8, isIgnoreInternalCIDR
 			CTDirectionOriginal(iptables.DirectionOriginal)
 	}
 
-	action := iptables.SNATAction{ToAddr: ip}
+	var action iptables.Action
+	action = iptables.SNATAction{ToAddr: ip}
+	if useNodeIP {
+		action = iptables.MasqAction{}
+	}
 	rule := &iptables.Rule{Match: matchCriteria, Action: action, Comment: []string{
 		fmt.Sprintf("snat policy %s", policyName),
 	}}
@@ -732,6 +752,15 @@ func (r *policeReconciler) reconcileGateway(ctx context.Context, req reconcile.R
 	return reconcile.Result{}, nil
 }
 
+func (r *policeReconciler) reconcileTunnel(ctx context.Context, req reconcile.Request, log logr.Logger) (reconcile.Result, error) {
+	log.V(1).Info("reconciling")
+	err := r.initApplyPolicy()
+	if err != nil {
+		return reconcile.Result{Requeue: true}, err
+	}
+	return reconcile.Result{}, nil
+}
+
 func buildFilterStaticRule(base uint32) map[string][]iptables.Rule {
 	res := map[string][]iptables.Rule{
 		"FORWARD": {{
@@ -783,13 +812,16 @@ func buildMangleStaticRule(base uint32,
 		},
 	})
 
-	if isEgressNode && enableGatewayReplyRoute {
+	if isEgressNode {
 		prerouting = append(prerouting, iptables.Rule{
-			Match:  iptables.MatchCriteria{},
-			Action: iptables.JumpAction{Target: "EGRESSGATEWAY-REPLY-ROUTING"},
-			Comment: []string{
-				"egressGateway Reply datapath rule, rule is from the EgressGateway",
-			},
+			Match:   iptables.MatchCriteria{},
+			Action:  iptables.JumpAction{Target: "EGRESSGATEWAY-REPLY-ROUTING"},
+			Comment: []string{"EgressGateway reply datapath rule, rule is from the EgressGateway"},
+		})
+		prerouting = append(prerouting, iptables.Rule{
+			Match:   iptables.MatchCriteria{}.MarkMatchesWithMask(base, 0xff000000),
+			Action:  iptables.AcceptAction{},
+			Comment: []string{"EgressGateway reply datapath rule, rule is from the EgressGateway"},
 		})
 		postrouting = append(postrouting, iptables.Rule{
 			Match:  iptables.MatchCriteria{}.MarkMatchesWithMask(replyMark, 0xffffffff),
@@ -808,30 +840,34 @@ func buildMangleStaticRule(base uint32,
 	return res
 }
 
-func buildPreroutingReplyRouting(vxlanName string, replyMark uint32) []iptables.Rule {
+func buildPreroutingReplyRouting(vxlanName string, base uint32, replyMark string, mac string) ([]iptables.Rule, error) {
+	mark, err := parseMark(replyMark)
+	if err != nil {
+		return nil, err
+	}
 	return []iptables.Rule{
 		{
-			Match:  iptables.MatchCriteria{}.InInterface(vxlanName),
-			Action: iptables.SetMaskedMarkAction{Mark: replyMark, Mask: 0xffffffff},
+			Match:  iptables.MatchCriteria{}.InInterface(vxlanName).SrcMacSource(mac).CTDirectionOriginal(iptables.DirectionOriginal),
+			Action: iptables.SetMaskedMarkAction{Mark: mark, Mask: 0xffffffff},
 			Comment: []string{
-				"mark the traffic from the EgressGateway tunnel, rule is from the EgressGateway",
+				"Mark the traffic from the EgressGateway tunnel, rule is from the EgressGateway",
 			},
 		},
 		{
-			Match:  iptables.MatchCriteria{}.MarkMatchesWithMask(replyMark, 0xffffffff),
-			Action: iptables.SaveConnMarkAction{SaveMask: replyMark},
+			Match:  iptables.MatchCriteria{}.MarkMatchesWithMask(mark, 0xffffffff),
+			Action: iptables.SaveConnMarkAction{SaveMask: 0xffffffff},
 			Comment: []string{
-				"save mark to the connection, rule is from the EgressGateway",
+				"Save mark to the connection, rule is from the EgressGateway",
 			},
 		},
 		{
-			Match:  iptables.MatchCriteria{}.ConntrackState("ESTABLISHED"),
-			Action: iptables.RestoreConnMarkAction{RestoreMask: 0},
+			Match:  iptables.MatchCriteria{}.InInterface(vxlanName).SrcMacSource(mac),
+			Action: iptables.SetMaskedMarkAction{Mark: base, Mask: 0xffffffff},
 			Comment: []string{
-				"label for restoring connections, rule is from the EgressGateway",
+				"Clear Mark of the inner package, rule is from the EgressGateway",
 			},
 		},
-	}
+	}, nil
 }
 
 // reconcilePolicy reconcile egress policy

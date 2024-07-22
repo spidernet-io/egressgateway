@@ -89,6 +89,7 @@ nav:
       - Failover: usage/EgressGatewayFailover.md
       - Move EgressIP: usage/MoveIP.md
       - Run EgressGateway on Aliyun Cloud: usage/Aliyun.md
+      - Run EgressGateway on AWS Cloud: usage/AwsWithCilium.md
       - Troubleshooting: usage/Troubleshooting.md
   - Concepts:
       - Architecture: concepts/Architecture.md

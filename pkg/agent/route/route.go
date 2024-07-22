@@ -12,12 +12,34 @@ import (
 	"github.com/spidernet-io/egressgateway/pkg/markallocator"
 )
 
-func NewRuleRoute(log logr.Logger) *RuleRoute {
-	return &RuleRoute{log: log}
+// NewRuleRoute creates a new RuleRoute with the provided options.
+func NewRuleRoute(options ...Option) *RuleRoute {
+	r := &RuleRoute{priority: 99}
+	for _, o := range options {
+		o(r)
+	}
+	return r
+}
+
+type Option func(*RuleRoute)
+
+// WithPriority sets the priority of the RuleRoute.
+func WithPriority(priority int) Option {
+	return func(r *RuleRoute) {
+		r.priority = priority
+	}
+}
+
+// WithLogger sets the logger of the RuleRoute.
+func WithLogger(logger logr.Logger) Option {
+	return func(r *RuleRoute) {
+		r.log = logger
+	}
 }
 
 type RuleRoute struct {
-	log logr.Logger
+	log      logr.Logger
+	priority int
 }
 
 func (r *RuleRoute) PurgeStaleRules(marks map[int]struct{}, baseMark string) error {
@@ -29,6 +51,7 @@ func (r *RuleRoute) PurgeStaleRules(marks map[int]struct{}, baseMark string) err
 	clean := func(rules []netlink.Rule, family int) error {
 		for _, rule := range rules {
 			rule.Family = family
+
 			if _, ok := marks[rule.Mark]; !ok {
 				if int(start) <= rule.Mark && int(end) >= rule.Mark {
 					err := netlink.RuleDel(&rule)
@@ -158,10 +181,14 @@ func (r *RuleRoute) EnsureRule(family int, table int, mark int, log logr.Logger)
 		if rule.Table != table {
 			del = true
 		}
+		if rule.Priority != r.priority {
+			del = true
+		}
 		if found {
 			del = true
 		}
 		if del {
+			r.log.V(1).Info("delete rule", "rule", rule.String())
 			rule.Family = family
 			err = netlink.RuleDel(&rule)
 			if err != nil {
@@ -175,18 +202,18 @@ func (r *RuleRoute) EnsureRule(family int, table int, mark int, log logr.Logger)
 		return nil
 	}
 
-	if !found {
-		r.log.V(1).Info("rule not match, try add it")
-		rule := netlink.NewRule()
-		rule.Table = table
-		rule.Mark = mark
-		rule.Family = family
+	// not found
+	r.log.V(1).Info("rule not match, try add it")
+	rule := netlink.NewRule()
+	rule.Table = table
+	rule.Mark = mark
+	rule.Family = family
+	rule.Priority = r.priority
 
-		r.log.V(1).Info("add rule", "rule", rule.String())
-		err := netlink.RuleAdd(rule)
-		if err != nil {
-			return err
-		}
+	r.log.V(1).Info("add rule", "rule", rule.String())
+	err = netlink.RuleAdd(rule)
+	if err != nil {
+		return err
 	}
 	return nil
 }

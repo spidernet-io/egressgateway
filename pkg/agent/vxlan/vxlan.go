@@ -149,7 +149,7 @@ func (dev *Device) ensureLink(vxlan *netlink.Vxlan) (*netlink.Vxlan, error) {
 func (dev *Device) ensureFilter(ipv4, ipv6 *net.IPNet) error {
 	name := "all"
 	if ipv4 != nil {
-		err := writeProcSys(fmt.Sprintf("/proc/sys/net/ipv4/conf/%s/rp_filter", name), "2")
+		err := writeProcSys(fmt.Sprintf("/proc/sys/net/ipv4/conf/%s/rp_filter", name), "0")
 		if err != nil {
 			return err
 		}

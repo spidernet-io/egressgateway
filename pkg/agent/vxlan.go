@@ -58,11 +58,6 @@ type VTEP struct {
 	MAC  net.HardwareAddr
 }
 
-type replyRoute struct {
-	tunnelIP  net.IP
-	linkIndex int
-}
-
 func (r *vxlanReconciler) Reconcile(ctx context.Context, req reconcile.Request) (reconcile.Result, error) {
 	kind, newReq, err := utils.ParseKindWithReq(req)
 	if err != nil {
@@ -87,277 +82,14 @@ func (r *vxlanReconciler) Reconcile(ctx context.Context, req reconcile.Request) 
 	case "EgressGateway":
 		return r.reconcileEgressGateway(ctx, newReq, log)
 	case "EgressEndpointSlice":
-		return r.reconcileEgressEndpointSlice(ctx, newReq, log)
+		// return r.reconcileEgressEndpointSlice(ctx, newReq, log)
+		return reconcile.Result{}, nil
 	case "EgressClusterEndpointSlice":
-		return r.reconcileEgressClusterEndpointSlice(ctx, newReq, log)
+		// return r.reconcileEgressClusterEndpointSlice(ctx, newReq, log)
+		return reconcile.Result{}, nil
 	default:
 		return reconcile.Result{}, nil
 	}
-}
-
-func (r *vxlanReconciler) reconcileEgressEndpointSlice(ctx context.Context, req reconcile.Request, log logr.Logger) (reconcile.Result, error) {
-	if err := r.syncReplayRoute(log); err != nil {
-		return reconcile.Result{Requeue: true}, err
-	}
-
-	return reconcile.Result{}, nil
-}
-
-func (r *vxlanReconciler) reconcileEgressClusterEndpointSlice(ctx context.Context, req reconcile.Request, log logr.Logger) (reconcile.Result, error) {
-	if err := r.syncReplayRoute(log); err != nil {
-		return reconcile.Result{Requeue: true}, err
-	}
-
-	return reconcile.Result{}, nil
-}
-
-func (r *vxlanReconciler) syncReplayRoute(log logr.Logger) error {
-
-	if !r.cfg.FileConfig.EnableGatewayReplyRoute {
-		log.Info("EnableGatewayReplyRoute=false")
-		return nil
-	}
-
-	table := r.cfg.FileConfig.GatewayReplyRouteTable
-	mark := r.cfg.FileConfig.GatewayReplyRouteMark
-	ipv4RouteMap := make(map[string]replyRoute, 0)
-	ipv6RouteMap := make(map[string]replyRoute, 0)
-	hostIPV4RouteMap := make(map[string]replyRoute, 0)
-	hostIPV6RouteMap := make(map[string]replyRoute, 0)
-	ctx := context.Background()
-	link, err := netlink.LinkByName(r.cfg.FileConfig.VXLAN.Name)
-	if err != nil {
-		return err
-	}
-	index := link.Attrs().Index
-
-	// Ensure policy routing
-	if r.cfg.FileConfig.EnableIPv4 {
-		err := r.ruleRoute.EnsureRule(netlink.FAMILY_V4, table, mark, r.log)
-		if err != nil {
-			log.Error(err, "failed to set the routing rule")
-			return err
-		}
-	}
-
-	if r.cfg.FileConfig.EnableIPv6 {
-		err := r.ruleRoute.EnsureRule(netlink.FAMILY_V6, table, mark, r.log)
-		if err != nil {
-			log.Error(err, "failed to set the routing rule")
-			return err
-		}
-	}
-
-	// get the latest routing info
-	egpList := new(egressv1.EgressPolicyList)
-	if err := r.client.List(ctx, egpList); err != nil {
-		log.Error(err, "list EgressPolicyList failed")
-		return err
-	}
-	for _, egp := range egpList.Items {
-		if egp.Status.Node == r.cfg.EnvConfig.NodeName {
-			selector, err := metav1.LabelSelectorAsSelector(&metav1.LabelSelector{
-				MatchLabels: map[string]string{egressv1.LabelPolicyName: egp.Name},
-			})
-			if err != nil {
-				log.Error(err, "failed to build LabelSelector; ", "key: ", egressv1.LabelPolicyName, " value: ", egp.Name)
-				continue
-			}
-
-			opt := &client.ListOptions{LabelSelector: selector}
-			egenps := new(egressv1.EgressEndpointSliceList)
-			err = r.client.List(ctx, egenps, opt)
-			if err != nil {
-				log.Error(err, "list EgressEndpointSliceList failed;", " egpName=", egp.Name)
-				continue
-			}
-
-			for _, egep := range egenps.Items {
-				for _, ep := range egep.Endpoints {
-					if ep.Node != r.cfg.EnvConfig.NodeName {
-						if r.cfg.FileConfig.EnableIPv4 {
-							if tunnelIP, ok := r.peerMap.Load(ep.Node); ok {
-								for _, v := range ep.IPv4 {
-									ipv4RouteMap[v] = replyRoute{tunnelIP: *tunnelIP.IPv4}
-								}
-							} else {
-								log.Info("r.peerMap.Load(", ep.Node, ") = nil")
-							}
-						}
-
-						if r.cfg.FileConfig.EnableIPv6 {
-							if tunnelIP, ok := r.peerMap.Load(ep.Node); ok {
-								for _, v := range ep.IPv6 {
-									ipv6RouteMap[v] = replyRoute{tunnelIP: *tunnelIP.IPv6}
-								}
-							}
-						}
-					}
-				}
-
-			}
-		}
-	}
-
-	egcpList := new(egressv1.EgressClusterPolicyList)
-	if err := r.client.List(ctx, egcpList); err != nil {
-		log.Error(err, "list EgressClusterPolicyList failed")
-		return err
-	}
-	for _, egcp := range egcpList.Items {
-		if egcp.Status.Node == r.cfg.EnvConfig.NodeName {
-			selector, err := metav1.LabelSelectorAsSelector(&metav1.LabelSelector{
-				MatchLabels: map[string]string{egressv1.LabelPolicyName: egcp.Name},
-			})
-			if err != nil {
-				log.Error(err, "failed to build LabelSelector; ", "key: ", egressv1.LabelPolicyName, "value: ", egcp.Name)
-				continue
-			}
-
-			opt := &client.ListOptions{LabelSelector: selector}
-			egcenps := new(egressv1.EgressClusterEndpointSliceList)
-			err = r.client.List(ctx, egcenps, opt)
-			if err != nil {
-				log.Error(err, "list EgressClusterEndpointSliceList failed;", " egcpName=", egcp.Name)
-				continue
-			}
-
-			for _, egcep := range egcenps.Items {
-				for _, ep := range egcep.Endpoints {
-					if ep.Node != r.cfg.EnvConfig.NodeName {
-						if r.cfg.FileConfig.EnableIPv4 {
-							if tunnelIP, ok := r.peerMap.Load(ep.Node); ok {
-								for _, v := range ep.IPv4 {
-									ipv4RouteMap[v] = replyRoute{tunnelIP: *tunnelIP.IPv4}
-								}
-							}
-						}
-
-						if r.cfg.FileConfig.EnableIPv6 {
-							if tunnelIP, ok := r.peerMap.Load(ep.Node); ok {
-								for _, v := range ep.IPv6 {
-									ipv6RouteMap[v] = replyRoute{tunnelIP: *tunnelIP.IPv6}
-								}
-							}
-						}
-					}
-				}
-			}
-		}
-	}
-
-	// get info about the routing table on the host
-	routeFilter := &netlink.Route{Table: table}
-	ipV4Routes, err := netlink.RouteListFiltered(netlink.FAMILY_V4, routeFilter, netlink.RT_FILTER_TABLE)
-	if err != nil {
-		log.Error(err, "Failed to obtain the IPv4 route of the host")
-		return err
-	}
-	ipV6Routes, err := netlink.RouteListFiltered(netlink.FAMILY_V4, routeFilter, netlink.RT_FILTER_TABLE)
-	if err != nil {
-		log.Error(err, "Failed to obtain the IPv6 route of the host")
-		return err
-	}
-
-	for _, route := range ipV4Routes {
-		if route.Table == table {
-			hostIPV4RouteMap[route.Dst.IP.String()] = replyRoute{tunnelIP: route.Gw, linkIndex: route.LinkIndex}
-		}
-	}
-	for _, route := range ipV6Routes {
-		if route.Table == table {
-			hostIPV6RouteMap[route.Dst.IP.String()] = replyRoute{tunnelIP: route.Gw, linkIndex: route.LinkIndex}
-		}
-	}
-
-	// IPV4
-	if r.cfg.FileConfig.EnableIPv4 {
-		// delete unnecessary or incorrect routes from the host
-		for k, v := range hostIPV4RouteMap {
-			route := &netlink.Route{LinkIndex: index, Dst: &net.IPNet{IP: net.ParseIP(k).To4(), Mask: net.CIDRMask(32, 32)}, Gw: v.tunnelIP, Table: table}
-			if _, ok := ipv4RouteMap[k]; !ok {
-				err = netlink.RouteDel(route)
-				if err != nil {
-					log.Error(err, "failed to delete route; ", "route=", route)
-					continue
-				}
-			} else {
-				if v.tunnelIP.String() != ipv4RouteMap[k].tunnelIP.String() || index != v.linkIndex {
-					err = netlink.RouteDel(route)
-					if err != nil {
-						log.Error(err, "failed to delete route; ", "route=", route)
-						continue
-					}
-
-					route.ILinkIndex = index
-					route.Dst = &net.IPNet{IP: net.ParseIP(k).To4(), Mask: net.CIDRMask(32, 32)}
-					route.Gw = ipv4RouteMap[k].tunnelIP
-					err = netlink.RouteAdd(route)
-					if err != nil {
-						log.Error(err, "failed to add route; ", "route=", route)
-						continue
-					}
-				}
-			}
-		}
-
-		// add a missing route from the host
-		for k, v := range ipv4RouteMap {
-			if _, ok := hostIPV4RouteMap[k]; !ok {
-				route := &netlink.Route{LinkIndex: index, Dst: &net.IPNet{IP: net.ParseIP(k).To4(), Mask: net.CIDRMask(32, 32)}, Gw: v.tunnelIP, Table: table}
-				err = netlink.RouteAdd(route)
-				log.Info("add ", "route=", route)
-				if err != nil {
-					log.Error(err, "failed to add route; ", "route=", route)
-					continue
-				}
-			}
-		}
-	}
-
-	// IPV6
-	if r.cfg.FileConfig.EnableIPv6 {
-		for k, v := range hostIPV6RouteMap {
-			route := &netlink.Route{LinkIndex: index, Dst: &net.IPNet{IP: net.ParseIP(k).To16(), Mask: net.CIDRMask(128, 128)}, Gw: v.tunnelIP, Table: table}
-			if _, ok := ipv6RouteMap[k]; !ok {
-				err = netlink.RouteDel(route)
-				if err != nil {
-					log.Error(err, "failed to delete route; ", "route=", route)
-					continue
-				}
-			} else {
-				if v.tunnelIP.String() != ipv6RouteMap[k].tunnelIP.String() || index != v.linkIndex {
-					err = netlink.RouteDel(route)
-					if err != nil {
-						log.Error(err, "failed to delete route; ", "route=", route)
-						continue
-					}
-
-					route.ILinkIndex = index
-					route.Dst = &net.IPNet{IP: net.ParseIP(k).To16(), Mask: net.CIDRMask(128, 128)}
-					route.Gw = ipv6RouteMap[k].tunnelIP
-					err = netlink.RouteAdd(route)
-					if err != nil {
-						log.Error(err, "failed to add route; ", "route=", route)
-						continue
-					}
-				}
-			}
-		}
-
-		for k, v := range ipv6RouteMap {
-			if _, ok := hostIPV6RouteMap[k]; !ok {
-				route := &netlink.Route{LinkIndex: index, Dst: &net.IPNet{IP: net.ParseIP(k).To16(), Mask: net.CIDRMask(1, 128)}, Gw: v.tunnelIP, Table: table}
-				err = netlink.RouteAdd(route)
-				if err != nil {
-					log.Error(err, "failed to add route; ", "route=", route)
-					continue
-				}
-			}
-		}
-	}
-
-	return nil
 }
 
 func (r *vxlanReconciler) reconcileEgressGateway(ctx context.Context, req reconcile.Request, log logr.Logger) (reconcile.Result, error) {
@@ -450,18 +182,10 @@ func (r *vxlanReconciler) reconcileEgressTunnel(ctx context.Context, req reconci
 			log.Error(err, "add egress tunnel, ensure route with error")
 		}
 
-		egressTunnelMap, err := r.listEgressTunnel(ctx)
+		err = r.ruleRoute.Ensure(r.cfg.FileConfig.VXLAN.Name, peer.IPv4, peer.IPv6, peer.Mark, peer.Mark)
 		if err != nil {
-			return reconcile.Result{}, err
+			r.log.Error(err, "ensure vxlan link")
 		}
-		if _, ok := egressTunnelMap[node.Name]; ok {
-			// if it is egresstunnel
-			err = r.ruleRoute.Ensure(r.cfg.FileConfig.VXLAN.Name, peer.IPv4, peer.IPv6, peer.Mark, peer.Mark)
-			if err != nil {
-				r.log.Error(err, "ensure vxlan link")
-			}
-		}
-
 		return reconcile.Result{}, nil
 	}
 
@@ -734,12 +458,7 @@ func (r *vxlanReconciler) keepVXLAN() {
 
 		markMap := make(map[int]struct{})
 		r.peerMap.Range(func(key string, val vxlan.Peer) bool {
-			egressTunnelMap, err := r.listEgressTunnel(context.Background())
-			if err != nil {
-				r.log.Error(err, "ensure vxlan list EgressTunnel with error")
-				return false
-			}
-			if _, ok := egressTunnelMap[key]; ok && val.Mark != 0 {
+			if val.Mark != 0 {
 				markMap[val.Mark] = struct{}{}
 				err = r.ruleRoute.Ensure(r.cfg.FileConfig.VXLAN.Name, val.IPv4, val.IPv6, val.Mark, val.Mark)
 				if err != nil {
@@ -853,14 +572,6 @@ func (r *vxlanReconciler) keepReplayRoute() {
 		return
 	}
 
-	for {
-		err := r.syncReplayRoute(log)
-		if err != nil {
-			log.Error(err, "failed to keep replay route")
-		}
-
-		time.Sleep(time.Second * 10)
-	}
 }
 
 func (r *vxlanReconciler) Start(ctx context.Context) error {
@@ -881,7 +592,7 @@ func parseMarkToInt(mark string) (int, error) {
 }
 
 func newEgressTunnelController(mgr manager.Manager, cfg *config.Config, log logr.Logger) error {
-	ruleRoute := route.NewRuleRoute(log)
+	ruleRoute := route.NewRuleRoute(route.WithLogger(log))
 
 	r := &vxlanReconciler{
 		client:         mgr.GetClient(),
@@ -949,7 +660,6 @@ func newEgressTunnelController(mgr manager.Manager, cfg *config.Config, log logr
 	}
 
 	go r.keepVXLAN()
-	go r.keepReplayRoute()
 
 	return nil
 }
@@ -978,4 +688,6 @@ func (p egressTunnelPredicate) Update(updateEvent event.UpdateEvent) bool {
 	}
 	return false
 }
-func (p egressTunnelPredicate) Generic(_ event.GenericEvent) bool { return false }
+func (p egressTunnelPredicate) Generic(_ event.GenericEvent) bool {
+	return false
+}
