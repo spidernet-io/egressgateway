@@ -19,38 +19,44 @@ jobs:
           persist-credentials: false
           ref: ${{ inputs.ref }}
 
-      # download all artifact
-      - name: Download images
-        uses: actions/download-artifact@v4.1.7
-        with:
-          path: output/artifact-trivy
 
-      - name: Load And Scan Images
-        run: |
-          PROJECT_DIR=`pwd`
-          cd output/artifact-trivy
-          ls
-          ALL_DIR=`ls`
-          IMAGE_DIR=""
-          for ITEM in $ALL_DIR ; do
-              grep -E "^image-tar" <<< "${ITEM}" &>/dev/null && IMAGE_DIR+=" ${ITEM} "
-          done
-          echo "IMAGE_DIR=${IMAGE_DIR}"
-          RESULT=true
-          for ITEM in $IMAGE_DIR ; do
-              TAR_FILES=`ls ${ITEM}`
-              for TAR in $TAR_FILES ; do
-                echo "image tar ${ITEM}/${TAR}"
-                cat ${ITEM}/${TAR} |  docker import - ${TAR%*.tar}:${{ inputs.ref }}
-                echo "---------trivy checkout image ${TAR%*.tar}:${{ inputs.ref }} --------------------"
-                make -C ${PROJECT_DIR} lint_image_trivy -e IMAGE_NAME=${TAR%*.tar}:${{ inputs.ref }} \
-                    || { RESULT=false ; echo "error, image ${TAR%*.tar}:${{ inputs.ref }} is bad" ; }
-              done
-          done
-          docker images
-          if [ "$RESULT" != "true" ]; then
-              echo "error, image is not secure, see detail on Step 'Load And Scan Images' "
-              exit 1
-          else
-              exit 0
-          fi
+      - name: Download egressgateway-agent
+        uses: actions/download-artifact@v4.1.8
+        with:
+          name: image-tar-egressgateway-agent
+          path: output/image
+      - name: Download egressgateway-controller
+        uses: actions/download-artifact@v4.1.8
+        with:
+          name: image-tar-egressgateway-controller
+          path: output/image
+      - name: Download egressgateway-nettools
+        uses: actions/download-artifact@v4.1.8
+        with:
+          name: image-tar-egressgateway-nettools
+          path: output/image
+
+
+      - name: List downloaded files
+        run: ls -al output/image
+
+
+      # merge to one step
+      # https://github.com/aquasecurity/trivy-action/issues/313
+      - name: Scan agent
+        uses: aquasecurity/trivy-action@0.24.0
+        with:
+          input: output/image/egressgateway-agent.tar
+          severity: 'CRITICAL,HIGH'
+
+      - name: Scan controller
+        uses: aquasecurity/trivy-action@0.24.0
+        with:
+          input: output/image/egressgateway-controller.tar
+          severity: 'CRITICAL,HIGH'
+
+      - name: Scan nettools
+        uses: aquasecurity/trivy-action@0.24.0
+        with:
+          input: output/image/egressgateway-nettools.tar
+          severity: 'CRITICAL,HIGH'
