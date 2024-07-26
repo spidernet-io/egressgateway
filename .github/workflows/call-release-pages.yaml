@@ -133,7 +133,7 @@ jobs:
           echo "Push a doc version: ${{ env.DOCS_TAG }} from branch: ${{ env.REF }}, update it to latest: ${{ env.SET_LATEST }} "
 
       - name: Upload Artifact
-        uses: actions/upload-artifact@v4.3.2
+        uses: actions/upload-artifact@v4.3.4
         with:
           name: site_artifact
           path: site.tar.gz
@@ -153,7 +153,7 @@ jobs:
 
       ## doc
       - name: Download Artifact
-        uses: actions/download-artifact@v4.1.7
+        uses: actions/download-artifact@v4.1.8
         with:
           name: site_artifact
 
