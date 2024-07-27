@@ -6,8 +6,8 @@ package common
 import (
 	"context"
 	"fmt"
-	"sort"
-
+	"github.com/spidernet-io/egressgateway/pkg/controller/clusterinfo"
+	"github.com/spidernet-io/egressgateway/pkg/utils"
 	"time"
 
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -15,7 +15,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	egressv1 "github.com/spidernet-io/egressgateway/pkg/k8s/apis/v1beta1"
-	"github.com/spidernet-io/egressgateway/test/e2e/tools"
 )
 
 func UpdateEgressClusterInfoNew(ctx context.Context, cli client.Client,
@@ -54,115 +53,111 @@ func UpdateEgressClusterInfoNew(ctx context.Context, cli client.Client,
 	}
 }
 
-func CheckEgressClusterInfoStatusSynced(
-	ctx context.Context, cli client.Client,
-	eci *egressv1.EgressClusterInfo,
+func CheckEgressClusterInfoStatusSynced(ctx context.Context,
+	cli client.Client, eci *egressv1.EgressClusterInfo,
 ) error {
-	ctx, cancel := context.WithTimeout(ctx, time.Second*20)
+	ctx, cancel := context.WithTimeout(ctx, time.Second*30)
 	defer cancel()
 
-	// get calico ip pool
-	// get node ip list
-	// get clusterIP list
+	clusterIPReady := false
+	nodeIPReady := false
+	calicoReady := false
+	extraCIDRReady := false
 
-	// check all internal ip synced
+	clusterIPReadyStr := ""
 
 	for {
 		select {
 		case <-ctx.Done():
-			return fmt.Errorf("check EgressClusterInfo status synced timeout")
+			return fmt.Errorf("check EgressClusterInfo status synced timeout "+
+				"clusterIPReady=%v nodeIPReady=%v calicoReady=%v extraCIDRReady=%v \n%s",
+				clusterIPReady, nodeIPReady, calicoReady, extraCIDRReady, clusterIPReadyStr)
 		default:
 			key := types.NamespacedName{Name: eci.Name}
 			err := cli.Get(ctx, key, eci)
 			if err != nil {
+				return fmt.Errorf("failed go get egress cluster info %w "+
+					"clusterIPReady=%v nodeIPReady=%v calicoReady=%v extraCIDRReady=%v",
+					err, clusterIPReady, nodeIPReady, calicoReady, extraCIDRReady)
+			}
+
+			if !clusterIPReady {
+				if eci.Spec.AutoDetect.ClusterIP {
+					clusterIPv4CIDRs, clusterIPv6CIDRs, err := clusterinfo.GetClusterCIDR(ctx, cli)
+					if err != nil {
+						continue
+					}
+					if eci.Status.ClusterIP == nil {
+						continue
+					}
+					pass1 := utils.EqualStringSlice(eci.Status.ClusterIP.IPv4, clusterIPv4CIDRs)
+					pass2 := utils.EqualStringSlice(eci.Status.ClusterIP.IPv6, clusterIPv6CIDRs)
+					if pass1 && pass2 {
+						clusterIPReady = true
+					}
+
+					clusterIPReadyStr = fmt.Sprintf("eci.Status.ClusterIP.IPv4=%v, clusterIPv4CIDRs=%v, "+
+						"eci.Status.ClusterIP.IPv6=%v, clusterIPv6CIDRs=%v",
+						eci.Status.ClusterIP.IPv4, clusterIPv4CIDRs,
+						eci.Status.ClusterIP.IPv6, clusterIPv6CIDRs)
+
+				} else {
+					clusterIPReady = true
+				}
+			}
+
+			if !nodeIPReady {
+				if eci.Spec.AutoDetect.NodeIP {
+					nodeIPv4List, nodeIPv6List, err := GetAllNodesIPNew(ctx, cli)
+					if err != nil {
+						return err
+					}
+
+					list := make([]string, 0)
+					for _, v := range eci.Status.NodeIP {
+						list = append(list, v.IPv4...)
+						list = append(list, v.IPv6...)
+					}
+
+					if utils.EqualStringSlice(list, append(nodeIPv4List, nodeIPv6List...)) {
+						nodeIPReady = true
+					}
+				} else {
+					nodeIPReady = true
+				}
+			}
+
+			if !calicoReady {
+				if eci.Spec.AutoDetect.PodCidrMode == "calico" {
+					res, err := ListCalicoIPPool(ctx, cli)
+					if err != nil {
+						return err
+					}
+
+					list := make([]string, 0)
+					for _, v := range eci.Status.PodCIDR {
+						list = append(list, v.IPv4...)
+						list = append(list, v.IPv6...)
+					}
+
+					if utils.EqualStringSlice(res, list) {
+						calicoReady = true
+					}
+				} else {
+					calicoReady = true
+				}
+			}
+
+			if !extraCIDRReady {
+				if utils.EqualStringSlice(eci.Spec.ExtraCidr, eci.Status.ExtraCidr) {
+					extraCIDRReady = true
+				}
+			}
+
+			if clusterIPReady && nodeIPReady && calicoReady && extraCIDRReady {
 				return nil
 			}
-
-			checked := 0
-
-			exp := 0
-			if eci.Spec.AutoDetect.ClusterIP {
-				exp++
-				// do check
-				clusterIPv4CIDRs, clusterIPv6CIDRs, err := GetClusterCIDR(ctx, cli)
-				if err != nil {
-					return err
-				}
-				if eci.Status.ClusterIP == nil {
-					return fmt.Errorf("error: empty  eci.Status.ClusterIP")
-				}
-				err1 := diffTwoSlice(eci.Status.ClusterIP.IPv4, clusterIPv4CIDRs)
-				err2 := diffTwoSlice(eci.Status.ClusterIP.IPv6, clusterIPv6CIDRs)
-				if err1 == nil && err2 == nil {
-					checked++
-				}
-			}
-			if eci.Spec.AutoDetect.NodeIP {
-				exp++
-				// do check
-				nodeIPv4List, nodeIPv6List, err := GetAllNodesIPNew(ctx, cli)
-				if err != nil {
-					return err
-				}
-
-				list := make([]string, 0)
-				for _, v := range eci.Status.NodeIP {
-					list = append(list, v.IPv4...)
-					list = append(list, v.IPv6...)
-				}
-
-				err = diffTwoSlice(list, append(nodeIPv4List, nodeIPv6List...))
-				if err == nil {
-					checked++
-				}
-			}
-			if eci.Spec.AutoDetect.PodCidrMode == "calico" {
-				exp++
-				// do check
-				res, err := ListCalicoIPPool(ctx, cli)
-				if err != nil {
-					return err
-				}
-
-				list := make([]string, 0)
-				for _, v := range eci.Status.PodCIDR {
-					list = append(list, v.IPv4...)
-					list = append(list, v.IPv6...)
-				}
-
-				err = diffTwoSlice(res, list)
-				if err == nil {
-					checked++
-				}
-			}
-			if tools.IsSameSlice(eci.Spec.ExtraCidr, eci.Status.ExtraCidr) {
-				exp++
-				checked++
-			}
-
-			if checked == exp {
-				return nil
-			}
-			return nil
+			time.Sleep(time.Second * 4)
 		}
 	}
-}
-
-func diffTwoSlice(a []string, b []string) error {
-	if len(a) != len(b) {
-		return fmt.Errorf("arrays have different lengths")
-	}
-
-	// Sort the arrays in ascending order
-	sort.Strings(a)
-	sort.Strings(b)
-
-	// Compare each element in the sorted arrays
-	for i := 0; i < len(a); i++ {
-		if a[i] != b[i] {
-			return fmt.Errorf("arrays are not identical")
-		}
-	}
-
-	return nil
 }

@@ -25,7 +25,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/handler"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
-	"sigs.k8s.io/controller-runtime/pkg/source"
 
 	"github.com/spidernet-io/egressgateway/pkg/agent/route"
 	"github.com/spidernet-io/egressgateway/pkg/agent/vxlan"
@@ -918,31 +917,34 @@ func newEgressTunnelController(mgr manager.Manager, cfg *config.Config, log logr
 		return err
 	}
 
-	if err := c.Watch(source.Kind(mgr.GetCache(), &egressv1.EgressTunnel{}),
+	sourceEgressTunnel := utils.SourceKind(mgr.GetCache(),
+		&egressv1.EgressTunnel{},
 		handler.EnqueueRequestsFromMapFunc(utils.KindToMapFlat("EgressTunnel")),
-		egressTunnelPredicate{},
-	); err != nil {
+		egressTunnelPredicate{})
+	if err := c.Watch(sourceEgressTunnel); err != nil {
 		return fmt.Errorf("failed to watch EgressTunnel: %w", err)
 	}
 
-	if err := c.Watch(source.Kind(mgr.GetCache(), &egressv1.EgressGateway{}),
-		handler.EnqueueRequestsFromMapFunc(utils.KindToMapFlat("EgressGateway"))); err != nil {
+	sourceEgressGateway := utils.SourceKind(mgr.GetCache(),
+		&egressv1.EgressGateway{},
+		handler.EnqueueRequestsFromMapFunc(utils.KindToMapFlat("EgressGateway")))
+	if err := c.Watch(sourceEgressGateway); err != nil {
 		return fmt.Errorf("failed to watch EgressGateway: %w", err)
 	}
 
-	if err := c.Watch(
-		source.Kind(mgr.GetCache(), &egressv1.EgressEndpointSlice{}),
+	sourceEgressEndpointSlice := utils.SourceKind(mgr.GetCache(),
+		&egressv1.EgressEndpointSlice{},
 		handler.EnqueueRequestsFromMapFunc(utils.KindToMapFlat("EgressEndpointSlice")),
-		epSlicePredicate{},
-	); err != nil {
+		epSlicePredicate{})
+	if err := c.Watch(sourceEgressEndpointSlice); err != nil {
 		return fmt.Errorf("failed to watch EgressEndpointSlice: %w", err)
 	}
 
-	if err := c.Watch(
-		source.Kind(mgr.GetCache(), &egressv1.EgressClusterEndpointSlice{}),
+	sourceEgressClusterEndpointSlice := utils.SourceKind(mgr.GetCache(),
+		&egressv1.EgressClusterEndpointSlice{},
 		handler.EnqueueRequestsFromMapFunc(utils.KindToMapFlat("EgressClusterEndpointSlice")),
-		epSlicePredicate{},
-	); err != nil {
+		epSlicePredicate{})
+	if err := c.Watch(sourceEgressClusterEndpointSlice); err != nil {
 		return fmt.Errorf("failed to watch EgressClusterEndpointSlice: %w", err)
 	}
 

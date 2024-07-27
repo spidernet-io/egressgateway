@@ -6,6 +6,7 @@ package endpoint
 import (
 	"context"
 	"fmt"
+	"github.com/spidernet-io/egressgateway/pkg/utils"
 	"net"
 	"reflect"
 	"sort"
@@ -353,19 +354,33 @@ func NewEgressEndpointSliceController(mgr manager.Manager, log logr.Logger, cfg 
 		return err
 	}
 
-	if err = c.Watch(source.Kind(mgr.GetCache(), &corev1.Pod{}),
-		handler.EnqueueRequestsFromMapFunc(enqueuePod(r.client)), podPredicate{}); err != nil {
+	sourcePod := utils.SourceKind(mgr.GetCache(),
+		&corev1.Pod{},
+		handler.EnqueueRequestsFromMapFunc(enqueuePod(r.client)),
+		podPredicate{})
+	if err = c.Watch(sourcePod); err != nil {
 		return fmt.Errorf("failed to watch Pod: %v", err)
 	}
 
-	if err = c.Watch(source.Kind(mgr.GetCache(), &v1beta1.EgressPolicy{}),
-		&handler.EnqueueRequestForObject{}); err != nil {
+	kindEgressPolicy := source.Kind(mgr.GetCache(),
+		&v1beta1.EgressPolicy{},
+		&handler.TypedEnqueueRequestForObject[*v1beta1.EgressPolicy]{},
+	)
+	if err = c.Watch(kindEgressPolicy); err != nil {
 		return fmt.Errorf("failed to watch EgressPolicy: %v", err)
 	}
 
-	opt := handler.OnlyControllerOwner()
-	h := handler.EnqueueRequestForOwner(mgr.GetScheme(), mgr.GetRESTMapper(), &v1beta1.EgressPolicy{}, opt)
-	if err = c.Watch(source.Kind(mgr.GetCache(), &v1beta1.EgressEndpointSlice{}), h); err != nil {
+	egressEndpointSliceHandler := handler.TypedEnqueueRequestForOwner[*v1beta1.EgressEndpointSlice]
+	kindEgressEndpointSlice := source.Kind(mgr.GetCache(),
+		&v1beta1.EgressEndpointSlice{},
+		egressEndpointSliceHandler(
+			mgr.GetScheme(),
+			mgr.GetRESTMapper(),
+			&v1beta1.EgressPolicy{},
+			handler.OnlyControllerOwner(),
+		),
+	)
+	if err = c.Watch(kindEgressEndpointSlice); err != nil {
 		return fmt.Errorf("failed to watch EgressEndpointSlice: %v", err)
 	}
 

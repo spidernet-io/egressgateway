@@ -5,6 +5,7 @@ package egressendpointslice_test
 
 import (
 	"context"
+	config2 "sigs.k8s.io/controller-runtime/pkg/client/config"
 	"testing"
 
 	. "github.com/onsi/ginkgo/v2"
@@ -43,7 +44,12 @@ var _ = BeforeSuite(func() {
 	config, err = common.ReadConfig()
 	Expect(err).NotTo(HaveOccurred())
 
-	cli, err = client.New(config.KubeConfigFile, client.Options{Scheme: schema.GetScheme()})
+	cfg := config2.GetConfigOrDie()
+	cfg.QPS = 100
+	cfg.Burst = 100
+	cli, err = client.New(cfg, client.Options{
+		Scheme: schema.GetScheme(),
+	})
 	Expect(err).NotTo(HaveOccurred())
 
 	ctx := context.Background()

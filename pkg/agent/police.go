@@ -16,11 +16,6 @@ import (
 	"time"
 
 	"github.com/go-logr/logr"
-	"github.com/spidernet-io/egressgateway/pkg/config"
-	"github.com/spidernet-io/egressgateway/pkg/ipset"
-	"github.com/spidernet-io/egressgateway/pkg/iptables"
-	egressv1 "github.com/spidernet-io/egressgateway/pkg/k8s/apis/v1beta1"
-	"github.com/spidernet-io/egressgateway/pkg/utils"
 	apierr "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
@@ -32,7 +27,12 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/handler"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
-	"sigs.k8s.io/controller-runtime/pkg/source"
+
+	"github.com/spidernet-io/egressgateway/pkg/config"
+	"github.com/spidernet-io/egressgateway/pkg/ipset"
+	"github.com/spidernet-io/egressgateway/pkg/iptables"
+	egressv1 "github.com/spidernet-io/egressgateway/pkg/k8s/apis/v1beta1"
+	"github.com/spidernet-io/egressgateway/pkg/utils"
 )
 
 const (
@@ -1147,40 +1147,58 @@ func newPolicyController(mgr manager.Manager, log logr.Logger, cfg *config.Confi
 		return err
 	}
 
-	if err := c.Watch(source.Kind(mgr.GetCache(), &egressv1.EgressGateway{}),
-		handler.EnqueueRequestsFromMapFunc(utils.KindToMapFlat("EgressGateway"))); err != nil {
+	sourceEgressGateway := utils.SourceKind(mgr.GetCache(),
+		&egressv1.EgressGateway{},
+		handler.EnqueueRequestsFromMapFunc(utils.KindToMapFlat("EgressGateway")))
+	if err := c.Watch(sourceEgressGateway); err != nil {
 		return fmt.Errorf("failed to watch EgressGateway: %w", err)
 	}
 
-	if err := c.Watch(source.Kind(mgr.GetCache(), &egressv1.EgressPolicy{}),
-		handler.EnqueueRequestsFromMapFunc(utils.KindToMapFlat("EgressPolicy")), policyPredicate{}); err != nil {
+	sourceEgressPolicy := utils.SourceKind(mgr.GetCache(),
+		&egressv1.EgressPolicy{},
+		handler.EnqueueRequestsFromMapFunc(utils.KindToMapFlat("EgressPolicy")),
+		policyPredicate{})
+	if err := c.Watch(sourceEgressPolicy); err != nil {
 		return fmt.Errorf("failed to watch EgressPolicy: %w", err)
 	}
 
-	if err := c.Watch(source.Kind(mgr.GetCache(), &egressv1.EgressClusterPolicy{}),
-		handler.EnqueueRequestsFromMapFunc(utils.KindToMapFlat("EgressClusterPolicy")), policyPredicate{}); err != nil {
+	sourceEgressClusterPolicy := utils.SourceKind(mgr.GetCache(),
+		&egressv1.EgressClusterPolicy{},
+		handler.EnqueueRequestsFromMapFunc(utils.KindToMapFlat("EgressClusterPolicy")),
+		policyPredicate{})
+	if err := c.Watch(sourceEgressClusterPolicy); err != nil {
 		return fmt.Errorf("failed to watch EgressClusterPolicy: %w", err)
 	}
 
-	if err := c.Watch(
-		source.Kind(mgr.GetCache(), &egressv1.EgressEndpointSlice{}),
+	sourceEgressEndpointSlice := utils.SourceKind(mgr.GetCache(),
+		&egressv1.EgressEndpointSlice{},
 		handler.EnqueueRequestsFromMapFunc(enqueueEndpointSlice()),
-		epSlicePredicate{},
-	); err != nil {
+		epSlicePredicate{})
+	if err := c.Watch(sourceEgressEndpointSlice); err != nil {
 		return fmt.Errorf("failed to watch EgressEndpointSlice: %w", err)
 	}
 
-	if err := c.Watch(
-		source.Kind(mgr.GetCache(), &egressv1.EgressClusterEndpointSlice{}),
+	sourceEgressClusterEndpointSlice := utils.SourceKind(mgr.GetCache(),
+		&egressv1.EgressClusterEndpointSlice{},
 		handler.EnqueueRequestsFromMapFunc(enqueueEndpointSlice()),
-		epSlicePredicate{},
-	); err != nil {
+		epSlicePredicate{})
+	if err := c.Watch(sourceEgressClusterEndpointSlice); err != nil {
 		return fmt.Errorf("failed to watch EgressClusterEndpointSlice: %w", err)
 	}
 
-	if err := c.Watch(source.Kind(mgr.GetCache(), &egressv1.EgressClusterInfo{}),
-		handler.EnqueueRequestsFromMapFunc(utils.KindToMapFlat("EgressClusterInfo"))); err != nil {
+	sourceEgressClusterInfo := utils.SourceKind(mgr.GetCache(),
+		&egressv1.EgressClusterInfo{},
+		handler.EnqueueRequestsFromMapFunc(utils.KindToMapFlat("EgressClusterInfo")))
+	if err := c.Watch(sourceEgressClusterInfo); err != nil {
 		return fmt.Errorf("failed to watch EgressClusterInfo: %w", err)
+	}
+
+	sourceEgressTunnel := utils.SourceKind(mgr.GetCache(),
+		&egressv1.EgressTunnel{},
+		handler.EnqueueRequestsFromMapFunc(utils.KindToMapFlat("EgressTunnel")),
+		egressTunnelPredicate{})
+	if err := c.Watch(sourceEgressTunnel); err != nil {
+		return fmt.Errorf("failed to watch EgressTunnel: %w", err)
 	}
 
 	return nil

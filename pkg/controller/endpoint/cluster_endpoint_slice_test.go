@@ -616,7 +616,7 @@ func Test_NewEgressClusterEpSliceController(t *testing.T) {
 			patchFun: mock_NewEgressClusterEpSliceController_Watch_namespace_err,
 			expErr:   true,
 		},
-		"failed controller watch egressClusterPolilcy": {
+		"failed controller watch egressClusterPolicy": {
 			patchFun: mock_NewEgressClusterEpSliceController_Watch_clusterpolicy_err,
 			expErr:   true,
 		},
@@ -681,7 +681,6 @@ func Test_NewEgressClusterEpSliceController(t *testing.T) {
 			}
 
 			err = NewEgressClusterEpSliceController(mgr, log, cfg)
-
 			if tc.expErr {
 				assert.Error(t, err)
 			}
@@ -920,18 +919,20 @@ func Test_listClusterEndpointSlices(t *testing.T) {
 	})
 }
 
-func Test_Update(t *testing.T) {
+func TestUpdateNamespace(t *testing.T) {
 	cases := map[string]struct {
 		in  event.UpdateEvent
 		res bool
 	}{
-		"ObjectOld not Namespace": {
-			in: event.UpdateEvent{},
+		"ObjectOld all nil": {
+			in:  event.UpdateEvent{},
+			res: false,
 		},
-		"ObjectNew not Namespace": {
+		"ObjectNew nil": {
 			in: event.UpdateEvent{
 				ObjectOld: &corev1.Namespace{},
 			},
+			res: false,
 		},
 		"ObjectNew Namespace label equal": {
 			in: event.UpdateEvent{
@@ -952,12 +953,9 @@ func Test_Update(t *testing.T) {
 	for name, tc := range cases {
 		t.Run(name, func(t *testing.T) {
 			p := nsPredicate{}
-
-			ok := p.Update(tc.in)
-			if tc.res {
-				assert.True(t, ok)
-			} else {
-				assert.False(t, ok)
+			got := p.Update(tc.in)
+			if got != tc.res {
+				t.Fatalf("got %v", got)
 			}
 		})
 	}
@@ -974,16 +972,11 @@ func Test_Generic(t *testing.T) {
 
 func Test_enqueueNS(t *testing.T) {
 	cases := map[string]struct {
-		in       client.Object
+		in       *corev1.Namespace
 		objs     []client.Object
 		patchFun func(c client.Client) []gomonkey.Patches
 		expErr   bool
 	}{
-		"failed not namespace obj": {
-			in:       &corev1.Pod{},
-			patchFun: mock_enqueueNS_List_err,
-			expErr:   true,
-		},
 		"failed List": {
 			in:       &corev1.Namespace{},
 			patchFun: mock_enqueueNS_List_err,

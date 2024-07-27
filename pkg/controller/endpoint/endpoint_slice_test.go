@@ -649,7 +649,7 @@ func Test_NewEgressEndpointSliceController(t *testing.T) {
 			expErr:   true,
 		},
 
-		"failed controller watch egressPolilcy": {
+		"failed controller watch egressPolicy": {
 			patchFun: mock_NewEgressClusterEpSliceController_Watch_namespace_err,
 			expErr:   true,
 		},
@@ -1075,7 +1075,7 @@ func Test_podPredicate_Update(t *testing.T) {
 				ObjectOld: &corev1.Pod{},
 			},
 		},
-		"nodeName not equal": {
+		"Node label not equal": {
 			in: event.UpdateEvent{
 				ObjectOld: &corev1.Pod{
 					ObjectMeta: metav1.ObjectMeta{
@@ -1087,13 +1087,14 @@ func Test_podPredicate_Update(t *testing.T) {
 				},
 				ObjectNew: &corev1.Pod{
 					ObjectMeta: metav1.ObjectMeta{
-						Labels: map[string]string{"foo": "bar"},
+						Labels: map[string]string{"foo": "bar2"},
 					},
 					Spec: corev1.PodSpec{
-						NodeName: "node2",
+						NodeName: "node1",
 					},
 				},
 			},
+			res: true,
 		},
 	}
 
@@ -1121,15 +1122,11 @@ func Test_podPredicate_Generic(t *testing.T) {
 }
 func Test_enqueuePod(t *testing.T) {
 	cases := map[string]struct {
-		in       client.Object
+		in       *corev1.Pod
 		objs     []client.Object
 		patchFun func(c client.Client) []gomonkey.Patches
 		expErr   bool
 	}{
-		"failed not pod obj": {
-			in:     &corev1.Namespace{},
-			expErr: true,
-		},
 		"failed List": {
 			in:       &corev1.Pod{},
 			patchFun: mock_enqueuePod_List_err,

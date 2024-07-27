@@ -384,7 +384,8 @@ var _ = Describe("EgressPolicy", Serial, func() {
 					egp.Spec.EgressIP.IPv6 = "10.10.10.2"
 				}
 			}),
-			Entry("should fail when the `Spec.EgressIP` of the policy is not within the IP range of the ippools in the gateway used by the policy", Label("P00004"), true,
+			Entry("should fail when the `spec.EgressIP` of the policy is not within the IP range of the ippools in the gateway used by the policy",
+				Label("P00004"), true,
 				func(egp *egressv1.EgressPolicy) {
 					egp.Spec.EgressGatewayName = egw.Name
 					egp.Spec.AppliedTo.PodSubnet = []string{"10.10.0.0/16"}
@@ -395,18 +396,20 @@ var _ = Describe("EgressPolicy", Serial, func() {
 						egp.Spec.EgressIP.IPv6 = "fddd:10::2"
 					}
 				}),
-			Entry("should fail when Spec.AppliedTo is empty", Label("P00005"), true,
+			Entry("should fail when spec.AppliedTo is empty", Label("P00005"), true,
 				func(egp *egressv1.EgressPolicy) {
 					egp.Spec.EgressGatewayName = egw.Name
 					egp.Spec.AppliedTo = egressv1.AppliedTo{}
 				}),
-			Entry("should fail when the policy set with both Spec.AppliedTo.PodSubnet and Spec.AppliedTo.PodSelector", Label("P00006"), true,
+			Entry("should fail when the policy set with both spec.AppliedTo.PodSubnet and spec.AppliedTo.PodSelector",
+				Label("P00006"), true,
 				func(egp *egressv1.EgressPolicy) {
 					egp.Spec.EgressGatewayName = egw.Name
 					egp.Spec.AppliedTo.PodSubnet = []string{"10.10.0.0/16"}
 					egp.Spec.AppliedTo.PodSelector = &metav1.LabelSelector{MatchLabels: map[string]string{"a": "b"}}
 				}),
-			Entry("should fail when the `Spec.EgressIP.UseNodeIP` of the policy is set to true and the Spec.EgressIP is not empty", Label("P00017"), true,
+			Entry("should fail when the `Spec.EgressIP.UseNodeIP` of the policy is set to true and the Spec.EgressIP is not empty",
+				Label("P00017"), true,
 				func(egp *egressv1.EgressPolicy) {
 					egp.Spec.EgressGatewayName = egw.Name
 					egp.Spec.AppliedTo.PodSubnet = []string{"10.10.0.0/16"}
@@ -418,7 +421,9 @@ var _ = Describe("EgressPolicy", Serial, func() {
 						egp.Spec.EgressIP.IPv6 = egw.Spec.Ippools.Ipv6DefaultEIP
 					}
 				}),
-			Entry("should success when the `Spec.EgressIP` of the policy is not empty and the Spec.EgressIP.AllocatorPolicy is 'rr'", Label("P00010"), false,
+			Entry("should success when the `Spec.EgressIP` of the policy is not empty and the Spec.EgressIP.AllocatorPolicy is 'rr'",
+				Label("P00010"),
+				false,
 				func(egp *egressv1.EgressPolicy) {
 					egp.Spec.EgressGatewayName = egw.Name
 					egp.Spec.AppliedTo.PodSubnet = []string{"10.10.0.0/16"}
@@ -945,7 +950,7 @@ var _ = Describe("EgressPolicy", Serial, func() {
 		The policy and clusterPolicy should be created successfully, and the spec.egressGatewayName should be set to the cluster's default gateway. Verify that the status is correct.
 		Create a namespace-level default gateway. Create a policy in this namespace without specifying the gatewayName. It is expected to use the default gateway of this namespace, and verify that the status is correct.
 	*/
-	Context("Test cluster-level default-egressgateway and namesapce-level default-egressgateway", Serial, func() {
+	Context("Test cluster-level default-egressgateway and namespace-level default-egressgateway", Serial, func() {
 		var ctx context.Context
 		var err error
 		// gateway
@@ -1170,3 +1175,76 @@ func updateEgressClusterInfoExtraCidr(ctx context.Context, extraCidr []string) (
 	}
 	return egci, err
 }
+
+var _ = Describe("Create EgressPolicy use spec.EgressIP", Label("P00022"), Serial, Ordered, func() {
+	var (
+		egw *egressv1.EgressGateway
+		egp *egressv1.EgressPolicy
+		ctx context.Context
+		err error
+	)
+
+	BeforeAll(func() {
+		ctx = context.Background()
+		var err error
+
+		pool := egressv1.Ippools{}
+
+		if egressConfig.EnableIPv4 {
+			pool.IPv4 = []string{"10.6.100.1", "10.6.100.2"}
+			pool.Ipv4DefaultEIP = "10.6.100.1"
+		}
+		if egressConfig.EnableIPv6 {
+			pool.IPv6 = []string{"fd09:6:100::1", "fd09:6:100::2"}
+			pool.Ipv6DefaultEIP = "fd09:6:100::1"
+		}
+
+		nodeSelector := egressv1.NodeSelector{Selector: &metav1.LabelSelector{MatchLabels: nodeLabel}}
+
+		egw, err = common.CreateGatewayNew(ctx, cli, "egw-"+uuid.NewString(), pool, nodeSelector)
+		Expect(err).NotTo(HaveOccurred())
+		GinkgoWriter.Printf("Create EgressGateway: %s\n", egw.Name)
+
+		DeferCleanup(func() {
+			// delete the policy if it is existed
+			if egp != nil {
+				err = common.WaitEgressPoliciesDeleted(ctx, cli, []*egressv1.EgressPolicy{egp}, time.Second*5)
+				Expect(err).NotTo(HaveOccurred())
+			}
+			// delete EgressGateway
+			ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
+			defer cancel()
+			if egw != nil {
+				err = common.DeleteEgressGateway(ctx, cli, egw, time.Minute/2)
+				Expect(err).NotTo(HaveOccurred())
+			}
+		})
+	})
+
+	It("check policy status", func() {
+		egp, err = common.CreateEgressPolicyCustom(ctx, cli, func(egp *egressv1.EgressPolicy) {
+			egp.Spec.AppliedTo.PodSelector = &metav1.LabelSelector{MatchLabels: map[string]string{
+				"app": "mock-app",
+			}}
+			egp.Spec.EgressGatewayName = egw.Name
+			if egressConfig.EnableIPv4 {
+				egp.Spec.EgressIP.IPv4 = "10.6.100.2"
+			}
+			if egressConfig.EnableIPv6 {
+				egp.Spec.EgressIP.IPv6 = "fd09:6:100::2"
+			}
+		})
+		Expect(err).NotTo(HaveOccurred())
+
+		err = common.WaitEgressPolicyStatusReady(ctx, cli, egp, egressConfig.EnableIPv4, egressConfig.EnableIPv6, time.Second*10)
+		Expect(err).NotTo(HaveOccurred())
+
+		// check the status of the policy
+		if egressConfig.EnableIPv4 && egp.Status.Eip.Ipv4 != "10.6.100.2" {
+			Fail(fmt.Sprintf("the status of the policy is: %v\nthe status of expect is: %v\n", egp.Status.Eip.Ipv4, "10.6.100.2"))
+		}
+		if egressConfig.EnableIPv6 && egp.Status.Eip.Ipv6 != "fd09:6:100::2" {
+			Fail(fmt.Sprintf("the status of the policy is: %v\nthe status of expect is: %v\n", egp.Status.Eip.Ipv6, "fd09:6:100::2"))
+		}
+	})
+})

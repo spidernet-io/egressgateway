@@ -23,13 +23,14 @@ import (
 )
 
 var _ = Describe("EgressClusterInfo", Label("EgressClusterInfo"), Serial, func() {
-	var ctx = context.Background()
+	var ctx context.Context
 	var eci *egressv1.EgressClusterInfo
 
 	var calicoIPv4Prefix string
 	var calicoIPv6Prefix string
 
 	BeforeEach(func() {
+		ctx = context.Background()
 		eci = new(egressv1.EgressClusterInfo)
 		eci.Name = "default"
 		key := types.NamespacedName{Name: eci.Name}
@@ -61,8 +62,6 @@ var _ = Describe("EgressClusterInfo", Label("EgressClusterInfo"), Serial, func()
 	})
 
 	It("Get and delete EgressClusterInfo", Serial, Label("I00001", "I00007"), func() {
-		ctx := context.Background()
-
 		GinkgoWriter.Printf("check eci status synced: %s\n", eci.Name)
 		err := common.CheckEgressClusterInfoStatusSynced(ctx, cli, eci)
 		Expect(err).NotTo(HaveOccurred())
