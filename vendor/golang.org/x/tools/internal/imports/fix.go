@@ -104,7 +104,10 @@ type packageInfo struct {
 
 // parseOtherFiles parses all the Go files in srcDir except filename, including
 // test files if filename looks like a test.
-func parseOtherFiles(fset *token.FileSet, srcDir, filename string) []*ast.File {
+//
+// It returns an error only if ctx is cancelled. Files with parse errors are
+// ignored.
+func parseOtherFiles(ctx context.Context, fset *token.FileSet, srcDir, filename string) ([]*ast.File, error) {
 	// This could use go/packages but it doesn't buy much, and it fails
 	// with https://golang.org/issue/26296 in LoadFiles mode in some cases.
 	considerTests := strings.HasSuffix(filename, "_test.go")
@@ -112,11 +115,14 @@ func parseOtherFiles(fset *token.FileSet, srcDir, filename string) []*ast.File {
 	fileBase := filepath.Base(filename)
 	packageFileInfos, err := os.ReadDir(srcDir)
 	if err != nil {
-		return nil
+		return nil, ctx.Err()
 	}
 
 	var files []*ast.File
 	for _, fi := range packageFileInfos {
+		if ctx.Err() != nil {
+			return nil, ctx.Err()
+		}
 		if fi.Name() == fileBase || !strings.HasSuffix(fi.Name(), ".go") {
 			continue
 		}
@@ -132,7 +138,7 @@ func parseOtherFiles(fset *token.FileSet, srcDir, filename string) []*ast.File {
 		files = append(files, f)
 	}
 
-	return files
+	return files, ctx.Err()
 }
 
 // addGlobals puts the names of package vars into the provided map.
@@ -301,6 +307,20 @@ func (p *pass) loadPackageNames(imports []*ImportInfo) error {
 	return nil
 }
 
+// if there is a trailing major version, remove it
+func withoutVersion(nm string) string {
+	if v := path.Base(nm); len(v) > 0 && v[0] == 'v' {
+		if _, err := strconv.Atoi(v[1:]); err == nil {
+			// this is, for instance, called with rand/v2 and returns rand
+			if len(v) < len(nm) {
+				xnm := nm[:len(nm)-len(v)-1]
+				return path.Base(xnm)
+			}
+		}
+	}
+	return nm
+}
+
 // importIdentifier returns the identifier that imp will introduce. It will
 // guess if the package name has not been loaded, e.g. because the source
 // is not available.
@@ -310,7 +330,7 @@ func (p *pass) importIdentifier(imp *ImportInfo) string {
 	}
 	known := p.knownPackages[imp.ImportPath]
 	if known != nil && known.name != "" {
-		return known.name
+		return withoutVersion(known.name)
 	}
 	return ImportPathToAssumedName(imp.ImportPath)
 }
@@ -543,12 +563,7 @@ func (p *pass) addCandidate(imp *ImportInfo, pkg *packageInfo) {
 
 // fixImports adds and removes imports from f so that all its references are
 // satisfied and there are no unused imports.
-//
-// This is declared as a variable rather than a function so goimports can
-// easily be extended by adding a file with an init function.
-var fixImports = fixImportsDefault
-
-func fixImportsDefault(fset *token.FileSet, f *ast.File, filename string, env *ProcessEnv) error {
+func fixImports(fset *token.FileSet, f *ast.File, filename string, env *ProcessEnv) error {
 	fixes, err := getFixes(context.Background(), fset, f, filename, env)
 	if err != nil {
 		return err
@@ -578,7 +593,10 @@ func getFixes(ctx context.Context, fset *token.FileSet, f *ast.File, filename st
 		return fixes, nil
 	}
 
-	otherFiles := parseOtherFiles(fset, srcDir, filename)
+	otherFiles, err := parseOtherFiles(ctx, fset, srcDir, filename)
+	if err != nil {
+		return nil, err
+	}
 
 	// Second pass: add information from other files in the same package,
 	// like their package vars and imports.
@@ -1059,6 +1077,18 @@ func addStdlibCandidates(pass *pass, refs references) error {
 	if err != nil {
 		return err
 	}
+	localbase := func(nm string) string {
+		ans := path.Base(nm)
+		if ans[0] == 'v' {
+			// this is called, for instance, with math/rand/v2 and returns rand/v2
+			if _, err := strconv.Atoi(ans[1:]); err == nil {
+				ix := strings.LastIndex(nm, ans)
+				more := path.Base(nm[:ix])
+				ans = path.Join(more, ans)
+			}
+		}
+		return ans
+	}
 	add := func(pkg string) {
 		// Prevent self-imports.
 		if path.Base(pkg) == pass.f.Name.Name && filepath.Join(goenv["GOROOT"], "src", pkg) == pass.srcDir {
@@ -1067,13 +1097,17 @@ func addStdlibCandidates(pass *pass, refs references) error {
 		exports := symbolNameSet(stdlib.PackageSymbols[pkg])
 		pass.addCandidate(
 			&ImportInfo{ImportPath: pkg},
-			&packageInfo{name: path.Base(pkg), exports: exports})
+			&packageInfo{name: localbase(pkg), exports: exports})
 	}
 	for left := range refs {
 		if left == "rand" {
-			// Make sure we try crypto/rand before math/rand.
+			// Make sure we try crypto/rand before any version of math/rand as both have Int()
+			// and our policy is to recommend crypto
 			add("crypto/rand")
-			add("math/rand")
+			// if the user's no later than go1.21, this should be "math/rand"
+			// but we have no way of figuring out what the user is using
+			// TODO: investigate using the toolchain version to disambiguate in the stdlib
+			add("math/rand/v2")
 			continue
 		}
 		for importPath := range stdlib.PackageSymbols {
@@ -1162,7 +1196,7 @@ func addExternalCandidates(ctx context.Context, pass *pass, refs references, fil
 	if err != nil {
 		return err
 	}
-	if err = resolver.scan(context.Background(), callback); err != nil {
+	if err = resolver.scan(ctx, callback); err != nil {
 		return err
 	}
 
@@ -1173,7 +1207,7 @@ func addExternalCandidates(ctx context.Context, pass *pass, refs references, fil
 	}
 	results := make(chan result, len(refs))
 
-	ctx, cancel := context.WithCancel(context.TODO())
+	ctx, cancel := context.WithCancel(ctx)
 	var wg sync.WaitGroup
 	defer func() {
 		cancel()
