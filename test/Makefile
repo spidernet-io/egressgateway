@@ -13,10 +13,11 @@ init_kind_env:
   	    make install_weave ; \
 	elif [ "$(cni)" == "spiderpool" ] ; then \
   	    make install_spiderpool ; \
+  	elif [ "$(cni)" == "cilium" ] ; then \
+  	  	make install_cilium ; \
     else \
     	make install_calico ; \
     fi
-	make install_kwok
 
 
 .PHONY: init_one_kind
@@ -101,6 +102,22 @@ install_calico:
 	export E2E_KIND_KUBECONFIG_PATH=$(E2E_KIND_KUBECONFIG_PATH); \
 	export KIND_CLUSTER_NAME=$(E2E_KIND_CLUSTER_NAME) ; \
 	bash ./scripts/installCalico.sh
+
+.PHONY: install_cilium
+install_cilium: KIND_CLUSTER_NAME ?= $(E2E_KIND_CLUSTER_NAME)
+install_cilium:
+	echo "install cilium"
+	export CILIUM_VERSION=$(CILIUM_VERSION); \
+	export DEFAULT_CILIUM__VERSION=$(DEFAULT_CILIUM__VERSION); \
+	export HTTP_PROXY=$(HTTP_PROXY); \
+	export CALICO_REGISTRY=$(CILIUM__REGISTRY); \
+	export INSTALL_TIME_OUT=$(INSTALL_TIME_OUT); \
+	export E2E_IP_FAMILY=$(E2E_IP_FAMILY); \
+	export E2E_KIND_KUBECONFIG_PATH=$(E2E_KIND_KUBECONFIG_PATH); \
+	export KIND_CLUSTER_NAME=$(E2E_KIND_CLUSTER_NAME) ; \
+	export E2E_KIND_IPV4_POD_CIDR=$(E2E_KIND_IPV4_POD_CIDR); \
+	export E2E_KIND_IPV6_POD_CIDR=$(E2E_KIND_IPV6_POD_CIDR); \
+	bash ./scripts/installCilium.sh
 
 .PHONY: install_flannel
 install_flannel:

@@ -56,6 +56,21 @@
     kubectl patch spidercoordinators default  --type='merge' -p '{"spec": {"hijackCIDR": ["1.1.1.1/32", "2.2.2.2/32"]}}'
     ```
 
+=== "Cilium"
+
+    当前 EgressGateway 仅支持 Cilium `Native` 路由模式. 
+    
+    如果你想在你的集群中运行 [Cilium](https://cilium.io/)，你可以参考下面命令：
+
+    ```shell
+    cilium install --wait --set enable-ipv4=true \
+        --set ipv4NativeRoutingCIDR=$IPV4_POD_CIDR \
+        --set autoDirectNodeRoutes=true \
+        --set routingMode="native" \
+        --set bpf.masquerade=false
+    ```
+    
+    如果你在 AWS 中使用，你可以参考[这篇](/usage/AwsWithCilium)文章。
 
 ## 安装 EgressGateway
 

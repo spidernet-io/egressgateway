@@ -10,9 +10,12 @@ import (
 	"strings"
 
 	"k8s.io/apimachinery/pkg/types"
+	"sigs.k8s.io/controller-runtime/pkg/cache"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
+	"sigs.k8s.io/controller-runtime/pkg/predicate"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
+	"sigs.k8s.io/controller-runtime/pkg/source"
 )
 
 var ErrInvalidRequest = errors.New("error invalid request")
@@ -47,4 +50,8 @@ func ParseKindWithReq(req reconcile.Request) (string, reconcile.Request, error) 
 			Name:      req.Name,
 		},
 	}, nil
+}
+
+func SourceKind(cache cache.Cache, obj client.Object, h handler.EventHandler, predicates ...predicate.Predicate) source.Source {
+	return source.Kind(cache, obj, h, predicates...)
 }

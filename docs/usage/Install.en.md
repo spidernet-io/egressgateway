@@ -55,6 +55,22 @@ This page provides instructions for quickly installing EgressGateway on a self-m
     kubectl patch spidercoordinators default  --type='merge' -p '{"spec": {"hijackCIDR": ["1.1.1.1/32", "2.2.2.2/32"]}}'
     ```
 
+=== "Cilium"
+
+    The current EgressGateway only supports Cilium in `Native` routing mode. 
+    
+    If your want to use [Cilium](https://cilium.io/) in your cluster, you can run the following install command:
+
+    ```shell
+    cilium install --wait --set enable-ipv4=true \
+        --set ipv4NativeRoutingCIDR=$IPV4_POD_CIDR \
+        --set autoDirectNodeRoutes=true \
+        --set routingMode="native" \
+        --set bpf.masquerade=false
+    ```
+    
+    If you are using AWS, you can refer to [this article](/usage/AwsWithCilium).
+
 
 ## Install EgressGateway
 

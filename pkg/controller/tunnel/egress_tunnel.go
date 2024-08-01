@@ -25,7 +25,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/handler"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
-	"sigs.k8s.io/controller-runtime/pkg/source"
 
 	"github.com/spidernet-io/egressgateway/pkg/config"
 	egressv1 "github.com/spidernet-io/egressgateway/pkg/k8s/apis/v1beta1"
@@ -697,14 +696,20 @@ func NewEgressTunnelController(mgr manager.Manager, log logr.Logger, cfg *config
 	}
 
 	log.Info("egresstunnel controller watch EgressTunnel")
-	if err := c.Watch(source.Kind(mgr.GetCache(), &egressv1.EgressTunnel{}),
-		handler.EnqueueRequestsFromMapFunc(utils.KindToMapFlat("EgressTunnel"))); err != nil {
+
+	sourceEgressTunnel := utils.SourceKind(mgr.GetCache(),
+		&egressv1.EgressTunnel{},
+		handler.EnqueueRequestsFromMapFunc(utils.KindToMapFlat("EgressTunnel")))
+	if err := c.Watch(sourceEgressTunnel); err != nil {
 		return fmt.Errorf("failed to watch EgressTunnel: %w", err)
 	}
 
 	log.Info("egresstunnel controller watch Node")
-	if err := c.Watch(source.Kind(mgr.GetCache(), &corev1.Node{}),
-		handler.EnqueueRequestsFromMapFunc(utils.KindToMapFlat("Node"))); err != nil {
+
+	sourceNode := utils.SourceKind(mgr.GetCache(),
+		&corev1.Node{},
+		handler.EnqueueRequestsFromMapFunc(utils.KindToMapFlat("Node")))
+	if err := c.Watch(sourceNode); err != nil {
 		return fmt.Errorf("failed to watch Node: %w", err)
 	}
 

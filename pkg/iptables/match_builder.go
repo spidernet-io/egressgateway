@@ -85,6 +85,10 @@ func (m MatchCriteria) InInterface(ifaceMatch string) MatchCriteria {
 	return append(m, fmt.Sprintf("--in-interface %s", ifaceMatch))
 }
 
+func (m MatchCriteria) SrcMacSource(mac string) MatchCriteria {
+	return append(m, fmt.Sprintf("-m mac --mac-source %s", mac))
+}
+
 func (m MatchCriteria) OutInterface(ifaceMatch string) MatchCriteria {
 	return append(m, fmt.Sprintf("--out-interface %s", ifaceMatch))
 }

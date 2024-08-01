@@ -27,10 +27,11 @@
 * [Flannel](https://github.com/flannel-io/flannel)
 * [Weave](https://github.com/weaveworks/weave)
 * [Spiderpool](https://github.com/spidernet-io/spiderpool)
+* [Cilium](https://cilium.io/) 路由模式
 
 ## 开始使用 EgressGateway
 
-参考[安装指南](usage/Install.zh.md)
+参考[安装指南](usage/Install)
 
 ## 社区
 

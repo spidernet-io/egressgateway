@@ -5,6 +5,7 @@ package common
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	apiserrors "k8s.io/apimachinery/pkg/api/errors"
@@ -144,13 +145,10 @@ func WaitForEgressEndPointSliceStatusSynced(ctx context.Context, cli client.Clie
 			return e2eerr.ErrTimeout
 		default:
 			ok, err := CheckEgressEndPointSliceStatus(ctx, cli, egp)
-			if err != nil {
-				return err
-			}
-			if ok {
+			if err == nil && ok {
 				return nil
 			}
-			time.Sleep(time.Second / 2)
+			time.Sleep(time.Second * 2)
 		}
 	}
 }
@@ -162,16 +160,13 @@ func WaitForEgressClusterEndPointSliceStatusSynced(ctx context.Context, cli clie
 	for {
 		select {
 		case <-ctx.Done():
-			return e2eerr.ErrTimeout
+			return fmt.Errorf("check egress cluster endpoint slice status synced timeout")
 		default:
 			ok, err := CheckEgressClusterEndPointSliceStatus(ctx, cli, egcp)
-			if err != nil {
-				return err
-			}
-			if ok {
+			if err == nil && ok {
 				return nil
 			}
-			time.Sleep(time.Second / 2)
+			time.Sleep(time.Second * 2)
 		}
 	}
 }

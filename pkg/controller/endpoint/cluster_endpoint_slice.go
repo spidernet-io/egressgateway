@@ -6,6 +6,7 @@ package endpoint
 import (
 	"context"
 	"fmt"
+	"github.com/spidernet-io/egressgateway/pkg/utils"
 	"reflect"
 	"time"
 
@@ -308,30 +309,41 @@ func NewEgressClusterEpSliceController(mgr manager.Manager, log logr.Logger, cfg
 		return err
 	}
 
-	if err = c.Watch(source.Kind(mgr.GetCache(), &corev1.Pod{}),
-		handler.EnqueueRequestsFromMapFunc(enqueueEGCP(r.client)), podPredicate{}); err != nil {
+	sourcePod := utils.SourceKind(mgr.GetCache(),
+		&corev1.Pod{},
+		handler.EnqueueRequestsFromMapFunc(enqueueEGCP(r.client)),
+		podPredicate{})
+	if err = c.Watch(sourcePod); err != nil {
 		return fmt.Errorf("failed to watch pod: %v", err)
 	}
 
-	if err = c.Watch(source.Kind(mgr.GetCache(), &corev1.Namespace{}),
-		handler.EnqueueRequestsFromMapFunc(enqueueNS(r.client)), nsPredicate{}); err != nil {
+	sourceNS := utils.SourceKind(mgr.GetCache(),
+		&corev1.Namespace{},
+		handler.EnqueueRequestsFromMapFunc(enqueueNS(r.client)),
+		nsPredicate{})
+	if err = c.Watch(sourceNS); err != nil {
 		return fmt.Errorf("failed to watch namespace: %v", err)
 	}
 
-	if err = c.Watch(source.Kind(mgr.GetCache(), &v1beta1.EgressClusterPolicy{}),
-		&handler.EnqueueRequestForObject{}); err != nil {
+	sourceEgressClusterPolicy := source.Kind(mgr.GetCache(),
+		&v1beta1.EgressClusterPolicy{},
+		&handler.TypedEnqueueRequestForObject[*v1beta1.EgressClusterPolicy]{})
+	if err = c.Watch(sourceEgressClusterPolicy); err != nil {
 		return fmt.Errorf("failed to watch EgressClusterPolicy: %v", err)
 	}
 
-	opt := handler.OnlyControllerOwner()
-	eventHandler := handler.EnqueueRequestForOwner(
-		mgr.GetScheme(), mgr.GetRESTMapper(), &v1beta1.EgressClusterPolicy{}, opt,
+	sourceEgressClusterEndpointSlice := source.Kind(mgr.GetCache(),
+		&v1beta1.EgressClusterEndpointSlice{},
+		handler.TypedEnqueueRequestForOwner[*v1beta1.EgressClusterEndpointSlice](
+			mgr.GetScheme(),
+			mgr.GetRESTMapper(),
+			&v1beta1.EgressClusterPolicy{},
+			handler.OnlyControllerOwner(),
+		),
 	)
-	if err = c.Watch(source.Kind(mgr.GetCache(), &v1beta1.EgressClusterEndpointSlice{}),
-		eventHandler); err != nil {
+	if err = c.Watch(sourceEgressClusterEndpointSlice); err != nil {
 		return fmt.Errorf("failed to watch EgressClusterEndpointSlice: %v", err)
 	}
-
 	return nil
 }
 

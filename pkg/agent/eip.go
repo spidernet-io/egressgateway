@@ -16,7 +16,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/handler"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
-	"sigs.k8s.io/controller-runtime/pkg/source"
 
 	"github.com/spidernet-io/egressgateway/pkg/config"
 	egressv1 "github.com/spidernet-io/egressgateway/pkg/k8s/apis/v1beta1"
@@ -149,14 +148,23 @@ func newEipCtrl(mgr manager.Manager, log logr.Logger, cfg *config.Config) error 
 		return err
 	}
 
-	if err := c.Watch(source.Kind(mgr.GetCache(), &egressv1.EgressPolicy{}),
-		handler.EnqueueRequestsFromMapFunc(utils.KindToMapFlat("EgressPolicy"))); err != nil {
+	sourceEgressPolicy := utils.SourceKind(
+		mgr.GetCache(),
+		&egressv1.EgressPolicy{},
+		handler.EnqueueRequestsFromMapFunc(utils.KindToMapFlat("EgressPolicy")),
+	)
+	if err := c.Watch(sourceEgressPolicy); err != nil {
 		return fmt.Errorf("failed to watch EgressPolicy: %w", err)
 	}
 
-	if err := c.Watch(source.Kind(mgr.GetCache(), &egressv1.EgressClusterPolicy{}),
-		handler.EnqueueRequestsFromMapFunc(utils.KindToMapFlat("EgressClusterPolicy"))); err != nil {
+	sourceEgressPolicy = utils.SourceKind(
+		mgr.GetCache(),
+		&egressv1.EgressClusterPolicy{},
+		handler.EnqueueRequestsFromMapFunc(utils.KindToMapFlat("EgressClusterPolicy")),
+	)
+	if err := c.Watch(sourceEgressPolicy); err != nil {
 		return fmt.Errorf("failed to watch EgressClusterPolicy: %w", err)
+
 	}
 
 	return nil

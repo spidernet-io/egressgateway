@@ -199,17 +199,17 @@ var _ = Describe("Operate EgressGateway", Label("EgressGateway"), Ordered, func(
 			GinkgoWriter.Printf("Succeeded to create egw:\n%s\n", common.GetObjYAML(egw))
 
 			DeferCleanup(func() {
-				// delete daemonset
+				// delete DaemonSet
 				Expect(common.DeleteObj(ctx, cli, ds)).NotTo(HaveOccurred())
 
-				// delete egresspolicy
+				// delete EgressPolicy
 				if egp != nil {
 					GinkgoWriter.Printf("Delete egp: %s\n", egp.Name)
 					err = common.WaitEgressPoliciesDeleted(ctx, cli, []*egressv1.EgressPolicy{egp}, time.Second*5)
 					Expect(err).NotTo(HaveOccurred())
 				}
 
-				// delete egressclusterpolicy
+				// delete EgressClusterPolicy
 				if egcp != nil {
 					GinkgoWriter.Printf("Delete egcp: %s\n", egcp.Name)
 					err = common.WaitEgressClusterPoliciesDeleted(ctx, cli, []*egressv1.EgressClusterPolicy{egcp}, time.Second*5)
@@ -225,7 +225,7 @@ var _ = Describe("Operate EgressGateway", Label("EgressGateway"), Ordered, func(
 			})
 		})
 
-		// create egressPolicy
+		// create EgressPolicy
 		DescribeTable("createPolicy", func(expect bool, setup func(*egressv1.EgressPolicy)) {
 			egp, err = common.CreateEgressPolicyCustom(ctx, cli, setup)
 			if expect {
@@ -653,7 +653,7 @@ var _ = Describe("Operate EgressGateway", Label("EgressGateway"), Ordered, func(
 		// policy
 		var egp *egressv1.EgressPolicy
 
-		// lalbe
+		// label
 		var label map[string]string
 
 		// error
@@ -711,7 +711,7 @@ var _ = Describe("Operate EgressGateway", Label("EgressGateway"), Ordered, func(
 			GinkgoWriter.Printf("delete the egp: %s\n", egp.Name)
 			Expect(common.DeleteObj(ctx, cli, egp)).NotTo(HaveOccurred())
 
-			// we expect the egw will be delete after a while
+			// we expect the egw will be deleted after a while
 			Eventually(ctx, func() error {
 				err = cli.Get(ctx, types.NamespacedName{Name: egw.Name}, egw)
 				if errors.IsNotFound(err) {

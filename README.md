@@ -39,6 +39,7 @@ To solve this problem, EgressGateway has been introduced into the k8s cluster. I
 * [Flannel](https://github.com/flannel-io/flannel)
 * [Weave](https://github.com/weaveworks/weave)
 * [Spiderpool](https://github.com/spidernet-io/spiderpool)
+* [Cilium](https://cilium.io/) native mode
 
 ## Getting started using EgressGateway
 

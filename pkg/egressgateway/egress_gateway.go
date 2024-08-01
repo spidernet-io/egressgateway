@@ -6,12 +6,18 @@ package egressgateway
 import (
 	"context"
 	"fmt"
+	"math"
 	"math/rand"
 	"net"
 	"reflect"
 	"time"
 
 	"github.com/go-logr/logr"
+	"github.com/spidernet-io/egressgateway/pkg/config"
+	"github.com/spidernet-io/egressgateway/pkg/constant"
+	egress "github.com/spidernet-io/egressgateway/pkg/k8s/apis/v1beta1"
+	"github.com/spidernet-io/egressgateway/pkg/utils"
+	"github.com/spidernet-io/egressgateway/pkg/utils/ip"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -23,13 +29,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/handler"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
-	"sigs.k8s.io/controller-runtime/pkg/source"
-
-	"github.com/spidernet-io/egressgateway/pkg/config"
-	"github.com/spidernet-io/egressgateway/pkg/constant"
-	egress "github.com/spidernet-io/egressgateway/pkg/k8s/apis/v1beta1"
-	"github.com/spidernet-io/egressgateway/pkg/utils"
-	"github.com/spidernet-io/egressgateway/pkg/utils/ip"
 )
 
 type egnReconciler struct {
@@ -943,9 +942,44 @@ func assignIP(from *egress.EgressGateway, req reconcile.Request, specEgressIP eg
 				}
 			}
 		}
+		// case3 not spec eip in egw status
+		assignedIP := &AssignedIP{
+			Node:      "",
+			IPv4:      specEgressIP.IPv4,
+			IPv6:      specEgressIP.IPv6,
+			UseNodeIP: false,
+		}
+		//
+		bestNodeIndex := -1
+		eipNumMin := math.MaxInt8
+		// find best node
+		for i, node := range from.Status.NodeList {
+			if node.Status != string(egress.EgressTunnelReady) {
+				continue
+			}
+			if len(node.Eips) < eipNumMin {
+				eipNumMin = len(node.Eips)
+				bestNodeIndex = i
+			}
+		}
+		if bestNodeIndex != -1 {
+			from.Status.NodeList[bestNodeIndex].Eips = append(
+				from.Status.NodeList[bestNodeIndex].Eips,
+				egress.Eips{
+					IPv4:     specEgressIP.IPv4,
+					IPv6:     specEgressIP.IPv6,
+					Policies: []egress.Policy{{Name: req.Name, Namespace: req.Namespace}},
+				},
+			)
+			assignedIP.Node = from.Status.NodeList[bestNodeIndex].Name
+		}
+		if assignedIP.Node == "" {
+			return nil, fmt.Errorf("EgressGateway %s does not have an available Node", from.Name)
+		}
+		return assignedIP, nil
 	}
 
-	// case3 assign new IP use eip assign policy
+	// case4 assign new IP use eip assign policy
 	//
 	if specEgressIP.AllocatorPolicy == egress.EipAllocatorRR {
 		randObj := rand.New(rand.NewSource(time.Now().UnixNano()))
@@ -1039,6 +1073,7 @@ func assignIP(from *egress.EgressGateway, req reconcile.Request, specEgressIP eg
 		)
 		return assignedIP, nil
 	} else {
+		// case 5: use default eip
 		assignedIP := &AssignedIP{
 			Node:      "",
 			IPv4:      from.Spec.Ippools.Ipv4DefaultEIP,
@@ -1249,28 +1284,44 @@ func NewEgressGatewayController(mgr manager.Manager, log logr.Logger, cfg *confi
 		return err
 	}
 
-	if err = c.Watch(source.Kind(mgr.GetCache(), &egress.EgressGateway{}),
-		handler.EnqueueRequestsFromMapFunc(utils.KindToMapFlat("EgressGateway")), egressGatewayPredicate{}); err != nil {
+	sourceEgressGateway := utils.SourceKind(mgr.GetCache(),
+		&egress.EgressGateway{},
+		handler.EnqueueRequestsFromMapFunc(utils.KindToMapFlat("EgressGateway")),
+		egressGatewayPredicate{})
+	err = c.Watch(sourceEgressGateway)
+	if err != nil {
 		return fmt.Errorf("failed to watch EgressGateway: %w", err)
 	}
 
-	if err = c.Watch(source.Kind(mgr.GetCache(), &corev1.Node{}),
-		handler.EnqueueRequestsFromMapFunc(utils.KindToMapFlat("Node")), nodePredicate{}); err != nil {
+	sourceNode := utils.SourceKind(mgr.GetCache(),
+		&corev1.Node{},
+		handler.EnqueueRequestsFromMapFunc(utils.KindToMapFlat("Node")),
+		nodePredicate{})
+	if err = c.Watch(sourceNode); err != nil {
 		return fmt.Errorf("failed to watch Node: %w", err)
 	}
 
-	if err = c.Watch(source.Kind(mgr.GetCache(), &egress.EgressPolicy{}),
-		handler.EnqueueRequestsFromMapFunc(utils.KindToMapFlat("EgressPolicy")), egressPolicyPredicate{}); err != nil {
+	sourceEgressPolicy := utils.SourceKind(mgr.GetCache(),
+		&egress.EgressPolicy{},
+		handler.EnqueueRequestsFromMapFunc(utils.KindToMapFlat("EgressPolicy")),
+		egressPolicyPredicate{})
+	if err = c.Watch(sourceEgressPolicy); err != nil {
 		return fmt.Errorf("failed to watch EgressPolicy: %w", err)
 	}
 
-	if err = c.Watch(source.Kind(mgr.GetCache(), &egress.EgressClusterPolicy{}),
-		handler.EnqueueRequestsFromMapFunc(utils.KindToMapFlat("EgressClusterPolicy")), egressClusterPolicyPredicate{}); err != nil {
+	sourceEgressClusterPolicy := utils.SourceKind(mgr.GetCache(),
+		&egress.EgressClusterPolicy{},
+		handler.EnqueueRequestsFromMapFunc(utils.KindToMapFlat("EgressClusterPolicy")),
+		egressClusterPolicyPredicate{})
+	if err = c.Watch(sourceEgressClusterPolicy); err != nil {
 		return fmt.Errorf("failed to watch EgressClusterPolicy: %w", err)
 	}
 
-	if err = c.Watch(source.Kind(mgr.GetCache(), &egress.EgressTunnel{}),
-		handler.EnqueueRequestsFromMapFunc(utils.KindToMapFlat("EgressTunnel")), egressTunnelPredicate{}); err != nil {
+	sourceEgressTunnel := utils.SourceKind(mgr.GetCache(),
+		&egress.EgressTunnel{},
+		handler.EnqueueRequestsFromMapFunc(utils.KindToMapFlat("EgressTunnel")),
+		egressTunnelPredicate{})
+	if err = c.Watch(sourceEgressTunnel); err != nil {
 		return fmt.Errorf("failed to watch EgressTunnel: %w", err)
 	}
 
