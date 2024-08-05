@@ -70,7 +70,7 @@ jobs:
           make chart_package
 
       - name: Upload Artifact
-        uses: actions/upload-artifact@v4.3.4
+        uses: actions/upload-artifact@v4.3.5
         with:
           name: chart_package_artifact
           path: ${{ env.CHART_OUTPUT_PATH }}
