@@ -86,7 +86,7 @@ func validateEgressPolicy(ctx context.Context, client client.Client, req webhook
 	}
 
 	// denied when both PodSelector and PodSubnet are empty
-	if egp.Spec.AppliedTo.PodSubnet == nil || len(egp.Spec.AppliedTo.PodSubnet) == 0 {
+	if len(egp.Spec.AppliedTo.PodSubnet) == 0 {
 		if egp.Spec.AppliedTo.PodSelector == nil || (len(egp.Spec.AppliedTo.PodSelector.MatchLabels) == 0 && len(egp.Spec.AppliedTo.PodSelector.MatchExpressions) == 0) {
 			return webhook.Denied("invalid EgressPolicy, spec.appliedTo field requires at least one of spec.appliedTo.podSubnet, .spec.appliedTo.podSelector.matchLabels or .spec.appliedTo.podSelector.matchExpressions to be specified.")
 		}

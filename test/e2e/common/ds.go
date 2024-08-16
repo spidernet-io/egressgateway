@@ -57,7 +57,7 @@ func CreateDaemonSet(ctx context.Context, cli client.Client, name string, image 
 		case <-ctx.Done():
 			_ = DeleteObj(context.Background(), cli, res)
 			log.Log("create DaemonSet time out")
-			return nil, fmt.Errorf(log.Save())
+			return nil, fmt.Errorf("%s", log.Save())
 		default:
 			err := cli.Get(ctx, types.NamespacedName{Namespace: res.Namespace, Name: res.Name}, res)
 			if err != nil {
@@ -72,7 +72,6 @@ func CreateDaemonSet(ctx context.Context, cli client.Client, name string, image 
 				return res, nil
 			}
 
-			log.Log("--------")
 			log.Log(fmt.Sprintf("CurrentNumberScheduled=%v\nDesiredNumberScheduled=%v\nNumberAvailable=%v", a, b, c))
 
 			nodes := new(corev1.NodeList)

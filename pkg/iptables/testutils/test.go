@@ -310,7 +310,7 @@ func (d *restoreCmd) Run() error {
 			}
 			rest := strings.Join(parts[2:], " ")
 			if chains[chainName] == nil {
-				panic(fmt.Sprintf("Append to unknown chain: " + chainName))
+				panic(fmt.Sprintf("Append to unknown chain: %s", chainName))
 			}
 			chains[chainName] = append(chains[chainName], rest)
 			d.Dataplane.ChainMods.Add(chainMod{name: chainName, ruleNum: len(chains[chainName])})
