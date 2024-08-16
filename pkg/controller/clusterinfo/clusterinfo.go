@@ -13,6 +13,7 @@ import (
 	calicov1 "github.com/tigera/operator/pkg/apis/crd.projectcalico.org/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
+	"k8s.io/apimachinery/pkg/api/meta"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
 	"sigs.k8s.io/controller-runtime/pkg/event"
@@ -65,9 +66,12 @@ func NewController(mgr manager.Manager, log logr.Logger, cfg *config.Config) err
 		for {
 			err = r.cli.List(context.Background(), &calicov1.IPPoolList{})
 			if err != nil {
-				log.Error(err, "failed to list CalicoIPPool", "error", err)
-				time.Sleep(time.Second * 3)
-				continue
+				if meta.IsNoMatchError(err) {
+					log.Info("not found CalicoIPPool CRD in current cluster, skipping watch")
+				} else {
+					log.Error(err, "failed to list Calico IPPool, skipping watch.", "error", err)
+				}
+				return
 			}
 			sourceCalicoIPPool := utils.SourceKind(r.mgr.GetCache(),
 				&calicov1.IPPool{},

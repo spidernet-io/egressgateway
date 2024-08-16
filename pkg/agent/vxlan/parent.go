@@ -62,6 +62,10 @@ func GetParentByDefaultRoute(cli NetLink) func(version int) (*Parent, error) {
 			if !addr.IP.IsGlobalUnicast() {
 				continue
 			}
+			ones, bits := addr.Mask.Size()
+			if ones == 32 && bits == 32 || ones == 128 && bits == 128 {
+				continue
+			}
 			return &Parent{Name: link.Attrs().Name, IP: addr.IP, Index: link.Attrs().Index}, nil
 		}
 		return nil, fmt.Errorf("failed to find parent interface")

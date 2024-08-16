@@ -23,18 +23,21 @@ curl ipinfo.io
 
 ## 安装 EgressGateway
 
-添加 helm 仓库，并安装 EgressGateway。我们通过 `feature.enableIPv4=true` 来启用 IPv4，`feature.enableIPv6=false` 来禁用 IPv6。
-我们通过 `feature.clusterCIDR.extraCidr[0]=172.16.0.0/16` 来指定排除集群的 CIDR 走到网关。
+添加和更新 Helm 仓库以从指定来源安装 EgressGateway。
 
 ```shell
 helm repo add egressgateway https://spidernet-io.github.io/egressgateway/
 helm repo update
+```
 
+我们  `feature.enableIPv4=true` 启用 IPv4 ，通过 `feature.enableIPv6=false` 禁用 IPv6。在安装过程中，我们可以通过 ``feature.clusterCIDR.extraCidr`` 集群的内部 CIDR，这将修改 `EgressPolicy` 的行为。如果您创建一个 `EgressPolicy` CR 并且没有指定 `spec.destSubnet`，EgressGateway 将把 Pod 的所有访问外部的流量（内部 CIDR 除外）转发到网关节点。相反，如果指定了 `spec.destSubnet`，EgressGateway 将仅将指定的流量转发到网关节点。
+
+```shell
 helm install egress --wait \
-  --debug egressgateway/egressgateway \
-  --set feature.enableIPv4=true \
-  --set feature.enableIPv6=false \
-  --set feature.clusterCIDR.extraCidr[0]=172.16.0.0/16
+ --debug egressgateway/egressgateway \
+ --set feature.enableIPv4=true \
+ --set feature.enableIPv6=false \
+ --set feature.clusterCIDR.extraCidr[0]=172.16.0.0/16
 ```
 
 ## 创建 EgressGateway CR
@@ -52,11 +55,11 @@ ip-172-16-62-200.ec2.internal    Ready    <none>   25m   v1.30.0-eks-036c24b   1
 我们选择 `ip-172-16-103-117.ec2.internal` 和 `ip-172-16-62-200.ec2.internal` 作为网关节点。给节点设置 `egress=true` 标签。
 
 ```shell
-kubectl label node ip-172-16-103-117.ec2.internal egress=true
-kubectl label node ip-172-16-62-200.ec2.internal egress=true
+kubectl label node ip-172-16-103-117.ec2.internal role=gateway
+kubectl label node ip-172-16-62-200.ec2.internal role=gateway
 ```
 
-创建 EgressGateway CR，我们通过 `egress: "true"` 来选择节点作为出口网关。
+创建 EgressGateway CR，我们通过 `role: gateway` 来选择节点作为出口网关。
 
 ```yaml
 apiVersion: egressgateway.spidernet.io/v1beta1
@@ -67,7 +70,7 @@ spec:
   nodeSelector:
     selector:
       matchLabels:
-        egress: "true"
+        role: gateway
 ```
 
 ## 创建测试 Pod

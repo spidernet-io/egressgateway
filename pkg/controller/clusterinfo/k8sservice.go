@@ -6,20 +6,39 @@ package clusterinfo
 import (
 	"context"
 	"fmt"
-	"github.com/spidernet-io/egressgateway/pkg/utils/ip"
+
 	corev1 "k8s.io/api/core/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"strings"
+
+	"github.com/spidernet-io/egressgateway/pkg/utils/ip"
 )
 
-var kubeControllerManagerPodLabel = map[string]string{"component": "kube-controller-manager"}
+// kubeControllerManagerPodLabelList Store the labels for the Kubernetes Controller Manager.
+// We use these labels to retrieve the Kubernetes Controller Manager Pod arguments in order
+// to obtain the cluster CIDR. Since different clusters have different Kubernetes Controller
+// Manager labels, the content of the labels also varies.
+var kubeControllerManagerPodLabelList = []map[string]string{
+	{
+		"component": "kube-controller-manager",
+	},
+	{
+		"k8s-app": "kube-controller-manager",
+	},
+}
 
 func GetClusterCIDR(ctx context.Context, cli client.Client) (ipv4, ipv6 []string, err error) {
-	pods, err := listPodByLabel(ctx, cli, kubeControllerManagerPodLabel)
-	if err != nil {
-		return nil, nil, err
+	for _, item := range kubeControllerManagerPodLabelList {
+		pods, err := listPodByLabel(ctx, cli, item)
+		if err != nil {
+			return nil, nil, err
+		}
+		if len(pods) < 1 {
+			continue
+		}
+		return parseCIDRFromControllerManager(&pods[0], "--service-cluster-ip-range=")
 	}
-	return parseCIDRFromControllerManager(&pods[0], "--service-cluster-ip-range=")
+	return nil, nil, nil
 }
 
 func listPodByLabel(ctx context.Context, cli client.Client,
@@ -31,9 +50,6 @@ func listPodByLabel(ctx context.Context, cli client.Client,
 		return nil, err
 	}
 	pods := podList.Items
-	if len(pods) == 0 {
-		return nil, fmt.Errorf("failed to get pod")
-	}
 	return pods, nil
 }
 

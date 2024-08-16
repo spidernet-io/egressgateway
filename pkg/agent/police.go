@@ -37,6 +37,9 @@ import (
 const (
 	EgressClusterCIDRIPv4 = "egress-cluster-cidr-ipv4"
 	EgressClusterCIDRIPv6 = "egress-cluster-cidr-ipv6"
+
+	Mark = 0xff000000
+	Mask = 0xffffffff
 )
 
 type policeReconciler struct {
@@ -257,7 +260,7 @@ func (r *policeReconciler) initApplyPolicy() error {
 		}
 		restore := iptables.Rule{
 			Match:  iptables.MatchCriteria{}.CTDirectionOriginal(iptables.DirectionReply),
-			Action: iptables.RestoreConnMarkAction{RestoreMask: 0xffffffff},
+			Action: iptables.RestoreConnMarkAction{RestoreMask: Mask},
 			Comment: []string{
 				"label for restoring connections, rule is from the EgressGateway",
 			},
@@ -554,7 +557,7 @@ func (r *policeReconciler) buildPolicyRule(policyName string, mark uint32, versi
 			CTDirectionOriginal(iptables.DirectionOriginal)
 	}
 
-	action := iptables.SetMaskedMarkAction{Mark: mark, Mask: 0xffffffff}
+	action := iptables.SetMaskedMarkAction{Mark: mark, Mask: Mask}
 	rule := &iptables.Rule{Match: matchCriteria, Action: action, Comment: []string{
 		fmt.Sprintf("Set mark for EgressPolicy %s", policyName),
 	}}
@@ -571,13 +574,21 @@ func buildNatStaticRule(base uint32) map[string][]iptables.Rule {
 			},
 		},
 		{
-			Match:  iptables.MatchCriteria{}.MarkMatchesWithMask(base, 0xffffffff),
+			Match:  iptables.MatchCriteria{}.MarkMatchesWithMask(base, Mask),
 			Action: iptables.AcceptAction{},
 			Comment: []string{
 				"Accept for egress traffic from pod going to EgressTunnel",
 			},
 		},
-	}}
+	},
+		"PREROUTING": {
+			{
+				Match:   iptables.MatchCriteria{}.MarkMatchesWithMask(base, Mark),
+				Action:  iptables.AcceptAction{},
+				Comment: []string{"EgressGateway traffic accept datapath rule"},
+			},
+		},
+	}
 	return res
 }
 
@@ -764,14 +775,14 @@ func (r *policeReconciler) reconcileTunnel(ctx context.Context, req reconcile.Re
 func buildFilterStaticRule(base uint32) map[string][]iptables.Rule {
 	res := map[string][]iptables.Rule{
 		"FORWARD": {{
-			Match:  iptables.MatchCriteria{}.MarkMatchesWithMask(base, 0xffffffff),
+			Match:  iptables.MatchCriteria{}.MarkMatchesWithMask(base, Mask),
 			Action: iptables.AcceptAction{},
 			Comment: []string{
 				"Accept for egress traffic from pod going to EgressTunnel",
 			},
 		}},
 		"OUTPUT": {{
-			Match:  iptables.MatchCriteria{}.MarkMatchesWithMask(base, 0xffffffff),
+			Match:  iptables.MatchCriteria{}.MarkMatchesWithMask(base, Mask),
 			Action: iptables.AcceptAction{},
 			Comment: []string{
 				"Accept for egress traffic from pod going to EgressTunnel",
@@ -787,8 +798,8 @@ func buildMangleStaticRule(base uint32,
 
 	forward := []iptables.Rule{
 		{
-			Match:  iptables.MatchCriteria{}.MarkMatchesWithMask(base, 0xff000000),
-			Action: iptables.SetMaskedMarkAction{Mark: base, Mask: 0xffffffff},
+			Match:  iptables.MatchCriteria{}.MarkMatchesWithMask(base, Mark),
+			Action: iptables.SetMaskedMarkAction{Mark: base, Mask: Mask},
 			Comment: []string{
 				"Accept for egress traffic from pod going to EgressTunnel",
 			},
@@ -796,7 +807,7 @@ func buildMangleStaticRule(base uint32,
 	}
 
 	postrouting := []iptables.Rule{{
-		Match:  iptables.MatchCriteria{}.MarkMatchesWithMask(base, 0xffffffff),
+		Match:  iptables.MatchCriteria{}.MarkMatchesWithMask(base, Mask),
 		Action: iptables.AcceptAction{},
 		Comment: []string{
 			"Accept for egress traffic from pod going to EgressTunnel",
@@ -819,16 +830,22 @@ func buildMangleStaticRule(base uint32,
 			Comment: []string{"EgressGateway reply datapath rule, rule is from the EgressGateway"},
 		})
 		prerouting = append(prerouting, iptables.Rule{
-			Match:   iptables.MatchCriteria{}.MarkMatchesWithMask(base, 0xff000000),
+			Match:   iptables.MatchCriteria{}.MarkMatchesWithMask(base, Mark),
 			Action:  iptables.AcceptAction{},
 			Comment: []string{"EgressGateway reply datapath rule, rule is from the EgressGateway"},
 		})
 		postrouting = append(postrouting, iptables.Rule{
-			Match:  iptables.MatchCriteria{}.MarkMatchesWithMask(replyMark, 0xffffffff),
-			Action: iptables.SetMaskedMarkAction{Mark: 0x00000000, Mask: 0xffffffff},
+			Match:  iptables.MatchCriteria{}.MarkMatchesWithMask(replyMark, Mask),
+			Action: iptables.SetMaskedMarkAction{Mark: 0x00000000, Mask: Mask},
 			Comment: []string{
 				"clear the Mark of the inner package, rule is from the EgressGateway",
 			},
+		})
+	} else {
+		prerouting = append(prerouting, iptables.Rule{
+			Match:   iptables.MatchCriteria{}.MarkMatchesWithMask(base, Mark),
+			Action:  iptables.AcceptAction{},
+			Comment: []string{"EgressGateway traffic accept datapath rule"},
 		})
 	}
 
@@ -848,21 +865,21 @@ func buildPreroutingReplyRouting(vxlanName string, base uint32, replyMark string
 	return []iptables.Rule{
 		{
 			Match:  iptables.MatchCriteria{}.InInterface(vxlanName).SrcMacSource(mac).CTDirectionOriginal(iptables.DirectionOriginal),
-			Action: iptables.SetMaskedMarkAction{Mark: mark, Mask: 0xffffffff},
+			Action: iptables.SetMaskedMarkAction{Mark: mark, Mask: Mask},
 			Comment: []string{
 				"Mark the traffic from the EgressGateway tunnel, rule is from the EgressGateway",
 			},
 		},
 		{
-			Match:  iptables.MatchCriteria{}.MarkMatchesWithMask(mark, 0xffffffff),
-			Action: iptables.SaveConnMarkAction{SaveMask: 0xffffffff},
+			Match:  iptables.MatchCriteria{}.MarkMatchesWithMask(mark, Mask),
+			Action: iptables.SaveConnMarkAction{SaveMask: Mask},
 			Comment: []string{
 				"Save mark to the connection, rule is from the EgressGateway",
 			},
 		},
 		{
 			Match:  iptables.MatchCriteria{}.InInterface(vxlanName).SrcMacSource(mac),
-			Action: iptables.SetMaskedMarkAction{Mark: base, Mask: 0xffffffff},
+			Action: iptables.SetMaskedMarkAction{Mark: base, Mask: Mask},
 			Comment: []string{
 				"Clear Mark of the inner package, rule is from the EgressGateway",
 			},

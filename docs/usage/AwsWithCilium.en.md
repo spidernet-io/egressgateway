@@ -1,4 +1,4 @@
-# Using EgressGateway with AWS Cilium CNI
+#  EgressGateway with Cilium CNI on AWS
 
 ## Introduction
 
@@ -6,7 +6,7 @@ This article introduces the use of EgressGateway in a Cilium CNI networking envi
 
 Compared to Cilium's Egress feature, EgressGateway supports HA. If you don't need HA, consider using Cilium's Egress feature first.
 
-The following sections will guide you step-by-step to install EgressGateway, create a sample pod, and configure an egress policy for the pod to access the internet via the gateway node.
+The following sections will guide you step-by-step to install EgressGateway, create a sample Pod, and configure an EgressPolicy for the Pod to access the internet via the gateway node.
 
 ## Create Cluster and Install Cilium
 
@@ -22,12 +22,16 @@ Using curl, you should see a response that includes your node's public IP.
 
 ## Install EgressGateway
 
-Add the helm repository and install EgressGateway. We enable IPv4 with `feature.enableIPv4=true` and disable IPv6 with `feature.enableIPv6=false`. We also specify to exclude the cluster's CIDR from the gateway with `feature.clusterCIDR.extraCidr[0]=172.16.0.0/16`.
+Add and update the Helm repository to install egressgateway from the specified source.
 
 ```shell
 helm repo add egressgateway https://spidernet-io.github.io/egressgateway/
 helm repo update
+```
 
+We enable IPv4 with `feature.enableIPv4=true` and disable IPv6 with `feature.enableIPv6=false`. We can optionally specify `feature.clusterCIDR.extraCidr` the internal CIDR of the cluster during installation, which will modify the behavior of the `EgressPolicy`. If you create an `EgressPolicy` CR and do not specify `spec.destSubnet`, the EgressGateway will forward all traffic from the Pod, except for the internal CIDR, to the gateway node. Conversely, if `spec.destSubnet` is specified, the EgressGateway will only forward the designated traffic to the gateway node.
+
+```shell
 helm install egress --wait \
   --debug egressgateway/egressgateway \
   --set feature.enableIPv4=true \
@@ -41,7 +45,7 @@ List the current nodes.
 
 ```shell
 ~ kubectl get nodes -A -owide
-NAME                             STATUS   ROLES    AGE   VERSION               INTERNAL-IP      EXTERNAL-IP                         
+NAME                             STATUS   ROLES    AGE   VERSION               INTERNAL-IP      EXTERNAL-IP   
 ip-172-16-103-117.ec2.internal   Ready    <none>   25m   v1.30.0-eks-036c24b   172.16.103.117   34.239.162.85  
 ip-172-16-61-234.ec2.internal    Ready    <none>   25m   v1.30.0-eks-036c24b   172.16.61.234    54.147.15.230
 ip-172-16-62-200.ec2.internal    Ready    <none>   25m   v1.30.0-eks-036c24b   172.16.62.200    54.147.16.130  
@@ -50,11 +54,11 @@ ip-172-16-62-200.ec2.internal    Ready    <none>   25m   v1.30.0-eks-036c24b   1
 We select `ip-172-16-103-117.ec2.internal` and `ip-172-16-62-200.ec2.internal` as gateway nodes. Label the nodes with `egress=true`.
 
 ```shell
-kubectl label node ip-172-16-103-117.ec2.internal egress=true
-kubectl label node ip-172-16-62-200.ec2.internal egress=true
+kubectl label node ip-172-16-103-117.ec2.internal role=gateway
+kubectl label node ip-172-16-62-200.ec2.internal role=gateway
 ```
 
-Create the EgressGateway CR, using `egress: "true"` to select nodes as exit gateways.
+Create the EgressGateway CR, using `role: gateway` to select nodes as exit gateways.
 
 ```yaml
 apiVersion: egressgateway.spidernet.io/v1beta1
@@ -65,7 +69,7 @@ spec:
   nodeSelector:
     selector:
       matchLabels:
-        egress: "true"
+        role: gateway
 ```
 
 ## Create a Test Pod
