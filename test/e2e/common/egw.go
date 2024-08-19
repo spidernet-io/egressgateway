@@ -277,7 +277,7 @@ func DeleteEgressGateway(ctx context.Context, cli client.Client, egw *egressv1.E
 		select {
 		case <-ctx.Done():
 			log.Log("check delete egress gateway object timeout")
-			return fmt.Errorf(log.Save())
+			return fmt.Errorf("%s", log.Save())
 		default:
 			err = cli.Get(ctx, types.NamespacedName{Name: egw.Name}, egw)
 			if apierrors.IsNotFound(err) {
