@@ -1,0 +1,112 @@
+site_name: EgressGateway
+docs_dir: docs
+site_dir: site
+repo_name: spidernet-io/egressgateway
+site_url: https://spidernet-io.github.io/egressgateway/
+repo_url: https://github.com/spidernet-io/egressgateway
+remote_branch: github_pages
+theme:
+  name: material
+  navigation_depth: 2
+  features:
+    - content.code.annotate
+    - content.tabs.link
+  palette:
+    scheme: default
+    primary: "#4478D1"
+#  features:
+#    - navigation.instant
+#    - navigation.tracking
+#    - navigation.indexes
+#    - navigation.top
+#    - search.highlight
+#    - search.suggest
+#    - search.share
+
+extra:
+  version:
+    provider: mike
+
+plugins:
+  - i18n:
+      default_language: !ENV [DEFAULT_LANGUAGE, "en"]
+      default_language_only: !ENV [DEFAULT_LANGUAGE_ONLY, false]
+      docs_structure: suffix
+      material_alternate: true
+      languages:
+        - locale: en
+          default: true
+          name: English
+          build: true
+        - locale: zh
+          name: 中文
+          build: true
+  - tags
+  - search
+
+markdown_extensions:
+  - meta
+  - toc
+  - tables
+  - fenced_code
+  - tables
+  - attr_list
+  # Python Markdown Extensions
+  - pymdownx.arithmatex:
+      generic: true
+  - pymdownx.betterem:
+      smart_enable: all
+  - pymdownx.caret
+  - pymdownx.details
+  - pymdownx.emoji:
+      emoji_index: !!python/name:materialx.emoji.twemoji
+      emoji_generator: !!python/name:materialx.emoji.to_svg
+  - pymdownx.inlinehilite
+  - pymdownx.keys
+  - pymdownx.mark
+  - pymdownx.smartsymbols
+  - pymdownx.superfences
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.tasklist:
+      custom_checkbox: true
+  - pymdownx.tilde
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.snippets
+
+nav:
+  - Overview: README.md
+  - Getting started:
+      - Install: usage/Install.md
+      - Upgrade: usage/Upgrade.md
+      - Uninstall: usage/Uninstall.md
+  - Usage:
+      - Namespace Default EgressGateway: usage/NamespaceDefaultEgressGateway.md
+      - Cluster Default EgressGateway: usage/ClusterDefaultEgressGateway.md
+      - Failover: usage/EgressGatewayFailover.md
+      - Move EgressIP: usage/MoveIP.md
+      - Run EgressGateway on Aliyun Cloud: usage/Aliyun.md
+      - Run EgressGateway on AWS Cloud: usage/AwsWithCilium.md
+      - Troubleshooting: usage/Troubleshooting.md
+  - Concepts:
+      - Architecture: concepts/Architecture.md
+      - Datapath: concepts/Datapath.md
+  - Reference:
+      - CRD EgressTunnel: reference/EgressTunnel.md
+      - CRD EgressGateway: reference/EgressGateway.md
+      - CRD EgressPolicy: reference/EgressPolicy.md
+      - CRD EgressClusterPolicy: reference/EgressClusterPolicy.md
+      - CRD EgressEndpointSlice: reference/EgressEndpointSlice.md
+      - CRD EgressClusterEndpointSlice: reference/EgressClusterEndpointSlice.md
+      - CRD EgressClusterInfo: reference/EgressClusterInfo.md
+      - egctl cli: reference/egctl.md
+      - metrics: reference/metrics.md
+  - Development:
+      - DataFlow: develop/Dataflow.md
+      - Contribute: develop/Contribute.md
+      - Release: develop/Release.md
+  - Community:
+      - Roadmap: develop/Roadmap.md
