@@ -28,7 +28,7 @@ require (
 	github.com/spf13/viper v1.19.0
 	github.com/stretchr/testify v1.9.0
 	github.com/tigera/operator v1.35.0
-	github.com/vishvananda/netlink v1.2.1-beta.2.0.20230130171208-05506ada9f99
+	github.com/vishvananda/netlink v1.3.0
 	go.uber.org/zap v1.27.0
 	golang.org/x/sys v0.24.0
 	gomodules.xyz/jsonpatch/v2 v2.4.0
@@ -122,7 +122,7 @@ require (
 	github.com/subosito/gotenv v1.6.0 // indirect
 	github.com/tigera/api v0.0.0-20230406222214-ca74195900cb // indirect
 	github.com/toqueteos/webbrowser v1.2.0 // indirect
-	github.com/vishvananda/netns v0.0.0-20200728191858-db3c7e526aae // indirect
+	github.com/vishvananda/netns v0.0.4 // indirect
 	gitlab.com/golang-commonmark/puny v0.0.0-20191124015043-9f83538fa04f // indirect
 	go.mongodb.org/mongo-driver v1.11.3 // indirect
 	go.uber.org/multierr v1.11.0 // indirect

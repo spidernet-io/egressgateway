@@ -52,6 +52,10 @@ func LinkSetVfVlanQos(link Link, vf, vlan, qos int) error {
 	return ErrNotImplemented
 }
 
+func LinkSetVfVlanQosProto(link Link, vf, vlan, qos, proto int) error {
+	return ErrNotImplemented
+}
+
 func LinkSetVfTxRate(link Link, vf, rate int) error {
 	return ErrNotImplemented
 }
@@ -132,6 +136,14 @@ func LinkSetGROMaxSize(link Link, maxSize int) error {
 	return ErrNotImplemented
 }
 
+func LinkSetGSOIPv4MaxSize(link Link, maxSize int) error {
+	return ErrNotImplemented
+}
+
+func LinkSetGROIPv4MaxSize(link Link, maxSize int) error {
+	return ErrNotImplemented
+}
+
 func LinkAdd(link Link) error {
 	return ErrNotImplemented
 }
@@ -189,6 +201,10 @@ func RouteAdd(route *Route) error {
 }
 
 func RouteAppend(route *Route) error {
+	return ErrNotImplemented
+}
+
+func RouteChange(route *Route) error {
 	return ErrNotImplemented
 }
 
@@ -265,5 +281,9 @@ func NeighDeserialize(m []byte) (*Neigh, error) {
 }
 
 func SocketGet(local, remote net.Addr) (*Socket, error) {
+	return nil, ErrNotImplemented
+}
+
+func SocketDestroy(local, remote net.Addr) (*Socket, error) {
 	return nil, ErrNotImplemented
 }
