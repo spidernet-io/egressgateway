@@ -11,6 +11,7 @@ import (
 
 	"github.com/agiledragon/gomonkey/v2"
 	"github.com/go-logr/logr"
+	"github.com/google/uuid"
 	"github.com/spidernet-io/egressgateway/pkg/coalescing"
 	"github.com/spidernet-io/egressgateway/pkg/config"
 	"k8s.io/apimachinery/pkg/types"
@@ -1284,7 +1285,7 @@ func mock_NewEgressClusterEpSliceController_New_err(t *testing.T, r reconcile.Re
 }
 
 func mock_NewEgressClusterEpSliceController_Watch_pod_err(t *testing.T, r reconcile.Reconciler, mgr manager.Manager, log logr.Logger) []gomonkey.Patches {
-	name := "test-controller"
+	name := "test-controller" + uuid.NewString()
 	cache, err := coalescing.NewRequestCache(time.Second)
 	assert.NoError(t, err)
 	reduce := coalescing.NewReconciler(r, cache, log)
@@ -1297,7 +1298,7 @@ func mock_NewEgressClusterEpSliceController_Watch_pod_err(t *testing.T, r reconc
 }
 
 func mock_NewEgressClusterEpSliceController_Watch_namespace_err(t *testing.T, r reconcile.Reconciler, mgr manager.Manager, log logr.Logger) []gomonkey.Patches {
-	name := "test-controller"
+	name := "test-controller" + uuid.NewString()
 	cache, err := coalescing.NewRequestCache(time.Second)
 	assert.NoError(t, err)
 	reduce := coalescing.NewReconciler(r, cache, log)
@@ -1306,14 +1307,13 @@ func mock_NewEgressClusterEpSliceController_Watch_namespace_err(t *testing.T, r 
 	assert.NoError(t, err)
 	patch1 := gomonkey.ApplyFuncReturn(controller.New, c, nil)
 	patch2 := gomonkey.ApplyMethodSeq(c, "Watch", []gomonkey.OutputCell{
-		{Values: gomonkey.Params{nil}, Times: 1},
 		{Values: gomonkey.Params{errForMock}, Times: 1},
 	})
 	return []gomonkey.Patches{*patch1, *patch2}
 }
 
 func mock_NewEgressClusterEpSliceController_Watch_clusterpolicy_err(t *testing.T, r reconcile.Reconciler, mgr manager.Manager, log logr.Logger) []gomonkey.Patches {
-	name := "test-controller"
+	name := "test-controller" + uuid.NewString()
 	cache, err := coalescing.NewRequestCache(time.Second)
 	assert.NoError(t, err)
 	reduce := coalescing.NewReconciler(r, cache, log)
@@ -1322,15 +1322,13 @@ func mock_NewEgressClusterEpSliceController_Watch_clusterpolicy_err(t *testing.T
 	assert.NoError(t, err)
 	patch1 := gomonkey.ApplyFuncReturn(controller.New, c, nil)
 	patch2 := gomonkey.ApplyMethodSeq(c, "Watch", []gomonkey.OutputCell{
-		{Values: gomonkey.Params{nil}, Times: 1},
-		{Values: gomonkey.Params{nil}, Times: 1},
 		{Values: gomonkey.Params{errForMock}, Times: 1},
 	})
 	return []gomonkey.Patches{*patch1, *patch2}
 }
 
 func mock_NewEgressClusterEpSliceController_Watch_clusterendpointslice_err(t *testing.T, r reconcile.Reconciler, mgr manager.Manager, log logr.Logger) []gomonkey.Patches {
-	name := "test-controller"
+	name := "test-controller" + uuid.NewString()
 	cache, err := coalescing.NewRequestCache(time.Second)
 	assert.NoError(t, err)
 	reduce := coalescing.NewReconciler(r, cache, log)
@@ -1339,9 +1337,6 @@ func mock_NewEgressClusterEpSliceController_Watch_clusterendpointslice_err(t *te
 	assert.NoError(t, err)
 	patch1 := gomonkey.ApplyFuncReturn(controller.New, c, nil)
 	patch2 := gomonkey.ApplyMethodSeq(c, "Watch", []gomonkey.OutputCell{
-		{Values: gomonkey.Params{nil}, Times: 1},
-		{Values: gomonkey.Params{nil}, Times: 1},
-		{Values: gomonkey.Params{nil}, Times: 1},
 		{Values: gomonkey.Params{errForMock}, Times: 1},
 	})
 	return []gomonkey.Patches{*patch1, *patch2}
