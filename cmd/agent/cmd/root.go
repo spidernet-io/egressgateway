@@ -6,12 +6,14 @@ package cmd
 import (
 	"context"
 	"fmt"
-	"github.com/spf13/cobra"
-	"github.com/spidernet-io/egressgateway/pkg/agent"
-	"github.com/spidernet-io/egressgateway/pkg/config"
 	"os"
 	"os/signal"
 	"path/filepath"
+	"syscall"
+
+	"github.com/spf13/cobra"
+	"github.com/spidernet-io/egressgateway/pkg/agent"
+	"github.com/spidernet-io/egressgateway/pkg/config"
 )
 
 var binName = filepath.Base(os.Args[0])
@@ -21,7 +23,7 @@ var rootCmd = &cobra.Command{
 	Use:   binName,
 	Short: "run egress gateway agent",
 	Run: func(cmd *cobra.Command, args []string) {
-		ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
+		ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 		defer stop()
 
 		cfg, err := config.LoadConfig(true)
