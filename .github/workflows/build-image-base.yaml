@@ -126,7 +126,7 @@ jobs:
 
       - name: Release build ${{ matrix.name }}
         if: ${{ env.RUN_EXIST == 'false' }}
-        uses: docker/build-push-action@v6.7.0
+        uses: docker/build-push-action@v6.9.0
         continue-on-error: false
         id: docker_build_release
         with:
