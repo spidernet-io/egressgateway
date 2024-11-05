@@ -107,7 +107,8 @@ case ${E2E_IP_FAMILY} in
     exit 1
 esac
 
-kubectl patch felixconfigurations.crd.projectcalico.org default --type='merge' -p '{"spec":{"chainInsertMode":"Append"}}' || { echo "failed to patch calico chainInsertMode"; exit 1; }
+# there no default felixconfigurations.crd.projectcalico.org in latest calico version (https://github.com/projectcalico/calico/releases/tag/v3.29.0)
+kubectl patch felixconfigurations.crd.projectcalico.org default --type='merge' -p '{"spec":{"chainInsertMode":"Append"}}' || true
 if [[ ${E2E_IP_FAMILY} != "ipv4" ]]; then
   ok=no
   for i in {1..10}; do
