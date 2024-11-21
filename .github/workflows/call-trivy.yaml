@@ -45,18 +45,24 @@ jobs:
       # https://github.com/aquasecurity/trivy-action/issues/313
       - name: Scan agent
         uses: aquasecurity/trivy-action@0.28.0
+        env:
+          TRIVY_DB_REPOSITORY: public.ecr.aws/aquasecurity/trivy-db,ghcr.io/aquasecurity/trivy-db
         with:
           input: output/image/egressgateway-agent.tar
           severity: 'CRITICAL,HIGH'
 
       - name: Scan controller
         uses: aquasecurity/trivy-action@0.28.0
+        env:
+          TRIVY_DB_REPOSITORY: public.ecr.aws/aquasecurity/trivy-db,ghcr.io/aquasecurity/trivy-db
         with:
           input: output/image/egressgateway-controller.tar
           severity: 'CRITICAL,HIGH'
 
       - name: Scan nettools
         uses: aquasecurity/trivy-action@0.28.0
+        env:
+          TRIVY_DB_REPOSITORY: public.ecr.aws/aquasecurity/trivy-db,ghcr.io/aquasecurity/trivy-db
         with:
           input: output/image/egressgateway-nettools.tar
           severity: 'CRITICAL,HIGH'
