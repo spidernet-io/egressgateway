@@ -903,7 +903,7 @@ k8s.io/utils/trace
 # modernc.org/memory v1.7.2
 ## explicit; go 1.18
 modernc.org/memory
-# sigs.k8s.io/cluster-api-provider-azure v1.17.1
+# sigs.k8s.io/cluster-api-provider-azure v1.17.2
 ## explicit; go 1.22.0
 sigs.k8s.io/cluster-api-provider-azure/util/cache/ttllru
 # sigs.k8s.io/controller-runtime v0.18.5
