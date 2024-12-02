@@ -20,6 +20,13 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
+type NFTablesMode string
+
+const (
+	NFTablesModeEnabled  NFTablesMode = "Enabled"
+	NFTablesModeDisabled NFTablesMode = "Disabled"
+)
+
 type IptablesBackend string
 
 const (
@@ -303,6 +310,9 @@ type FelixConfigurationSpec struct {
 	// modes can use XDP. This is not recommended since it doesn't provide better performance than
 	// iptables. [Default: false]
 	GenericXDPEnabled *bool `json:"genericXDPEnabled,omitempty" confignamev1:"GenericXDPEnabled"`
+
+	// NFTablesMode configures nftables support in Felix. [Default: Disabled]
+	NFTablesMode *NFTablesMode `json:"nftablesMode,omitempty"`
 
 	// BPFEnabled, if enabled Felix will use the BPF dataplane. [Default: false]
 	BPFEnabled *bool `json:"bpfEnabled,omitempty" validate:"omitempty"`
