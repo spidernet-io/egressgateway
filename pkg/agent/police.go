@@ -285,6 +285,12 @@ func (r *policeReconciler) initApplyPolicy() error {
 				isIgnoreInternalCIDR = true
 			}
 
+			// support enabling IPv4/IPv6 Dual Stack, only create IPv4 or IPv6 EgressGateway
+			if (table.IPVersion == 4 && (!val.UseNodeIP && val.IP.V4 == "")) ||
+				(table.IPVersion == 6 && (!val.UseNodeIP && val.IP.V6 == "")) {
+				continue
+			}
+
 			rule := buildEipRule(policyName, val.IP, table.IPVersion, isIgnoreInternalCIDR, val.UseNodeIP)
 			if rule != nil {
 				rules = append(rules, *rule)

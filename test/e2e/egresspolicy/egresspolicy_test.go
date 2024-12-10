@@ -1248,3 +1248,65 @@ var _ = Describe("Create EgressPolicy use spec.EgressIP", Label("P00022"), Seria
 		}
 	})
 })
+
+var _ = Describe("Create only IPv6 EgressPolicy in enable IPv4/IPv6 dual stack", Serial, Ordered, func() {
+	var (
+		egw *egressv1.EgressGateway
+		egp *egressv1.EgressPolicy
+		ctx context.Context
+		err error
+	)
+
+	BeforeAll(func() {
+		ctx = context.Background()
+		var err error
+
+		pool := egressv1.Ippools{}
+
+		if !(egressConfig.EnableIPv4 && egressConfig.EnableIPv6) {
+			Skip("Skipping test case as it requires both IPv4 and IPv6 to be enabled")
+		}
+
+		pool.IPv6 = []string{"fd09:6:100::10", "fd09:6:100::20"}
+		pool.Ipv6DefaultEIP = "fd09:6:100::10"
+
+		nodeSelector := egressv1.NodeSelector{Selector: &metav1.LabelSelector{MatchLabels: nodeLabel}}
+
+		egw, err = common.CreateGatewayNew(ctx, cli, "egw-"+uuid.NewString(), pool, nodeSelector)
+		Expect(err).NotTo(HaveOccurred())
+		GinkgoWriter.Printf("Create EgressGateway: %s\n", egw.Name)
+
+		DeferCleanup(func() {
+			// delete the policy if it is existed
+			if egp != nil {
+				err = common.WaitEgressPoliciesDeleted(ctx, cli, []*egressv1.EgressPolicy{egp}, time.Second*5)
+				Expect(err).NotTo(HaveOccurred())
+			}
+			// delete EgressGateway
+			ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
+			defer cancel()
+			if egw != nil {
+				err = common.DeleteEgressGateway(ctx, cli, egw, time.Minute/2)
+				Expect(err).NotTo(HaveOccurred())
+			}
+		})
+	})
+
+	It("check policy status", func() {
+		egp, err = common.CreateEgressPolicyCustom(ctx, cli, func(egp *egressv1.EgressPolicy) {
+			egp.Spec.AppliedTo.PodSelector = &metav1.LabelSelector{MatchLabels: map[string]string{
+				"app": "mock-app",
+			}}
+			egp.Spec.EgressGatewayName = egw.Name
+			egp.Spec.EgressIP.IPv6 = "fd09:6:100::20"
+		})
+		Expect(err).NotTo(HaveOccurred())
+
+		err = common.WaitEgressPolicyStatusReady(ctx, cli, egp, false, egressConfig.EnableIPv6, time.Second*10)
+		Expect(err).NotTo(HaveOccurred())
+
+		if egressConfig.EnableIPv6 && egp.Status.Eip.Ipv6 != "fd09:6:100::20" {
+			Fail(fmt.Sprintf("the status of the policy is: %v\nthe status of expect is: %v\n", egp.Status.Eip.Ipv6, "fd09:6:100::20"))
+		}
+	})
+})
