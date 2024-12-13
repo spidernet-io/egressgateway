@@ -295,6 +295,48 @@ func TestValidateEgressPolicy(t *testing.T) {
 			},
 			expAllow: false,
 		},
+		"case9 create multi policy": {
+			existingResources: []client.Object{
+				&v1beta1.EgressGateway{
+					ObjectMeta: metav1.ObjectMeta{
+						Name: "test",
+					},
+					Spec: v1beta1.EgressGatewaySpec{
+						Ippools: v1beta1.Ippools{
+							IPv4:           []string{"10.195.30.21-10.195.30.23"},
+							Ipv4DefaultEIP: "10.195.30.21",
+						},
+					},
+					Status: v1beta1.EgressGatewayStatus{
+						NodeList: []v1beta1.EgressIPStatus{
+							{
+								Name: "node1",
+								Eips: []v1beta1.Eips{
+									{
+										IPv4: "10.195.30.21",
+										IPv6: "",
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			spec: v1beta1.EgressPolicySpec{
+				EgressGatewayName: "test",
+				EgressIP: v1beta1.EgressIP{
+					UseNodeIP: false,
+					IPv4:      "10.195.30.22",
+				},
+				AppliedTo: v1beta1.AppliedTo{
+					PodSelector: &metav1.LabelSelector{
+						MatchLabels: map[string]string{"app": "test"},
+					},
+				},
+				DestSubnet: []string{"192.168.1.1/24"},
+			},
+			expAllow: true,
+		},
 	}
 	for name, c := range cases {
 		t.Run(name, func(t *testing.T) {
