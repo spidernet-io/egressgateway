@@ -927,7 +927,7 @@ func assignIP(from *egress.EgressGateway, req reconcile.Request, specEgressIP eg
 		// check
 		for nodeIndex, node := range from.Status.NodeList {
 			for eipIndex, eip := range node.Eips {
-				if eip.IPv4 == specEgressIP.IPv4 || eip.IPv6 == specEgressIP.IPv6 {
+				if (eip.IPv4 == specEgressIP.IPv4 && specEgressIP.IPv4 != "") || (eip.IPv6 == specEgressIP.IPv6 && specEgressIP.IPv6 != "") {
 					from.Status.NodeList[nodeIndex].Eips[eipIndex].Policies = append(
 						from.Status.NodeList[nodeIndex].Eips[eipIndex].Policies, egress.Policy{
 							Name:      req.Name,
