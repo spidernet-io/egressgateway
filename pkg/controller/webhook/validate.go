@@ -283,17 +283,21 @@ func checkEIP(client client.Client, ctx context.Context, ipv4, ipv6, egwName str
 		}
 	}
 
-	eips := egressgateway.GetEipByIPV4(eipIPV4, *egw)
-	if len(eips.IPv6) != 0 {
-		if eipIPV6 != eips.IPv6 {
-			return false, fmt.Errorf("%v cannot be used, when %v is used, %v must be used", eipIPV6, eipIPV4, eips.IPv6)
+	if len(egw.Spec.Ippools.IPv4) > 0 {
+		eips := egressgateway.GetEipByIPV4(eipIPV4, *egw)
+		if len(eips.IPv6) != 0 {
+			if eipIPV6 != eips.IPv6 {
+				return false, fmt.Errorf("%v cannot be used, when ipv4 %v is used, %v must be used", eipIPV6, eipIPV4, eips.IPv6)
+			}
 		}
 	}
 
-	eips = egressgateway.GetEipByIPV6(eipIPV6, *egw)
-	if len(eips.IPv4) != 0 {
-		if eipIPV4 != eips.IPv4 {
-			return false, fmt.Errorf("%v cannot be used, when %v is used, %v must be used", eipIPV4, eipIPV6, eips.IPv4)
+	if len(egw.Spec.Ippools.IPv6) > 0 {
+		eips := egressgateway.GetEipByIPV6(eipIPV6, *egw)
+		if len(eips.IPv4) != 0 {
+			if eipIPV4 != eips.IPv4 {
+				return false, fmt.Errorf("%v cannot be used, when ipv6 %v is used, %v must be used", eipIPV4, eipIPV6, eips.IPv4)
+			}
 		}
 	}
 
