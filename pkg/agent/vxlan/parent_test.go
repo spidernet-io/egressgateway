@@ -6,10 +6,15 @@ package vxlan
 import (
 	"errors"
 	"net"
+	"os"
 	"testing"
 
+	"github.com/spidernet-io/egressgateway/pkg/config"
 	"github.com/stretchr/testify/assert"
 	"github.com/vishvananda/netlink"
+	corev1 "k8s.io/api/core/v1"
+	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 )
 
 type TestCase struct {
@@ -274,4 +279,48 @@ func Test_GetParentByName(t *testing.T) {
 
 	_, err = GetParentByName(mockLink, "eth0")(6)
 	assert.Error(t, err)
+}
+
+func Test_GetCustomParentName(t *testing.T) {
+	mockClient := fake.NewClientBuilder().Build()
+	customNames := []config.TunnelDetectCustomInterface{
+		{
+			NodeSelector:  map[string]string{"mockLbl1": "mockVal1", "mockLbl2": "mockVal2"},
+			InterfaceName: "ifaceMock",
+		},
+	}
+	defaultName := "ifaceDefault"
+
+	// error when no NODE_NAME env variable is set
+	_, err := GetCustomParentName(mockClient, defaultName, customNames)
+	assert.Error(t, err)
+
+	// error when current NODE_NAME not found
+	os.Setenv("NODE_NAME", "MockNode")
+	_, err = GetCustomParentName(mockClient, defaultName, customNames)
+	assert.Error(t, err)
+
+	// return default name when nodeSelector doesn't match
+	mockClient = fake.NewClientBuilder().WithObjects(&corev1.Node{ObjectMeta: v1.ObjectMeta{Name: "MockNode"}}).Build()
+	parrentName, err := GetCustomParentName(mockClient, defaultName, customNames)
+	assert.Nil(t, err)
+	assert.Equal(t, defaultName, parrentName)
+
+	// return default name when nodeSelector partially match
+	mockClient = fake.NewClientBuilder().WithObjects(&corev1.Node{ObjectMeta: v1.ObjectMeta{Name: "MockNode", Labels: map[string]string{"mockLbl1": "mockVal1"}}}).Build()
+	parrentName, err = GetCustomParentName(mockClient, defaultName, customNames)
+	assert.Nil(t, err)
+	assert.Equal(t, defaultName, parrentName)
+
+	// return custom interface name when nodeSelector match
+	mockClient = fake.NewClientBuilder().WithObjects(&corev1.Node{ObjectMeta: v1.ObjectMeta{Name: "MockNode", Labels: map[string]string{"mockLbl1": "mockVal1", "mockLbl2": "mockVal2"}}}).Build()
+	parrentName, err = GetCustomParentName(mockClient, defaultName, customNames)
+	assert.Nil(t, err)
+	assert.Equal(t, customNames[0].InterfaceName, parrentName)
+
+	// return default name when TunnelDetectCustomInterface is empty
+	mockClient = fake.NewClientBuilder().WithObjects(&corev1.Node{ObjectMeta: v1.ObjectMeta{Name: "MockNode", Labels: map[string]string{"mockLbl1": "mockVal1", "mockLbl2": "mockVal2"}}}).Build()
+	parrentName, err = GetCustomParentName(mockClient, defaultName, []config.TunnelDetectCustomInterface{})
+	assert.Nil(t, err)
+	assert.Equal(t, defaultName, parrentName)
 }
