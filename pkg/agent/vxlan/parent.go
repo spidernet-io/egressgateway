@@ -4,10 +4,16 @@
 package vxlan
 
 import (
+	"context"
 	"fmt"
 	"net"
+	"os"
 
+	corev1 "k8s.io/api/core/v1"
+
+	"github.com/spidernet-io/egressgateway/pkg/config"
 	"github.com/vishvananda/netlink"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 type NetLink struct {
@@ -94,4 +100,35 @@ func GetParentByName(cli NetLink, name string) func(version int) (*Parent, error
 		}
 		return nil, fmt.Errorf("failed to find parent interface")
 	}
+}
+
+// GetCustomParentName get parent interface name from configured TunnelDetectCustomInterface
+// If no node matches from TunnelDetectCustomInterface, return default name from configured TunnelDetectMethod with interface=...
+func GetCustomParentName(cl client.Client, defaultName string, override []config.TunnelDetectCustomInterface) (string, error) {
+	nodeName := os.Getenv("NODE_NAME")
+	if nodeName == "" {
+		return "", fmt.Errorf("NODE_NAME environment variable is not set")
+	}
+	// Retrieve the current node's labels
+	node := &corev1.Node{}
+	if err := cl.Get(context.Background(), client.ObjectKey{Name: nodeName}, node); err != nil {
+		return "", fmt.Errorf("can not get current node: %s", err)
+	}
+	// ...
+	for _, ovrd := range override {
+		if matchesNodeSelector(node, ovrd.NodeSelector) {
+			return ovrd.InterfaceName, nil
+		}
+	}
+	return defaultName, nil
+}
+
+// matchesNodeSelector checks if a node's labels match the given nodeSelector
+func matchesNodeSelector(node *corev1.Node, nodeSelector map[string]string) bool {
+	for key, value := range nodeSelector {
+		if node.Labels[key] != value {
+			return false
+		}
+	}
+	return true
 }
