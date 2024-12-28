@@ -33,7 +33,7 @@ feature:
   tunnelIpv6Subnet: "fd11::/112"
   ## @param feature.tunnelDetectMethod Tunnel base on which interface [`defaultRouteInterface`, `interface=eth0`]
   tunnelDetectMethod: "defaultRouteInterface"
-  ## @param feature.TunnelDetectCustomInterface defines custom parent interface name per node basis.
+  ## @param feature.tunnelDetectCustomInterface defines custom parent interface name per node basis.
   tunnelDetectCustomInterface: []
   # - nodeSelector:
   #     label: value
