@@ -283,44 +283,70 @@ func Test_GetParentByName(t *testing.T) {
 
 func Test_GetCustomParentName(t *testing.T) {
 	mockClient := fake.NewClientBuilder().Build()
+	defaultName := "ifaceDefault"
+	customInterfaceName := "ifaceMock"
+	mockLink := NetLink{
+		LinkByName: func(name string) (netlink.Link, error) {
+			return netlink.NewLinkBond(netlink.LinkAttrs{Name: name}), nil
+		},
+		AddrList: func(link netlink.Link, family int) ([]netlink.Addr, error) {
+			add := net.ParseIP("1.2.3.4")
+			return []netlink.Addr{{IPNet: netlink.NewIPNet(add)}}, nil
+		},
+	}
 	customNames := []config.TunnelDetectCustomInterface{
 		{
 			NodeSelector:  map[string]string{"mockLbl1": "mockVal1", "mockLbl2": "mockVal2"},
-			InterfaceName: "ifaceMock",
+			InterfaceName: customInterfaceName,
 		},
 	}
-	defaultName := "ifaceDefault"
 
 	// error when no NODE_NAME env variable is set
-	_, err := GetCustomParentName(mockClient, defaultName, customNames)
+	_, err := GetParentByCustomName(mockLink, defaultName, customNames, mockClient)(4)
+	assert.Error(t, err)
+	_, err = GetParentByCustomName(mockLink, defaultName, customNames, mockClient)(6)
 	assert.Error(t, err)
 
 	// error when current NODE_NAME not found
 	os.Setenv("NODE_NAME", "MockNode")
-	_, err = GetCustomParentName(mockClient, defaultName, customNames)
+	_, err = GetParentByCustomName(mockLink, defaultName, customNames, mockClient)(4)
+	assert.Error(t, err)
+	_, err = GetParentByCustomName(mockLink, defaultName, customNames, mockClient)(6)
 	assert.Error(t, err)
 
 	// return default name when nodeSelector doesn't match
 	mockClient = fake.NewClientBuilder().WithObjects(&corev1.Node{ObjectMeta: v1.ObjectMeta{Name: "MockNode"}}).Build()
-	parrentName, err := GetCustomParentName(mockClient, defaultName, customNames)
+	parrentName, err := GetParentByCustomName(mockLink, defaultName, customNames, mockClient)(4)
 	assert.Nil(t, err)
-	assert.Equal(t, defaultName, parrentName)
+	assert.Equal(t, defaultName, parrentName.Name)
+	parrentName, err = GetParentByCustomName(mockLink, defaultName, customNames, mockClient)(6)
+	assert.Nil(t, err)
+	assert.Equal(t, defaultName, parrentName.Name)
 
 	// return default name when nodeSelector partially match
 	mockClient = fake.NewClientBuilder().WithObjects(&corev1.Node{ObjectMeta: v1.ObjectMeta{Name: "MockNode", Labels: map[string]string{"mockLbl1": "mockVal1"}}}).Build()
-	parrentName, err = GetCustomParentName(mockClient, defaultName, customNames)
+	parrentName, err = GetParentByCustomName(mockLink, defaultName, customNames, mockClient)(4)
 	assert.Nil(t, err)
-	assert.Equal(t, defaultName, parrentName)
+	assert.Equal(t, defaultName, parrentName.Name)
+	parrentName, err = GetParentByCustomName(mockLink, defaultName, customNames, mockClient)(6)
+	assert.Nil(t, err)
+	assert.Equal(t, defaultName, parrentName.Name)
 
 	// return custom interface name when nodeSelector match
 	mockClient = fake.NewClientBuilder().WithObjects(&corev1.Node{ObjectMeta: v1.ObjectMeta{Name: "MockNode", Labels: map[string]string{"mockLbl1": "mockVal1", "mockLbl2": "mockVal2"}}}).Build()
-	parrentName, err = GetCustomParentName(mockClient, defaultName, customNames)
+	parrentName, err = GetParentByCustomName(mockLink, defaultName, customNames, mockClient)(4)
 	assert.Nil(t, err)
-	assert.Equal(t, customNames[0].InterfaceName, parrentName)
+	assert.Equal(t, customNames[0].InterfaceName, parrentName.Name)
+	parrentName, err = GetParentByCustomName(mockLink, defaultName, customNames, mockClient)(6)
+	assert.Nil(t, err)
+	assert.Equal(t, customNames[0].InterfaceName, parrentName.Name)
 
 	// return default name when TunnelDetectCustomInterface is empty
 	mockClient = fake.NewClientBuilder().WithObjects(&corev1.Node{ObjectMeta: v1.ObjectMeta{Name: "MockNode", Labels: map[string]string{"mockLbl1": "mockVal1", "mockLbl2": "mockVal2"}}}).Build()
-	parrentName, err = GetCustomParentName(mockClient, defaultName, []config.TunnelDetectCustomInterface{})
+	parrentName, err = GetParentByCustomName(mockLink, defaultName, []config.TunnelDetectCustomInterface{}, mockClient)(4)
 	assert.Nil(t, err)
-	assert.Equal(t, defaultName, parrentName)
+	assert.Equal(t, defaultName, parrentName.Name)
+	parrentName, err = GetParentByCustomName(mockLink, defaultName, []config.TunnelDetectCustomInterface{}, mockClient)(6)
+	assert.Nil(t, err)
+	assert.Equal(t, defaultName, parrentName.Name)
 }

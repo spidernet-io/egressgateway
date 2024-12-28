@@ -102,25 +102,27 @@ func GetParentByName(cli NetLink, name string) func(version int) (*Parent, error
 	}
 }
 
-// GetCustomParentName get parent interface name from configured TunnelDetectCustomInterface
+// GetParentByCustomName get parent interface name from configured TunnelDetectCustomInterface
 // If no node matches from TunnelDetectCustomInterface, return default name from configured TunnelDetectMethod with interface=...
-func GetCustomParentName(cl client.Client, defaultName string, override []config.TunnelDetectCustomInterface) (string, error) {
-	nodeName := os.Getenv("NODE_NAME")
-	if nodeName == "" {
-		return "", fmt.Errorf("NODE_NAME environment variable is not set")
-	}
-	// Retrieve the current node's labels
-	node := &corev1.Node{}
-	if err := cl.Get(context.Background(), client.ObjectKey{Name: nodeName}, node); err != nil {
-		return "", fmt.Errorf("can not get current node: %s", err)
-	}
-	// ...
-	for _, ovrd := range override {
-		if matchesNodeSelector(node, ovrd.NodeSelector) {
-			return ovrd.InterfaceName, nil
+func GetParentByCustomName(cli NetLink, name string, override []config.TunnelDetectCustomInterface, cl client.Client) func(version int) (*Parent, error) {
+	return func(version int) (*Parent, error) {
+		nodeName := os.Getenv("NODE_NAME")
+		if nodeName == "" {
+			return nil, fmt.Errorf("NODE_NAME environment variable is not set")
 		}
+		// Retrieve the current node's labels
+		node := &corev1.Node{}
+		if err := cl.Get(context.Background(), client.ObjectKey{Name: nodeName}, node); err != nil {
+			return nil, fmt.Errorf("can not get current node: %s", err)
+		}
+		// ...
+		for _, ovrd := range override {
+			if matchesNodeSelector(node, ovrd.NodeSelector) {
+				return GetParentByName(cli, ovrd.InterfaceName)(version)
+			}
+		}
+		return GetParentByName(cli, name)(version)
 	}
-	return defaultName, nil
 }
 
 // matchesNodeSelector checks if a node's labels match the given nodeSelector

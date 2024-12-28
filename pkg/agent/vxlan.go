@@ -613,11 +613,11 @@ func newEgressTunnelController(mgr manager.Manager, cfg *config.Config, log logr
 	}
 	if strings.HasPrefix(cfg.FileConfig.TunnelDetectMethod, config.TunnelInterfaceSpecific) {
 		name := strings.TrimPrefix(cfg.FileConfig.TunnelDetectMethod, config.TunnelInterfaceSpecific)
-		name, err := vxlan.GetCustomParentName(r.client, name, cfg.FileConfig.TunnelDetectCustomInterface)
-		if err != nil {
-			return err
+		if len(cfg.FileConfig.TunnelDetectCustomInterface) == 0 {
+			r.getParent = vxlan.GetParentByName(netLink, name)
+		} else {
+			r.getParent = vxlan.GetParentByCustomName(netLink, name, cfg.FileConfig.TunnelDetectCustomInterface, mgr.GetClient())
 		}
-		r.getParent = vxlan.GetParentByName(netLink, name)
 	} else {
 		r.getParent = vxlan.GetParentByDefaultRoute(netLink)
 	}
