@@ -34,7 +34,7 @@ feature:
   ## @param feature.tunnelDetectMethod Tunnel base on which interface [`defaultRouteInterface`, `interface=eth0`]
   tunnelDetectMethod: "defaultRouteInterface"
   ## @param feature.TunnelDetectCustomInterface defines custom parent interface name per node basis.
-  TunnelDetectCustomInterface: []
+  tunnelDetectCustomInterface: []
   # - nodeSelector:
   #     label: value
   #   interfaceName: testInterface
