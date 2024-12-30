@@ -84,6 +84,8 @@ type FileConfig struct {
 	GatewayReplyRouteTable       int             `yaml:"gatewayReplyRouteTable"`
 	GatewayReplyRouteMark        int             `yaml:"gatewayReplyRouteMark"`
 	GatewayFailover              GatewayFailover `yaml:"gatewayFailover"`
+
+	TunnelDetectCustomInterface []TunnelDetectCustomInterface `yaml:"tunnelDetectCustomInterface"`
 }
 
 type GatewayFailover struct {
@@ -118,6 +120,11 @@ type AutoDetect struct {
 	PodCIDR   string `yaml:"podCIDR"`
 	ClusterIP bool   `yaml:"clusterIP"`
 	NodeIP    bool   `yaml:"nodeIP"`
+}
+
+type TunnelDetectCustomInterface struct {
+	NodeSelector  map[string]string `yaml:"nodeSelector"`
+	InterfaceName string            `yaml:"interfaceName"`
 }
 
 // LoadConfig loads the configuration
