@@ -30,14 +30,14 @@ require (
 	github.com/tigera/operator v1.35.0
 	github.com/vishvananda/netlink v1.2.1-beta.2.0.20230130171208-05506ada9f99
 	go.uber.org/zap v1.27.0
-	golang.org/x/sys v0.25.0
+	golang.org/x/sys v0.28.0
 	gomodules.xyz/jsonpatch/v2 v2.4.0
 	gopkg.in/yaml.v3 v3.0.1
 	k8s.io/api v0.30.3
 	k8s.io/apimachinery v0.30.3
 	k8s.io/client-go v0.30.3
 	k8s.io/utils v0.0.0-20240711033017-18e509b52bc8
-	modernc.org/memory v1.7.2
+	modernc.org/memory v1.8.2
 	sigs.k8s.io/cluster-api-provider-azure v1.17.1
 	sigs.k8s.io/controller-runtime v0.18.5
 	sigs.k8s.io/controller-tools v0.15.0
