@@ -6,7 +6,7 @@ EgressGateway 支持多个 Node 作为 Pod 的高可用（HA）出口网关，�
 
 ## 订阅 EgressGateway
 
-访问 [EgressGateway AWS Marketplace](https://aws.amazon.com/marketplace/pp/prodview-b5ip2fo7qduma/) 页面进行订阅.
+访问 [EgressGateway AWS Marketplace](https://aws.amazon.com/marketplace/pp/prodview-b5ip2fo7qduma/) 页面进行订阅。
 
 ## 创建 Kubernetes 集群
 
