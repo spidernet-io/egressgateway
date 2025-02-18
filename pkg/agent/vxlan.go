@@ -81,12 +81,6 @@ func (r *vxlanReconciler) Reconcile(ctx context.Context, req reconcile.Request) 
 		return r.reconcileEgressTunnel(ctx, newReq, log)
 	case "EgressGateway":
 		return r.reconcileEgressGateway(ctx, newReq, log)
-	case "EgressEndpointSlice":
-		// return r.reconcileEgressEndpointSlice(ctx, newReq, log)
-		return reconcile.Result{}, nil
-	case "EgressClusterEndpointSlice":
-		// return r.reconcileEgressClusterEndpointSlice(ctx, newReq, log)
-		return reconcile.Result{}, nil
 	default:
 		return reconcile.Result{}, nil
 	}
@@ -642,25 +636,10 @@ func newEgressTunnelController(mgr manager.Manager, cfg *config.Config, log logr
 
 	sourceEgressGateway := utils.SourceKind(mgr.GetCache(),
 		&egressv1.EgressGateway{},
-		handler.EnqueueRequestsFromMapFunc(utils.KindToMapFlat("EgressGateway")))
+		handler.EnqueueRequestsFromMapFunc(utils.KindToMapFlat("EgressGateway")),
+	)
 	if err := c.Watch(sourceEgressGateway); err != nil {
 		return fmt.Errorf("failed to watch EgressGateway: %w", err)
-	}
-
-	sourceEgressEndpointSlice := utils.SourceKind(mgr.GetCache(),
-		&egressv1.EgressEndpointSlice{},
-		handler.EnqueueRequestsFromMapFunc(utils.KindToMapFlat("EgressEndpointSlice")),
-		epSlicePredicate{})
-	if err := c.Watch(sourceEgressEndpointSlice); err != nil {
-		return fmt.Errorf("failed to watch EgressEndpointSlice: %w", err)
-	}
-
-	sourceEgressClusterEndpointSlice := utils.SourceKind(mgr.GetCache(),
-		&egressv1.EgressClusterEndpointSlice{},
-		handler.EnqueueRequestsFromMapFunc(utils.KindToMapFlat("EgressClusterEndpointSlice")),
-		epSlicePredicate{})
-	if err := c.Watch(sourceEgressClusterEndpointSlice); err != nil {
-		return fmt.Errorf("failed to watch EgressClusterEndpointSlice: %w", err)
 	}
 
 	go r.keepVXLAN()

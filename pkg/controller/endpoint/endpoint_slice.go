@@ -6,7 +6,6 @@ package endpoint
 import (
 	"context"
 	"fmt"
-	"github.com/spidernet-io/egressgateway/pkg/utils"
 	"net"
 	"reflect"
 	"sort"
@@ -32,6 +31,7 @@ import (
 	"github.com/spidernet-io/egressgateway/pkg/coalescing"
 	"github.com/spidernet-io/egressgateway/pkg/config"
 	"github.com/spidernet-io/egressgateway/pkg/k8s/apis/v1beta1"
+	"github.com/spidernet-io/egressgateway/pkg/utils"
 )
 
 type endpointReconciler struct {

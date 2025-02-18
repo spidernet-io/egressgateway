@@ -66,26 +66,26 @@ type EnvConfig struct {
 }
 
 type FileConfig struct {
-	EnableIPv4                   bool            `yaml:"enableIPv4"`
-	EnableIPv6                   bool            `yaml:"enableIPv6"`
-	IPTables                     IPTables        `yaml:"iptables"`
-	DatapathMode                 string          `yaml:"datapathMode"`
-	TunnelIpv4Subnet             string          `yaml:"tunnelIpv4Subnet"`
-	TunnelIpv6Subnet             string          `yaml:"tunnelIpv6Subnet"`
-	TunnelIPv4Net                *net.IPNet      `json:"-"`
-	TunnelIPv6Net                *net.IPNet      `json:"-"`
-	TunnelDetectMethod           string          `yaml:"tunnelDetectMethod"`
-	VXLAN                        VXLAN           `yaml:"vxlan"`
-	MaxNumberEndpointPerSlice    int             `yaml:"maxNumberEndpointPerSlice"`
-	Mark                         string          `yaml:"mark"`
-	AnnouncedInterfacesToExclude []string        `yaml:"announcedInterfacesToExclude"`
-	AnnounceExcludeRegexp        *regexp.Regexp  `json:"-"`
-	EnableGatewayReplyRoute      bool            `yaml:"enableGatewayReplyRoute"`
-	GatewayReplyRouteTable       int             `yaml:"gatewayReplyRouteTable"`
-	GatewayReplyRouteMark        int             `yaml:"gatewayReplyRouteMark"`
-	GatewayFailover              GatewayFailover `yaml:"gatewayFailover"`
-
-	TunnelDetectCustomInterface []TunnelDetectCustomInterface `yaml:"tunnelDetectCustomInterface"`
+	EnableIPv4                   bool                          `yaml:"enableIPv4"`
+	EnableIPv6                   bool                          `yaml:"enableIPv6"`
+	IPTables                     IPTables                      `yaml:"iptables"`
+	DatapathMode                 string                        `yaml:"datapathMode"`
+	TunnelIpv4Subnet             string                        `yaml:"tunnelIpv4Subnet"`
+	TunnelIpv6Subnet             string                        `yaml:"tunnelIpv6Subnet"`
+	TunnelIPv4Net                *net.IPNet                    `json:"-"`
+	TunnelIPv6Net                *net.IPNet                    `json:"-"`
+	TunnelDetectMethod           string                        `yaml:"tunnelDetectMethod"`
+	VXLAN                        VXLAN                         `yaml:"vxlan"`
+	MaxNumberEndpointPerSlice    int                           `yaml:"maxNumberEndpointPerSlice"`
+	Mark                         string                        `yaml:"mark"`
+	AnnouncedInterfacesToExclude []string                      `yaml:"announcedInterfacesToExclude"`
+	AnnounceExcludeRegexp        *regexp.Regexp                `json:"-"`
+	EnableGatewayReplyRoute      bool                          `yaml:"enableGatewayReplyRoute"`
+	GatewayReplyRouteTable       int                           `yaml:"gatewayReplyRouteTable"`
+	GatewayReplyRouteMark        int                           `yaml:"gatewayReplyRouteMark"`
+	GatewayFailover              GatewayFailover               `yaml:"gatewayFailover"`
+	TunnelDetectCustomInterface  []TunnelDetectCustomInterface `yaml:"tunnelDetectCustomInterface"`
+	CacheSyncSyncPeriodSecond    int                           `json:"cacheSyncSyncPeriodSecond "`
 }
 
 type GatewayFailover struct {
@@ -170,6 +170,7 @@ func LoadConfig(isAgent bool) (*Config, error) {
 				TunnelUpdatePeriod:  5,
 				EipEvictionTimeout:  15,
 			},
+			CacheSyncSyncPeriodSecond: 1800,
 		},
 	}
 
