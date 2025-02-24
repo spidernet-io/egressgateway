@@ -6,7 +6,7 @@ require (
 	github.com/agiledragon/gomonkey/v2 v2.12.0
 	github.com/asaskevich/govalidator v0.0.0-20230301143203-a9d515a09cc2
 	github.com/cilium/ipam v0.0.0-20220824141044-46ef3d556735
-	github.com/go-faker/faker/v4 v4.4.2
+	github.com/go-faker/faker/v4 v4.6.0
 	github.com/go-logr/logr v1.4.2
 	github.com/go-swagger/go-swagger v0.30.4
 	github.com/google/gops v0.3.27
