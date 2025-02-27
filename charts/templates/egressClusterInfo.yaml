@@ -7,4 +7,7 @@ spec:
     clusterIP: {{ .Values.feature.clusterCIDR.autoDetect.clusterIP }}
     podCidrMode: {{ .Values.feature.clusterCIDR.autoDetect.podCidrMode }}
     nodeIP: {{ .Values.feature.clusterCIDR.autoDetect.nodeIP }}
-  extraCidr: {{ .Values.feature.clusterCIDR.extraCidr }}
+{{- if .Values.feature.clusterCIDR.extraCidr }}
+  extraCidr:
+{{ .Values.feature.clusterCIDR.extraCidr | toYaml | indent 4 }}
+{{ end -}}
