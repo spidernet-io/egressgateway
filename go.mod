@@ -1,6 +1,7 @@
 module github.com/spidernet-io/egressgateway
 
 go 1.22.5
+toolchain go1.24.1
 
 require (
 	github.com/agiledragon/gomonkey/v2 v2.12.0
@@ -12,7 +13,7 @@ require (
 	github.com/google/gops v0.3.27
 	github.com/google/uuid v1.6.0
 	github.com/gorilla/websocket v1.5.3
-	github.com/grafana/pyroscope-go v1.2.0
+	github.com/grafana/pyroscope-go v1.2.1
 	github.com/mdlayher/arp v0.0.0-20220221190821-c37aaafac7f9
 	github.com/mdlayher/ethernet v0.0.0-20220221185849-529eae5b6118
 	github.com/mdlayher/ndp v0.0.0-20200602162440-17ab9e3e5567
