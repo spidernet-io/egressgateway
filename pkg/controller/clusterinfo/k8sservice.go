@@ -7,9 +7,10 @@ import (
 	"context"
 	"fmt"
 
+	"strings"
+
 	corev1 "k8s.io/api/core/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	"strings"
 
 	"github.com/spidernet-io/egressgateway/pkg/utils/ip"
 )
@@ -58,9 +59,10 @@ func parseCIDRFromControllerManager(pod *corev1.Pod, param string) (ipv4, ipv6 [
 	if len(containers) == 0 {
 		return nil, nil, fmt.Errorf("failed to found containers")
 	}
-	commands := containers[0].Command
+	container := containers[0]
+	cmdAndArgs := append(container.Command, container.Args...)
 	ipRange := ""
-	for _, c := range commands {
+	for _, c := range cmdAndArgs {
 		if strings.Contains(c, param) {
 			ipRange = strings.Split(c, "=")[1]
 			break
