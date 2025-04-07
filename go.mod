@@ -1,6 +1,7 @@
 module github.com/spidernet-io/egressgateway
 
 go 1.22.5
+toolchain go1.24.1
 
 require (
 	github.com/agiledragon/gomonkey/v2 v2.12.0
@@ -30,7 +31,7 @@ require (
 	github.com/tigera/operator v1.35.0
 	github.com/vishvananda/netlink v1.2.1-beta.2.0.20230130171208-05506ada9f99
 	go.uber.org/zap v1.27.0
-	golang.org/x/sys v0.28.0
+	golang.org/x/sys v0.32.0
 	gomodules.xyz/jsonpatch/v2 v2.4.0
 	gopkg.in/yaml.v3 v3.0.1
 	k8s.io/api v0.30.3
