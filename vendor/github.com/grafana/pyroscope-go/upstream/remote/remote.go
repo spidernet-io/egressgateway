@@ -201,6 +201,7 @@ func (r *Remote) uploadProfile(j *upstream.UploadJob) error {
 	} else if r.cfg.BasicAuthUser != "" && r.cfg.BasicAuthPassword != "" {
 		request.SetBasicAuth(r.cfg.BasicAuthUser, r.cfg.BasicAuthPassword)
 	} else if r.cfg.AuthToken != "" {
+		request.Header.Set("Authorization", "Bearer "+r.cfg.AuthToken)
 		r.logger.Infof(authTokenDeprecationWarning)
 	}
 	if r.cfg.TenantID != "" {
