@@ -151,7 +151,7 @@ jobs:
 
       - name: Upload artifact digests
         if: ${{ env.RUN_EXIST == 'false' }}
-        uses: actions/upload-artifact@v4.6.0
+        uses: actions/upload-artifact@v4.6.2
         with:
           name: image-digest-${{ matrix.name }}
           path: image-digest
@@ -168,12 +168,16 @@ jobs:
           mkdir -p image-digest/
 
       - name: Download digests of all images built
-        uses: actions/download-artifact@v4.1.8
+        uses: actions/download-artifact@v4.3.0
         with:
           path: image-digest/
+          pattern: "image-digest-*"
+          merge-multiple: true
 
       - name: Image Digests Output
         shell: bash
         run: |
           cd image-digest/
+          ls -l
+          echo "---------------------------------"
           find -type f | sort | xargs -d '\n' cat
