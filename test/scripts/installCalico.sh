@@ -52,7 +52,15 @@ done
 
 export KUBECONFIG=${E2E_KIND_KUBECONFIG_PATH}
 
-kubectl apply -f  ${CALICO_YAML}
+K8S_MINOR=$(kubectl version -o json | yq -r '.serverVersion.minor | match("[0-9]+").string')
+echo "k8s minor version is ${K8S_MINOR}"
+if [ "$K8S_MINOR" -ge 25 ]; then
+  kubectl apply -f "${CALICO_YAML}"
+else
+  echo "use --validate=false to apply calico yaml"
+  kubectl apply -f  ${CALICO_YAML} --validate=false
+fi
+
 sleep 3
 
 kubectl wait --for=condition=ready -l k8s-app=calico-node --timeout=${INSTALL_TIME_OUT} pod -n kube-system
