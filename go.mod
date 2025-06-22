@@ -1,12 +1,12 @@
 module github.com/spidernet-io/egressgateway
 
-go 1.22.5
+go 1.23.0
 
 require (
 	github.com/agiledragon/gomonkey/v2 v2.12.0
 	github.com/asaskevich/govalidator v0.0.0-20230301143203-a9d515a09cc2
 	github.com/cilium/ipam v0.0.0-20220824141044-46ef3d556735
-	github.com/go-faker/faker/v4 v4.4.2
+	github.com/go-faker/faker/v4 v4.6.1
 	github.com/go-logr/logr v1.4.2
 	github.com/go-swagger/go-swagger v0.30.4
 	github.com/google/gops v0.3.27
@@ -131,9 +131,9 @@ require (
 	golang.org/x/mod v0.21.0 // indirect
 	golang.org/x/net v0.33.0 // indirect
 	golang.org/x/oauth2 v0.24.0 // indirect
-	golang.org/x/sync v0.10.0 // indirect
+	golang.org/x/sync v0.13.0 // indirect
 	golang.org/x/term v0.27.0 // indirect
-	golang.org/x/text v0.21.0 // indirect
+	golang.org/x/text v0.24.0 // indirect
 	golang.org/x/time v0.5.0 // indirect
 	golang.org/x/tools v0.24.0 // indirect
 	google.golang.org/protobuf v1.36.1 // indirect
