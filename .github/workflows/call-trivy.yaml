@@ -44,7 +44,7 @@ jobs:
       # merge to one step
       # https://github.com/aquasecurity/trivy-action/issues/313
       - name: Scan agent
-        uses: aquasecurity/trivy-action@0.29.0
+        uses: aquasecurity/trivy-action@0.31.0
         env:
           TRIVY_DB_REPOSITORY: public.ecr.aws/aquasecurity/trivy-db,ghcr.io/aquasecurity/trivy-db
         with:
@@ -52,7 +52,7 @@ jobs:
           severity: 'CRITICAL,HIGH'
 
       - name: Scan controller
-        uses: aquasecurity/trivy-action@0.29.0
+        uses: aquasecurity/trivy-action@0.31.0
         env:
           TRIVY_DB_REPOSITORY: public.ecr.aws/aquasecurity/trivy-db,ghcr.io/aquasecurity/trivy-db
         with:
@@ -60,7 +60,7 @@ jobs:
           severity: 'CRITICAL,HIGH'
 
       - name: Scan nettools
-        uses: aquasecurity/trivy-action@0.29.0
+        uses: aquasecurity/trivy-action@0.31.0
         env:
           TRIVY_DB_REPOSITORY: public.ecr.aws/aquasecurity/trivy-db,ghcr.io/aquasecurity/trivy-db
         with:
