@@ -345,9 +345,9 @@ func (r *policeReconciler) getPolicySubnet(ns, name string) ([]string, error) {
 	getSubnet := func(obj client.Object) []string {
 		switch obj := obj.(type) {
 		case *egressv1.EgressPolicy:
-			return obj.Spec.DestSubnet
+			return expandAnyCIDR(obj.Spec.DestSubnet)
 		case *egressv1.EgressClusterPolicy:
-			return obj.Spec.DestSubnet
+			return expandAnyCIDR(obj.Spec.DestSubnet)
 		default:
 			return nil
 		}
@@ -364,6 +364,25 @@ func (r *policeReconciler) getPolicySubnet(ns, name string) ([]string, error) {
 		}
 	}
 	return getSubnet(obj), nil
+}
+
+// expandAnyCIDR replaces 0.0.0.0/0 with 0.0.0.0/1 and 128.0.0.0/1
+// to avoid ipset restrictions, and removes duplicates from the result.
+func expandAnyCIDR(ips []string) []string {
+	ipSet := make(map[string]struct{})
+	for _, ip := range ips {
+		if ip == "0.0.0.0/0" {
+			ipSet["0.0.0.0/1"] = struct{}{}
+			ipSet["128.0.0.0/1"] = struct{}{}
+		} else {
+			ipSet[ip] = struct{}{}
+		}
+	}
+	result := make([]string, 0, len(ipSet))
+	for ip := range ipSet {
+		result = append(result, ip)
+	}
+	return result
 }
 
 func (r *policeReconciler) updatePolicyIPSet(policyNs string, policyName string, isEipNodeSet bool, destSubnet []string) error {
