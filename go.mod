@@ -1,6 +1,6 @@
 module github.com/spidernet-io/egressgateway
 
-go 1.22.5
+go 1.24.4
 
 require (
 	github.com/agiledragon/gomonkey/v2 v2.12.0
