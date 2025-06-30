@@ -103,7 +103,7 @@ agent:
     ## @param agent.image.digest The image digest of egressgateway agent, which takes preference over tag
     digest: ""
     ## @param agent.image.tag The image tag of egressgateway agent, overrides the image tag whose default is the chart appVersion.
-    tag: "v0.6.3"
+    tag: "v0.6.4"
     ## @param agent.image.imagePullSecrets the image pull secrets of egressgateway agent
     imagePullSecrets: []
     # - name: "image-pull-secret"
@@ -244,7 +244,7 @@ controller:
     ## @param controller.image.digest The image digest of egressgatewayController, which takes preference over tag
     digest: ""
     ## @param controller.image.tag The image tag of egressgateway controller, overrides the image tag whose default is the chart appVersion.
-    tag: "v0.6.3"
+    tag: "v0.6.4"
     ## @param controller.image.imagePullSecrets The image pull secrets of egressgateway controller
     imagePullSecrets: []
     # - name: "image-pull-secret"
