@@ -74,13 +74,17 @@ type IPPoolSpec struct {
 	// AllowedUse controls what the IP pool will be used for.  If not specified or empty, defaults to
 	// ["Tunnel", "Workload"] for back-compatibility
 	AllowedUses []IPPoolAllowedUse `json:"allowedUses,omitempty" validate:"omitempty"`
+
+	// AssignmentMode determines if IP addresses from this pool should be  assigned automatically or on request only
+	AssignmentMode AssignmentMode `json:"assignmentMode,omitempty" validate:"omitempty,assignmentMode"`
 }
 
 type IPPoolAllowedUse string
 
 const (
-	IPPoolAllowedUseWorkload IPPoolAllowedUse = "Workload"
-	IPPoolAllowedUseTunnel   IPPoolAllowedUse = "Tunnel"
+	IPPoolAllowedUseWorkload      IPPoolAllowedUse = "Workload"
+	IPPoolAllowedUseTunnel        IPPoolAllowedUse = "Tunnel"
+	IPPoolsAllowedUseLoadBalancer IPPoolAllowedUse = "LoadBalancer"
 )
 
 type VXLANMode string
@@ -97,6 +101,13 @@ const (
 	IPIPModeNever       IPIPMode = "Never"
 	IPIPModeAlways      IPIPMode = "Always"
 	IPIPModeCrossSubnet IPIPMode = "CrossSubnet"
+)
+
+type AssignmentMode string
+
+const (
+	Automatic AssignmentMode = "Automatic"
+	Manual    AssignmentMode = "Manual"
 )
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
