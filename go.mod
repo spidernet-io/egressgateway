@@ -41,7 +41,7 @@ require (
 	sigs.k8s.io/cluster-api-provider-azure v1.17.1
 	sigs.k8s.io/controller-runtime v0.18.5
 	sigs.k8s.io/controller-tools v0.15.0
-	sigs.k8s.io/yaml v1.4.0
+	sigs.k8s.io/yaml v1.6.0
 )
 
 require (
@@ -126,6 +126,7 @@ require (
 	gitlab.com/golang-commonmark/puny v0.0.0-20191124015043-9f83538fa04f // indirect
 	go.mongodb.org/mongo-driver v1.11.3 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
+	go.yaml.in/yaml/v2 v2.4.2 // indirect
 	golang.org/x/crypto v0.31.0 // indirect
 	golang.org/x/exp v0.0.0-20240719175910-8a7402abbf56 // indirect
 	golang.org/x/mod v0.21.0 // indirect
