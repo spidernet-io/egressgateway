@@ -510,8 +510,8 @@ golang.org/x/oauth2/internal
 # golang.org/x/sync v0.10.0
 ## explicit; go 1.18
 golang.org/x/sync/errgroup
-# golang.org/x/sys v0.28.0
-## explicit; go 1.18
+# golang.org/x/sys v0.31.0
+## explicit; go 1.23.0
 golang.org/x/sys/plan9
 golang.org/x/sys/unix
 golang.org/x/sys/windows
@@ -913,8 +913,8 @@ k8s.io/utils/pointer
 k8s.io/utils/ptr
 k8s.io/utils/strings/slices
 k8s.io/utils/trace
-# modernc.org/memory v1.7.2
-## explicit; go 1.18
+# modernc.org/memory v1.11.0
+## explicit; go 1.23.0
 modernc.org/memory
 # sigs.k8s.io/cluster-api-provider-azure v1.17.1
 ## explicit; go 1.22.0
