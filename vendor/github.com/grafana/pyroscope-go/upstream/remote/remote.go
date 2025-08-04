@@ -30,15 +30,16 @@ const (
 )
 
 type Remote struct {
+	mu     sync.Mutex
 	cfg    Config
-	jobs   chan *upstream.UploadJob
+	jobs   chan job
 	client HTTPClient
 	logger Logger
 
 	done chan struct{}
 	wg   sync.WaitGroup
 
-	flushWG sync.WaitGroup
+	flushWG *sync.WaitGroup
 }
 
 type HTTPClient interface {
@@ -69,7 +70,7 @@ type Logger interface {
 func NewRemote(cfg Config) (*Remote, error) {
 	r := &Remote{
 		cfg:  cfg,
-		jobs: make(chan *upstream.UploadJob, 20),
+		jobs: make(chan job, 20),
 		client: &http.Client{
 			Transport: &http.Transport{
 				MaxConnsPerHost: cfg.Threads,
@@ -84,8 +85,9 @@ func NewRemote(cfg Config) (*Remote, error) {
 			},
 			Timeout: cfg.Timeout,
 		},
-		logger: cfg.Logger,
-		done:   make(chan struct{}),
+		logger:  cfg.Logger,
+		done:    make(chan struct{}),
+		flushWG: new(sync.WaitGroup),
 	}
 	if cfg.HTTPClient != nil {
 		r.client = cfg.HTTPClient
@@ -121,21 +123,28 @@ func (r *Remote) Stop() {
 	r.wg.Wait()
 }
 
-func (r *Remote) Upload(j *upstream.UploadJob) {
+func (r *Remote) Upload(uj *upstream.UploadJob) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
 	r.flushWG.Add(1)
+	j := job{
+		upload: uj,
+		flush:  r.flushWG,
+	}
 	select {
 	case r.jobs <- j:
 	default:
-		r.flushWG.Done()
+		j.flush.Done()
 		r.logger.Errorf("remote upload queue is full, dropping a profile job")
 	}
 }
 
 func (r *Remote) Flush() {
-	if r.done == nil {
-		return
-	}
-	r.flushWG.Wait()
+	r.mu.Lock()
+	flush := r.flushWG
+	r.flushWG = new(sync.WaitGroup)
+	r.mu.Unlock()
+	flush.Wait()
 }
 
 func (r *Remote) uploadProfile(j *upstream.UploadJob) error {
@@ -174,7 +183,6 @@ func (r *Remote) uploadProfile(j *upstream.UploadJob) error {
 
 	q := u.Query()
 	q.Set("name", j.Name)
-	// TODO: I think these should be renamed to startTime / endTime
 	q.Set("from", strconv.FormatInt(j.StartTime.UnixNano(), 10))
 	q.Set("until", strconv.FormatInt(j.EndTime.UnixNano(), 10))
 	q.Set("spyName", j.SpyName)
@@ -201,6 +209,7 @@ func (r *Remote) uploadProfile(j *upstream.UploadJob) error {
 	} else if r.cfg.BasicAuthUser != "" && r.cfg.BasicAuthPassword != "" {
 		request.SetBasicAuth(r.cfg.BasicAuthUser, r.cfg.BasicAuthPassword)
 	} else if r.cfg.AuthToken != "" {
+		request.Header.Set("Authorization", "Bearer "+r.cfg.AuthToken)
 		r.logger.Infof(authTokenDeprecationWarning)
 	}
 	if r.cfg.TenantID != "" {
@@ -237,9 +246,9 @@ func (r *Remote) handleJobs() {
 		case <-r.done:
 			r.wg.Done()
 			return
-		case job := <-r.jobs:
-			r.safeUpload(job)
-			r.flushWG.Done()
+		case j := <-r.jobs:
+			r.safeUpload(j.upload)
+			j.flush.Done()
 		}
 	}
 }
@@ -260,4 +269,9 @@ func (r *Remote) safeUpload(job *upstream.UploadJob) {
 	if err := r.uploadProfile(job); err != nil {
 		r.logger.Errorf("upload profile: %v", err)
 	}
+}
+
+type job struct {
+	upload *upstream.UploadJob
+	flush  *sync.WaitGroup
 }
