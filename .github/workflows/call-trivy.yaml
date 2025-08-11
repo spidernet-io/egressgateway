@@ -21,17 +21,17 @@ jobs:
 
 
       - name: Download egressgateway-agent
-        uses: actions/download-artifact@v4.3.0
+        uses: actions/download-artifact@v5.0.0
         with:
           name: image-tar-egressgateway-agent
           path: output/image
       - name: Download egressgateway-controller
-        uses: actions/download-artifact@v4.3.0
+        uses: actions/download-artifact@v5.0.0
         with:
           name: image-tar-egressgateway-controller
           path: output/image
       - name: Download egressgateway-nettools
-        uses: actions/download-artifact@v4.3.0
+        uses: actions/download-artifact@v5.0.0
         with:
           name: image-tar-egressgateway-nettools
           path: output/image
