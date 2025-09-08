@@ -174,7 +174,7 @@ github.com/gorilla/handlers
 # github.com/gorilla/websocket v1.5.3
 ## explicit; go 1.12
 github.com/gorilla/websocket
-# github.com/grafana/pyroscope-go v1.2.0
+# github.com/grafana/pyroscope-go v1.2.7
 ## explicit; go 1.17
 github.com/grafana/pyroscope-go
 github.com/grafana/pyroscope-go/internal/flameql
@@ -182,7 +182,7 @@ github.com/grafana/pyroscope-go/internal/pprof
 github.com/grafana/pyroscope-go/internal/sortedmap
 github.com/grafana/pyroscope-go/upstream
 github.com/grafana/pyroscope-go/upstream/remote
-# github.com/grafana/pyroscope-go/godeltaprof v0.1.8
+# github.com/grafana/pyroscope-go/godeltaprof v0.1.9
 ## explicit; go 1.18
 github.com/grafana/pyroscope-go/godeltaprof
 github.com/grafana/pyroscope-go/godeltaprof/internal/pprof

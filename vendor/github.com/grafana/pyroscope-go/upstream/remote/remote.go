@@ -2,6 +2,7 @@ package remote
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -19,7 +20,8 @@ import (
 	"github.com/grafana/pyroscope-go/upstream"
 )
 
-var errCloudTokenRequired = errors.New("please provide an authentication token. You can find it here: https://pyroscope.io/cloud")
+var errCloudTokenRequired = errors.New("please provide an authentication token." +
+	" You can find it here: https://pyroscope.io/cloud")
 
 const (
 	authTokenDeprecationWarning = "Authtoken is specified, but deprecated and ignored. " +
@@ -30,15 +32,16 @@ const (
 )
 
 type Remote struct {
+	mu     sync.Mutex
 	cfg    Config
-	jobs   chan *upstream.UploadJob
+	jobs   chan job
 	client HTTPClient
 	logger Logger
 
 	done chan struct{}
 	wg   sync.WaitGroup
 
-	flushWG sync.WaitGroup
+	flushWG *sync.WaitGroup
 }
 
 type HTTPClient interface {
@@ -69,7 +72,7 @@ type Logger interface {
 func NewRemote(cfg Config) (*Remote, error) {
 	r := &Remote{
 		cfg:  cfg,
-		jobs: make(chan *upstream.UploadJob, 20),
+		jobs: make(chan job, 20),
 		client: &http.Client{
 			Transport: &http.Transport{
 				MaxConnsPerHost: cfg.Threads,
@@ -84,8 +87,9 @@ func NewRemote(cfg Config) (*Remote, error) {
 			},
 			Timeout: cfg.Timeout,
 		},
-		logger: cfg.Logger,
-		done:   make(chan struct{}),
+		logger:  cfg.Logger,
+		done:    make(chan struct{}),
+		flushWG: new(sync.WaitGroup),
 	}
 	if cfg.HTTPClient != nil {
 		r.client = cfg.HTTPClient
@@ -121,27 +125,34 @@ func (r *Remote) Stop() {
 	r.wg.Wait()
 }
 
-func (r *Remote) Upload(j *upstream.UploadJob) {
+func (r *Remote) Upload(uj *upstream.UploadJob) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
 	r.flushWG.Add(1)
+	j := job{
+		upload: uj,
+		flush:  r.flushWG,
+	}
 	select {
 	case r.jobs <- j:
 	default:
-		r.flushWG.Done()
+		j.flush.Done()
 		r.logger.Errorf("remote upload queue is full, dropping a profile job")
 	}
 }
 
 func (r *Remote) Flush() {
-	if r.done == nil {
-		return
-	}
-	r.flushWG.Wait()
+	r.mu.Lock()
+	flush := r.flushWG
+	r.flushWG = new(sync.WaitGroup)
+	r.mu.Unlock()
+	flush.Wait()
 }
 
 func (r *Remote) uploadProfile(j *upstream.UploadJob) error {
 	u, err := url.Parse(r.cfg.Address)
 	if err != nil {
-		return fmt.Errorf("url parse: %v", err)
+		return fmt.Errorf("url parse: %w", err)
 	}
 
 	body := &bytes.Buffer{}
@@ -151,14 +162,7 @@ func (r *Remote) uploadProfile(j *upstream.UploadJob) error {
 	if err != nil {
 		return err
 	}
-	fw.Write(j.Profile)
-	if j.PrevProfile != nil {
-		fw, err = writer.CreateFormFile("prev_profile", "profile.pprof")
-		if err != nil {
-			return err
-		}
-		fw.Write(j.PrevProfile)
-	}
+	_, _ = fw.Write(j.Profile)
 	if j.SampleTypeConfig != nil {
 		fw, err = writer.CreateFormFile("sample_type_config", "sample_type_config.json")
 		if err != nil {
@@ -168,13 +172,14 @@ func (r *Remote) uploadProfile(j *upstream.UploadJob) error {
 		if err != nil {
 			return err
 		}
-		fw.Write(b)
+		_, _ = fw.Write(b)
 	}
-	writer.Close()
+	if err = writer.Close(); err != nil {
+		return err
+	}
 
 	q := u.Query()
 	q.Set("name", j.Name)
-	// TODO: I think these should be renamed to startTime / endTime
 	q.Set("from", strconv.FormatInt(j.StartTime.UnixNano(), 10))
 	q.Set("until", strconv.FormatInt(j.EndTime.UnixNano(), 10))
 	q.Set("spyName", j.SpyName)
@@ -187,20 +192,22 @@ func (r *Remote) uploadProfile(j *upstream.UploadJob) error {
 
 	r.logger.Debugf("uploading at %s", u.String())
 	// new a request for the job
-	request, err := http.NewRequest("POST", u.String(), body)
+	request, err := http.NewRequestWithContext(context.Background(), http.MethodPost, u.String(), body)
 	if err != nil {
-		return fmt.Errorf("new http request: %v", err)
+		return fmt.Errorf("new http request: %w", err)
 	}
 	contentType := writer.FormDataContentType()
 	r.logger.Debugf("content type: %s", contentType)
 	request.Header.Set("Content-Type", contentType)
 	// request.Header.Set("Content-Type", "binary/octet-stream+"+string(j.Format))
 
-	if r.cfg.AuthToken != "" && isOGPyroscopeCloud(u) {
+	switch {
+	case r.cfg.AuthToken != "" && isOGPyroscopeCloud(u):
 		request.Header.Set("Authorization", "Bearer "+r.cfg.AuthToken)
-	} else if r.cfg.BasicAuthUser != "" && r.cfg.BasicAuthPassword != "" {
+	case r.cfg.BasicAuthUser != "" && r.cfg.BasicAuthPassword != "":
 		request.SetBasicAuth(r.cfg.BasicAuthUser, r.cfg.BasicAuthPassword)
-	} else if r.cfg.AuthToken != "" {
+	case r.cfg.AuthToken != "":
+		request.Header.Set("Authorization", "Bearer "+r.cfg.AuthToken)
 		r.logger.Infof(authTokenDeprecationWarning)
 	}
 	if r.cfg.TenantID != "" {
@@ -213,18 +220,21 @@ func (r *Remote) uploadProfile(j *upstream.UploadJob) error {
 	// do the request and get the response
 	response, err := r.client.Do(request)
 	if err != nil {
-		return fmt.Errorf("do http request: %v", err)
+		return fmt.Errorf("do http request: %w", err)
 	}
-	defer response.Body.Close()
+	defer func() {
+		_ = response.Body.Close()
+	}()
 
 	// read all the response body
 	respBody, err := io.ReadAll(response.Body)
 	if err != nil {
-		return fmt.Errorf("read response body: %v", err)
+		return fmt.Errorf("read response body: %w", err)
 	}
 
-	if response.StatusCode != 200 {
-		return fmt.Errorf("failed to upload. server responded with statusCode: '%d' and body: '%s'", response.StatusCode, string(respBody))
+	if response.StatusCode != http.StatusOK {
+		return fmt.Errorf("failed to upload: (%d) '%s'", //nolint:err113
+			response.StatusCode, string(respBody))
 	}
 
 	return nil
@@ -236,10 +246,11 @@ func (r *Remote) handleJobs() {
 		select {
 		case <-r.done:
 			r.wg.Done()
+
 			return
-		case job := <-r.jobs:
-			r.safeUpload(job)
-			r.flushWG.Done()
+		case j := <-r.jobs:
+			r.safeUpload(j.upload)
+			j.flush.Done()
 		}
 	}
 }
@@ -260,4 +271,9 @@ func (r *Remote) safeUpload(job *upstream.UploadJob) {
 	if err := r.uploadProfile(job); err != nil {
 		r.logger.Errorf("upload profile: %v", err)
 	}
+}
+
+type job struct {
+	upload *upstream.UploadJob
+	flush  *sync.WaitGroup
 }

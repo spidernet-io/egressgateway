@@ -1,7 +1,5 @@
 package flameql
 
-import "regexp"
-
 type Query struct {
 	AppName  string
 	Matchers []*TagMatcher
@@ -12,11 +10,10 @@ type Query struct {
 func (q *Query) String() string { return q.q }
 
 type TagMatcher struct {
-	Key   string
-	Value string
 	Op
 
-	R *regexp.Regexp
+	Key   string
+	Value string
 }
 
 type Op int
@@ -35,7 +32,7 @@ const (
 	ReservedTagKeyName = "__name__"
 )
 
-var reservedTagKeys = []string{
+var reservedTagKeys = []string{ //nolint:gochecknoglobals
 	ReservedTagKeyName,
 }
 
@@ -48,21 +45,6 @@ type ByPriority []*TagMatcher
 func (p ByPriority) Len() int           { return len(p) }
 func (p ByPriority) Swap(i, j int)      { p[i], p[j] = p[j], p[i] }
 func (p ByPriority) Less(i, j int) bool { return p[i].Op < p[j].Op }
-
-func (m *TagMatcher) Match(v string) bool {
-	switch m.Op {
-	case OpEqual:
-		return m.Value == v
-	case OpNotEqual:
-		return m.Value != v
-	case OpEqualRegex:
-		return m.R.Match([]byte(v))
-	case OpNotEqualRegex:
-		return !m.R.Match([]byte(v))
-	default:
-		panic("invalid match operator")
-	}
-}
 
 // ValidateTagKey report an error if the given key k violates constraints.
 //
@@ -80,6 +62,7 @@ func ValidateTagKey(k string) error {
 	if IsTagKeyReserved(k) {
 		return newErr(ErrTagKeyReserved, k)
 	}
+
 	return nil
 }
 
@@ -93,6 +76,7 @@ func ValidateAppName(n string) error {
 			return newInvalidAppNameRuneError(n, r)
 		}
 	}
+
 	return nil
 }
 
@@ -101,7 +85,7 @@ func IsTagKeyRuneAllowed(r rune) bool {
 }
 
 func IsAppNameRuneAllowed(r rune) bool {
-	return r == '-' || r == '.' || IsTagKeyRuneAllowed(r)
+	return r == '-' || r == '.' || r == '/' || IsTagKeyRuneAllowed(r)
 }
 
 func IsTagKeyReserved(k string) bool {
@@ -110,5 +94,6 @@ func IsTagKeyReserved(k string) bool {
 			return true
 		}
 	}
+
 	return false
 }

@@ -12,11 +12,17 @@ func (*noopLoggerImpl) Errorf(_ string, _ ...interface{}) {}
 
 type standardLoggerImpl struct{}
 
-func (*standardLoggerImpl) Infof(a string, b ...interface{})  { fmt.Printf("[INFO]  "+a+"\n", b...) }
-func (*standardLoggerImpl) Debugf(a string, b ...interface{}) { fmt.Printf("[DEBUG] "+a+"\n", b...) }
-func (*standardLoggerImpl) Errorf(a string, b ...interface{}) { fmt.Printf("[ERROR] "+a+"\n", b...) }
+func (*standardLoggerImpl) Infof(a string, b ...interface{}) {
+	fmt.Printf("[INFO]  "+a+"\n", b...) //nolint:forbidigo
+}
+func (*standardLoggerImpl) Debugf(a string, b ...interface{}) {
+	fmt.Printf("[DEBUG] "+a+"\n", b...) //nolint:forbidigo
+}
+func (*standardLoggerImpl) Errorf(a string, b ...interface{}) {
+	fmt.Printf("[ERROR] "+a+"\n", b...) //nolint:forbidigo
+}
 
 var (
-	noopLogger     = &noopLoggerImpl{}
-	StandardLogger = &standardLoggerImpl{}
+	noopLogger     = &noopLoggerImpl{}     //nolint:gochecknoglobals
+	StandardLogger = &standardLoggerImpl{} //nolint:gochecknoglobals
 )

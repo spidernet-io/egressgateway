@@ -25,7 +25,7 @@ const (
 	DefaultSampleRate                = 100
 )
 
-var DefaultProfileTypes = []ProfileType{
+var DefaultProfileTypes = []ProfileType{ //nolint:gochecknoglobals
 	ProfileCPU,
 	ProfileAllocObjects,
 	ProfileAllocSpace,

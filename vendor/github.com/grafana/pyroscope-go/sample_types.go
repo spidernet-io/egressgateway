@@ -5,7 +5,7 @@ import (
 )
 
 var (
-	sampleTypeConfigHeap = map[string]*upstream.SampleType{
+	sampleTypeConfigHeap = map[string]*upstream.SampleType{ //nolint:gochecknoglobals
 		"alloc_objects": {
 			Units:      "objects",
 			Cumulative: false,
@@ -25,7 +25,7 @@ var (
 			Cumulative:  false,
 		},
 	}
-	sampleTypeConfigMutex = map[string]*upstream.SampleType{
+	sampleTypeConfigMutex = map[string]*upstream.SampleType{ //nolint:gochecknoglobals
 		"contentions": {
 			DisplayName: "mutex_count",
 			Units:       "lock_samples",
@@ -37,7 +37,7 @@ var (
 			Cumulative:  false,
 		},
 	}
-	sampleTypeConfigBlock = map[string]*upstream.SampleType{
+	sampleTypeConfigBlock = map[string]*upstream.SampleType{ //nolint:gochecknoglobals
 		"contentions": {
 			DisplayName: "block_count",
 			Units:       "lock_samples",

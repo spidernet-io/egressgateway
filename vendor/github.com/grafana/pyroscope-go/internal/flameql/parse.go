@@ -1,7 +1,6 @@
 package flameql
 
 import (
-	"regexp"
 	"sort"
 	"strings"
 )
@@ -26,6 +25,7 @@ func ParseQuery(s string) (*Query, error) {
 			}
 			q.AppName = s[:offset]
 			q.Matchers = m
+
 			return &q, nil
 		default:
 			if !IsAppNameRuneAllowed(c) {
@@ -39,13 +39,15 @@ func ParseQuery(s string) (*Query, error) {
 	}
 
 	q.AppName = s
+
 	return &q, nil
 }
 
 // ParseMatchers parses a string of $tag_matcher<,$tag_matchers> form.
 func ParseMatchers(s string) ([]*TagMatcher, error) {
-	var matchers []*TagMatcher
-	for _, t := range split(s) {
+	strMatchers := split(s)
+	matchers := make([]*TagMatcher, 0, len(strMatchers))
+	for _, t := range strMatchers {
 		if t == "" {
 			continue
 		}
@@ -59,6 +61,7 @@ func ParseMatchers(s string) ([]*TagMatcher, error) {
 		return nil, newErr(ErrInvalidMatchersSyntax, s)
 	}
 	sort.Sort(ByPriority(matchers))
+
 	return matchers, nil
 }
 
@@ -79,7 +82,7 @@ loop:
 				return nil, newErr(ErrInvalidTagValueSyntax, s)
 			case s[offset+1] == '"':
 				tm.Op = OpEqual
-			case s[offset+1] == '~':
+			case s[offset+1] == '~': // todo this should be illegal
 				if r <= 3 {
 					return nil, newErr(ErrInvalidTagValueSyntax, s)
 				}
@@ -89,8 +92,10 @@ loop:
 				if s[offset+2] != '"' {
 					return nil, newErr(ErrInvalidTagValueSyntax, s)
 				}
+
 				return nil, newErr(ErrUnknownOp, s)
 			}
+
 			break loop
 		case '!':
 			if r <= 3 {
@@ -99,11 +104,12 @@ loop:
 			switch s[offset+1] {
 			case '=':
 				tm.Op = OpNotEqual
-			case '~':
+			case '~': // todo this should be illegal
 				tm.Op = OpNotEqualRegex
 			default:
 				return nil, newErr(ErrUnknownOp, s)
 			}
+
 			break loop
 		default:
 			if !IsTagKeyRuneAllowed(c) {
@@ -131,18 +137,9 @@ loop:
 		return nil, newErr(ErrInvalidTagValueSyntax, v)
 	}
 
-	// Compile regex, if applicable.
-	switch tm.Op {
-	case OpEqualRegex, OpNotEqualRegex:
-		r, err := regexp.Compile(v)
-		if err != nil {
-			return nil, newErr(err, v)
-		}
-		tm.R = r
-	}
-
 	tm.Key = k
 	tm.Value = v
+
 	return &tm, nil
 }
 
@@ -150,6 +147,7 @@ func unquote(s string) (string, bool) {
 	if s[0] != '"' || s[len(s)-1] != '"' {
 		return s, false
 	}
+
 	return s[1 : len(s)-1], true
 }
 
@@ -165,10 +163,12 @@ func split(s string) []string {
 		case s[i] == '"':
 			if y && i > 0 && s[i-1] != '\\' {
 				y = false
+
 				continue
 			}
 			y = true
 		}
 	}
+
 	return append(r, s[x:])
 }

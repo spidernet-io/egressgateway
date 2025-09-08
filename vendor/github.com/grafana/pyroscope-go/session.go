@@ -135,12 +135,14 @@ func mergeTagsWithAppName(appName string, sid sessionID, tags map[string]string)
 		if flameql.IsTagKeyReserved(tagKey) {
 			continue
 		}
-		if err = flameql.ValidateTagKey(tagKey); err != nil {
+		err = flameql.ValidateTagKey(tagKey)
+		if err != nil {
 			return "", err
 		}
 		k.Add(tagKey, tagValue)
 	}
 	k.Add(sessionIDLabelName, sid.String())
+
 	return k.Normalized(), nil
 }
 
@@ -163,6 +165,7 @@ func (ps *Session) takeSnapshots() {
 			if ps.isCPUEnabled() {
 				ps.cpu.Stop()
 			}
+
 			return
 		}
 	}
@@ -171,6 +174,7 @@ func (ps *Session) takeSnapshots() {
 func copyBuf(b []byte) []byte {
 	r := make([]byte, len(b))
 	copy(r, b)
+
 	return r
 }
 
@@ -201,6 +205,7 @@ func (ps *Session) isCPUEnabled() bool {
 			return true
 		}
 	}
+
 	return false
 }
 
@@ -210,6 +215,7 @@ func (ps *Session) isMemEnabled() bool {
 			return true
 		}
 	}
+
 	return false
 }
 
@@ -219,6 +225,7 @@ func (ps *Session) isBlockEnabled() bool {
 			return true
 		}
 	}
+
 	return false
 }
 
@@ -228,6 +235,7 @@ func (ps *Session) isMutexEnabled() bool {
 			return true
 		}
 	}
+
 	return false
 }
 
@@ -237,6 +245,7 @@ func (ps *Session) isGoroutinesEnabled() bool {
 			return true
 		}
 	}
+
 	return false
 }
 
@@ -253,7 +262,12 @@ func (ps *Session) uploadData(startTime, endTime time.Time) {
 	if ps.isGoroutinesEnabled() {
 		p := pprof.Lookup("goroutine")
 		if p != nil {
-			p.WriteTo(ps.goroutinesBuf, 0)
+			err := p.WriteTo(ps.goroutinesBuf, 0)
+			if err != nil {
+				ps.logger.Errorf("failed to dump goroutines profile: %s", err)
+
+				return
+			}
 			ps.upstream.Upload(&upstream.UploadJob{
 				Name:            ps.appName,
 				StartTime:       startTime,
@@ -305,6 +319,7 @@ func (ps *Session) dumpHeapProfile(startTime time.Time, endTime time.Time) {
 		err := ps.deltaHeap.Profile(ps.memBuf)
 		if err != nil {
 			ps.logger.Errorf("failed to dump heap profile: %s", err)
+
 			return
 		}
 		curMemBytes := copyBuf(ps.memBuf.Bytes())
@@ -330,7 +345,12 @@ func (ps *Session) dumpMutexProfile(startTime time.Time, endTime time.Time) {
 		}
 	}()
 	ps.mutexBuf.Reset()
-	ps.deltaMutex.Profile(ps.mutexBuf)
+	err := ps.deltaMutex.Profile(ps.mutexBuf)
+	if err != nil {
+		ps.logger.Errorf("failed to dump mutex profile: %s", err)
+
+		return
+	}
 	curMutexBuf := copyBuf(ps.mutexBuf.Bytes())
 	job := &upstream.UploadJob{
 		Name:             ps.appName,
@@ -351,7 +371,12 @@ func (ps *Session) dumpBlockProfile(startTime time.Time, endTime time.Time) {
 		}
 	}()
 	ps.blockBuf.Reset()
-	ps.deltaBlock.Profile(ps.blockBuf)
+	err := ps.deltaBlock.Profile(ps.blockBuf)
+	if err != nil {
+		ps.logger.Errorf("failed to dump block profile: %s", err)
+
+		return
+	}
 	curBlockBuf := copyBuf(ps.blockBuf.Bytes())
 	job := &upstream.UploadJob{
 		Name:             ps.appName,
@@ -391,5 +416,6 @@ func (ps *Session) truncatedTime() time.Time {
 func numGC() uint32 {
 	var memStats runtime.MemStats
 	runtime.ReadMemStats(&memStats)
+
 	return memStats.NumGC
 }

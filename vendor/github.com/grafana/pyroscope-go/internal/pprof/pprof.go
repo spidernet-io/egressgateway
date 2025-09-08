@@ -6,11 +6,12 @@ import (
 	"sync"
 )
 
-var c struct {
+var c struct { //nolint:gochecknoglobals
 	sync.Mutex
+	Collector
+
 	ref int64
 	fn  func()
-	Collector
 }
 
 type Collector interface {
@@ -35,6 +36,7 @@ func StartCPUProfile(w io.Writer) error {
 	if err == nil {
 		c.ref++
 	}
+
 	return err
 }
 
@@ -53,6 +55,7 @@ func SetCollector(collector Collector) {
 	if c.ref == 0 {
 		c.Collector = collector
 		c.Unlock()
+
 		return
 	}
 	ch := make(chan struct{})
