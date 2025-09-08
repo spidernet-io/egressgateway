@@ -26,7 +26,7 @@ require (
 	github.com/sirupsen/logrus v1.9.3
 	github.com/spf13/cobra v1.8.1
 	github.com/spf13/viper v1.19.0
-	github.com/stretchr/testify v1.10.0
+	github.com/stretchr/testify v1.11.1
 	github.com/tigera/operator v1.35.0
 	github.com/vishvananda/netlink v1.2.1-beta.2.0.20230130171208-05506ada9f99
 	go.uber.org/zap v1.27.0
