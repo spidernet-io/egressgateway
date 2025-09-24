@@ -847,6 +847,7 @@ func buildMangleStaticRule(base uint32,
 			"Checking for EgressPolicy matched traffic",
 		},
 	})
+
 	if isEgressNode {
 		prerouting = append(prerouting, iptables.Rule{
 			Match:   iptables.MatchCriteria{}.MarkMatchesWithMask(base, Mark),
