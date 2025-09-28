@@ -5,14 +5,15 @@ package vxlan
 
 import (
 	"fmt"
-	"github.com/spidernet-io/egressgateway/pkg/ethtool"
-	wlock "github.com/spidernet-io/egressgateway/pkg/lock"
-	"github.com/vishvananda/netlink"
 	"io"
 	"net"
 	"os"
 	"reflect"
 	"syscall"
+
+	"github.com/spidernet-io/egressgateway/pkg/ethtool"
+	wlock "github.com/spidernet-io/egressgateway/pkg/lock"
+	"github.com/vishvananda/netlink"
 )
 
 // Device is vxlan device manager
@@ -89,7 +90,7 @@ func (dev *Device) EnsureLink(name string, vni int, port int, mac net.HardwareAd
 		return err
 	}
 
-	err = dev.ensureFilter(ipv4, ipv6)
+	err = dev.ensureFilter(name, ipv4, ipv6)
 	if err != nil {
 		return err
 	}
@@ -146,10 +147,9 @@ func (dev *Device) ensureLink(vxlan *netlink.Vxlan) (*netlink.Vxlan, error) {
 	return vxlan, nil
 }
 
-func (dev *Device) ensureFilter(ipv4, ipv6 *net.IPNet) error {
-	name := "all"
+func (dev *Device) ensureFilter(ifname string, ipv4, ipv6 *net.IPNet) error {
 	if ipv4 != nil {
-		err := writeProcSys(fmt.Sprintf("/proc/sys/net/ipv4/conf/%s/rp_filter", name), "0")
+		err := writeProcSys(fmt.Sprintf("/proc/sys/net/ipv4/conf/%s/rp_filter", ifname), "2")
 		if err != nil {
 			return err
 		}
