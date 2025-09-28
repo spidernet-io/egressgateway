@@ -303,7 +303,7 @@ func Test_ensureFilter(t *testing.T) {
 	dev := new(Device)
 	patch := gomonkey.ApplyFuncReturn(writeProcSys, errors.New("some err"))
 	defer patch.Reset()
-	err := dev.ensureFilter(&net.IPNet{}, &net.IPNet{})
+	err := dev.ensureFilter("egress.vxlan", &net.IPNet{}, &net.IPNet{})
 	assert.Error(t, err)
 }
 
