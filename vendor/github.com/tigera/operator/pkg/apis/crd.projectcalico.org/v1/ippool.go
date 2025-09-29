@@ -1,4 +1,4 @@
-// Copyright (c) 2020-2024 Tigera, Inc. All rights reserved.
+// Copyright (c) 2020-2025 Tigera, Inc. All rights reserved.
 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,6 +15,7 @@
 package v1
 
 import (
+	operatorv1 "github.com/tigera/operator/api/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -74,13 +75,17 @@ type IPPoolSpec struct {
 	// AllowedUse controls what the IP pool will be used for.  If not specified or empty, defaults to
 	// ["Tunnel", "Workload"] for back-compatibility
 	AllowedUses []IPPoolAllowedUse `json:"allowedUses,omitempty" validate:"omitempty"`
+
+	// AssignmentMode determines if IP addresses from this pool should be  assigned automatically or on request only
+	AssignmentMode operatorv1.AssignmentMode `json:"assignmentMode,omitempty" validate:"omitempty,assignmentMode"`
 }
 
 type IPPoolAllowedUse string
 
 const (
-	IPPoolAllowedUseWorkload IPPoolAllowedUse = "Workload"
-	IPPoolAllowedUseTunnel   IPPoolAllowedUse = "Tunnel"
+	IPPoolAllowedUseWorkload      IPPoolAllowedUse = "Workload"
+	IPPoolAllowedUseTunnel        IPPoolAllowedUse = "Tunnel"
+	IPPoolsAllowedUseLoadBalancer IPPoolAllowedUse = "LoadBalancer"
 )
 
 type VXLANMode string
