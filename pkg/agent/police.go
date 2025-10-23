@@ -850,6 +850,11 @@ func buildMangleStaticRule(base uint32,
 
 	if isEgressNode {
 		prerouting = append(prerouting, iptables.Rule{
+			Match:   iptables.MatchCriteria{}.MarkMatchesWithMask(base, Mark),
+			Action:  iptables.AcceptAction{},
+			Comment: []string{"EgressGateway traffic accept datapath rule"},
+		})
+		prerouting = append(prerouting, iptables.Rule{
 			Match:   iptables.MatchCriteria{},
 			Action:  iptables.JumpAction{Target: "EGRESSGATEWAY-REPLY-ROUTING"},
 			Comment: []string{"EgressGateway reply datapath rule, rule is from the EgressGateway"},
