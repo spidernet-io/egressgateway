@@ -1,4 +1,4 @@
-// Copyright (c) 2017-2024 Tigera, Inc. All rights reserved.
+// Copyright (c) 2017-2025 Tigera, Inc. All rights reserved.
 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,6 +18,13 @@ import (
 	"github.com/tigera/api/pkg/lib/numorstring"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+)
+
+type NFTablesMode string
+
+const (
+	NFTablesModeEnabled  NFTablesMode = "Enabled"
+	NFTablesModeDisabled NFTablesMode = "Disabled"
 )
 
 type IptablesBackend string
@@ -216,6 +223,9 @@ type FelixConfigurationSpec struct {
 	HealthHost    *string `json:"healthHost,omitempty"`
 	HealthPort    *int    `json:"healthPort,omitempty"`
 
+	// CgroupV2Path overrides the default location where to find the cgroup hierarchy.
+	CgroupV2Path string `json:"cgroupV2Path,omitempty"`
+
 	// PrometheusMetricsEnabled enables the Prometheus metrics server in Felix if set to true. [Default: false]
 	PrometheusMetricsEnabled *bool `json:"prometheusMetricsEnabled,omitempty"`
 	// PrometheusMetricsHost is the host that the Prometheus metrics server should bind to. [Default: empty]
@@ -303,6 +313,9 @@ type FelixConfigurationSpec struct {
 	// modes can use XDP. This is not recommended since it doesn't provide better performance than
 	// iptables. [Default: false]
 	GenericXDPEnabled *bool `json:"genericXDPEnabled,omitempty" confignamev1:"GenericXDPEnabled"`
+
+	// NFTablesMode configures nftables support in Felix. [Default: Disabled]
+	NFTablesMode *NFTablesMode `json:"nftablesMode,omitempty"`
 
 	// BPFEnabled, if enabled Felix will use the BPF dataplane. [Default: false]
 	BPFEnabled *bool `json:"bpfEnabled,omitempty" validate:"omitempty"`
@@ -398,6 +411,10 @@ type FelixConfigurationSpec struct {
 	// `[fd00:83a6::12]:5353`.Note that Felix (calico-node) will need RBAC permission to read the details of
 	// each service specified by a `k8s-service:...` form. [Default: "k8s-service:kube-dns"].
 	DNSTrustedServers *[]string `json:"dnsTrustedServers,omitempty"`
+
+	// WAFEventLogsFileEnabled controls logging WAFEvent logs to a file. If false no WAFEvent logging to file will occur.
+	// [Default: false]
+	WAFEventLogsFileEnabled *bool `json:"wafEventLogsFileEnabled,omitempty"`
 }
 
 type RouteTableRange struct {
