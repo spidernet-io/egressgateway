@@ -503,6 +503,7 @@ func (r *policeReconciler) getPolicySrcIPs(policyNs, policyName string, filter f
 			}
 		}
 	} else {
+		opt.Namespace = policyNs
 		eps := new(egressv1.EgressEndpointSliceList)
 		err = r.client.List(ctx, eps, opt)
 		if err != nil {

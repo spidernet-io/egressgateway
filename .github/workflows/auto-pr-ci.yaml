@@ -224,54 +224,6 @@ jobs:
       ref: ${{ needs.prepare.outputs.ref }}
     secrets: inherit
 
-  e2e_dual-ubuntu-20-04:
-    needs: [call_build_ci_image, prepare]
-    # In Ubuntu 20.04, when installing k8s `1.23.*`+ using kind,
-    # there is an issue where it cannot be started. This is a
-    # compatibility problem with the `kindest/node` image in kind,
-    # and we are waiting for a fix from upstream.
-    if: ${{  always() && needs.prepare.outputs.e2e_enabled == 'true' && needs.prepare.outputs.ipfamily_dual_e2e == 'true' && (needs.prepare.outputs.kindNodeImage == 'kindest/node:v1.22.17' || needs.prepare.outputs.kindNodeImage == 'kindest/node:v1.23.17') }}
-    uses: ./.github/workflows/call-e2e.yaml
-    with:
-      ref: ${{ needs.prepare.outputs.ref }}
-      ipfamily: dual
-      e2e_labels: ${{ needs.prepare.outputs.e2e_labels }}
-      os: ubuntu-20.04
-      kind_node_image: ${{ needs.prepare.outputs.kindNodeImage }}
-    secrets: inherit
-
-  e2e_ipv4-ubuntu-20-04:
-    needs: [call_build_ci_image, prepare]
-    # In Ubuntu 20.04, when installing k8s `1.23.*`+ using kind,
-    # there is an issue where it cannot be started. This is a
-    # compatibility problem with the `kindest/node` image in kind,
-    # and we are waiting for a fix from upstream.
-    if: ${{  always() && needs.prepare.outputs.e2e_enabled == 'true' && needs.prepare.outputs.ipfamily_ipv4only_e2e == 'true' && (needs.prepare.outputs.kindNodeImage == 'kindest/node:v1.22.17' || needs.prepare.outputs.kindNodeImage == 'kindest/node:v1.23.17') }}
-    uses: ./.github/workflows/call-e2e.yaml
-    with:
-      ref: ${{ needs.prepare.outputs.ref }}
-      ipfamily: ipv4
-      e2e_labels: ${{ needs.prepare.outputs.e2e_labels }}
-      os: ubuntu-20.04
-      kind_node_image: ${{ needs.prepare.outputs.kindNodeImage }}
-    secrets: inherit
-
-  e2e_ipv6-ubuntu-20-04:
-    needs: [call_build_ci_image, prepare]
-    # In Ubuntu 20.04, when installing k8s `1.23.*`+ using kind,
-    # there is an issue where it cannot be started. This is a
-    # compatibility problem with the `kindest/node` image in kind,
-    # and we are waiting for a fix from upstream.
-    if: ${{  always() && needs.prepare.outputs.e2e_enabled == 'true'  && needs.prepare.outputs.ipfamily_ipv6only_e2e == 'true' && (needs.prepare.outputs.kindNodeImage == 'kindest/node:v1.22.17' || needs.prepare.outputs.kindNodeImage == 'kindest/node:v1.23.17') }}
-    uses: ./.github/workflows/call-e2e.yaml
-    with:
-      ref: ${{ needs.prepare.outputs.ref }}
-      ipfamily: ipv6
-      e2e_labels: ${{ needs.prepare.outputs.e2e_labels }}
-      os: ubuntu-20.04
-      kind_node_image: ${{ needs.prepare.outputs.kindNodeImage }}
-    secrets: inherit
-
   e2e_dual-ubuntu-latest:
     needs: [call_build_ci_image, prepare]
     if: ${{ always() && needs.prepare.outputs.e2e_enabled == 'true' && needs.prepare.outputs.ipfamily_dual_e2e == 'true' }}
