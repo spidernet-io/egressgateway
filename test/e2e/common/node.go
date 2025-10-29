@@ -11,6 +11,7 @@ import (
 
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/client-go/util/retry"
 
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
@@ -20,15 +21,20 @@ import (
 
 func LabelNodes(ctx context.Context, cli client.Client, nodes []string, labels map[string]string) error {
 	for _, nodeName := range nodes {
-		node := &corev1.Node{}
-		err := cli.Get(ctx, types.NamespacedName{Name: nodeName}, node)
-		if err != nil {
-			return err
-		}
-		for k, v := range labels {
-			node.Labels[k] = v
-		}
-		err = cli.Update(ctx, node)
+		err := retry.RetryOnConflict(retry.DefaultBackoff, func() error {
+			node := &corev1.Node{}
+			err := cli.Get(ctx, types.NamespacedName{Name: nodeName}, node)
+			if err != nil {
+				return err
+			}
+			if node.Labels == nil {
+				node.Labels = make(map[string]string)
+			}
+			for k, v := range labels {
+				node.Labels[k] = v
+			}
+			return cli.Update(ctx, node)
+		})
 		if err != nil {
 			return err
 		}
@@ -38,17 +44,17 @@ func LabelNodes(ctx context.Context, cli client.Client, nodes []string, labels m
 
 func UnLabelNodes(ctx context.Context, cli client.Client, nodes []string, labels map[string]string) error {
 	for _, nodeName := range nodes {
-		node := &corev1.Node{}
-		err := cli.Get(ctx, types.NamespacedName{Name: nodeName}, node)
-		if err != nil {
-			return err
-		}
-		l := node.Labels
-		for k := range labels {
-			delete(l, k)
-		}
-		node.Labels = l
-		err = cli.Update(ctx, node)
+		err := retry.RetryOnConflict(retry.DefaultBackoff, func() error {
+			node := &corev1.Node{}
+			err := cli.Get(ctx, types.NamespacedName{Name: nodeName}, node)
+			if err != nil {
+				return err
+			}
+			for k := range labels {
+				delete(node.Labels, k)
+			}
+			return cli.Update(ctx, node)
+		})
 		if err != nil {
 			return err
 		}
