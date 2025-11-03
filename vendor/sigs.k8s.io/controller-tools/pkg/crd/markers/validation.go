@@ -23,7 +23,6 @@ import (
 	"strings"
 
 	apiext "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
-
 	"sigs.k8s.io/controller-tools/pkg/markers"
 )
 
@@ -32,6 +31,9 @@ const (
 
 	SchemalessName        = "kubebuilder:validation:Schemaless"
 	ValidationItemsPrefix = validationPrefix + "items:"
+
+	ValidationExactlyOneOfPrefix = validationPrefix + "ExactlyOneOf"
+	ValidationAtMostOneOfPrefix  = validationPrefix + "AtMostOneOf"
 )
 
 // ValidationMarkers lists all available markers that affect CRD schema generation,
@@ -76,21 +78,33 @@ var ValidationMarkers = mustMakeAllWithPrefix(validationPrefix, markers.Describe
 	XValidation{},
 )
 
+// TypeOnlyMarkers list type-specific validation markers (i.e. those markers that don't make sense on a field, and thus aren't in ValidationMarkers or FieldOnlyMarkers).
+var TypeOnlyMarkers = []*definitionWithHelp{
+	must(markers.MakeDefinition(ValidationAtMostOneOfPrefix, markers.DescribesType, AtMostOneOf(nil))).
+		WithHelp(markers.SimpleHelp("CRD validation", "specifies a list of field names that must conform to the AtMostOneOf constraint.")),
+	must(markers.MakeDefinition(ValidationExactlyOneOfPrefix, markers.DescribesType, ExactlyOneOf(nil))).
+		WithHelp(markers.SimpleHelp("CRD validation", "specifies a list of field names that must conform to the ExactlyOneOf constraint.")),
+}
+
 // FieldOnlyMarkers list field-specific validation markers (i.e. those markers that don't make
 // sense on a type, and thus aren't in ValidationMarkers).
 var FieldOnlyMarkers = []*definitionWithHelp{
 	must(markers.MakeDefinition("kubebuilder:validation:Required", markers.DescribesField, struct{}{})).
-		WithHelp(markers.SimpleHelp("CRD validation", "specifies that this field is required, if fields are optional by default.")),
+		WithHelp(markers.SimpleHelp("CRD validation", "specifies that this field is required.")),
 	must(markers.MakeDefinition("kubebuilder:validation:Optional", markers.DescribesField, struct{}{})).
-		WithHelp(markers.SimpleHelp("CRD validation", "specifies that this field is optional, if fields are required by default.")),
+		WithHelp(markers.SimpleHelp("CRD validation", "specifies that this field is optional.")),
+	must(markers.MakeDefinition("required", markers.DescribesField, struct{}{})).
+		WithHelp(markers.SimpleHelp("CRD validation", "specifies that this field is required.")),
 	must(markers.MakeDefinition("optional", markers.DescribesField, struct{}{})).
-		WithHelp(markers.SimpleHelp("CRD validation", "specifies that this field is optional, if fields are required by default.")),
+		WithHelp(markers.SimpleHelp("CRD validation", "specifies that this field is optional.")),
 
 	must(markers.MakeDefinition("nullable", markers.DescribesField, Nullable{})).
 		WithHelp(Nullable{}.Help()),
 
 	must(markers.MakeAnyTypeDefinition("kubebuilder:default", markers.DescribesField, Default{})).
 		WithHelp(Default{}.Help()),
+	must(markers.MakeDefinition("default", markers.DescribesField, KubernetesDefault{})).
+		WithHelp(KubernetesDefault{}.Help()),
 
 	must(markers.MakeAnyTypeDefinition("kubebuilder:example", markers.DescribesField, Example{})).
 		WithHelp(Example{}.Help()),
@@ -100,6 +114,9 @@ var FieldOnlyMarkers = []*definitionWithHelp{
 
 	must(markers.MakeDefinition(SchemalessName, markers.DescribesField, Schemaless{})).
 		WithHelp(Schemaless{}.Help()),
+
+	must(markers.MakeAnyTypeDefinition("kubebuilder:title", markers.DescribesField, Title{})).
+		WithHelp(Title{}.Help()),
 }
 
 // ValidationIshMarkers are field-and-type markers that don't fall under the
@@ -135,6 +152,7 @@ func init() {
 	}
 
 	AllDefinitions = append(AllDefinitions, FieldOnlyMarkers...)
+	AllDefinitions = append(AllDefinitions, TypeOnlyMarkers...)
 	AllDefinitions = append(AllDefinitions, ValidationIshMarkers...)
 }
 
@@ -240,6 +258,31 @@ type Default struct {
 }
 
 // +controllertools:marker:generateHelp:category="CRD validation"
+// Title sets the title for this field.
+//
+// The title is metadata that makes the OpenAPI documentation more user-friendly,
+// making the schema more understandable when viewed in documentation tools.
+// It's a metadata field that doesn't affect validation but provides
+// important context about what the schema represents.
+type Title struct {
+	Value interface{}
+}
+
+// +controllertools:marker:generateHelp:category="CRD validation"
+// Default sets the default value for this field.
+//
+// A default value will be accepted as any value valid for the field.
+// Only JSON-formatted values are accepted. `ref(...)` values are ignored.
+// Formatting for common types include: boolean: `true`, string:
+// `"Cluster"`, numerical: `1.24`, array: `[1,2]`, object: `{"policy":
+// "delete"}`). Defaults should be defined in pruned form, and only best-effort
+// validation will be performed. Full validation of a default requires
+// submission of the containing CRD to an apiserver.
+type KubernetesDefault struct {
+	Value interface{}
+}
+
+// +controllertools:marker:generateHelp:category="CRD validation"
 // Example sets the example value for this field.
 //
 // An example value will be accepted as any value valid for the
@@ -280,7 +323,7 @@ type XEmbeddedResource struct{}
 // IntOrString marks a fields as an IntOrString.
 //
 // This is required when applying patterns or other validations to an IntOrString
-// field. Knwon information about the type is applied during the collapse phase
+// field. Known information about the type is applied during the collapse phase
 // and as such is not normally available during marker application.
 type XIntOrString struct{}
 
@@ -295,7 +338,11 @@ type XIntOrString struct{}
 type Schemaless struct{}
 
 func hasNumericType(schema *apiext.JSONSchemaProps) bool {
-	return schema.Type == "integer" || schema.Type == "number"
+	return schema.Type == string(Integer) || schema.Type == string(Number)
+}
+
+func hasTextualType(schema *apiext.JSONSchemaProps) bool {
+	return schema.Type == "string" || schema.XIntOrString
 }
 
 func isIntegral(value float64) bool {
@@ -312,14 +359,29 @@ type XValidation struct {
 	Rule              string
 	Message           string `marker:",optional"`
 	MessageExpression string `marker:"messageExpression,optional"`
+	Reason            string `marker:"reason,optional"`
+	FieldPath         string `marker:"fieldPath,optional"`
+	OptionalOldSelf   *bool  `marker:"optionalOldSelf,optional"`
 }
+
+// +controllertools:marker:generateHelp:category="CRD validation"
+// AtMostOneOf adds a validation constraint that allows at most one of the specified fields.
+//
+// This marker may be repeated to specify multiple AtMostOneOf constraints that are mutually exclusive.
+type AtMostOneOf []string
+
+// +controllertools:marker:generateHelp:category="CRD validation"
+// ExactlyOneOf adds a validation constraint that allows at exactly one of the specified fields.
+//
+// This marker may be repeated to specify multiple ExactlyOneOf constraints that are mutually exclusive.
+type ExactlyOneOf []string
 
 func (m Maximum) ApplyToSchema(schema *apiext.JSONSchemaProps) error {
 	if !hasNumericType(schema) {
 		return fmt.Errorf("must apply maximum to a numeric value, found %s", schema.Type)
 	}
 
-	if schema.Type == "integer" && !isIntegral(m.Value()) {
+	if schema.Type == string(Integer) && !isIntegral(m.Value()) {
 		return fmt.Errorf("cannot apply non-integral maximum validation (%v) to integer value", m.Value())
 	}
 
@@ -374,8 +436,8 @@ func (m MultipleOf) ApplyToSchema(schema *apiext.JSONSchemaProps) error {
 }
 
 func (m MaxLength) ApplyToSchema(schema *apiext.JSONSchemaProps) error {
-	if schema.Type != "string" {
-		return fmt.Errorf("must apply maxlength to a string")
+	if !hasTextualType(schema) {
+		return fmt.Errorf("must apply maxlength to a textual value, found type %q", schema.Type)
 	}
 	val := int64(m)
 	schema.MaxLength = &val
@@ -383,8 +445,8 @@ func (m MaxLength) ApplyToSchema(schema *apiext.JSONSchemaProps) error {
 }
 
 func (m MinLength) ApplyToSchema(schema *apiext.JSONSchemaProps) error {
-	if schema.Type != "string" {
-		return fmt.Errorf("must apply minlength to a string")
+	if !hasTextualType(schema) {
+		return fmt.Errorf("must apply minlength to a textual value, found type %q", schema.Type)
 	}
 	val := int64(m)
 	schema.MinLength = &val
@@ -392,18 +454,15 @@ func (m MinLength) ApplyToSchema(schema *apiext.JSONSchemaProps) error {
 }
 
 func (m Pattern) ApplyToSchema(schema *apiext.JSONSchemaProps) error {
-	// Allow string types or IntOrStrings. An IntOrString will still
-	// apply the pattern validation when a string is detected, the pattern
-	// will not apply to ints though.
-	if schema.Type != "string" && !schema.XIntOrString {
-		return fmt.Errorf("must apply pattern to a `string` or `IntOrString`")
+	if !hasTextualType(schema) {
+		return fmt.Errorf("must apply pattern to a textual value, found type %q", schema.Type)
 	}
 	schema.Pattern = string(m)
 	return nil
 }
 
 func (m MaxItems) ApplyToSchema(schema *apiext.JSONSchemaProps) error {
-	if schema.Type != "array" {
+	if schema.Type != string(Array) {
 		return fmt.Errorf("must apply maxitem to an array")
 	}
 	val := int64(m)
@@ -412,7 +471,7 @@ func (m MaxItems) ApplyToSchema(schema *apiext.JSONSchemaProps) error {
 }
 
 func (m MinItems) ApplyToSchema(schema *apiext.JSONSchemaProps) error {
-	if schema.Type != "array" {
+	if schema.Type != string(Array) {
 		return fmt.Errorf("must apply minitems to an array")
 	}
 	val := int64(m)
@@ -501,6 +560,52 @@ func (m Default) ApplyToSchema(schema *apiext.JSONSchemaProps) error {
 	return nil
 }
 
+func (m Default) ApplyPriority() ApplyPriority {
+	// explicitly go after +default markers, so kubebuilder-specific defaults get applied last and stomp
+	return 10
+}
+
+func (m Title) ApplyToSchema(schema *apiext.JSONSchemaProps) error {
+	if m.Value == nil {
+		// only apply to the schema if we have a non-nil title
+		return nil
+	}
+	title, isStr := m.Value.(string)
+	if !isStr {
+		return fmt.Errorf("expected string, got %T", m.Value)
+	}
+	schema.Title = title
+	return nil
+}
+
+func (m *KubernetesDefault) ParseMarker(_ string, _ string, restFields string) error {
+	if strings.HasPrefix(strings.TrimSpace(restFields), "ref(") {
+		// Skip +default=ref(...) values for now, since we don't have a good way to evaluate go constant values via AST.
+		// See https://github.com/kubernetes-sigs/controller-tools/pull/938#issuecomment-2096790018
+		return nil
+	}
+	return json.Unmarshal([]byte(restFields), &m.Value)
+}
+
+// Defaults are only valid CRDs created with the v1 API
+func (m KubernetesDefault) ApplyToSchema(schema *apiext.JSONSchemaProps) error {
+	if m.Value == nil {
+		// only apply to the schema if we have a non-nil default value
+		return nil
+	}
+	marshalledDefault, err := json.Marshal(m.Value)
+	if err != nil {
+		return err
+	}
+	schema.Default = &apiext.JSON{Raw: marshalledDefault}
+	return nil
+}
+
+func (m KubernetesDefault) ApplyPriority() ApplyPriority {
+	// explicitly go before +kubebuilder:default markers, so kubebuilder-specific defaults get applied last and stomp
+	return 9
+}
+
 func (m Example) ApplyToSchema(schema *apiext.JSONSchemaProps) error {
 	marshalledExample, err := json.Marshal(m.Value)
 	if err != nil {
@@ -534,10 +639,78 @@ func (m XIntOrString) ApplyPriority() ApplyPriority {
 }
 
 func (m XValidation) ApplyToSchema(schema *apiext.JSONSchemaProps) error {
+	var reason *apiext.FieldValueErrorReason
+	if m.Reason != "" {
+		switch m.Reason {
+		case string(apiext.FieldValueRequired), string(apiext.FieldValueInvalid), string(apiext.FieldValueForbidden), string(apiext.FieldValueDuplicate):
+			reason = (*apiext.FieldValueErrorReason)(&m.Reason)
+		default:
+			return fmt.Errorf("invalid reason %s, valid values are %s, %s, %s and %s", m.Reason, apiext.FieldValueRequired, apiext.FieldValueInvalid, apiext.FieldValueForbidden, apiext.FieldValueDuplicate)
+		}
+	}
+
 	schema.XValidations = append(schema.XValidations, apiext.ValidationRule{
 		Rule:              m.Rule,
 		Message:           m.Message,
 		MessageExpression: m.MessageExpression,
+		Reason:            reason,
+		FieldPath:         m.FieldPath,
+		OptionalOldSelf:   m.OptionalOldSelf,
 	})
 	return nil
+}
+
+func (XValidation) ApplyPriority() ApplyPriority {
+	return ApplyPriorityDefault
+}
+
+func (fields AtMostOneOf) ApplyToSchema(schema *apiext.JSONSchemaProps) error {
+	if len(fields) == 0 {
+		return nil
+	}
+	rule := fieldsToOneOfCelRuleStr(fields)
+	xvalidation := XValidation{
+		Rule:    fmt.Sprintf("%s <= 1", rule),
+		Message: fmt.Sprintf("at most one of the fields in %v may be set", fields),
+	}
+	return xvalidation.ApplyToSchema(schema)
+}
+
+func (AtMostOneOf) ApplyPriority() ApplyPriority {
+	// explicitly go after XValidation markers so that the ordering is deterministic
+	return XValidation{}.ApplyPriority() + 1
+}
+
+func (fields ExactlyOneOf) ApplyToSchema(schema *apiext.JSONSchemaProps) error {
+	if len(fields) == 0 {
+		return nil
+	}
+	rule := fieldsToOneOfCelRuleStr(fields)
+	xvalidation := XValidation{
+		Rule:    fmt.Sprintf("%s == 1", rule),
+		Message: fmt.Sprintf("exactly one of the fields in %v must be set", fields),
+	}
+	return xvalidation.ApplyToSchema(schema)
+}
+
+func (ExactlyOneOf) ApplyPriority() ApplyPriority {
+	// explicitly go after XValidation markers so that the ordering is deterministic
+	return XValidation{}.ApplyPriority() + 1
+}
+
+// fieldsToOneOfCelRuleStr converts a slice of field names to a string representation
+// [has(self.field1),has(self.field1),...].filter(x, x == true).size()
+func fieldsToOneOfCelRuleStr(fields []string) string {
+	var list strings.Builder
+	list.WriteString("[")
+	for i, f := range fields {
+		if i > 0 {
+			list.WriteString(",")
+		}
+		list.WriteString("has(self.")
+		list.WriteString(f)
+		list.WriteString(")")
+	}
+	list.WriteString("].filter(x,x==true).size()")
+	return list.String()
 }
