@@ -11,8 +11,8 @@ func forItems(items *spec.Items) *spec.Schema {
 	valids := items.CommonValidations
 	schema := spec.Schema{
 		SchemaProps: spec.SchemaProps{
-			Type:             []string{items.SimpleSchema.Type},
-			Format:           items.SimpleSchema.Format,
+			Type:             []string{items.Type},
+			Format:           items.Format,
 			Maximum:          valids.Maximum,
 			ExclusiveMaximum: valids.ExclusiveMaximum,
 			Minimum:          valids.Minimum,
@@ -107,7 +107,7 @@ func getURLMethodsFor(spec *spec.Swagger) URLMethods {
 		eachPath := eachPath
 		opsMap := toMap(&eachPath)
 		for method, op := range opsMap {
-			returnURLMethods[URLMethod{url, method}] = &PathItemOp{&eachPath, op}
+			returnURLMethods[URLMethod{url, method}] = &PathItemOp{&eachPath, op, eachPath.Extensions}
 		}
 	}
 	return returnURLMethods

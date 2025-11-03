@@ -29,6 +29,7 @@ type modelOptions struct {
 	KeepSpecOrder              bool     `long:"keep-spec-order" description:"keep schema properties order identical to spec file"`
 	AllDefinitions             bool     `long:"all-definitions" description:"generate all model definitions regardless of usage in operations" hidden:"deprecated"`
 	StructTags                 []string `long:"struct-tags" description:"the struct tags to generate, repeat for multiple (defaults to json)"`
+	RootedErrorPath            bool     `long:"rooted-error-path" description:"extends validation errors with the type name instead of an empty path, in the case of arrays and maps"`
 }
 
 func (mo modelOptions) apply(opts *generator.GenOpts) {
@@ -39,6 +40,7 @@ func (mo modelOptions) apply(opts *generator.GenOpts) {
 	opts.PropertiesSpecOrder = mo.KeepSpecOrder
 	opts.IgnoreOperations = mo.AllDefinitions
 	opts.StructTags = mo.StructTags
+	opts.WantsRootedErrorPath = mo.RootedErrorPath
 }
 
 // WithModels adds the model options group.
@@ -69,7 +71,7 @@ func (m Model) apply(opts *generator.GenOpts) {
 	opts.AcceptDefinitionsOnly = m.AcceptDefinitionsOnly
 }
 
-func (m Model) log(rp string) {
+func (m Model) log(_ string) {
 	log.Println(`Generation completed!
 
 For this generation to compile you need to have some packages in your go.mod:
@@ -85,8 +87,7 @@ func (m *Model) generate(opts *generator.GenOpts) error {
 }
 
 // Execute generates a model file
-func (m *Model) Execute(args []string) error {
-
+func (m *Model) Execute(_ []string) error {
 	if m.Shared.DumpData && len(append(m.Name, m.Models.Models...)) > 1 {
 		return errors.New("only 1 model at a time is supported for dumping data")
 	}

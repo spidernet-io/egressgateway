@@ -3,7 +3,9 @@ package generator
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
+	"log"
 	"math"
 	"os"
 	"path"
@@ -16,13 +18,12 @@ import (
 	"text/template/parse"
 	"unicode"
 
-	"log"
-
 	"github.com/Masterminds/sprig/v3"
+	"github.com/kr/pretty"
+
 	"github.com/go-openapi/inflect"
 	"github.com/go-openapi/runtime"
 	"github.com/go-openapi/swag"
-	"github.com/kr/pretty"
 )
 
 var (
@@ -35,6 +36,8 @@ var (
 	templates *Repository
 
 	docFormat map[string]string
+
+	errInternal = errors.New("internal error detected in templates")
 )
 
 func initTemplateRepo() {
@@ -94,6 +97,7 @@ func DefaultFuncMap(lang *LanguageOpts) template.FuncMap {
 		"inspect":          pretty.Sprint,
 		"cleanPath":        path.Clean,
 		"mediaTypeName":    mediaMime,
+		"mediaGoName":      mediaGoName,
 		"arrayInitializer": lang.arrayInitializer,
 		"hasPrefix":        strings.HasPrefix,
 		"stringContains":   strings.Contains,
@@ -109,7 +113,7 @@ func DefaultFuncMap(lang *LanguageOpts) template.FuncMap {
 		"headerDocType": func(header GenHeader) string {
 			return resolvedDocType(header.SwaggerType, header.SwaggerFormat, header.Child)
 		},
-		"schemaDocType": func(in interface{}) string {
+		"schemaDocType": func(in any) string {
 			switch schema := in.(type) {
 			case GenSchema:
 				return resolvedDocSchemaType(schema.SwaggerType, schema.SwaggerFormat, schema.Items)
@@ -134,9 +138,68 @@ func DefaultFuncMap(lang *LanguageOpts) template.FuncMap {
 		},
 		"docCollectionFormat": resolvedDocCollectionFormat,
 		"trimSpace":           strings.TrimSpace,
+		"mdBlock":             markdownBlock, // markdown block
 		"httpStatus":          httpStatus,
 		"cleanupEnumVariant":  cleanupEnumVariant,
 		"gt0":                 gt0,
+		"path":                errorPath,
+		"cmdName": func(in any) (string, error) {
+			// builds the name of a CLI command for a single operation
+			op, isOperation := in.(GenOperation)
+			if !isOperation {
+				ptr, ok := in.(*GenOperation)
+				if !ok {
+					return "", fmt.Errorf("cmdName should be called on a GenOperation, but got: %T", in)
+				}
+				op = *ptr
+			}
+			name := "Operation" + pascalize(op.Package) + pascalize(op.Name) + "Cmd"
+
+			return name, nil // TODO
+		},
+		"cmdGroupName": func(in any) (string, error) {
+			// builds the name of a group of CLI commands
+			opGroup, ok := in.(GenOperationGroup)
+			if !ok {
+				return "", fmt.Errorf("cmdGroupName should be called on a GenOperationGroup, but got: %T", in)
+			}
+			name := "GroupOfOperations" + pascalize(opGroup.Name) + "Cmd"
+
+			return name, nil // TODO
+		},
+		"flagNameVar": func(in string) string {
+			// builds a flag name variable in CLI commands
+			return fmt.Sprintf("flag%sName", pascalize(in))
+		},
+		"flagValueVar": func(in string) string {
+			// builds a flag value variable in CLI commands
+			return fmt.Sprintf("flag%sValue", pascalize(in))
+		},
+		"flagDefaultVar": func(in string) string {
+			// builds a flag default value variable in CLI commands
+			return fmt.Sprintf("flag%sDefault", pascalize(in))
+		},
+		"flagModelVar": func(in string) string {
+			// builds a flag model variable in CLI commands
+			return fmt.Sprintf("flag%sModel", pascalize(in))
+		},
+		"flagDescriptionVar": func(in string) string {
+			// builds a flag description variable in CLI commands
+			return fmt.Sprintf("flag%sDescription", pascalize(in))
+		},
+		"printGoLiteral": func(in any) string {
+			// printGoLiteral replaces printf "%#v" and replaces "interface {}" by "any"
+			return interfaceReplacer.Replace(fmt.Sprintf("%#v", in))
+		},
+		// assert is used to inject into templates and check for inconsistent/invalid data.
+		// This is for now being used during test & debug of templates.
+		"assert": func(msg string, assertion bool) (string, error) {
+			if !assertion {
+				return "", fmt.Errorf("%v: %w", msg, errInternal)
+			}
+
+			return "", nil
+		},
 	}
 
 	for k, v := range extra {
@@ -327,7 +390,6 @@ func (t *Repository) ShallowClone() *Repository {
 
 // LoadDefaults will load the embedded templates
 func (t *Repository) LoadDefaults() {
-
 	for name, asset := range assets {
 		if err := t.addFile(name, string(asset), true); err != nil {
 			log.Fatal(err)
@@ -337,26 +399,27 @@ func (t *Repository) LoadDefaults() {
 
 // LoadDir will walk the specified path and add each .gotmpl file it finds to the repository
 func (t *Repository) LoadDir(templatePath string) error {
-	err := filepath.Walk(templatePath, func(path string, info os.FileInfo, err error) error {
-
+	err := filepath.Walk(templatePath, func(path string, _ os.FileInfo, err error) error {
 		if strings.HasSuffix(path, ".gotmpl") {
 			if assetName, e := filepath.Rel(templatePath, path); e == nil {
 				if data, e := os.ReadFile(path); e == nil {
 					if ee := t.AddFile(assetName, string(data)); ee != nil {
-						return fmt.Errorf("could not add template: %v", ee)
+						return fmt.Errorf("could not add template: %w", ee)
 					}
 				}
 				// Non-readable files are skipped
 			}
 		}
+
 		if err != nil {
 			return err
 		}
+
 		// Non-template files are skipped
 		return nil
 	})
 	if err != nil {
-		return fmt.Errorf("could not complete template processing in directory \"%s\": %v", templatePath, err)
+		return fmt.Errorf("could not complete template processing in directory \"%s\": %w", templatePath, err)
 	}
 	return nil
 }
@@ -392,9 +455,8 @@ func (t *Repository) addFile(name, data string, allowOverride bool) error {
 	name = swag.ToJSONName(strings.TrimSuffix(name, ".gotmpl"))
 
 	templ, err := template.New(name).Funcs(t.funcs).Parse(data)
-
 	if err != nil {
-		return fmt.Errorf("failed to load template %s: %v", name, err)
+		return fmt.Errorf("failed to load template %s: %w", name, err)
 	}
 
 	// check if any protected templates are defined
@@ -441,7 +503,6 @@ func (t *Repository) SetAllowOverride(value bool) {
 }
 
 func findDependencies(n parse.Node) []string {
-
 	var deps []string
 	depMap := make(map[string]bool)
 
@@ -459,26 +520,26 @@ func findDependencies(n parse.Node) []string {
 			}
 		}
 	case *parse.IfNode:
-		for _, dep := range findDependencies(node.BranchNode.List) {
+		for _, dep := range findDependencies(node.List) {
 			depMap[dep] = true
 		}
-		for _, dep := range findDependencies(node.BranchNode.ElseList) {
+		for _, dep := range findDependencies(node.ElseList) {
 			depMap[dep] = true
 		}
 
 	case *parse.RangeNode:
-		for _, dep := range findDependencies(node.BranchNode.List) {
+		for _, dep := range findDependencies(node.List) {
 			depMap[dep] = true
 		}
-		for _, dep := range findDependencies(node.BranchNode.ElseList) {
+		for _, dep := range findDependencies(node.ElseList) {
 			depMap[dep] = true
 		}
 
 	case *parse.WithNode:
-		for _, dep := range findDependencies(node.BranchNode.List) {
+		for _, dep := range findDependencies(node.List) {
 			depMap[dep] = true
 		}
-		for _, dep := range findDependencies(node.BranchNode.ElseList) {
+		for _, dep := range findDependencies(node.ElseList) {
 			depMap[dep] = true
 		}
 
@@ -491,7 +552,6 @@ func findDependencies(n parse.Node) []string {
 	}
 
 	return deps
-
 }
 
 func (t *Repository) flattenDependencies(templ *template.Template, dependencies map[string]bool) map[string]bool {
@@ -499,7 +559,7 @@ func (t *Repository) flattenDependencies(templ *template.Template, dependencies 
 		dependencies = make(map[string]bool)
 	}
 
-	deps := findDependencies(templ.Tree.Root)
+	deps := findDependencies(templ.Root)
 
 	for _, d := range deps {
 		if _, found := dependencies[d]; !found {
@@ -516,11 +576,9 @@ func (t *Repository) flattenDependencies(templ *template.Template, dependencies 
 	}
 
 	return dependencies
-
 }
 
 func (t *Repository) addDependencies(templ *template.Template) (*template.Template, error) {
-
 	name := templ.Name()
 
 	deps := t.flattenDependencies(templ, nil)
@@ -545,9 +603,8 @@ func (t *Repository) addDependencies(templ *template.Template) (*template.Templa
 
 			// Add it to the parse tree
 			templ, err = templ.AddParseTree(dep, tt.Tree)
-
 			if err != nil {
-				return templ, fmt.Errorf("dependency error: %v", err)
+				return templ, fmt.Errorf("dependency error: %w", err)
 			}
 
 		}
@@ -575,8 +632,7 @@ func (t *Repository) DumpTemplates() {
 		fmt.Fprintf(buf, "## %s\n", name)
 		fmt.Fprintf(buf, "Defined in `%s`\n", t.files[name])
 
-		if deps := findDependencies(templ.Tree.Root); len(deps) > 0 {
-
+		if deps := findDependencies(templ.Root); len(deps) > 0 {
 			fmt.Fprintf(buf, "####requires \n - %v\n\n\n", strings.Join(deps, "\n - "))
 		}
 		fmt.Fprintln(buf, "\n---")
@@ -586,7 +642,7 @@ func (t *Repository) DumpTemplates() {
 
 // FuncMap functions
 
-func asJSON(data interface{}) (string, error) {
+func asJSON(data any) (string, error) {
 	b, err := json.Marshal(data)
 	if err != nil {
 		return "", err
@@ -594,7 +650,7 @@ func asJSON(data interface{}) (string, error) {
 	return string(b), nil
 }
 
-func asPrettyJSON(data interface{}) (string, error) {
+func asPrettyJSON(data any) (string, error) {
 	b, err := json.MarshalIndent(data, "", "  ")
 	if err != nil {
 		return "", err
@@ -619,7 +675,7 @@ func dropPackage(str string) string {
 // return true if the GoType str contains pkg. For example "model.MyType" -> true, "MyType" -> false
 func containsPkgStr(str string) bool {
 	dropped := dropPackage(str)
-	return !(dropped == str)
+	return dropped != str
 }
 
 func padSurround(entry, padWith string, i, ln int) string {
@@ -710,11 +766,11 @@ func cleanupEnumVariant(in string) string {
 	return replaced
 }
 
-func dict(values ...interface{}) (map[string]interface{}, error) {
+func dict(values ...any) (map[string]any, error) {
 	if len(values)%2 != 0 {
 		return nil, fmt.Errorf("expected even number of arguments, got %d", len(values))
 	}
-	dict := make(map[string]interface{}, len(values)/2)
+	dict := make(map[string]any, len(values)/2)
 	for i := 0; i < len(values); i += 2 {
 		key, ok := values[i].(string)
 		if !ok {
@@ -725,7 +781,7 @@ func dict(values ...interface{}) (map[string]interface{}, error) {
 	return dict, nil
 }
 
-func isInteger(arg interface{}) bool {
+func isInteger(arg any) bool {
 	// is integer determines if a value may be represented by an integer
 	switch val := arg.(type) {
 	case int8, int16, int32, int, int64, uint8, uint16, uint32, uint, uint64:
@@ -852,4 +908,103 @@ func gt0(in *int64) bool {
 	// NOTE: plain {{ gt .MinProperties 0 }} just refuses to work normally
 	// with a pointer
 	return in != nil && *in > 0
+}
+
+func errorPath(in any) (string, error) {
+	// For schemas:
+	// errorPath returns an empty string litteral when the schema path is empty.
+	// It provides a shorthand for template statements such as:
+	// {{ if .Path }}{{ .Path }}{{ else }}" "{{ end }},
+	// which becomes {{ path . }}
+	//
+	// When called for a GenParameter, GenResponse or GenOperation object, it just
+	// returns Path.
+	//
+	// Extra behavior for schemas, when the generation option RootedErroPath is enabled:
+	// In the case of arrays with an empty path, it adds the type name as the path "root",
+	// so consumers of reported errors get an idea of the originator.
+
+	var pth string
+	rooted := func(schema GenSchema) string {
+		if schema.WantsRootedErrorPath && schema.Path == "" && (schema.IsArray || schema.IsMap) {
+			return `"[` + schema.Name + `]"`
+		}
+
+		return schema.Path
+	}
+
+	switch schema := in.(type) {
+	case GenSchema:
+		pth = rooted(schema)
+	case *GenSchema:
+		if schema == nil {
+			break
+		}
+		pth = rooted(*schema)
+	case GenDefinition:
+		pth = rooted(schema.GenSchema)
+	case *GenDefinition:
+		if schema == nil {
+			break
+		}
+		pth = rooted(schema.GenSchema)
+	case GenParameter:
+		pth = schema.Path
+
+	// unchanged Path if called with other types
+	case *GenParameter:
+		if schema == nil {
+			break
+		}
+		pth = schema.Path
+	case GenResponse:
+		pth = schema.Path
+	case *GenResponse:
+		if schema == nil {
+			break
+		}
+		pth = schema.Path
+	case GenOperation:
+		pth = schema.Path
+	case *GenOperation:
+		if schema == nil {
+			break
+		}
+		pth = schema.Path
+	case GenItems:
+		pth = schema.Path
+	case *GenItems:
+		if schema == nil {
+			break
+		}
+		pth = schema.Path
+	case GenHeader:
+		pth = schema.Path
+	case *GenHeader:
+		if schema == nil {
+			break
+		}
+		pth = schema.Path
+	default:
+		return "", fmt.Errorf("errorPath should be called with GenSchema or GenDefinition, but got %T", schema)
+	}
+
+	if pth == "" {
+		return `""`, nil
+	}
+
+	return pth, nil
+}
+
+const mdNewLine = "</br>"
+
+var (
+	mdNewLineReplacer = strings.NewReplacer("\r\n", mdNewLine, "\n", mdNewLine, "\r", mdNewLine)
+	interfaceReplacer = strings.NewReplacer("interface {}", "any")
+)
+
+func markdownBlock(in string) string {
+	in = strings.TrimSpace(in)
+
+	return mdNewLineReplacer.Replace(in)
 }

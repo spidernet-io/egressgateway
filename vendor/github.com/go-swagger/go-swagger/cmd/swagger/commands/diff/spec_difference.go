@@ -46,7 +46,6 @@ func equalNodes(a, b *Node) bool {
 		a.IsArray == b.IsArray &&
 		a.TypeName == b.TypeName &&
 		equalNodes(a.ChildNode, b.ChildNode)
-
 }
 
 // BreakingChangeCount Calculates the breaking change count
@@ -54,6 +53,17 @@ func (sd SpecDifferences) BreakingChangeCount() int {
 	count := 0
 	for _, eachDiff := range sd {
 		if eachDiff.Compatibility == Breaking {
+			count++
+		}
+	}
+	return count
+}
+
+// WarningChangeCount Calculates the warning change count
+func (sd SpecDifferences) WarningChangeCount() int {
+	count := 0
+	for _, eachDiff := range sd {
+		if eachDiff.Compatibility == Warning {
 			count++
 		}
 	}
@@ -138,13 +148,16 @@ func (sd *SpecDifferences) ReportCompatibility() (io.Reader, error, error) {
 	var out bytes.Buffer
 	breakingCount := sd.BreakingChangeCount()
 	if breakingCount > 0 {
-		fmt.Fprintln(&out, "\nBREAKING CHANGES:\n=================")
+		if len(*sd) != breakingCount {
+			fmt.Fprintln(&out, "")
+		}
+		fmt.Fprintln(&out, "BREAKING CHANGES:\n=================")
 		_, _ = out.ReadFrom(sd.reportChanges(Breaking))
 		msg := fmt.Sprintf("compatibility test FAILED: %d breaking changes detected", breakingCount)
 		fmt.Fprintln(&out, msg)
 		return &out, nil, errors.New(msg)
 	}
-	fmt.Fprintf(&out, "compatibility test OK. No breaking changes identified.")
+	fmt.Fprintf(&out, "compatibility test OK. No breaking changes identified.\n")
 	return &out, nil, nil
 }
 
@@ -173,20 +186,24 @@ func (sd SpecDifferences) ReportAllDiffs(fmtJSON bool) (io.Reader, error, error)
 	if fmtJSON {
 		b, err := JSONMarshal(sd)
 		if err != nil {
-			return nil, fmt.Errorf("couldn't print results: %v", err), nil
+			return nil, fmt.Errorf("couldn't print results: %w", err), nil
 		}
 		out, err := prettyprint(b)
 		return out, err, nil
 	}
 	numDiffs := len(sd)
 	if numDiffs == 0 {
-		return bytes.NewBuffer([]byte("No changes identified")), nil, nil
+		return bytes.NewBuffer([]byte("No changes identified\n")), nil, nil
 	}
 
 	var out bytes.Buffer
 	if numDiffs != sd.BreakingChangeCount() {
 		fmt.Fprintln(&out, "NON-BREAKING CHANGES:\n=====================")
 		_, _ = out.ReadFrom(sd.reportChanges(NonBreaking))
+		if sd.WarningChangeCount() > 0 {
+			fmt.Fprintln(&out, "\nNON-BREAKING CHANGES WITH WARNING:\n==================================")
+			_, _ = out.ReadFrom(sd.reportChanges(Warning))
+		}
 	}
 
 	more, err, warn := sd.ReportCompatibility()

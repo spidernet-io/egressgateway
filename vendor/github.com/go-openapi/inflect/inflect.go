@@ -19,12 +19,11 @@ type Rule struct {
 // a Ruleset is the config of pluralization rules
 // you can extend the rules with the Add* methods
 type Ruleset struct {
-	uncountables   map[string]bool
-	plurals        []*Rule
-	singulars      []*Rule
-	humans         []*Rule
-	acronyms       []*Rule
-	acronymMatcher *regexp.Regexp
+	uncountables map[string]bool
+	plurals      []*Rule
+	singulars    []*Rule
+	humans       []*Rule
+	acronyms     []*Rule
 }
 
 // create a blank ruleset. Unless you are going to
@@ -282,7 +281,7 @@ func (rs *Ruleset) AddHuman(suffix, replacement string) {
 	rs.humans = append([]*Rule{r}, rs.humans...)
 }
 
-// Add any inconsistant pluralizing/sinularizing rules
+// Add any inconsistent pluralizing/sinularizing rules
 // to the set here.
 func (rs *Ruleset) AddIrregular(singular, plural string) {
 	delete(rs.uncountables, singular)
@@ -306,15 +305,6 @@ func (rs *Ruleset) AddAcronym(word string) {
 // for example: "rice"
 func (rs *Ruleset) AddUncountable(word string) {
 	rs.uncountables[strings.ToLower(word)] = true
-}
-
-func (rs *Ruleset) isUncountable(word string) bool {
-	// handle multiple words by using the last one
-	words := strings.Split(word, " ")
-	if _, exists := rs.uncountables[strings.ToLower(words[len(words)-1])]; exists {
-		return true
-	}
-	return false
 }
 
 // returns the plural form of a singular word
@@ -384,20 +374,6 @@ func (rs *Ruleset) Titleize(word string) string {
 	return strings.Join(words, " ")
 }
 
-func (rs *Ruleset) safeCaseAcronyms(word string) string {
-	// convert an acroymn like HTML into Html
-	for _, rule := range rs.acronyms {
-		word = strings.Replace(word, rule.suffix, rule.replacement, -1)
-	}
-	return word
-}
-
-func (rs *Ruleset) seperatedWords(word, sep string) string {
-	word = rs.safeCaseAcronyms(word)
-	words := splitAtCaseChange(word)
-	return strings.Join(words, sep)
-}
-
 // lowercase underscore version "BigBen" -> "big_ben"
 func (rs *Ruleset) Underscore(word string) string {
 	return rs.seperatedWords(word, "_")
@@ -409,7 +385,7 @@ func (rs *Ruleset) Humanize(word string) string {
 	word = replaceLast(word, "_id", "") // strip foreign key kinds
 	// replace and strings in humans list
 	for _, rule := range rs.humans {
-		word = strings.Replace(word, rule.suffix, rule.replacement, -1)
+		word = strings.ReplaceAll(word, rule.suffix, rule.replacement)
 	}
 	sentance := rs.seperatedWords(word, " ")
 	return strings.ToUpper(sentance[:1]) + sentance[1:]
@@ -430,19 +406,19 @@ func (rs *Ruleset) Tableize(word string) string {
 	return rs.Pluralize(rs.Underscore(rs.Typeify(word)))
 }
 
-var notUrlSafe *regexp.Regexp = regexp.MustCompile(`[^\w\d\-_ ]`)
+var notURLSafe = regexp.MustCompile(`[^\w\d\-_ ]`)
 
 // param safe dasherized names like "my-param"
 func (rs *Ruleset) Parameterize(word string) string {
 	return ParameterizeJoin(word, "-")
 }
 
-// param safe dasherized names with custom seperator
+// param safe dasherized names with custom separator
 func (rs *Ruleset) ParameterizeJoin(word, sep string) string {
 	word = strings.ToLower(word)
 	word = rs.Asciify(word)
-	word = notUrlSafe.ReplaceAllString(word, "")
-	word = strings.Replace(word, " ", sep, -1)
+	word = notURLSafe.ReplaceAllString(word, "")
+	word = strings.ReplaceAll(word, " ", sep)
 	if len(sep) > 0 {
 		squash, err := regexp.Compile(sep + "+")
 		if err == nil {
@@ -453,7 +429,75 @@ func (rs *Ruleset) ParameterizeJoin(word, sep string) string {
 	return word
 }
 
-var lookalikes map[string]*regexp.Regexp = map[string]*regexp.Regexp{
+// transforms latin characters like é -> e
+func (rs *Ruleset) Asciify(word string) string {
+	for repl, regex := range lookalikes {
+		word = regex.ReplaceAllString(word, repl)
+	}
+	return word
+}
+
+var tablePrefix = regexp.MustCompile(`^[^.]*\.`)
+
+// "something_like_this" -> "SomethingLikeThis"
+func (rs *Ruleset) Typeify(word string) string {
+	word = tablePrefix.ReplaceAllString(word, "")
+	return rs.Camelize(rs.Singularize(word))
+}
+
+// "SomeText" -> "some-text"
+func (rs *Ruleset) Dasherize(word string) string {
+	return rs.seperatedWords(word, "-")
+}
+
+// "1031" -> "1031st"
+//
+//nolint:mnd
+func (rs *Ruleset) Ordinalize(str string) string {
+	number, err := strconv.Atoi(str)
+	if err != nil {
+		return str
+	}
+	switch abs(number) % 100 {
+	case 11, 12, 13:
+		return fmt.Sprintf("%dth", number)
+	default:
+		switch abs(number) % 10 {
+		case 1:
+			return fmt.Sprintf("%dst", number)
+		case 2:
+			return fmt.Sprintf("%dnd", number)
+		case 3:
+			return fmt.Sprintf("%drd", number)
+		}
+	}
+	return fmt.Sprintf("%dth", number)
+}
+
+func (rs *Ruleset) isUncountable(word string) bool {
+	// handle multiple words by using the last one
+	words := strings.Split(word, " ")
+	if _, exists := rs.uncountables[strings.ToLower(words[len(words)-1])]; exists {
+		return true
+	}
+	return false
+}
+
+func (rs *Ruleset) safeCaseAcronyms(word string) string {
+	// convert an acroymn like HTML into Html
+	for _, rule := range rs.acronyms {
+		word = strings.ReplaceAll(word, rule.suffix, rule.replacement)
+	}
+	return word
+}
+
+func (rs *Ruleset) seperatedWords(word, sep string) string {
+	word = rs.safeCaseAcronyms(word)
+	words := splitAtCaseChange(word)
+	return strings.Join(words, sep)
+}
+
+var lookalikes = map[string]*regexp.Regexp{
 	"A":  regexp.MustCompile(`À|Á|Â|Ã|Ä|Å`),
 	"AE": regexp.MustCompile(`Æ`),
 	"C":  regexp.MustCompile(`Ç`),
@@ -477,49 +521,6 @@ var lookalikes map[string]*regexp.Regexp = map[string]*regexp.Regexp{
 	"s":  regexp.MustCompile(`ş`),
 	"u":  regexp.MustCompile(`ù|ú|û|ü|ũ|ū|ŭ|ů|ű|ų`),
 	"y":  regexp.MustCompile(`ý|ÿ`),
-}
-
-// transforms latin characters like é -> e
-func (rs *Ruleset) Asciify(word string) string {
-	for repl, regex := range lookalikes {
-		word = regex.ReplaceAllString(word, repl)
-	}
-	return word
-}
-
-var tablePrefix *regexp.Regexp = regexp.MustCompile(`^[^.]*\.`)
-
-// "something_like_this" -> "SomethingLikeThis"
-func (rs *Ruleset) Typeify(word string) string {
-	word = tablePrefix.ReplaceAllString(word, "")
-	return rs.Camelize(rs.Singularize(word))
-}
-
-// "SomeText" -> "some-text"
-func (rs *Ruleset) Dasherize(word string) string {
-	return rs.seperatedWords(word, "-")
-}
-
-// "1031" -> "1031st"
-func (rs *Ruleset) Ordinalize(str string) string {
-	number, err := strconv.Atoi(str)
-	if err != nil {
-		return str
-	}
-	switch abs(number) % 100 {
-	case 11, 12, 13:
-		return fmt.Sprintf("%dth", number)
-	default:
-		switch abs(number) % 10 {
-		case 1:
-			return fmt.Sprintf("%dst", number)
-		case 2:
-			return fmt.Sprintf("%dnd", number)
-		case 3:
-			return fmt.Sprintf("%drd", number)
-		}
-	}
-	return fmt.Sprintf("%dth", number)
 }
 
 /////////////////////////////////////////
@@ -642,13 +643,13 @@ func reverse(s string) string {
 
 func isSpacerChar(c rune) bool {
 	switch {
-	case c == rune("_"[0]):
+	case c == '_':
 		return true
-	case c == rune(" "[0]):
+	case c == ':':
 		return true
-	case c == rune(":"[0]):
+	case c == '-':
 		return true
-	case c == rune("-"[0]):
+	case unicode.IsSpace(c):
 		return true
 	}
 	return false
