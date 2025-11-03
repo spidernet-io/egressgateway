@@ -42,8 +42,8 @@ func CompareProperties(location DifferenceLocation, schema1 *spec.Schema, schema
 
 	schema1Props := propertiesFor(schema1, getRefFn1)
 	schema2Props := propertiesFor(schema2, getRefFn2)
-	// find deleted and changed properties
 
+	// find deleted and changed properties
 	for eachProp1Name, eachProp1 := range schema1Props {
 		eachProp1 := eachProp1
 		childLoc := addChildDiffNode(location, eachProp1Name, eachProp1.Schema)
@@ -66,11 +66,16 @@ func CompareProperties(location DifferenceLocation, schema1 *spec.Schema, schema
 		eachProp2 := eachProp2
 		if _, ok := schema1.Properties[eachProp2Name]; !ok {
 			childLoc := addChildDiffNode(location, eachProp2Name, &eachProp2)
-			propDiffs = append(propDiffs, SpecDifference{DifferenceLocation: childLoc, Code: AddedProperty})
+
+			analyzedProp2 := schema2Props[eachProp2Name]
+			if analyzedProp2.Required {
+				propDiffs = append(propDiffs, SpecDifference{DifferenceLocation: childLoc, Code: AddedRequiredProperty})
+			} else {
+				propDiffs = append(propDiffs, SpecDifference{DifferenceLocation: childLoc, Code: AddedProperty})
+			}
 		}
 	}
 	return propDiffs
-
 }
 
 // CompareFloatValues compares a float data item
@@ -117,7 +122,6 @@ func CompareIntValues(fieldName string, val1 *int64, val2 *int64, ifGreaterCode 
 
 // CheckToFromPrimitiveType check for diff to or from a primitive
 func CheckToFromPrimitiveType(diffs []TypeDiff, type1, type2 interface{}) []TypeDiff {
-
 	type1IsPrimitive := isPrimitive(type1)
 	type2IsPrimitive := isPrimitive(type2)
 
@@ -133,7 +137,6 @@ func CheckToFromPrimitiveType(diffs []TypeDiff, type1, type2 interface{}) []Type
 
 // CheckRefChange has the property ref changed
 func CheckRefChange(diffs []TypeDiff, type1, type2 interface{}) (diffReturn []TypeDiff) {
-
 	diffReturn = diffs
 	if isRefType(type1) && isRefType(type2) {
 		// both refs but to different objects (TODO detect renamed object)

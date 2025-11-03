@@ -46,6 +46,8 @@ type specBuilder struct {
 }
 
 func (s *specBuilder) Build() (*spec.Swagger, error) {
+	// this initial scan step is skipped if !scanModels.
+	// Discovered dependencies should however be resolved.
 	if err := s.buildModels(); err != nil {
 		return nil, err
 	}
@@ -54,7 +56,7 @@ func (s *specBuilder) Build() (*spec.Swagger, error) {
 		return nil, err
 	}
 
-	if err := s.buildRespones(); err != nil {
+	if err := s.buildResponses(); err != nil {
 		return nil, err
 	}
 
@@ -160,7 +162,7 @@ func (s *specBuilder) buildRoutes() error {
 	return nil
 }
 
-func (s *specBuilder) buildRespones() error {
+func (s *specBuilder) buildResponses() error {
 	// build responses dictionary
 	for _, decl := range s.ctx.app.Responses {
 		rb := &responseBuilder{

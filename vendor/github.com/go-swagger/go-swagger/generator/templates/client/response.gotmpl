@@ -119,11 +119,17 @@ func ({{ .ReceiverName }} *{{ pascalize .Name }}) Code() int {
 }
 
 func ({{ .ReceiverName }} *{{ pascalize .Name }}) Error() string {
-	return fmt.Sprintf("[{{ upper .Method }} {{ .Path }}][%d] {{ if .Name }}{{ .Name }} {{ else }}unknown error {{ end }}{{ if .Schema }} %+v{{ end }}", {{ if eq .Code -1 }}{{ .ReceiverName }}._statusCode{{ else }}{{ .Code }}{{ end }}{{ if .Schema }}, o.Payload{{ end }})
+  {{- if .Schema }}{{ if (not .Schema.IsStream) }}
+  payload, _ := json.Marshal(o.Payload)
+  {{- end }}{{- end }}
+	return fmt.Sprintf("[{{ upper .Method }} {{ .Path }}][%d]{{ if .Name }} {{ .Name }}{{ else }} unknown error{{ end }}{{ if .Schema }}{{ if not .Schema.IsStream }} %s{{ end }}{{ end }}", {{ if eq .Code -1 }}{{ .ReceiverName }}._statusCode{{ else }}{{ .Code }}{{ end }}{{ if .Schema }}{{ if not .Schema.IsStream }}, payload{{ end }}{{ end }})
 }
 
 func ({{ .ReceiverName }} *{{ pascalize .Name }}) String() string {
-	return fmt.Sprintf("[{{ upper .Method }} {{ .Path }}][%d] {{ if .Name }}{{ .Name }} {{ else }}unknown response {{ end }}{{ if .Schema }} %+v{{ end }}", {{ if eq .Code -1 }}{{ .ReceiverName }}._statusCode{{ else }}{{ .Code }}{{ end }}{{ if .Schema }}, o.Payload{{ end }})
+  {{- if .Schema }}{{ if (not .Schema.IsStream) }}
+  payload, _ := json.Marshal(o.Payload)
+  {{- end }}{{- end }}
+	return fmt.Sprintf("[{{ upper .Method }} {{ .Path }}][%d]{{ if .Name }} {{ .Name }}{{ else }} unknown response{{ end }}{{ if .Schema }}{{ if not .Schema.IsStream }} %s{{ end }}{{ end }}", {{ if eq .Code -1 }}{{ .ReceiverName }}._statusCode{{ else }}{{ .Code }}{{ end }}{{ if .Schema }}{{ if not .Schema.IsStream }}, payload{{ end }}{{ end }})
 }
 
 {{ if .Schema }}
@@ -191,7 +197,7 @@ func ({{ .ReceiverName }} *{{ pascalize .Name }}) readResponse(response runtime.
     {{- if not .Schema.IsBaseType }}
 
   // response payload
-  if err := consumer.Consume(response.Body(), {{ if not (or .Schema.IsComplexObject .Schema.IsStream) }}&{{ end}}{{ .ReceiverName }}.Payload); err != nil && err != io.EOF {
+  if err := consumer.Consume(response.Body(), {{ if not (or .Schema.IsComplexObject .Schema.IsStream) }}&{{ end}}{{ .ReceiverName }}.Payload); err != nil && !stderrors.Is(err,io.EOF) {
     return err
   }
     {{- end }}
@@ -226,6 +232,7 @@ package {{ .Package }}
 
 
 import (
+  stderrors "errors"
   "io"
   "net/http"
 
@@ -248,7 +255,7 @@ type {{ pascalize .Name }}Reader struct {
 }
 
 // ReadResponse reads a server response into the received {{ .ReceiverName }}.
-func ({{ .ReceiverName }} *{{ pascalize .Name }}Reader) ReadResponse(response runtime.ClientResponse, consumer runtime.Consumer) (interface{}, error) {
+func ({{ .ReceiverName }} *{{ pascalize .Name }}Reader) ReadResponse(response runtime.ClientResponse, consumer runtime.Consumer) (any, error) {
   {{- if .Responses}}
   switch response.Code() {
   {{- end }}
@@ -278,7 +285,7 @@ func ({{ .ReceiverName }} *{{ pascalize .Name }}Reader) ReadResponse(response ru
     {{- if $.Responses}}
     default:
     {{- end }}
-      return nil, runtime.NewAPIError("response status code does not match any response statuses defined for this endpoint in the swagger spec", response, response.Code())
+      return nil, runtime.NewAPIError("[{{ upper .Method }} {{ .Path }}]{{ if .Name }} {{ .Name }}{{ end }}", response, response.Code())
   {{- end }}
   {{- if .Responses}}
   }

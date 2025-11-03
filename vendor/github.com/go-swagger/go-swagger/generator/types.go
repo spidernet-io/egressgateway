@@ -21,15 +21,16 @@ import (
 	"reflect"
 	"strings"
 
+	"github.com/go-viper/mapstructure/v2"
+	"github.com/kr/pretty"
+
 	"github.com/go-openapi/loads"
 	"github.com/go-openapi/spec"
 	"github.com/go-openapi/swag"
-	"github.com/kr/pretty"
-	"github.com/mitchellh/mapstructure"
 )
 
 const (
-	iface   = "interface{}"
+	iface   = "any"
 	array   = "array"
 	file    = "file"
 	number  = "number"
@@ -131,7 +132,7 @@ func simpleResolvedType(tn, fmt string, items *spec.Items, v *spec.CommonValidat
 	return
 }
 
-func newTypeResolver(pkg, fullPkg string, doc *loads.Document) *typeResolver {
+func newTypeResolver(pkg, _ string, doc *loads.Document) *typeResolver {
 	resolver := typeResolver{ModelsPackage: pkg, Doc: doc}
 	resolver.KnownDefs = make(map[string]struct{}, len(doc.Spec().Definitions))
 	for k, sch := range doc.Spec().Definitions {
@@ -142,7 +143,7 @@ func newTypeResolver(pkg, fullPkg string, doc *loads.Document) *typeResolver {
 }
 
 // knownDefGoType returns go type, package and package alias for definition
-func (t typeResolver) knownDefGoType(def string, schema spec.Schema, clear func(string) string) (string, string, string) {
+func (t typeResolver) knownDefGoType(def string, schema spec.Schema, clearFunc func(string) string) (string, string, string) {
 	debugLog("known def type: %q", def)
 	ext := schema.Extensions
 	nm, hasGoName := ext.GetString(xGoName)
@@ -153,12 +154,12 @@ func (t typeResolver) knownDefGoType(def string, schema spec.Schema, clear func(
 	}
 	extType, isExternalType := t.resolveExternalType(ext)
 	if !isExternalType || extType.Embedded {
-		if clear == nil {
+		if clearFunc == nil {
 			debugLog("known def type no clear: %q", def)
 			return def, t.definitionPkg, ""
 		}
-		debugLog("known def type clear: %q -> %q", def, clear(def))
-		return clear(def), t.definitionPkg, ""
+		debugLog("known def type clear: %q -> %q", def, clearFunc(def))
+		return clearFunc(def), t.definitionPkg, ""
 	}
 
 	// external type definition trumps regular type resolution
@@ -335,7 +336,7 @@ func (t *typeResolver) resolveSchemaRef(schema *spec.Schema, isRequired bool) (r
 	return
 }
 
-func (t *typeResolver) inferAliasing(result *resolvedType, schema *spec.Schema, isAnonymous bool, isRequired bool) {
+func (t *typeResolver) inferAliasing(result *resolvedType, _ *spec.Schema, isAnonymous bool, _ bool) {
 	if !isAnonymous && t.ModelName != "" {
 		result.AliasedType = result.GoType
 		result.IsAliased = true
@@ -345,7 +346,6 @@ func (t *typeResolver) inferAliasing(result *resolvedType, schema *spec.Schema, 
 }
 
 func (t *typeResolver) resolveFormat(schema *spec.Schema, isAnonymous bool, isRequired bool) (returns bool, result resolvedType, err error) {
-
 	if schema.Format != "" {
 		// defaults to string
 		result.SwaggerType = str
@@ -401,7 +401,6 @@ func (t *typeResolver) resolveFormat(schema *spec.Schema, isAnonymous bool, isRe
 //
 // The interpretation of Required as a mean to make a type nullable is carried out elsewhere.
 func (t *typeResolver) isNullable(schema *spec.Schema) bool {
-
 	if nullable, ok := t.isNullableOverride(schema); ok {
 		return nullable
 	}
@@ -469,6 +468,7 @@ func (t *typeResolver) resolveArray(schema *spec.Schema, isAnonymous, isRequired
 		return
 	}
 
+	// resolve anonymous items
 	rt, er := t.ResolveSchema(schema.Items.Schema, true, false)
 	if er != nil {
 		err = er
@@ -648,16 +648,16 @@ func (t *typeResolver) resolveObject(schema *spec.Schema, isAnonymous bool) (res
 		return
 	}
 
-	// an object without property and without AdditionalProperties schema is rendered as interface{}
+	// an object without property and without AdditionalProperties schema is rendered as any
 	result.IsMap = true
 	result.SwaggerType = object
 	result.IsNullable = false
-	// an object without properties but with MinProperties or MaxProperties is rendered as map[string]interface{}
+	// an object without properties but with MinProperties or MaxProperties is rendered as map[string]any
 	result.IsInterface = len(schema.Properties) == 0 && !schema.Validations().HasObjectValidations()
 	if result.IsInterface {
 		result.GoType = iface
 	} else {
-		result.GoType = "map[string]interface{}"
+		result.GoType = "map[string]any"
 	}
 	return
 }
@@ -699,7 +699,7 @@ func nullableNumber(schema *spec.Schema, isRequired bool) bool {
 	isMinMax := (schema.Minimum != nil && schema.Maximum != nil && *schema.Minimum < *schema.Maximum)
 	bcMinMax := (schema.Minimum != nil && schema.Maximum != nil && (*schema.Minimum < 0 && 0 < *schema.Maximum))
 
-	nullable := !schema.ReadOnly && (isRequired || (hasDefault && !(isMin || isMax || isMinMax)) || bcMin || bcMax || bcMinMax)
+	nullable := !schema.ReadOnly && (isRequired || (hasDefault && !isMin && !isMax && !isMinMax) || bcMin || bcMax || bcMinMax)
 	return nullable
 }
 
@@ -965,7 +965,7 @@ func (t *typeResolver) ResolveSchema(schema *spec.Schema, isAnonymous, isRequire
 	case "null":
 		if schema.Validations().HasObjectValidations() {
 			// no explicit object type, but inferred from object validations:
-			// this makes the type a map[string]interface{} instead of interface{}
+			// this makes the type a map[string]any instead of any
 			result, err = t.resolveObject(schema, isAnonymous)
 			if err != nil {
 				result = resolvedType{}
@@ -987,8 +987,8 @@ func (t *typeResolver) ResolveSchema(schema *spec.Schema, isAnonymous, isRequire
 	return
 }
 
-func warnSkipValidation(types interface{}) func(string, interface{}) {
-	return func(validation string, value interface{}) {
+func warnSkipValidation(types any) func(string, any) {
+	return func(validation string, value any) {
 		value = reflect.Indirect(reflect.ValueOf(value)).Interface()
 		log.Printf("warning: validation %s (value: %v) not compatible with type %v. Skipped", validation, value, types)
 	}
@@ -1000,8 +1000,8 @@ func warnSkipValidation(types interface{}) func(string, interface{}) {
 func guardValidations(tpe string, schema interface {
 	Validations() spec.SchemaValidations
 	SetValidations(spec.SchemaValidations)
-}, types ...string) {
-
+}, types ...string,
+) {
 	v := schema.Validations()
 	if len(types) == 0 {
 		types = []string{tpe}
@@ -1038,7 +1038,7 @@ func guardValidations(tpe string, schema interface {
 		}
 	}
 
-	// other cases:  mapped as interface{}: no validations allowed but Enum
+	// other cases:  mapped as any: no validations allowed but Enum
 }
 
 // guardFormatConflicts handles all conflicting properties
@@ -1049,7 +1049,8 @@ func guardValidations(tpe string, schema interface {
 func guardFormatConflicts(format string, schema interface {
 	Validations() spec.SchemaValidations
 	SetValidations(spec.SchemaValidations)
-}) {
+},
+) {
 	v := schema.Validations()
 	msg := fmt.Sprintf("for format %q", format)
 
@@ -1200,7 +1201,7 @@ func (rt *resolvedType) setIsEmptyOmitted(schema *spec.Schema, tpe string) {
 	rt.IsEmptyOmitted = (tpe != array) || (tpe == array && rt.IsAliased)
 }
 
-func (rt *resolvedType) setIsJSONString(schema *spec.Schema, tpe string) {
+func (rt *resolvedType) setIsJSONString(schema *spec.Schema, _ string) {
 	_, found := schema.Extensions[xGoJSONString]
 	if !found {
 		rt.IsJSONString = false
