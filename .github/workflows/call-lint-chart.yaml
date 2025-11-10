@@ -84,7 +84,7 @@ jobs:
       # Pre-requisites: A GitHub repo containing a directory with your Helm charts (e.g: charts)
       - name: Set up chart-testing
         if: ${{ env.RUN_JUST_LINT_CHART == 'false' }}
-        uses: helm/chart-testing-action@v2.7.0
+        uses: helm/chart-testing-action@v2.8.0
 
       - name: Run chart-testing (list-changed)
         if: ${{ env.RUN_JUST_LINT_CHART == 'false' }}
