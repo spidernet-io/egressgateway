@@ -112,6 +112,12 @@ jobs:
           find . -name "*.tar" -print0 | xargs -0 -I {} sh -c 'echo "Loading {} ..."; docker load -i "{}"'
           docker images
 
+      - name: Cleanup image tar files
+        if: always()
+        run: |
+          ls -l
+          rm -rf output/artifact-${{ inputs.ipfamily }}          
+
       - name: Run test
         run: |
           make -C test checkBin
