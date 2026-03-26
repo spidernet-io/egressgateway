@@ -283,6 +283,10 @@ func needUpdateEndpoint(pod corev1.Pod, ep *v1beta1.EgressEndpoint) bool {
 		ep.IPv6 = expIPv6List
 	}
 
+	if pod.Spec.NodeName != ep.Node {
+		needUpdate = true
+	}
+
 	return needUpdate
 }
 
@@ -418,7 +422,7 @@ func (p podPredicate) Update(updateEvent event.UpdateEvent) bool {
 	// case by pods labels are changed
 	if reflect.DeepEqual(oldPod.Labels, newPod.Labels) &&
 		reflect.DeepEqual(oldPod.Status.PodIPs, newPod.Status.PodIPs) &&
-		oldPod.Spec.NodeName != newPod.Spec.NodeName {
+		oldPod.Spec.NodeName == newPod.Spec.NodeName {
 		return false
 	}
 

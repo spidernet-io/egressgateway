@@ -107,6 +107,8 @@ var _ = Describe("EgressPolicy", Serial, func() {
 		It("test namespaced policy", func() {
 			var err error
 			ctx := context.Background()
+			var deploy *appsv1.Deployment
+			var deployPolicy *egressv1.EgressPolicy
 
 			// P00008 and P00011
 			By("case P00008, P00011: create policy with empty `EgressIP`")
@@ -219,6 +221,37 @@ var _ = Describe("EgressPolicy", Serial, func() {
 			time.Sleep(time.Second * 2)
 			e = policy.Status.Eip
 			err = common.CheckDaemonSetEgressIP(ctx, cli, config, egressConfig, dsB, e.Ipv4, e.Ipv6, false)
+			Expect(err).NotTo(HaveOccurred())
+
+			DeferCleanup(func() {
+				if deployPolicy != nil {
+					Expect(common.DeleteObj(ctx, cli, deployPolicy)).NotTo(HaveOccurred())
+				}
+				if deploy != nil {
+					Expect(common.WaitDeployDeleted(ctx, cli, deploy, time.Minute)).NotTo(HaveOccurred())
+				}
+			})
+
+			By("restart deployment pods after creating a namespaced policy and verify they still use the same EIP")
+			deploy, err = common.CreateDeploy(ctx, cli, "deploy-"+faker.Word(), config.Image, 2, time.Minute*2)
+			Expect(err).NotTo(HaveOccurred())
+			GinkgoWriter.Printf("Create Deployment: %s\n", deploy.Name)
+
+			deployPolicy, err = common.CreateEgressPolicyNew(ctx, cli, egressConfig, egw.Name, deploy.Spec.Template.Labels, "")
+			Expect(err).NotTo(HaveOccurred())
+			GinkgoWriter.Printf("Create EgressPolicy for Deployment: %s\n", deployPolicy.Name)
+
+			time.Sleep(time.Second * 2)
+			deployEip := deployPolicy.Status.Eip
+			err = common.CheckDeployEgressIP(ctx, cli, config, egressConfig, deploy, deployEip.Ipv4, deployEip.Ipv6, true)
+			Expect(err).NotTo(HaveOccurred())
+
+			GinkgoWriter.Printf("restart deployment pods: %s\n", deploy.Name)
+			err = common.DeleteTestPodsUntilReady(ctx, cli, deploy.Spec.Template.Labels, time.Minute*5)
+			Expect(err).NotTo(HaveOccurred())
+
+			GinkgoWriter.Println("check deployment pods still use the same EIP after restart")
+			err = common.CheckDeployEgressIP(ctx, cli, config, egressConfig, deploy, deployEip.Ipv4, deployEip.Ipv6, true)
 			Expect(err).NotTo(HaveOccurred())
 		})
 
@@ -335,6 +368,112 @@ var _ = Describe("EgressPolicy", Serial, func() {
 			e = clusterPolicy.Status.Eip
 			err = common.CheckDaemonSetEgressIP(ctx, cli, config, egressConfig, dsB, e.Ipv4, e.Ipv6, false)
 			Expect(err).NotTo(HaveOccurred())
+		})
+	})
+
+	Context("Test EgressPolicy with StatefulSet", func() {
+		var (
+			sts    *appsv1.StatefulSet
+			policy *egressv1.EgressPolicy
+		)
+
+		BeforeEach(func() {
+			ctx := context.Background()
+			var err error
+
+			sts, err = common.CreateStatefulSet(ctx, cli, "sts-"+faker.Word(), config.Image, 2, time.Minute*2)
+			Expect(err).NotTo(HaveOccurred())
+			GinkgoWriter.Printf("Create StatefulSet: %s\n", sts.Name)
+
+			DeferCleanup(func() {
+				ctx := context.Background()
+
+				err := common.DeleteObj(ctx, cli, policy)
+				Expect(err).NotTo(HaveOccurred())
+
+				err = common.DeleteObj(ctx, cli, sts)
+				Expect(err).NotTo(HaveOccurred())
+
+				err = common.DeleteObj(ctx, cli, &corev1.Service{
+					ObjectMeta: metav1.ObjectMeta{
+						Namespace: sts.Namespace,
+						Name:      sts.Name,
+					},
+				})
+				Expect(err).NotTo(HaveOccurred())
+			})
+		})
+
+		It("test namespaced policy", func() {
+			ctx := context.Background()
+			var err error
+			ipUsage := egressv1.IPUsage{}
+
+			if len(pool.IPv4) != 0 {
+				ipUsage.IPv4Total = ipNum
+				ipUsage.IPv4Free = ipNum - 1
+			}
+			if len(pool.IPv6) != 0 {
+				ipUsage.IPv6Total = ipNum
+				ipUsage.IPv6Free = ipNum - 1
+			}
+
+			By("create policy for StatefulSet pods with empty `EgressIP`")
+
+			policy, err = common.CreateEgressPolicyNew(ctx, cli, egressConfig, egw.Name, sts.Spec.Template.Labels, "")
+			Expect(err).NotTo(HaveOccurred())
+
+			GinkgoWriter.Printf("Create EgressPolicy for StatefulSet: %s\n", policy.Name)
+			time.Sleep(time.Second * 2)
+			e := policy.Status.Eip
+			err = common.CheckStatefulSetEgressIP(ctx, cli, config, egressConfig, sts, e.Ipv4, e.Ipv6, true)
+			Expect(err).NotTo(HaveOccurred())
+
+			GinkgoWriter.Printf("check the status of the policy: %s\n", policy.Name)
+			expectPolicyStatus := &egressv1.EgressPolicyStatus{
+				Eip: egressv1.Eip{
+					Ipv4: egw.Spec.Ippools.Ipv4DefaultEIP,
+					Ipv6: egw.Spec.Ippools.Ipv6DefaultEIP,
+				},
+				Node: node1.Name,
+			}
+			Expect(common.CheckEgressPolicyStatusSynced(ctx, cli, policy, expectPolicyStatus, time.Second*5)).NotTo(HaveOccurred())
+
+			GinkgoWriter.Printf("check the status of the gateway: %s\n", egw.Name)
+			expectGatewayStatus := &egressv1.EgressGatewayStatus{
+				NodeList: []egressv1.EgressIPStatus{
+					{
+						Name: node1.Name,
+						Eips: []egressv1.Eips{
+							{
+								IPv4: egw.Spec.Ippools.Ipv4DefaultEIP,
+								IPv6: egw.Spec.Ippools.Ipv6DefaultEIP,
+								Policies: []egressv1.Policy{
+									{
+										Name:      policy.Name,
+										Namespace: policy.Namespace,
+									},
+								},
+							},
+						},
+						Status: string(egressv1.EgressTunnelReady),
+					},
+				},
+				IPUsage: ipUsage,
+			}
+			err = common.CheckEgressGatewayStatusSynced(ctx, cli, egw, expectGatewayStatus, time.Second*5)
+			Expect(err).NotTo(HaveOccurred(), fmt.Sprintf("expect: %v\ngot: %v\n", expectGatewayStatus, egw.Status))
+
+			By("delete policy and verify StatefulSet pods no longer use the EIP")
+
+			err = common.DeleteObj(ctx, cli, policy)
+			Expect(err).NotTo(HaveOccurred())
+
+			time.Sleep(time.Second * 2)
+			err = common.CheckStatefulSetEgressIP(ctx, cli, config, egressConfig, sts, e.Ipv4, e.Ipv6, false)
+			Expect(err).NotTo(HaveOccurred())
+
+			policy = nil
 		})
 	})
 
