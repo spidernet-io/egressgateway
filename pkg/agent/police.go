@@ -1367,7 +1367,7 @@ func (p policyPredicate) Generic(_ event.GenericEvent) bool { return false }
 
 type epSlicePredicate struct{}
 
-func (p epSlicePredicate) Create(_ event.CreateEvent) bool   { return false }
+func (p epSlicePredicate) Create(_ event.CreateEvent) bool   { return true }
 func (p epSlicePredicate) Delete(_ event.DeleteEvent) bool   { return false }
 func (p epSlicePredicate) Update(_ event.UpdateEvent) bool   { return true }
 func (p epSlicePredicate) Generic(_ event.GenericEvent) bool { return false }

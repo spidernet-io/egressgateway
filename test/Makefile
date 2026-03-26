@@ -376,7 +376,7 @@ e2e_test:
 		echo -e "\033[35m[STEP4]\033[0m run ginkgo.sh"; \
 		export IMAGE=$(NETTOOLS_IMAGE); \
 		$(ROOT_DIR)/tools/golang/ginkgo.sh \
-			--race --timeout=$(E2E_TIMEOUT) --output-interceptor-mode=none --poll-progress-after=20s \
+			--race --trimpath --timeout=$(E2E_TIMEOUT) --output-interceptor-mode=none --poll-progress-after=$(E2E_GINKGO_POLL_PROGRESS_AFTER) \
 			--json-report e2ereport.json --output-dir $(ROOT_DIR) --procs $(E2E_GINKGO_PROCS) \
 			--label-filter="$(E2E_GINKGO_LABELS)" -randomize-suites -randomize-all -vv --fail-fast  $(E2E_GINKGO_OPTION) --skip=$(E2E_RELIABILITY) \
 			-r e2e/* || RESULT=1 ; \
@@ -385,7 +385,7 @@ e2e_test:
 		KIND_CLUSTER_NAME=$(KIND_CLUSTER_NAME) ./scripts/debugCluster.sh $(KIND_KUBECONFIG) "detail" "$(E2E_LOG_FILE)" $(E2E_NAMESPACE) ; \
 		./scripts/debugCluster.sh $(KIND_KUBECONFIG) "error" "$(E2E_LOG_FILE)" $(E2E_NAMESPACE) || { echo "error, found error log, datarace/pacni/longlock !!!" ; RESULT=1 ; } ; \
 		$(ROOT_DIR)/tools/golang/ginkgo.sh \
-			--race --timeout=$(E2E_TIMEOUT) --output-interceptor-mode=none --poll-progress-after=20s \
+			--race --trimpath --timeout=$(E2E_TIMEOUT) --output-interceptor-mode=none --poll-progress-after=$(E2E_GINKGO_POLL_PROGRESS_AFTER) \
 			--json-report e2ereport.json --output-dir $(ROOT_DIR) --procs $(E2E_GINKGO_PROCS) \
 			--label-filter="$(E2E_GINKGO_LABELS)" -randomize-suites -randomize-all -vv --fail-fast  $(E2E_GINKGO_OPTION) --focus=$(E2E_RELIABILITY) \
 			-r e2e/* || RESULT=1 ; \
