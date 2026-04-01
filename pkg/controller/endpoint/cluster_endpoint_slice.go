@@ -92,7 +92,7 @@ func (r *endpointClusterReconciler) Reconcile(ctx context.Context, req reconcile
 					needUpdate = true
 				}
 				existingKeyMap[key] = true
-				epSlice.Endpoints[index] = epSlice.Endpoints[i]
+				epSlice.Endpoints[index] = ep
 				index = index + 1
 			} else {
 				needUpdate = true

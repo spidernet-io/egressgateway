@@ -285,6 +285,7 @@ func needUpdateEndpoint(pod corev1.Pod, ep *v1beta1.EgressEndpoint) bool {
 
 	if pod.Spec.NodeName != ep.Node {
 		needUpdate = true
+		ep.Node = pod.Spec.NodeName
 	}
 
 	return needUpdate
