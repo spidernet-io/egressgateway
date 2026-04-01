@@ -119,6 +119,78 @@ func TestReconcilerEgressClusterEndpointSlice(t *testing.T) {
 	}
 }
 
+func TestReconcilerEgressClusterEndpointSlicePersistsUpdatedEndpoint(t *testing.T) {
+	labels := map[string]string{"app": "nginx1"}
+	builder := fake.NewClientBuilder()
+	builder.WithScheme(schema.GetScheme())
+	builder.WithObjects(
+		&v1beta1.EgressClusterPolicy{
+			ObjectMeta: metav1.ObjectMeta{
+				Name: "policy1",
+			},
+			Spec: v1beta1.EgressClusterPolicySpec{
+				AppliedTo: v1beta1.ClusterAppliedTo{
+					PodSelector: &metav1.LabelSelector{MatchLabels: labels},
+				},
+			},
+		},
+		&v1beta1.EgressClusterEndpointSlice{
+			ObjectMeta: metav1.ObjectMeta{
+				Name: "s1",
+				Labels: map[string]string{
+					v1beta1.LabelPolicyName: "policy1",
+				},
+			},
+			Endpoints: []v1beta1.EgressEndpoint{
+				{
+					Namespace: "default",
+					Pod:       "pod1",
+					IPv4:      []string{"10.6.0.1"},
+					Node:      "node1",
+				},
+			},
+		},
+		&corev1.Pod{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "pod1",
+				Namespace: "default",
+				Labels:    labels,
+			},
+			Spec: corev1.PodSpec{
+				NodeName: "node2",
+			},
+			Status: corev1.PodStatus{
+				PodIPs: []corev1.PodIP{
+					{IP: "10.6.0.9"},
+				},
+			},
+		},
+	)
+	cli := builder.Build()
+
+	reconciler := endpointClusterReconciler{
+		client: cli,
+		log:    logger.NewLogger(config.EnvConfig{}.Logger),
+		config: &config.Config{
+			FileConfig: config.FileConfig{
+				MaxNumberEndpointPerSlice: 100,
+			},
+		},
+	}
+
+	_, err := reconciler.Reconcile(context.Background(), reconcile.Request{
+		NamespacedName: types.NamespacedName{Name: "policy1"},
+	})
+	assert.NoError(t, err)
+
+	epList, err := listClusterEndpointSlices(context.Background(), cli, "policy1")
+	assert.NoError(t, err)
+	if assert.Len(t, epList.Items, 1) && assert.Len(t, epList.Items[0].Endpoints, 1) {
+		assert.Equal(t, []string{"10.6.0.9"}, epList.Items[0].Endpoints[0].IPv4)
+		assert.Equal(t, "node2", epList.Items[0].Endpoints[0].Node)
+	}
+}
+
 func checkClusterPolicyIPsInEpSlice(pods []corev1.Pod, eps *v1beta1.EgressClusterEndpointSliceList) error {
 	if pods == nil || eps == nil {
 		return nil

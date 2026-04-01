@@ -917,6 +917,26 @@ func Test_needUpdateEndpoint(t *testing.T) {
 			},
 		}, &v1beta1.EgressEndpoint{})
 	})
+	t.Run("need update node", func(t *testing.T) {
+		ep := &v1beta1.EgressEndpoint{
+			IPv4: []string{"10.10.0.2"},
+			Node: "node1",
+		}
+
+		needUpdate := needUpdateEndpoint(corev1.Pod{
+			Spec: corev1.PodSpec{
+				NodeName: "node2",
+			},
+			Status: corev1.PodStatus{
+				PodIPs: []corev1.PodIP{
+					{IP: "10.10.0.2"},
+				},
+			},
+		}, ep)
+
+		assert.True(t, needUpdate)
+		assert.Equal(t, "node2", ep.Node)
+	})
 }
 
 func Test_sliceEqual(t *testing.T) {
