@@ -125,7 +125,7 @@ jobs:
       
       # test against commit version
       - name: Setup Kind Cluster
-        uses: nick-invision/retry@v3
+        uses: nick-invision/retry@v4
         with:
           timeout_minutes: 20
           max_attempts: 1
