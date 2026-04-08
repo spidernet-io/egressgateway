@@ -14,6 +14,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/apimachinery/pkg/util/wait"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	e2eerr "github.com/spidernet-io/egressgateway/test/e2e/err"
@@ -170,27 +171,51 @@ func WaitAllPodRunning(ctx context.Context, cli client.Client, timeout time.Dura
 	ctx, cancel := context.WithTimeout(ctx, timeout)
 	defer cancel()
 
-	podList := new(corev1.PodList)
+	return wait.PollUntilContextCancel(ctx, time.Second, true, func(ctx context.Context) (bool, error) {
+		podList := &corev1.PodList{}
 
-WAIT:
-	for {
-		select {
-		case <-ctx.Done():
-			return e2eerr.ErrWaitPodRunningTimeout
-		default:
-			err := cli.List(ctx, podList)
-			if err != nil {
+		if err := cli.List(ctx, podList); err != nil {
+			return false, err
+		}
+
+		if len(podList.Items) == 0 {
+			return true, nil
+		}
+
+		for _, pod := range podList.Items {
+			if pod.DeletionTimestamp != nil {
 				continue
 			}
-			for _, pod := range podList.Items {
-				if !IfPodRunning(&pod) {
-					time.Sleep(time.Second)
-					goto WAIT
-				}
+
+			if !isPodRunningOrCompleted(&pod) {
+				return false, nil
 			}
-			return nil
+		}
+
+		return true, nil
+	})
+}
+
+func isPodRunningOrCompleted(pod *corev1.Pod) bool {
+	switch pod.Status.Phase {
+	case corev1.PodSucceeded:
+		return true
+
+	case corev1.PodRunning:
+		return isPodReady(pod)
+
+	default:
+		return false
+	}
+}
+
+func isPodReady(pod *corev1.Pod) bool {
+	for _, cond := range pod.Status.Conditions {
+		if cond.Type == corev1.PodReady && cond.Status == corev1.ConditionTrue {
+			return true
 		}
 	}
+	return false
 }
 
 func GetNodesPodList(ctx context.Context, cli client.Client, labels map[string]string, nodes []string) (*corev1.PodList, error) {
