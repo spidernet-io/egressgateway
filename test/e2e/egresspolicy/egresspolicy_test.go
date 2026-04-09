@@ -247,7 +247,10 @@ var _ = Describe("EgressPolicy", Serial, func() {
 			Expect(err).NotTo(HaveOccurred())
 
 			GinkgoWriter.Printf("restart deployment pods: %s\n", deploy.Name)
-			err = common.DeleteTestPodsUntilReady(ctx, cli, deploy.Spec.Template.Labels, time.Minute*5)
+
+			restartCtx, restartCancel := context.WithTimeout(ctx, time.Minute*3)
+			defer restartCancel()
+			err = common.RestartPodsAndWait(restartCtx, cli, *deploy)
 			Expect(err).NotTo(HaveOccurred())
 
 			GinkgoWriter.Println("check deployment pods still use the same EIP after restart")
