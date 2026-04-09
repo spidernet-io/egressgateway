@@ -65,10 +65,13 @@ metadata:
   name: default
 spec:
   calicoNetwork:
+    bgp: Disabled
+    nodeAddressAutodetectionV4:
+      interface: eth0  
     ipPools:
     - blockSize: 26
       cidr: ${E2E_KIND_IPV4_POD_CIDR}
-      encapsulation: VXLANCrossSubnet
+      encapsulation: VXLAN
       natOutgoing: Enabled
       nodeSelector: all()
 EOF
@@ -81,12 +84,15 @@ metadata:
   name: default
 spec:
   calicoNetwork:
+    bgp: Disabled
+    nodeAddressAutodetectionV4:
+      interface: eth0
     nodeAddressAutodetectionV6:
-      firstFound: true
+      interface: eth0      
     ipPools:
     - blockSize: 122
       cidr: ${E2E_KIND_IPV6_POD_CIDR}
-      encapsulation: None
+      encapsulation: VXLAN
       natOutgoing: Enabled
       nodeSelector: all()
 EOF
@@ -99,17 +105,20 @@ metadata:
   name: default
 spec:
   calicoNetwork:
+    bgp: Disabled
+    nodeAddressAutodetectionV4:
+      interface: eth0  
     nodeAddressAutodetectionV6:
-      firstFound: true
+      interface: eth0
     ipPools:
     - blockSize: 26
       cidr: ${E2E_KIND_IPV4_POD_CIDR}
-      encapsulation: VXLANCrossSubnet
+      encapsulation: VXLAN
       natOutgoing: Enabled
       nodeSelector: all()
     - blockSize: 122
       cidr: ${E2E_KIND_IPV6_POD_CIDR}
-      encapsulation: None
+      encapsulation: VXLAN
       natOutgoing: Enabled
       nodeSelector: all()
 EOF

@@ -10,7 +10,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-
+	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
@@ -209,15 +209,6 @@ func isPodRunningOrCompleted(pod *corev1.Pod) bool {
 	}
 }
 
-func isPodReady(pod *corev1.Pod) bool {
-	for _, cond := range pod.Status.Conditions {
-		if cond.Type == corev1.PodReady && cond.Status == corev1.ConditionTrue {
-			return true
-		}
-	}
-	return false
-}
-
 func GetNodesPodList(ctx context.Context, cli client.Client, labels map[string]string, nodes []string) (*corev1.PodList, error) {
 	list := new(corev1.PodList)
 	lsOps := client.MatchingLabels(labels)
@@ -258,7 +249,7 @@ func WaitForNodesPodListRestarted(ctx context.Context, cli client.Client, labels
 	}
 }
 
-// IfPodListRestart check pods of the podList if restarted
+// IfPodListRestarted check pods of the podList if restarted
 func IfPodListRestarted(pods *corev1.PodList) bool {
 	for _, p := range pods.Items {
 		for _, status := range p.Status.ContainerStatuses {
@@ -318,46 +309,76 @@ func DeletePodsUntilReady(ctx context.Context, cli client.Client, labels map[str
 	}
 }
 
-func DeleteTestPodsUntilReady(ctx context.Context, cli client.Client, labels map[string]string, timeout time.Duration) error {
-	pl, err := GetNodesPodList(ctx, cli, labels, []string{})
-	if err != nil {
-		return err
-	}
-	oldUIDs := GetPodListUIDs(pl)
-
-	err = DeletePodList(ctx, cli, pl)
-	if err != nil {
-		return err
+// RestartPodsAndWait deletes all pods under a deployment and waits for new ones to be Ready.
+func RestartPodsAndWait(ctx context.Context, k8sClient client.Client, deploy appsv1.Deployment) error {
+	labelMap := deploy.Spec.Selector.MatchLabels
+	if len(labelMap) == 0 {
+		return fmt.Errorf("deployment %s has no label selector, cannot identify pods to restart", deploy.Name)
 	}
 
-	ctx, cancel := context.WithTimeout(ctx, timeout)
-	defer cancel()
+	expectedReplicas := int(*deploy.Spec.Replicas)
+	if expectedReplicas == 0 {
+		return fmt.Errorf("deployment %s has no replicas, cannot identify pods to restart", deploy.Name)
+	}
 
-RETRY:
+	// 1. Delete all existing pods matching the labels
+	deleteOpts := []client.DeleteAllOfOption{
+		client.InNamespace(deploy.Namespace),
+		client.MatchingLabels(labelMap),
+	}
+	if err := k8sClient.DeleteAllOf(ctx, &corev1.Pod{}, deleteOpts...); err != nil {
+		return fmt.Errorf("failed to delete pods for deployment %s: %w", deploy.Name, err)
+	}
+
+	// 2. Polling for readiness
+	// We use a ticker for periodic checks
+	ticker := time.NewTicker(3 * time.Second)
+	defer ticker.Stop()
+
 	for {
 		select {
 		case <-ctx.Done():
-			return e2eerr.ErrTimeout
-		default:
-			pl, err := GetNodesPodList(ctx, cli, labels, []string{})
-			if err != nil {
-				continue
+			return fmt.Errorf("timeout or context cancelled while waiting for pods of %s to be ready: %w", deploy.Name, ctx.Err())
+		case <-ticker.C:
+			podList := &corev1.PodList{}
+			listOpts := []client.ListOption{
+				client.InNamespace(deploy.Namespace),
+				client.MatchingLabels(labelMap),
 			}
-			newUIDs := GetPodListUIDs(pl)
-			if len(e2etools.SubtractionSlice(oldUIDs, newUIDs)) != len(oldUIDs) {
-				time.Sleep(time.Second)
-				continue
+			if err := k8sClient.List(ctx, podList, listOpts...); err != nil {
+				return fmt.Errorf("failed to list pods: %w", err)
 			}
 
-			for _, p := range pl.Items {
-				if !IfContainerRunning(&p) || !IfPodRunning(&p) {
-					time.Sleep(time.Second)
-					goto RETRY
+			readyCount := 0
+			for _, pod := range podList.Items {
+				if pod.DeletionTimestamp != nil {
+					continue
+				}
+
+				if isPodReady(&pod) {
+					readyCount++
 				}
 			}
-			return nil
+
+			// Success condition
+			if readyCount >= expectedReplicas {
+				return nil
+			}
 		}
 	}
+}
+
+// isPodReady checks if a pod is in Running phase and has Ready condition set to True.
+func isPodReady(pod *corev1.Pod) bool {
+	if pod.Status.Phase != corev1.PodRunning {
+		return false
+	}
+	for _, condition := range pod.Status.Conditions {
+		if condition.Type == corev1.PodReady && condition.Status == corev1.ConditionTrue {
+			return true
+		}
+	}
+	return false
 }
 
 func GetPodListUIDs(podList *corev1.PodList) []string {

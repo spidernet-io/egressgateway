@@ -96,8 +96,15 @@ var _ = Describe("Reliability", Serial, Label("Reliability"), func() {
 			Expect(err).NotTo(HaveOccurred())
 
 			// start up all nodes if some nodes not ready
-			GinkgoWriter.Println("PowerOnNodesUntilClusterReady")
-			Expect(common.PowerOnNodesUntilClusterReady(ctx, cli, workerNodes, time.Minute*3, time.Minute*3)).NotTo(HaveOccurred())
+			t1 := time.Now().Format(time.RFC3339)
+			GinkgoWriter.Printf("PowerOnNodesUntilClusterReady start: %s\n", t1)
+			if err := common.PowerOnNodesUntilClusterReady(ctx, cli, workerNodes, time.Minute*6, time.Minute*6); err != nil {
+				debugInfo := common.CollectClusterDebugInfo(ctx, cli)
+				_, _ = fmt.Fprint(GinkgoWriter, debugInfo)
+				Expect(err).NotTo(HaveOccurred())
+			}
+			t2 := time.Now().Format(time.RFC3339)
+			GinkgoWriter.Printf("PowerOnNodesUntilClusterReady end: %s\n", t2)
 
 			// unlabel nodes
 			GinkgoWriter.Println("unLabel nodes")
@@ -209,8 +216,13 @@ var _ = Describe("Reliability", Serial, Label("Reliability"), func() {
 			GinkgoWriter.Printf("succeeded to check the export IP of pods running on ready nodes: %v\n", checkNodes)
 
 			// power on the node and wait cluster ready
-			GinkgoWriter.Println("PowerOnNodesUntilClusterReady")
-			Expect(common.PowerOnNodesUntilClusterReady(ctx, cli, workerNodes, time.Minute, time.Minute)).NotTo(HaveOccurred())
+			GinkgoWriter.Printf("PowerOnNodesUntilClusterReady start: %s\n", time.Now().Format(time.RFC3339))
+			if err := common.PowerOnNodesUntilClusterReady(ctx, cli, workerNodes, time.Minute*6, time.Minute*6); err != nil {
+				debugInfo := common.CollectClusterDebugInfo(ctx, cli)
+				_, _ = fmt.Fprint(GinkgoWriter, debugInfo)
+				Expect(err).NotTo(HaveOccurred())
+			}
+			GinkgoWriter.Printf("PowerOnNodesUntilClusterReady end: %s\n", time.Now().Format(time.RFC3339))
 
 			// expect the eip will not drift
 			GinkgoWriter.Println("check the egress gateway status; the EIP should not drift")
@@ -411,7 +423,9 @@ var _ = Describe("Reliability", Serial, Label("Reliability"), func() {
 
 				// restart deploy
 				GinkgoWriter.Printf("restart the deployment %s\n", deploy.Name)
-				err = common.DeleteTestPodsUntilReady(ctx, cli, deploy.Spec.Template.Labels, time.Minute*10)
+				restartCtx, restartCancel := context.WithTimeout(ctx, time.Minute*10)
+				defer restartCancel()
+				err = common.RestartPodsAndWait(restartCtx, cli, *deploy)
 				Expect(err).NotTo(HaveOccurred())
 
 				// check the export ip of the pods on the real nodes again
@@ -433,7 +447,9 @@ var _ = Describe("Reliability", Serial, Label("Reliability"), func() {
 
 				// restart deploy
 				GinkgoWriter.Printf("restart the deployment %s\n", deploy.Name)
-				err = common.DeleteTestPodsUntilReady(ctx, cli, deploy.Spec.Template.Labels, time.Minute*10)
+				restartCtx, restartCancel := context.WithTimeout(ctx, time.Minute*10)
+				defer restartCancel()
+				err = common.RestartPodsAndWait(restartCtx, cli, *deploy)
 				Expect(err).NotTo(HaveOccurred())
 
 				// check the export ip of the pods on the real nodes again

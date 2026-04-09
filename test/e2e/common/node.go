@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 	"net"
+	"strings"
 	"time"
 
 	corev1 "k8s.io/api/core/v1"
@@ -93,7 +94,7 @@ func PowerOnNodeUntilReady(ctx context.Context, cli client.Client, nodeName stri
 	c := fmt.Sprintf("docker start %s", nodeName)
 	out, err := tools.ExecCommand(ctx, c, execTimeout)
 	if err != nil {
-		return fmt.Errorf("err: %v\nout: %v", err, string(out))
+		return fmt.Errorf("docker start error: %v\nout: %v", err, string(out))
 	}
 
 	ctx, cancel := context.WithTimeout(ctx, poweronTimeout)
@@ -105,7 +106,7 @@ func PowerOnNodeUntilReady(ctx context.Context, cli client.Client, nodeName stri
 		default:
 			node, err := GetNode(ctx, cli, nodeName)
 			if err != nil {
-				return err
+				return fmt.Errorf("failed to get node %s: %v", nodeName, err)
 			}
 			up := CheckNodeStatus(node, true)
 			if up {
@@ -120,10 +121,120 @@ func PowerOnNodesUntilClusterReady(ctx context.Context, cli client.Client, nodes
 	for _, node := range nodes {
 		err := PowerOnNodeUntilReady(ctx, cli, node, execTimeout, poweronTimeout)
 		if err != nil {
-			return err
+			return fmt.Errorf("failed to power on node %s: %v", node, err)
 		}
 	}
 	return WaitAllPodRunning(ctx, cli, poweronTimeout)
+}
+
+// CollectClusterDebugInfo collects diagnostic information about the cluster state,
+// including node status, pod status, disk usage, and describes for NotReady nodes
+// and non-Running pods. Returns a single string to avoid truncation when printed.
+func CollectClusterDebugInfo(ctx context.Context, cli client.Client) string {
+	var sb strings.Builder
+	timeout := time.Minute
+
+	sb.WriteString("\n========== kubectl get node -o wide ==========\n")
+	if out, err := tools.ExecCommand(ctx, "kubectl get node -o wide", timeout); err != nil {
+		sb.WriteString(fmt.Sprintf("error: %v\n", err))
+	} else {
+		sb.Write(out)
+	}
+
+	sb.WriteString("\n========== kubectl get pod -A -o wide ==========\n")
+	if out, err := tools.ExecCommand(ctx, "kubectl get pod -A -o wide", timeout); err != nil {
+		sb.WriteString(fmt.Sprintf("error: %v\n", err))
+	} else {
+		sb.Write(out)
+	}
+
+	sb.WriteString("\n========== df -h ==========\n")
+	if out, err := tools.ExecCommand(ctx, "df -h", timeout); err != nil {
+		sb.WriteString(fmt.Sprintf("error: %v\n", err))
+	} else {
+		sb.Write(out)
+	}
+
+	// describe NotReady nodes
+	nodeList := &corev1.NodeList{}
+	if err := cli.List(ctx, nodeList); err == nil {
+		for _, node := range nodeList.Items {
+			if !CheckNodeStatus(&node, true) {
+				sb.WriteString(fmt.Sprintf("\n========== kubectl describe node %s ==========\n", node.Name))
+				if out, err := tools.ExecCommand(ctx, fmt.Sprintf("kubectl describe node %s", node.Name), timeout); err != nil {
+					sb.WriteString(fmt.Sprintf("error: %v\n", err))
+				} else {
+					sb.Write(out)
+				}
+			}
+		}
+	}
+
+	// describe non-Running pods
+	podList := &corev1.PodList{}
+	if err := cli.List(ctx, podList); err == nil {
+		calicoNodeHosts := make(map[string]string)
+		for _, pod := range podList.Items {
+			if pod.Namespace == "calico-system" && strings.HasPrefix(pod.Name, "calico-node-") && pod.Spec.NodeName != "" && !isPodRunningOrCompleted(&pod) && pod.DeletionTimestamp == nil {
+				calicoNodeHosts[pod.Spec.NodeName] = pod.Name
+			}
+			if !isPodRunningOrCompleted(&pod) && pod.DeletionTimestamp == nil {
+				sb.WriteString(fmt.Sprintf("\n========== kubectl describe pod %s -n %s ==========\n", pod.Name, pod.Namespace))
+				if out, err := tools.ExecCommand(ctx, fmt.Sprintf("kubectl describe pod %s -n %s", pod.Name, pod.Namespace), timeout); err != nil {
+					sb.WriteString(fmt.Sprintf("error: %v\n", err))
+				} else {
+					sb.Write(out)
+				}
+				appendNonRunningContainerLogs(ctx, &sb, &pod, timeout)
+			}
+		}
+
+		for nodeName, podName := range calicoNodeHosts {
+			sb.WriteString(fmt.Sprintf("\n========== calico-node readiness %s on %s ==========\n", podName, nodeName))
+			cmd := fmt.Sprintf("docker exec %s curl -s -w '\\n%%{http_code}\\n' http://127.0.0.1:9099/readiness", nodeName)
+			if out, err := tools.ExecCommand(ctx, cmd, timeout); err != nil {
+				sb.WriteString(fmt.Sprintf("error: %v\n", err))
+			} else {
+				sb.Write(out)
+			}
+		}
+	}
+
+	return sb.String()
+}
+
+func appendNonRunningContainerLogs(ctx context.Context, sb *strings.Builder, pod *corev1.Pod, timeout time.Duration) {
+	appendContainerLogs := func(containerType string, status corev1.ContainerStatus) {
+		if status.State.Running != nil {
+			return
+		}
+
+		sb.WriteString(fmt.Sprintf("\n========== kubectl logs pod/%s -n %s -c %s (%s) ==========\n", pod.Name, pod.Namespace, status.Name, containerType))
+		cmd := fmt.Sprintf("kubectl logs %s -n %s -c %s --tail=200", pod.Name, pod.Namespace, status.Name)
+		if out, err := tools.ExecCommand(ctx, cmd, timeout); err != nil {
+			sb.WriteString(fmt.Sprintf("error: %v\n", err))
+		} else {
+			sb.Write(out)
+		}
+
+		if status.RestartCount > 0 {
+			sb.WriteString(fmt.Sprintf("\n========== kubectl logs pod/%s -n %s -c %s --previous (%s) ==========\n", pod.Name, pod.Namespace, status.Name, containerType))
+			previousCmd := fmt.Sprintf("kubectl logs %s -n %s -c %s --previous --tail=200", pod.Name, pod.Namespace, status.Name)
+			if out, err := tools.ExecCommand(ctx, previousCmd, timeout); err != nil {
+				sb.WriteString(fmt.Sprintf("error: %v\n", err))
+			} else {
+				sb.Write(out)
+			}
+		}
+	}
+
+	for _, status := range pod.Status.InitContainerStatuses {
+		appendContainerLogs("init", status)
+	}
+
+	for _, status := range pod.Status.ContainerStatuses {
+		appendContainerLogs("container", status)
+	}
 }
 
 func GetNodeIP(node *corev1.Node) (string, string) {

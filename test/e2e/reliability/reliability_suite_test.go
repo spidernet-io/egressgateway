@@ -9,6 +9,7 @@ import (
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	"github.com/onsi/gomega/format"
 
 	"gopkg.in/yaml.v3"
 	corev1 "k8s.io/api/core/v1"
@@ -21,6 +22,7 @@ import (
 )
 
 func TestReliability(t *testing.T) {
+	format.MaxLength = 0
 	RegisterFailHandler(Fail)
 	RunSpecs(t, "Reliability Suite")
 }
@@ -41,6 +43,9 @@ var _ = BeforeSuite(func() {
 	var err error
 	config, err = common.ReadConfig()
 	Expect(err).NotTo(HaveOccurred())
+
+	config.KubeConfigFile.QPS = 100
+	config.KubeConfigFile.Burst = 200
 
 	cli, err = client.New(config.KubeConfigFile, client.Options{Scheme: schema.GetScheme()})
 	Expect(err).NotTo(HaveOccurred())

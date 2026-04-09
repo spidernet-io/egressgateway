@@ -43,9 +43,9 @@ init_one_kind: checkBin cleanCluster
 			sed -i  ''"$${INSERT_LINE}"' a \  podSubnet: "$(E2E_KIND_IPV4_POD_CIDR),$(E2E_KIND_IPV6_POD_CIDR)"' $${NEW_KIND_YAML}  ; \
 			sed -i  ''"$${INSERT_LINE}"' a \  serviceSubnet: "$(E2E_KIND_IPV4_SERVICE_CIDR),$(E2E_KIND_IPV6_SERVICE_CIDR)"' $${NEW_KIND_YAML}  ; \
   		fi
-	- sysctl -w net.ipv6.conf.all.disable_ipv6=0 || true
-	- sysctl -w fs.inotify.max_user_watches=524288 || true
-	- sysctl -w fs.inotify.max_user_instances=8192  || true
+	- if [ "$(E2E_IP_FAMILY)" == "ipv4" ] ; then sudo sysctl -w net.ipv6.conf.all.disable_ipv6=1 || true ; else sudo sysctl -w net.ipv6.conf.all.disable_ipv6=0 || true ; fi
+	- sudo sysctl -w fs.inotify.max_user_watches=524288 || true
+	- sudo sysctl -w fs.inotify.max_user_instances=8192  || true
 	- kind delete cluster --name  $(KIND_CLUSTER_NAME)
 	KIND_OPTION="" ; \
        		[ -n "$(E2E_KIND_NODE_IMAGE)" ] && KIND_OPTION=" --image $(E2E_KIND_NODE_IMAGE) " && echo "setup kind with E2E_KIND_NODE_IMAGE=$(E2E_KIND_NODE_IMAGE)"; \

@@ -938,12 +938,12 @@ func (r *policeReconciler) reconcilePolicy(ctx context.Context, req reconcile.Re
 
 	// delete event
 	if deleted {
-		setNames := buildIPSetNamesByPolicy(req.Namespace, req.Name, true, true)
+		// setNames := buildIPSetNamesByPolicy(req.Namespace, req.Name, true, true)
 		log.Info("request item deleted, delete related policies")
-		_ = setNames.Map(func(set SetName) error {
-			r.removeIPSet(log, set.Name)
-			return nil
-		})
+		// _ = setNames.Map(func(set SetName) error {
+		// 	r.removeIPSet(log, set.Name)
+		// 	return nil
+		// })
 		return reconcile.Result{}, nil
 	}
 
@@ -1000,12 +1000,12 @@ func (r *policeReconciler) reconcileClusterPolicy(ctx context.Context, req recon
 
 	// delete event
 	if deleted {
-		setNames := buildIPSetNamesByPolicy(req.Namespace, req.Name, true, true)
+		// setNames := buildIPSetNamesByPolicy(req.Namespace, req.Name, true, true)
 		log.Info("request item deleted, delete related policies")
-		_ = setNames.Map(func(set SetName) error {
-			r.removeIPSet(log, set.Name)
-			return nil
-		})
+		// _ = setNames.Map(func(set SetName) error {
+		// 	r.removeIPSet(log, set.Name)
+		// 	return nil
+		// })
 		return reconcile.Result{}, nil
 	}
 
