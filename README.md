@@ -4,7 +4,7 @@
 [![Auto Release Version](https://github.com/spidernet-io/egressgateway/actions/workflows/auto-release.yaml/badge.svg)](https://github.com/spidernet-io/egressgateway/actions/workflows/auto-release.yaml)
 [![codecov](https://codecov.io/gh/spidernet-io/egressgateway/branch/main/graph/badge.svg?token=8CCT4CIIPx)](https://codecov.io/gh/spidernet-io/egressgateway)
 [![Go Report Card](https://goreportcard.com/badge/github.com/spidernet-io/egressgateway)](https://goreportcard.com/report/github.com/spidernet-io/egressgateway)
-![E2E](https://img.shields.io/endpoint?url=https://spidernet-io.github.io/egressgateway/e2e.json)
+![E2E](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/spidernet-io/egressgateway/badges/e2e.json)
 [![OpenSSF Best Practices](https://bestpractices.coreinfrastructure.org/projects/7410/badge)](https://bestpractices.coreinfrastructure.org/projects/7410)
 
 English | [简体中文](docs/README.zh.md)
