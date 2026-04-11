@@ -7,7 +7,7 @@ ARG GOLANG_IMAGE=docker.io/library/golang:1.24.4
 ARG UBUNTU_IMAGE=docker.io/library/ubuntu:24.04
 
 #========= build gops ===============
-FROM --platform=${TARGETPLATFORM} ${GOLANG_IMAGE} as gops-cni-builder
+FROM --platform=${TARGETPLATFORM} ${GOLANG_IMAGE} AS gops-cni-builder
 COPY /build-gops.sh /build-gops.sh
 
 ARG USE_PROXY_SOURCE
@@ -26,7 +26,7 @@ WORKDIR /
 RUN chmod +x /build-gops.sh && /build-gops.sh
 
 #========== root image ==============
-FROM --platform=${TARGETPLATFORM} ${UBUNTU_IMAGE} as rootfs
+FROM --platform=${TARGETPLATFORM} ${UBUNTU_IMAGE} AS rootfs
 ARG TARGETARCH
 COPY /install-others.sh /install-others.sh
 COPY /configure-iptables-wrapper.sh /configure-iptables-wrapper.sh
