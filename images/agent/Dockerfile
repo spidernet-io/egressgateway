@@ -5,7 +5,7 @@ ARG BASE_IMAGE=ghcr.io/spidernet-io/egressgateway-agent-base:26ea85672cbf1eb376f
 ARG GOLANG_IMAGE=docker.io/library/golang:1.24.4
 
 #======= build bin ==========
-FROM --platform=${BUILDPLATFORM} ${GOLANG_IMAGE} as builder
+FROM --platform=${BUILDPLATFORM} ${GOLANG_IMAGE} AS builder
 
 # docker build var
 ARG TARGETOS
