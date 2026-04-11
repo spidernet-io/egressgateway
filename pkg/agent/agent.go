@@ -29,7 +29,7 @@ type Agent struct {
 
 func New(cfg *config.Config) (types.Service, error) {
 	syncPeriod := time.Second * time.Duration(cfg.FileConfig.CacheSyncSyncPeriodSecond)
-	log := logger.NewLogger(cfg.EnvConfig.Logger)
+	log := logger.NewLogger(cfg.Logger)
 	t := time.Duration(0)
 	mgrOpts := manager.Options{
 		Cache: cache.Options{

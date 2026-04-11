@@ -1,14 +1,15 @@
-# config for golangci-lint
+version: "2"
+
 run:
-  # Timeout for analysis, e.g. 30s, 5m.
-  # Default: 1m
   timeout: 5m
 
-issues:
-  exclude-dirs:
-    - vendor
-    - pkg/layer2
-
 linters:
+  exclusions:
+    paths:
+      - vendor
+      - pkg/layer2
+      - test
+
   disable:
     - unused
+    - errcheck

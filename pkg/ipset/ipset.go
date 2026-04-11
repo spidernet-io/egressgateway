@@ -427,7 +427,7 @@ func validatePortRange(portRange string) (bool, error) {
 	for i := range strs {
 		num, err := strconv.Atoi(strs[i])
 		if err != nil {
-			return false, fmt.Errorf("Failed to parse %s, error: %v", strs[i], err)
+			return false, fmt.Errorf("failed to parse %s, error: %v", strs[i], err)
 		}
 		if num < 0 {
 			return false, fmt.Errorf("port number %d should be >=0", num)

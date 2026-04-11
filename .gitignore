@@ -50,7 +50,6 @@ outgoing
 *cscope.out
 *cscope.in.out
 *cscope.po.out
-*tags
 .gdb_history
 output_charts
 
