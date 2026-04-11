@@ -1,16 +1,8 @@
 name: Badge Status
 
-# ====modify====
 env:
   CODESTATUSSCRIPT: "./tools/golang/codeCoverage.sh"
-  BADGE_CODELINE_FILENAME:
-  BADGE_CODELINE_ID:
-  BADGE_COMMENT_FILENAME:
-  BADGE_COMMENT_ID:
   E2ECOVERSTATUSSCRIPT: "./tools/golang/e2ecover.sh"
-  BADGE_E2ECOVER_FILENAME: egressgatewaye2e.json
-  BADGE_E2ECOVER_ID: cc6d42eb27d8ee4c3d19c936eff2c478
-
 
 on:
   push:
@@ -22,57 +14,79 @@ jobs:
   update-badges:
     name: Update Badges
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: Download cloc
-        run: sudo apt-get update -y && sudo apt-get install -y cloc
+      - name: Install cloc
+        run: sudo apt-get update -y && sudo apt-get install -y cloc bc
 
-      - name: Get the Numbers
+      - name: Collect Metrics
         shell: bash
         run: |
-          TOOL_PATH=${{ env.CODESTATUSSCRIPT }}
-          CODE_LINES=$(  ${TOOL_PATH} --code-lines )
-          COMMENT_PERCENTAGE=$(  ${TOOL_PATH} --comment-percent )
+          CODE_LINES=$(${CODESTATUSSCRIPT} --code-lines)
+          COMMENT_PERCENTAGE=$(${CODESTATUSSCRIPT} --comment-percent)
+          E2E_STATUS=$(${E2ECOVERSTATUSSCRIPT})
+
           echo "CODE_LINES=${CODE_LINES}" >> $GITHUB_ENV
           echo "COMMENT_PERCENTAGE=${COMMENT_PERCENTAGE}" >> $GITHUB_ENV
-          TOOL_PATH=${{ env.E2ECOVERSTATUSSCRIPT }}
-          E2E_STATUS=$( ${TOOL_PATH} )
           echo "E2E_STATUS=${E2E_STATUS}" >> $GITHUB_ENV
 
-      - name: Create Lines-of-Code-Badge
-        if: ${{ env.BADGE_CODELINE_ID != '' }}
-        uses: schneegans/dynamic-badges-action@v1.7.0
-        with:
-          auth: ${{ secrets.WELAN_PAT }}
-          gistID: ${{ env.BADGE_CODELINE_ID }}
-          filename: ${{ env.BADGE_CODELINE_FILENAME }}
-          label: Code Lines
-          message: ${{ env.CODE_LINES }}
-          color: lightgrey
+      - name: Generate badge JSON
+        run: |
+          mkdir -p badges
 
-      - name: Create Comments-Badge
-        if: ${{ env.BADGE_COMMENT_LINE != '' }}
-        uses: schneegans/dynamic-badges-action@v1.7.0
-        with:
-          auth: ${{ secrets.WELAN_PAT }}
-          gistID: ${{ env.BADGE_COMMENT_LINE }}
-          filename: ${{ env.BADGE_COMMENT_FILENAME }}
-          label: Comments
-          message: ${{ env.COMMENT_PERCENTAGE }}%
-          valColorRange: ${{ env.COMMENT_PERCENTAGE }}
-          maxColorRange: 100
-          minColorRange: 0
+          # e2e color
+          if [ "$E2E_STATUS" = "passing" ]; then
+            E2E_COLOR="green"
+          else
+            E2E_COLOR="red"
+          fi
 
-      - name: Create E2E-Badge
-        if: ${{ env.BADGE_E2ECOVER_ID != '' }}
-        uses: schneegans/dynamic-badges-action@v1.7.0
-        with:
-          auth: ${{ secrets.WELAN_PAT }}
-          gistID: ${{ env.BADGE_E2ECOVER_ID }}
-          filename: ${{ env.BADGE_E2ECOVER_FILENAME }}
-          label: e2e cover
-          message: ${{ env.E2E_STATUS }}
-          color: lightgrey
+          # comment color
+          if (( $(echo "$COMMENT_PERCENTAGE > 80" | bc -l) )); then
+            COMMENT_COLOR="green"
+          elif (( $(echo "$COMMENT_PERCENTAGE > 50" | bc -l) )); then
+            COMMENT_COLOR="yellow"
+          else
+            COMMENT_COLOR="red"
+          fi
 
+          # code lines badge
+          cat > badges/code-lines.json <<EOF
+          {
+            "schemaVersion": 1,
+            "label": "code lines",
+            "message": "${CODE_LINES}",
+            "color": "blue"
+          }
+          EOF
+
+          # comments badge
+          cat > badges/comments.json <<EOF
+          {
+            "schemaVersion": 1,
+            "label": "comments",
+            "message": "${COMMENT_PERCENTAGE}%",
+            "color": "${COMMENT_COLOR}"
+          }
+          EOF
+
+          # e2e badge
+          cat > badges/e2e.json <<EOF
+          {
+            "schemaVersion": 1,
+            "label": "e2e",
+            "message": "${E2E_STATUS}",
+            "color": "${E2E_COLOR}"
+          }
+          EOF
+
+      - name: Deploy badges
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_branch: badges
+          publish_dir: ./badges
+          force_orphan: true
