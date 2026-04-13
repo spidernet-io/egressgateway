@@ -388,7 +388,7 @@ func expandAnyCIDR(ips []string) []string {
 func (r *policeReconciler) updatePolicyIPSet(policyNs string, policyName string, isEipNodeSet bool, destSubnet []string) error {
 	// calculate src ip list
 	srcIPv4List, srcIPv6List, err := r.getPolicySrcIPs(policyNs, policyName, func(e egressv1.EgressEndpoint) bool {
-		if e.Node == r.cfg.EnvConfig.NodeName {
+		if e.Node == r.cfg.NodeName {
 			return true
 		}
 		if isEipNodeSet {
@@ -967,10 +967,7 @@ func (r *policeReconciler) reconcilePolicy(ctx context.Context, req reconcile.Re
 		}
 	}
 
-	flag := false
-	if nodeName == r.cfg.EnvConfig.NodeName {
-		flag = true
-	}
+	flag := nodeName == r.cfg.NodeName
 
 	// update event
 	err = r.updatePolicyIPSet(policy.Namespace, policy.Name, flag, policy.Spec.DestSubnet)
@@ -1029,10 +1026,7 @@ func (r *policeReconciler) reconcileClusterPolicy(ctx context.Context, req recon
 		}
 	}
 
-	flag := false
-	if nodeName == r.cfg.EnvConfig.NodeName {
-		flag = true
-	}
+	flag := nodeName == r.cfg.NodeName
 
 	// update event
 	err = r.updatePolicyIPSet(policy.Namespace, policy.Name, flag, policy.Spec.DestSubnet)

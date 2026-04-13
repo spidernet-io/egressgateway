@@ -32,7 +32,7 @@ var tmpConfigmapData = `
   - br.456
 `
 
-var mockError = fmt.Errorf("mock error")
+var errMock = fmt.Errorf("mock error")
 
 func TestLoadConfig(t *testing.T) {
 	prepare := func() error {
@@ -83,27 +83,27 @@ func TestLoadConfig(t *testing.T) {
 		{
 			prepareFunc:  prepare,
 			monkeyFunc:   mapstructure.Decode,
-			monkeyOutput: []interface{}{mockError},
+			monkeyOutput: []interface{}{errMock},
 		},
 		{
 			prepareFunc:  prepare,
 			monkeyFunc:   os.ReadFile,
-			monkeyOutput: []interface{}{[]byte{}, mockError},
+			monkeyOutput: []interface{}{[]byte{}, errMock},
 		},
 		{
 			prepareFunc:  prepare,
 			monkeyFunc:   net.ParseCIDR,
-			monkeyOutput: []interface{}{net.IP{}, nil, mockError},
+			monkeyOutput: []interface{}{net.IP{}, nil, errMock},
 		},
 		{
 			prepareFunc:  prepare,
 			monkeyFunc:   zap.ParseAtomicLevel,
-			monkeyOutput: []interface{}{zap.AtomicLevel{}, mockError},
+			monkeyOutput: []interface{}{zap.AtomicLevel{}, errMock},
 		},
 		{
 			prepareFunc:  prepare,
 			monkeyFunc:   ctrl.GetConfig,
-			monkeyOutput: []interface{}{nil, mockError},
+			monkeyOutput: []interface{}{nil, errMock},
 		},
 	}
 
@@ -111,7 +111,7 @@ func TestLoadConfig(t *testing.T) {
 		if tc.monkeyFunc != nil {
 			patches := gomonkey.ApplyFuncReturn(tc.monkeyFunc, tc.monkeyOutput...)
 			err := tc.prepareFunc()
-			assert.ErrorIs(t, err, mockError)
+			assert.ErrorIs(t, err, errMock)
 			patches.Reset()
 		} else {
 			err := tc.prepareFunc()
@@ -123,7 +123,7 @@ func TestLoadConfig(t *testing.T) {
 func Test_PrintPrettyConfig(t *testing.T) {
 	cfg := &Config{}
 	patch := gomonkey.NewPatches()
-	patch.ApplyFuncReturn(json.Marshal, nil, mockError)
+	patch.ApplyFuncReturn(json.Marshal, nil, errMock)
 	defer patch.Reset()
 
 	assert.Panics(t, cfg.PrintPrettyConfig)
@@ -250,28 +250,28 @@ func mock_LoadConfig_false_isAgent() bool {
 }
 
 func err_LoadConfig_GetVersion() []gomonkey.Patches {
-	patch1 := gomonkey.ApplyFuncReturn(iptables.GetVersion, iptables.Version{}, mockError)
+	patch1 := gomonkey.ApplyFuncReturn(iptables.GetVersion, iptables.Version{}, errMock)
 	return []gomonkey.Patches{*patch1}
 }
 
 func err_LoadConfig_BindEnv() []gomonkey.Patches {
 	patch1 := gomonkey.ApplyFuncReturn(iptables.GetVersion, iptables.Version{Major: 1, Minor: 6, Patch: 2}, nil)
-	patch2 := gomonkey.ApplyFuncReturn(viper.BindEnv, mockError)
+	patch2 := gomonkey.ApplyFuncReturn(viper.BindEnv, errMock)
 	return []gomonkey.Patches{*patch1, *patch2}
 }
 
 func err_LoadConfig_viper_Unmarshal() []gomonkey.Patches {
-	patch1 := gomonkey.ApplyFuncReturn(viper.Unmarshal, mockError)
+	patch1 := gomonkey.ApplyFuncReturn(viper.Unmarshal, errMock)
 	return []gomonkey.Patches{*patch1}
 }
 
 func err_LoadConfig_yaml_Unmarshal() []gomonkey.Patches {
-	patch1 := gomonkey.ApplyFuncReturn(yaml.Unmarshal, mockError)
+	patch1 := gomonkey.ApplyFuncReturn(yaml.Unmarshal, errMock)
 	return []gomonkey.Patches{*patch1}
 }
 
 func err_LoadConfig_ParseCIDR_v4() []gomonkey.Patches {
-	patch1 := gomonkey.ApplyFuncReturn(net.ParseCIDR, net.IP{}, nil, mockError)
+	patch1 := gomonkey.ApplyFuncReturn(net.ParseCIDR, net.IP{}, nil, errMock)
 
 	return []gomonkey.Patches{*patch1}
 }

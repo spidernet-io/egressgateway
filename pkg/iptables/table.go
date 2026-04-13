@@ -873,7 +873,7 @@ func (t *Table) applyUpdates() error {
 			if len(previousHashes) > 0 && reflect.DeepEqual(currentHashes, previousHashes) {
 				// Chain is already correct, skip it.
 				t.logCxt.V(1).Info("chain already correct")
-				return set.RemoveItem
+				return set.ErrRemoveItem
 			}
 			chainNeedsToBeFlushed = true
 		} else if _, present := t.desiredStateOfChain(chainName); !present {
@@ -959,7 +959,7 @@ func (t *Table) applyUpdates() error {
 			if previousHashes[i] != "" {
 				line, deleteRenderingErr = t.renderDeleteByValueLine(chainName, i)
 				if deleteRenderingErr != nil {
-					return set.StopIteration
+					return set.ErrStopIteration
 				}
 				buf.WriteLine(line)
 			}

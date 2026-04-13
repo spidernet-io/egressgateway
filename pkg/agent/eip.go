@@ -65,11 +65,13 @@ func (r *eip) reconcilePolicy(ctx context.Context, req reconcile.Request, log lo
 	deleted = deleted || !policy.GetDeletionTimestamp().IsZero()
 
 	if deleted {
+		//nolint:staticcheck // QF1008: keep NamespacedName.String() for API compatibility
 		r.announce.DeleteBalancer(req.NamespacedName.String())
 		return reconcile.Result{}, nil
 	}
 
 	if policy.Status.Node != r.cfg.NodeName {
+		//nolint:staticcheck // QF1008: keep NamespacedName.String() for API compatibility
 		r.announce.DeleteBalancer(req.NamespacedName.String())
 		return reconcile.Result{}, nil
 	}
@@ -77,12 +79,14 @@ func (r *eip) reconcilePolicy(ctx context.Context, req reconcile.Request, log lo
 	ip := net.ParseIP(policy.Status.Eip.Ipv4)
 	if ip.To4() != nil {
 		adv := layer2.NewIPAdvertisement(ip, true, sets.Set[string]{})
+		//nolint:staticcheck // QF1008: keep NamespacedName.String() for API compatibility
 		r.announce.SetBalancer(req.NamespacedName.String(), adv)
 	}
 
 	ip = net.ParseIP(policy.Status.Eip.Ipv6)
 	if ip.To16() != nil {
 		adv := layer2.NewIPAdvertisement(ip, true, sets.Set[string]{})
+		//nolint:staticcheck // QF1008: keep NamespacedName.String() for API compatibility
 		r.announce.SetBalancer(req.NamespacedName.String(), adv)
 	}
 
@@ -105,11 +109,13 @@ func (r *eip) reconcileClusterPolicy(ctx context.Context, req reconcile.Request,
 	deleted = deleted || !policy.GetDeletionTimestamp().IsZero()
 
 	if deleted {
+		//nolint:staticcheck // QF1008: keep NamespacedName.String() for API compatibility
 		r.announce.DeleteBalancer(req.NamespacedName.String())
 		return reconcile.Result{}, nil
 	}
 
 	if policy.Status.Node != r.cfg.NodeName {
+		//nolint:staticcheck // QF1008: keep NamespacedName.String() for API compatibility
 		r.announce.DeleteBalancer(req.NamespacedName.String())
 		return reconcile.Result{}, nil
 	}
@@ -117,12 +123,14 @@ func (r *eip) reconcileClusterPolicy(ctx context.Context, req reconcile.Request,
 	ip := net.ParseIP(policy.Status.Eip.Ipv4)
 	if ip.To4() != nil {
 		adv := layer2.NewIPAdvertisement(ip, true, sets.Set[string]{})
+		//nolint:staticcheck // QF1008: keep NamespacedName.String() for API compatibility
 		r.announce.SetBalancer(req.NamespacedName.String(), adv)
 	}
 
 	ip = net.ParseIP(policy.Status.Eip.Ipv6)
 	if ip.To16() != nil {
 		adv := layer2.NewIPAdvertisement(ip, true, sets.Set[string]{})
+		//nolint:staticcheck // QF1008: keep NamespacedName.String() for API compatibility
 		r.announce.SetBalancer(req.NamespacedName.String(), adv)
 	}
 
