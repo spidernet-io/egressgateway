@@ -5,7 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"net"
+	"net/netip"
 	"time"
 
 	"golang.org/x/net/icmp"
@@ -68,8 +68,11 @@ func MarshalMessage(m Message) ([]byte, error) {
 //
 // The source and destination IP addresses are used to compute an IPv6 pseudo
 // header for checksum calculation.
-func MarshalMessageChecksum(m Message, source, destination net.IP) ([]byte, error) {
-	return marshalMessage(m, icmp.IPv6PseudoHeader(source, destination))
+func MarshalMessageChecksum(m Message, source, destination netip.Addr) ([]byte, error) {
+	return marshalMessage(
+		m,
+		icmp.IPv6PseudoHeader(source.AsSlice(), destination.AsSlice()),
+	)
 }
 
 // errParseMessage is a sentinel which indicates an error from ParseMessage.
@@ -114,7 +117,7 @@ type NeighborAdvertisement struct {
 	Router        bool
 	Solicited     bool
 	Override      bool
-	TargetAddress net.IP
+	TargetAddress netip.Addr
 	Options       []Option
 }
 
@@ -138,7 +141,7 @@ func (na *NeighborAdvertisement) marshal() ([]byte, error) {
 		b[0] |= (1 << 5)
 	}
 
-	copy(b[4:], na.TargetAddress)
+	copy(b[4:], na.TargetAddress.AsSlice())
 
 	ob, err := marshalOptions(na.Options)
 	if err != nil {
@@ -157,7 +160,11 @@ func (na *NeighborAdvertisement) unmarshal(b []byte) error {
 
 	// Skip flags and reserved area.
 	addr := b[4:naLen]
-	if err := checkIPv6(addr); err != nil {
+	target, ok := netip.AddrFromSlice(addr)
+	if !ok {
+		panicf("ndp: invalid IPv6 address slice: %v", addr)
+	}
+	if err := checkIPv6(target); err != nil {
 		return err
 	}
 
@@ -171,12 +178,9 @@ func (na *NeighborAdvertisement) unmarshal(b []byte) error {
 		Solicited: (b[0] & 0x40) != 0,
 		Override:  (b[0] & 0x20) != 0,
 
-		TargetAddress: make(net.IP, net.IPv6len),
-
-		Options: options,
+		TargetAddress: target,
+		Options:       options,
 	}
-
-	copy(na.TargetAddress, addr)
 
 	return nil
 }
@@ -186,7 +190,7 @@ var _ Message = &NeighborSolicitation{}
 // A NeighborSolicitation is a Neighbor Solicitation message as
 // described in RFC 4861, Section 4.3.
 type NeighborSolicitation struct {
-	TargetAddress net.IP
+	TargetAddress netip.Addr
 	Options       []Option
 }
 
@@ -199,7 +203,7 @@ func (ns *NeighborSolicitation) marshal() ([]byte, error) {
 	}
 
 	b := make([]byte, nsLen)
-	copy(b[4:], ns.TargetAddress)
+	copy(b[4:], ns.TargetAddress.AsSlice())
 
 	ob, err := marshalOptions(ns.Options)
 	if err != nil {
@@ -218,7 +222,11 @@ func (ns *NeighborSolicitation) unmarshal(b []byte) error {
 
 	// Skip reserved area.
 	addr := b[4:nsLen]
-	if err := checkIPv6(addr); err != nil {
+	target, ok := netip.AddrFromSlice(addr)
+	if !ok {
+		panicf("ndp: invalid IPv6 address slice: %v", addr)
+	}
+	if err := checkIPv6(target); err != nil {
 		return err
 	}
 
@@ -228,12 +236,9 @@ func (ns *NeighborSolicitation) unmarshal(b []byte) error {
 	}
 
 	*ns = NeighborSolicitation{
-		TargetAddress: make(net.IP, net.IPv6len),
-
-		Options: options,
+		TargetAddress: target,
+		Options:       options,
 	}
-
-	copy(ns.TargetAddress, addr)
 
 	return nil
 }
@@ -404,9 +409,9 @@ func (rs *RouterSolicitation) unmarshal(b []byte) error {
 }
 
 // checkIPv6 verifies that ip is an IPv6 address.
-func checkIPv6(ip net.IP) error {
-	if ip.To16() == nil || ip.To4() != nil {
-		return fmt.Errorf("ndp: invalid IPv6 address: %q", ip.String())
+func checkIPv6(ip netip.Addr) error {
+	if !ip.Is6() || ip.Is4In6() {
+		return fmt.Errorf("ndp: invalid IPv6 address: %q", ip)
 	}
 
 	return nil
