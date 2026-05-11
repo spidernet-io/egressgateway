@@ -17,6 +17,7 @@ limitations under the License.
 package markers
 
 import (
+	"fmt"
 	"reflect"
 
 	"sigs.k8s.io/controller-tools/pkg/markers"
@@ -56,6 +57,19 @@ func must(def *markers.Definition, err error) *definitionWithHelp {
 	}
 }
 
+func mustOptional(def *markers.Definition, err error) *definitionWithHelp {
+	def = markers.Must(def, err)
+	if !def.AnonymousField() {
+		def = markers.Must(def, fmt.Errorf("not an anonymous field: %v", def))
+	}
+	field := def.Fields[""]
+	field.Optional = true
+	def.Fields[""] = field
+	return &definitionWithHelp{
+		Definition: def,
+	}
+}
+
 // AllDefinitions contains all marker definitions for this package.
 var AllDefinitions []*definitionWithHelp
 
@@ -65,7 +79,7 @@ type hasHelp interface {
 
 // mustMakeAllWithPrefix converts each object into a marker definition using
 // the object's type's with the prefix to form the marker name.
-func mustMakeAllWithPrefix(prefix string, target markers.TargetType, objs ...interface{}) []*definitionWithHelp {
+func mustMakeAllWithPrefix(prefix string, target markers.TargetType, objs ...any) []*definitionWithHelp {
 	defs := make([]*definitionWithHelp, len(objs))
 	for i, obj := range objs {
 		name := prefix + reflect.TypeOf(obj).Name()
