@@ -111,13 +111,17 @@ func (r *RuleRoute) Ensure(linkName string, ipv4, ipv6 *net.IP, table int, mark 
 
 	log.V(1).Info("get link")
 
-	err = r.EnsureRoute(link, ipv4, netlink.FAMILY_V4, table, log)
-	if err != nil {
-		return err
+	if ipv4 != nil {
+		err = r.EnsureRoute(link, ipv4, netlink.FAMILY_V4, table, log)
+		if err != nil {
+			return err
+		}
 	}
-	err = r.EnsureRoute(link, ipv6, netlink.FAMILY_V6, table, log)
-	if err != nil {
-		return err
+	if ipv6 != nil {
+		err = r.EnsureRoute(link, ipv6, netlink.FAMILY_V6, table, log)
+		if err != nil {
+			return err
+		}
 	}
 	return nil
 }
