@@ -600,7 +600,7 @@ func buildNatStaticRule(base uint32) map[string][]iptables.Rule {
 			},
 		},
 		{
-			Match:  iptables.MatchCriteria{}.MarkMatchesWithMask(base, Mask),
+			Match:  iptables.MatchCriteria{}.MarkMatchesWithMask(base, Mark),
 			Action: iptables.AcceptAction{},
 			Comment: []string{
 				"Accept for egress traffic from pod going to EgressTunnel",
