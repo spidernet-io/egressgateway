@@ -71,7 +71,7 @@ jobs:
       - name: release Y branch
         uses: peterjgrainger/action-create-branch@v3.0.0
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ github.token }}
         with:
           branch: 'release-${{ env.RUN_YBranchName }}'
           sha: '${{ github.sha }}'
@@ -80,7 +80,7 @@ jobs:
       - name: Create cherry-pick label
         continue-on-error: true
         run: |
-          echo ${{ secrets.WELAN_PAT }} | gh auth login --with-token
+          echo ${{ github.token }} | gh auth login --with-token
           branchLabelName="${{ env.LABEL_PREFIX_CHERRYPICK }}release-${{ env.RUN_YBranchName }}"
           mainLabelName="${{ env.LABEL_PREFIX_CHERRYPICK }}main"
           echo "try to create label "

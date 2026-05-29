@@ -53,7 +53,7 @@ jobs:
         with:
           publish-dir: './site'
           production-branch: master
-          github-token: ${{ secrets.WELAN_PAT }}
+          github-token: ${{ github.token }}
           deploy-message: "Deploy from GitHub Actions"
           enable-pull-request-comment: true
           enable-commit-comment: true

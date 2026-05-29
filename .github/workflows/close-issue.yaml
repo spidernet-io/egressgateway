@@ -22,7 +22,7 @@ jobs:
 
       - name: close issue
         env:
-          GITHUB_TOKEN: ${{ secrets.WELAN_PAT }}
+          GITHUB_TOKEN: ${{ github.token }}
         run: |
           set -x
           OPTION=""

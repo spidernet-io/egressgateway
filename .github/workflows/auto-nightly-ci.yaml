@@ -142,7 +142,7 @@ jobs:
       - name: create an issue
         uses: dacbd/create-issue-action@v2.0.0
         with:
-          token: ${{ secrets.WELAN_PAT }}
+          token: ${{ github.token }}
           title: "Night CI ${{ ENV.TIMESTAMP }}: Failed"
           body: |
             action url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
