@@ -134,7 +134,7 @@ jobs:
           file: ./${{ matrix.context }}/Dockerfile
           push: ${{ env.RUN_PUSH }}
           provenance: false
-          github-token: ${{ secrets.WELAN_PAT }}
+          github-token: ${{ github.token }}
           platforms: ${{ env.BUILD_PLATFORM }}
           tags: |
             ${{ env.ONLINE_REGISTER }}/${{ env.IMAGE_REPO }}-${{ matrix.name }}:${{ env.RUN_TAG }}

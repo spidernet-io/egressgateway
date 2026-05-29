@@ -38,6 +38,6 @@ jobs:
           delete-branch: true
           base: main
           signoff: true
-          token: ${{ secrets.WELAN_PAT }}
+          token: ${{ github.token }}
           labels: pr/robot_update
           reviewers: lou-lan,dcwbq

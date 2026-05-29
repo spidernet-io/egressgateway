@@ -211,7 +211,7 @@ jobs:
         if: ${{ env.RUN_PERFORMANCE_RESULT != '' && inputs.ipfamily == 'dual' && env.PERFORMANCE_BADGE_ID != '' }}
         uses: schneegans/dynamic-badges-action@v1.7.0
         with:
-          auth: ${{ secrets.WELAN_PAT }}
+          auth: ${{ github.token }}
           gistID: ${{ env.PERFORMANCE_BADGE_ID }}
           filename: ${{ env.PERFORMANCE_BADGE_FILENAME }}
           label: performance

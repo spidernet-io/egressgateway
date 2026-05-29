@@ -38,7 +38,7 @@ jobs:
 
       - name: github yaml format yq
         env:
-          GITHUB_TOKEN: ${{ secrets.WELAN_PAT }}
+          GITHUB_TOKEN: ${{ github.token }}
           JSON_DOC: ${{ toJSON(github) }}
         run: |
           set -x

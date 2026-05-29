@@ -40,7 +40,7 @@ jobs:
       # ${{ secrets.GITHUB_TOKEN }} is forbidden to create or approve pull requests
       - name: cherry pick
         env:
-          GITHUB_TOKEN: ${{ secrets.WELAN_PAT}}
+          GITHUB_TOKEN: ${{ github.token }}
           JSON: ${{ toJSON(github) }}
         run: |
           set -x
