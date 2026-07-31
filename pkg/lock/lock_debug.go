@@ -9,11 +9,12 @@ package lock
 import (
 	"bytes"
 	"fmt"
-	deadlock "github.com/sasha-s/go-deadlock"
 	"io"
 	"os"
 	"runtime/debug"
 	"time"
+
+	deadlock "github.com/sasha-s/go-deadlock"
 )
 
 const (
@@ -98,7 +99,7 @@ func printStackTo(sec float64, stack []byte, writer io.Writer) {
 	}
 
 	fmt.Printf("goroutine=%v : Goroutine took lock %v seconds for more than %.2f seconds\n",
-		string(goRoutineNumber[len("goroutine"):len(goRoutineNumber)-1]), sec, selfishThresholdSec)
+		string(goRoutineNumber[len("goroutine"):len(goRoutineNumber)-1]), sec, float64(selfishThresholdSec))
 
 	// A stack trace is usually in the following format:
 	// goroutine 1432 [running]:

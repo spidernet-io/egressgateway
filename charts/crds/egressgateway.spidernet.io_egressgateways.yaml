@@ -141,7 +141,11 @@ spec:
                         type: object
                     type: object
                     x-kubernetes-map-type: atomic
+                required:
+                - selector
                 type: object
+            required:
+            - nodeSelector
             type: object
           status:
             properties:

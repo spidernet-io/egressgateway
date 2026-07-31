@@ -482,10 +482,10 @@ func (d *saveCmd) Kill() error {
 func (d *saveCmd) Output() ([]byte, error) {
 	if d.Dataplane.FailNextSaveRead {
 		d.Dataplane.FailNextSaveRead = false
-		return nil, errors.New("Simulated failure")
+		return nil, errors.New("simulated failure")
 	}
 	if d.Dataplane.FailAllSaves {
-		return nil, errors.New("Simulated failure")
+		return nil, errors.New("simulated failure")
 	}
 	var buf bytes.Buffer
 

@@ -369,12 +369,12 @@ unitest_tests:
 	-@mkdir -p $(UNITEST_OUTPUT)
 	@echo "run unitest tests"
 	sudo $(ROOT_DIR)/tools/golang/ginkgo.sh -gcflags "-l"   \
-		--cover --coverprofile=./coverage.out --covermode set  \
-		--json-report unitestreport.json \
-		-randomize-suites -randomize-all --keep-going  --timeout=1h  -p   --slow-spec-threshold=120s \
-		-vv  -r   $(UNITEST_DIR) \
-		&& mv ./coverage.out  $(UNITEST_OUTPUT)/coverage.out \
-		&& mv ./unitestreport.json  $(UNITEST_OUTPUT)/unitestreport.json
+    	--cover --coverprofile=coverage.out --covermode set --output-dir=. \
+    	--json-report unitestreport.json \
+    	-randomize-suites -randomize-all --keep-going --timeout=1h -p --slow-spec-threshold=120s \
+    	-vv -r $(UNITEST_DIR) \
+    	&& mv ./coverage.out $(UNITEST_OUTPUT)/coverage.out \
+    	&& mv ./unitestreport.json $(UNITEST_OUTPUT)/unitestreport.json
 	go tool cover -html=$(UNITEST_OUTPUT)/coverage.out -o $(UNITEST_OUTPUT)/coverage-all.html
 	@ echo "output coverage to $(UNITEST_OUTPUT)/coverage.out "
 	@ echo "output unitestreport to $(UNITEST_OUTPUT)/unitestreport.json "

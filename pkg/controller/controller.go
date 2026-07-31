@@ -33,7 +33,7 @@ type Controller struct {
 }
 
 func New(cfg *config.Config) (types.Service, error) {
-	log := logger.NewLogger(cfg.EnvConfig.Logger)
+	log := logger.NewLogger(cfg.Logger)
 	mgrOpts := manager.Options{
 		Scheme:                  schema.GetScheme(),
 		Logger:                  log,

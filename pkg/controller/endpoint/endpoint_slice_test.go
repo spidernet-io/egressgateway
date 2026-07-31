@@ -619,7 +619,7 @@ func TestNewEgressEndpointSliceController(t *testing.T) {
 			},
 		},
 	}
-	log := logger.NewLogger(cfg.EnvConfig.Logger)
+	log := logger.NewLogger(cfg.Logger)
 	mgr, err := ctrl.NewManager(cfg.KubeConfig, mgrOpts)
 	if err != nil {
 		t.Fatal(err)
@@ -696,7 +696,7 @@ func Test_NewEgressEndpointSliceController(t *testing.T) {
 					},
 				},
 			}
-			log := logger.NewLogger(cfg.EnvConfig.Logger)
+			log := logger.NewLogger(cfg.Logger)
 			mgr, err := ctrl.NewManager(cfg.KubeConfig, mgrOpts)
 			if err != nil {
 				t.Fatal(err)
@@ -833,7 +833,7 @@ func Test_endpointReconciler_Reconcile(t *testing.T) {
 				},
 			}
 
-			log := logger.NewLogger(cfg.EnvConfig.Logger)
+			log := logger.NewLogger(cfg.Logger)
 			mgr, err := ctrl.NewManager(cfg.KubeConfig, mgrOpts)
 			if err != nil {
 				t.Fatal(err)
@@ -982,7 +982,7 @@ func Test_initEndpoint(t *testing.T) {
 				},
 			},
 		}
-		log := logger.NewLogger(cfg.EnvConfig.Logger)
+		log := logger.NewLogger(cfg.Logger)
 		mgr, err := ctrl.NewManager(cfg.KubeConfig, mgrOpts)
 		if err != nil {
 			t.Fatal(err)

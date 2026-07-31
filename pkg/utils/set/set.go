@@ -101,9 +101,9 @@ loop:
 	for item := range set {
 		err := visitor(item)
 		switch err {
-		case StopIteration:
+		case ErrStopIteration:
 			break loop
-		case RemoveItem:
+		case ErrRemoveItem:
 			delete(set, item)
 		case nil:
 		default:
@@ -144,7 +144,7 @@ func (set Typed[T]) ContainsAll(other Set[T]) bool {
 	other.Iter(func(item T) error {
 		if !set.Contains(item) {
 			result = false
-			return StopIteration
+			return ErrStopIteration
 		}
 		return nil
 	})

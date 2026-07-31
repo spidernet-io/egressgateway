@@ -13,7 +13,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/rest"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -42,9 +41,9 @@ func TestEgressTunnelCtrlForEgressTunnel(t *testing.T) {
 	}
 
 	initialObjects := []client.Object{
-		&corev1.Node{ObjectMeta: v1.ObjectMeta{Name: "node1"}},
+		&corev1.Node{ObjectMeta: metav1.ObjectMeta{Name: "node1"}},
 		&egressv1.EgressTunnel{
-			ObjectMeta: v1.ObjectMeta{Name: "node1"},
+			ObjectMeta: metav1.ObjectMeta{Name: "node1"},
 			Status:     egressv1.EgressTunnelStatus{},
 		},
 	}
@@ -91,7 +90,11 @@ func TestEgressTunnelCtrlForEgressTunnel(t *testing.T) {
 		if !req.expErr {
 			assert.NoError(t, err)
 		}
-		assert.Equal(t, req.expRequeue, res.Requeue)
+		if req.expRequeue {
+			assert.True(t, res.RequeueAfter > 0)
+		} else {
+			assert.Equal(t, time.Duration(0), res.RequeueAfter)
+		}
 	}
 
 	egressTunnel := &egressv1.EgressTunnel{}
@@ -125,7 +128,7 @@ func TestEgressTunnelCtrlForEgressTunnel(t *testing.T) {
 
 func TestEgressTunnelCtrlForNode(t *testing.T) {
 	cfg := &config.Config{}
-	node := &corev1.Node{ObjectMeta: v1.ObjectMeta{Name: "node1"}}
+	node := &corev1.Node{ObjectMeta: metav1.ObjectMeta{Name: "node1"}}
 	initialObjects := []client.Object{node}
 
 	builder := fake.NewClientBuilder()
@@ -144,7 +147,7 @@ func TestEgressTunnelCtrlForNode(t *testing.T) {
 
 	reconciler := egReconciler{
 		client:      builder.Build(),
-		log:         logger.NewLogger(cfg.EnvConfig.Logger),
+		log:         logger.NewLogger(cfg.Logger),
 		config:      cfg,
 		mark:        mark,
 		allocatorV4: allocatorV4,
@@ -165,7 +168,11 @@ func TestEgressTunnelCtrlForNode(t *testing.T) {
 		if !req.expErr {
 			assert.NoError(t, err)
 		}
-		assert.Equal(t, req.expRequeue, res.Requeue)
+		if req.expRequeue {
+			assert.True(t, res.RequeueAfter > 0)
+		} else {
+			assert.Equal(t, time.Duration(0), res.RequeueAfter)
+		}
 	}
 
 	egressTunnel := &egressv1.EgressTunnel{}
@@ -184,7 +191,11 @@ func TestEgressTunnelCtrlForNode(t *testing.T) {
 		if !req.expErr {
 			assert.NoError(t, err)
 		}
-		assert.Equal(t, req.expRequeue, res.Requeue)
+		if req.expRequeue {
+			assert.True(t, res.RequeueAfter > 0)
+		} else {
+			assert.Equal(t, time.Duration(0), res.RequeueAfter)
+		}
 	}
 
 	err = reconciler.client.Get(ctx, types.NamespacedName{Name: "node1"}, egressTunnel)
@@ -192,18 +203,6 @@ func TestEgressTunnelCtrlForNode(t *testing.T) {
 	} else if egressTunnel.DeletionTimestamp.IsZero() {
 		t.Fatal("expect deleted egress tunnel, but got one")
 	}
-}
-
-func slicesEqual(a, b []string) bool {
-	if len(a) != len(b) {
-		return false
-	}
-	for i := range a {
-		if a[i] != b[i] {
-			return false
-		}
-	}
-	return true
 }
 
 func TestHealthCheck(t *testing.T) {
@@ -217,10 +216,10 @@ func TestHealthCheck(t *testing.T) {
 	}
 	initialObjects := []client.Object{
 		&egressv1.EgressTunnel{
-			ObjectMeta: v1.ObjectMeta{Name: "node1"},
+			ObjectMeta: metav1.ObjectMeta{Name: "node1"},
 		},
 		&egressv1.EgressTunnel{
-			ObjectMeta: v1.ObjectMeta{Name: "node2"},
+			ObjectMeta: metav1.ObjectMeta{Name: "node2"},
 		},
 	}
 
@@ -240,7 +239,7 @@ func TestHealthCheck(t *testing.T) {
 
 	reconciler := &egReconciler{
 		client:      builder.Build(),
-		log:         logger.NewLogger(cfg.EnvConfig.Logger),
+		log:         logger.NewLogger(cfg.Logger),
 		config:      cfg,
 		mark:        mark,
 		allocatorV4: allocatorV4,
@@ -311,7 +310,7 @@ func TestNewEgressTunnelController(t *testing.T) {
 			},
 		},
 	}
-	log := logger.NewLogger(cfg.EnvConfig.Logger)
+	log := logger.NewLogger(cfg.Logger)
 	mgr, err := ctrl.NewManager(cfg.KubeConfig, mgrOpts)
 	if err != nil {
 		t.Fatal(err)

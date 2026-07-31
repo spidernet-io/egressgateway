@@ -76,7 +76,7 @@ func TestValidateEgressGateway(t *testing.T) {
 
 			assert.Equal(t, c.expAllow, resp.Allowed)
 			if c.expErrMessage != "" {
-				assert.Equal(t, c.expErrMessage, resp.AdmissionResponse.Result.Message)
+				assert.Equal(t, c.expErrMessage, resp.Result.Message)
 			}
 		})
 	}
@@ -379,7 +379,7 @@ func TestValidateEgressPolicy(t *testing.T) {
 
 			assert.Equal(t, c.expAllow, resp.Allowed)
 			if c.expErrMessage != "" {
-				assert.Equal(t, c.expErrMessage, resp.AdmissionResponse.Result.Message)
+				assert.Equal(t, c.expErrMessage, resp.Result.Message)
 			}
 		})
 	}
@@ -562,7 +562,7 @@ func TestUpdateEgressPolicy(t *testing.T) {
 
 			assert.Equal(t, c.expAllow, resp.Allowed)
 			if c.expErrMessage != "" {
-				assert.Equal(t, c.expErrMessage, resp.AdmissionResponse.Result.Message)
+				assert.Equal(t, c.expErrMessage, resp.Result.Message)
 			}
 		})
 	}

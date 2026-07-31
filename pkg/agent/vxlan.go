@@ -49,7 +49,9 @@ type vxlanReconciler struct {
 	ruleRoute      *route.RuleRoute
 	ruleRouteCache *utils.SyncMap[string, []net.IP]
 
-	updateTimer *time.Timer
+	updateMu            sync.Mutex
+	updateRunning       bool
+	updateRetryInterval time.Duration
 }
 
 type VTEP struct {
@@ -86,7 +88,7 @@ func (r *vxlanReconciler) Reconcile(ctx context.Context, req reconcile.Request) 
 	}
 }
 
-func (r *vxlanReconciler) reconcileEgressGateway(ctx context.Context, req reconcile.Request, log logr.Logger) (reconcile.Result, error) {
+func (r *vxlanReconciler) reconcileEgressGateway(ctx context.Context, req reconcile.Request, _ logr.Logger) (reconcile.Result, error) {
 	egressTunnelMap, err := r.getEgressTunnelByEgressGateway(ctx, req.Name)
 	if err != nil {
 		r.log.Error(err, "vxlan reconcile egress gateway")
@@ -119,10 +121,7 @@ func (r *vxlanReconciler) reconcileEgressTunnel(ctx context.Context, req reconci
 	}
 	deleted = deleted || !node.GetDeletionTimestamp().IsZero()
 
-	isPeer := true
-	if req.Name == r.cfg.NodeName {
-		isPeer = false
-	}
+	isPeer := req.Name != r.cfg.NodeName
 	if deleted {
 		if isPeer {
 			r.peerMap.Delete(req.Name)
@@ -183,9 +182,18 @@ func (r *vxlanReconciler) reconcileEgressTunnel(ctx context.Context, req reconci
 		return reconcile.Result{}, nil
 	}
 
-	err = r.ensureEgressTunnelStatus(node)
+	updated, err := r.ensureEgressTunnelStatus(ctx, node)
 	if err != nil {
 		return reconcile.Result{}, err
+	}
+	if !updated && r.cfg.FileConfig.GatewayFailover.Enable {
+		err = r.triggerTunnelStatusUpdate(ctx)
+		if err != nil {
+			if errors.Is(err, context.Canceled) {
+				return reconcile.Result{}, nil
+			}
+			return reconcile.Result{}, err
+		}
 	}
 
 	return reconcile.Result{}, nil
@@ -223,46 +231,45 @@ func (r *vxlanReconciler) listEgressTunnel(ctx context.Context) (map[string]stru
 	return res, nil
 }
 
-func (r *vxlanReconciler) ensureEgressTunnelStatus(node *egressv1.EgressTunnel) error {
-	needUpdate := false
-
-	if r.version() == 4 && node.Status.Tunnel.Parent.IPv4 == "" {
-		needUpdate = true
-	}
-
-	if r.version() == 6 && node.Status.Tunnel.Parent.IPv6 == "" {
-		needUpdate = true
-	}
+func (r *vxlanReconciler) ensureEgressTunnelStatus(ctx context.Context, node *egressv1.EgressTunnel) (bool, error) {
+	needUpdate := (r.version() == 4 && node.Status.Tunnel.Parent.IPv4 == "") || (r.version() == 6 && node.Status.Tunnel.Parent.IPv6 == "")
 
 	if needUpdate {
-		err := r.updateEgressTunnelStatus(node, r.version())
+		updated, err := r.updateEgressTunnelStatus(ctx, node, r.version())
 		if err != nil {
-			return err
+			return false, err
+		}
+		if updated {
+			vtep := r.parseVTEP(node.Status)
+			if vtep != nil {
+				r.peerMap.Store(r.cfg.NodeName, *vtep)
+			}
+			return true, nil
 		}
 	}
 
 	vtep := r.parseVTEP(node.Status)
 	if vtep != nil {
-		r.peerMap.Store(r.cfg.EnvConfig.NodeName, *vtep)
+		r.peerMap.Store(r.cfg.NodeName, *vtep)
 	}
-	return nil
+	return false, nil
 }
 
-func (r *vxlanReconciler) updateEgressTunnelStatus(tunnel *egressv1.EgressTunnel, version int) error {
+func (r *vxlanReconciler) updateEgressTunnelStatus(ctx context.Context, tunnel *egressv1.EgressTunnel, version int) (bool, error) {
 	parent, err := r.getParent(version)
 	if err != nil {
-		return err
+		return false, err
 	}
 
 	if tunnel == nil {
 		tunnel = new(egressv1.EgressTunnel)
-		ctx := context.Background()
-		err = r.client.Get(ctx, types.NamespacedName{Name: r.cfg.NodeName}, tunnel)
+		getCtx := context.Background()
+		err = r.client.Get(getCtx, types.NamespacedName{Name: r.cfg.NodeName}, tunnel)
 		if err != nil {
 			if k8sErr.IsNotFound(err) {
-				return nil
+				return false, nil
 			}
-			return err
+			return false, err
 		}
 	}
 
@@ -305,52 +312,138 @@ func (r *vxlanReconciler) updateEgressTunnelStatus(tunnel *egressv1.EgressTunnel
 	}
 
 	if needUpdate {
-		err := r.updateTunnelStatus(tunnel)
+		err := r.runSerializedTunnelStatusUpdate(ctx, func() error {
+			return r.updateTunnelStatus(tunnel)
+		})
 		if err != nil {
-			return err
+			return false, err
 		}
+		return true, nil
 	}
 
-	return nil
+	return false, nil
 }
 
 func (r *vxlanReconciler) syncLastHeartbeatTime(ctx context.Context) error {
+	if ctx == nil {
+		ctx = context.Background()
+	}
+
 	r.log.Info("start sync heartbeat")
+	period := time.Second * time.Duration(r.cfg.FileConfig.GatewayFailover.TunnelUpdatePeriod)
+	if period <= 0 {
+		period = time.Second
+	}
+	wait := time.Duration(0)
+
 	for {
+		if wait > 0 {
+			t := time.NewTimer(wait)
+			select {
+			case <-ctx.Done():
+				if !t.Stop() {
+					select {
+					case <-t.C:
+					default:
+					}
+				}
+				r.log.Info("heartbeat context done")
+				return nil
+			case <-t.C:
+			}
+		}
+
+		err := r.triggerTunnelStatusUpdate(ctx)
+		if err != nil {
+			if errors.Is(err, context.Canceled) {
+				r.log.Info("heartbeat context done")
+				return nil
+			}
+			if errors.Is(err, context.DeadlineExceeded) || strings.Contains(err.Error(), "context deadline exceeded") {
+				return ErrHeartbeatTime
+			}
+			r.log.Error(err, "update tunnel status")
+			wait = time.Second
+			continue
+		}
+
+		wait = period
+	}
+}
+
+func (r *vxlanReconciler) triggerTunnelStatusUpdate(ctx context.Context) error {
+	if ctx == nil {
+		ctx = context.Background()
+	}
+
+	return r.runSerializedTunnelStatusUpdate(ctx, func() error {
+		tunnel := new(egressv1.EgressTunnel)
+		err := r.client.Get(ctx, types.NamespacedName{Name: r.cfg.NodeName}, tunnel)
+		if err != nil {
+			if k8sErr.IsNotFound(err) {
+				return nil
+			}
+			return err
+		}
+
+		r.log.V(1).Info("update tunnel last heartbeat time")
+		return r.updateTunnelStatus(tunnel)
+	})
+}
+
+func (r *vxlanReconciler) runSerializedTunnelStatusUpdate(ctx context.Context, update func() error) error {
+	if ctx == nil {
+		ctx = context.Background()
+	}
+	retryInterval := r.updateRetryInterval
+	if retryInterval <= 0 {
+		retryInterval = 5 * time.Second
+	}
+
+	for {
+		if r.acquireTunnelStatusUpdate() {
+			defer r.releaseTunnelStatusUpdate()
+			return update()
+		}
+
+		r.log.V(1).Info("tunnel status update is running, retry later", "retryAfter", retryInterval)
+		t := time.NewTimer(retryInterval)
 		select {
 		case <-ctx.Done():
-			r.log.Info("heartbeat context done")
-			return nil
-		case <-r.updateTimer.C:
-			ctx := context.Background()
-			tunnel := new(egressv1.EgressTunnel)
-			err := r.client.Get(ctx, types.NamespacedName{Name: r.cfg.NodeName}, tunnel)
-			if err != nil {
-				if k8sErr.IsNotFound(err) {
-					break
+			if !t.Stop() {
+				select {
+				case <-t.C:
+				default:
 				}
-				r.log.Error(err, "update tunnel status")
-				r.updateTimer.Reset(time.Second)
-				break
 			}
-			r.log.V(1).Info("update tunnel last heartbeat time")
-			err = r.updateTunnelStatus(tunnel)
-			if err != nil {
-				if strings.Contains(err.Error(), "context deadline exceeded") {
-					return ErrHeartbeatTime
-				}
-				r.log.Error(err, "update tunnel status")
-				r.updateTimer.Reset(time.Second)
-				break
-			}
+			return ctx.Err()
+		case <-t.C:
 		}
 	}
 }
 
+func (r *vxlanReconciler) acquireTunnelStatusUpdate() bool {
+	r.updateMu.Lock()
+	defer r.updateMu.Unlock()
+
+	if r.updateRunning {
+		return false
+	}
+
+	r.updateRunning = true
+	return true
+}
+
+func (r *vxlanReconciler) releaseTunnelStatusUpdate() {
+	r.updateMu.Lock()
+	defer r.updateMu.Unlock()
+
+	r.updateRunning = false
+}
+
 func (r *vxlanReconciler) parseVTEP(status egressv1.EgressTunnelStatus) *vxlan.Peer {
-	var ipv4 *net.IP
-	var ipv6 *net.IP
 	ready := true
+	var ipv4, ipv6 *net.IP
 
 	if r.cfg.FileConfig.EnableIPv4 {
 		if status.Tunnel.IPv4 == "" {
@@ -396,7 +489,7 @@ func (r *vxlanReconciler) version() int {
 func (r *vxlanReconciler) keepVXLAN() {
 	reduce := false
 	for {
-		vtep, ok := r.peerMap.Load(r.cfg.EnvConfig.NodeName)
+		vtep, ok := r.peerMap.Load(r.cfg.NodeName)
 		if !ok {
 			r.log.V(1).Info("vtep not ready")
 			time.Sleep(time.Second)
@@ -423,7 +516,7 @@ func (r *vxlanReconciler) keepVXLAN() {
 			}
 		}
 
-		err := r.updateEgressTunnelStatus(nil, r.version())
+		_, err := r.updateEgressTunnelStatus(context.Background(), nil, r.version())
 		if err != nil {
 			r.log.Error(err, "update EgressTunnel status")
 			time.Sleep(time.Second)
@@ -496,7 +589,6 @@ func (r *vxlanReconciler) updateTunnelStatus(tunnel *egressv1.EgressTunnel) erro
 	if err != nil {
 		return err
 	}
-	r.updateTimer.Reset(time.Second * time.Duration(r.cfg.FileConfig.GatewayFailover.TunnelUpdatePeriod))
 	return nil
 }
 
@@ -508,7 +600,7 @@ func (r *vxlanReconciler) ensureRoute() error {
 
 	peerMap := make(map[string]vxlan.Peer)
 	r.peerMap.Range(func(key string, peer vxlan.Peer) bool {
-		if key == r.cfg.EnvConfig.NodeName {
+		if key == r.cfg.NodeName {
 			return true
 		}
 		peerMap[key] = peer
@@ -551,7 +643,7 @@ func (r *vxlanReconciler) initTunnelPeerMap() error {
 		if item.Status.Phase == egressv1.EgressTunnelReady {
 			vtep := r.parseVTEP(item.Status)
 			if vtep != nil {
-				r.peerMap.Store(r.cfg.EnvConfig.NodeName, *vtep)
+				r.peerMap.Store(r.cfg.NodeName, *vtep)
 			}
 		}
 	}
@@ -589,14 +681,14 @@ func newEgressTunnelController(mgr manager.Manager, cfg *config.Config, log logr
 	ruleRoute := route.NewRuleRoute(route.WithLogger(log))
 
 	r := &vxlanReconciler{
-		client:         mgr.GetClient(),
-		log:            log,
-		cfg:            cfg,
-		doOnce:         sync.Once{},
-		peerMap:        utils.NewSyncMap[string, vxlan.Peer](),
-		ruleRoute:      ruleRoute,
-		ruleRouteCache: utils.NewSyncMap[string, []net.IP](),
-		updateTimer:    time.NewTimer(time.Second * time.Duration(cfg.FileConfig.GatewayFailover.TunnelUpdatePeriod)),
+		client:              mgr.GetClient(),
+		log:                 log,
+		cfg:                 cfg,
+		doOnce:              sync.Once{},
+		peerMap:             utils.NewSyncMap[string, vxlan.Peer](),
+		ruleRoute:           ruleRoute,
+		ruleRouteCache:      utils.NewSyncMap[string, []net.IP](),
+		updateRetryInterval: 5 * time.Second,
 	}
 
 	netLink := vxlan.NetLink{

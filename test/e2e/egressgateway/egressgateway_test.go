@@ -761,30 +761,21 @@ var _ = Describe("Check EgressGateway usage when not mach node", Label("EgressGa
 	It("should correctly manage gateway IP usage", func() {
 		ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 		defer cancel()
+
 		for {
-			var pass bool
-			select {
-			case <-ctx.Done():
-				err = fmt.Errorf("check egw timeout")
-				break
-			default:
-				err = cli.Get(ctx, types.NamespacedName{Name: gateway.Name}, gateway)
-				Expect(err).NotTo(HaveOccurred())
-				if egressConfig.EnableIPv4 && gateway.Status.IPUsage.IPv4Total != expIPv4Count {
-					time.Sleep(time.Second)
-					continue
-				}
-				if egressConfig.EnableIPv6 && gateway.Status.IPUsage.IPv6Total != expIPv6Count {
-					time.Sleep(time.Second)
-					continue
-				}
-				pass = true
-				break
-			}
+			err = cli.Get(ctx, types.NamespacedName{Name: gateway.Name}, gateway)
 			Expect(err).NotTo(HaveOccurred())
-			if pass {
-				break
+
+			if egressConfig.EnableIPv4 && gateway.Status.IPUsage.IPv4Total != expIPv4Count {
+				time.Sleep(time.Second)
+				continue
 			}
+
+			if egressConfig.EnableIPv6 && gateway.Status.IPUsage.IPv6Total != expIPv6Count {
+				time.Sleep(time.Second)
+				continue
+			}
+			return
 		}
 	})
 })
