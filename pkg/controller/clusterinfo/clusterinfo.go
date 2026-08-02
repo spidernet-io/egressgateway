@@ -146,8 +146,10 @@ func (r *clusterInfo) reconcileNode(ctx context.Context, req reconcile.Request, 
 		log.Info("not found default EgressClusterInfo")
 		return nil
 	}
-	// skip if not enable detect node
-	if !info.Spec.AutoDetect.NodeIP {
+	detectNodeIP := info.Spec.AutoDetect.NodeIP
+	detectK8sPodCIDR := info.Spec.AutoDetect.PodCidrMode == egressv1.CniTypeK8s ||
+		info.Spec.AutoDetect.PodCidrMode == egressv1.CniTypeAuto
+	if !detectNodeIP && !detectK8sPodCIDR {
 		return nil
 	}
 
@@ -161,51 +163,58 @@ func (r *clusterInfo) reconcileNode(ctx context.Context, req reconcile.Request, 
 		deleted = true
 	}
 	deleted = deleted || !node.GetDeletionTimestamp().IsZero()
+	changed := false
 
 	if deleted {
 		log.Info("delete event of node", "delete", req.Name)
-		if _, ok := info.Status.NodeIP[req.Name]; ok {
-			delete(info.Status.NodeIP, req.Name)
-			err := r.cli.Status().Update(ctx, info)
-			if err != nil {
-				return fmt.Errorf("failed to update EgressClusterInfo when delete node(%s) event: %w", node.Name, err)
+		if detectNodeIP {
+			if _, ok := info.Status.NodeIP[req.Name]; ok {
+				delete(info.Status.NodeIP, req.Name)
+				changed = true
 			}
 		}
 	} else {
 		log.Info("update event of node", "update", req.Name)
-		ipv4, ipv6 := getNodeIPList(node)
-
-		if info.Status.NodeIP == nil {
-			info.Status.NodeIP = make(map[string]egressv1.IPListPair)
-		}
-
-		if val, ok := info.Status.NodeIP[req.Name]; ok {
-			// diff info.Status.NodeIP[req.Name].IPv4 == ipv4
-			// diff info.Status.NodeIP[req.Name].IPv6 == ipv6
-			if !utils.EqualStringSlice(val.IPv4, ipv4) ||
-				!utils.EqualStringSlice(val.IPv6, ipv6) {
-				// then update info.Status.NodeIP[req.Name]
-				info.Status.NodeIP[req.Name] = egressv1.IPListPair{
-					IPv4: ipv4,
-					IPv6: ipv6,
-				}
-				err := r.cli.Status().Update(ctx, info)
-				if err != nil {
-					return fmt.Errorf("failed to update EgressClusterInfo when update node(%s) event: %w", node.Name, err)
-				}
+		if detectNodeIP {
+			ipv4, ipv6 := getNodeIPList(node)
+			if info.Status.NodeIP == nil {
+				info.Status.NodeIP = make(map[string]egressv1.IPListPair)
 			}
-		} else {
-			info.Status.NodeIP[req.Name] = egressv1.IPListPair{
-				IPv4: ipv4,
-				IPv6: ipv6,
-			}
-			err := r.cli.Status().Update(ctx, info)
-			if err != nil {
-				return fmt.Errorf("failed to update EgressClusterInfo when update node(%s) event: %w", node.Name, err)
+			if updateIPListPair(info.Status.NodeIP, req.Name, ipv4, ipv6) {
+				changed = true
 			}
 		}
 	}
+
+	if detectK8sPodCIDR {
+		podCIDRChanged, err := r.syncPodCIDRs(ctx, info)
+		if err != nil {
+			return err
+		}
+		changed = changed || podCIDRChanged
+	}
+
+	if changed {
+		err := r.cli.Status().Update(ctx, info)
+		if err != nil {
+			return fmt.Errorf("failed to update EgressClusterInfo when reconciling node(%s): %w", req.Name, err)
+		}
+	}
 	return nil
+}
+
+func updateIPListPair(items map[string]egressv1.IPListPair, name string, ipv4, ipv6 []string) bool {
+	if val, ok := items[name]; ok {
+		if utils.EqualStringSlice(val.IPv4, ipv4) && utils.EqualStringSlice(val.IPv6, ipv6) {
+			return false
+		}
+	}
+
+	items[name] = egressv1.IPListPair{
+		IPv4: ipv4,
+		IPv6: ipv6,
+	}
+	return true
 }
 
 func (r *clusterInfo) reconcileCalicoIPPool(ctx context.Context, req reconcile.Request, log logr.Logger) error {
@@ -227,58 +236,13 @@ func (r *clusterInfo) reconcileCalicoIPPool(ctx context.Context, req reconcile.R
 		return nil
 	}
 
-	deleted := false
-	pool := new(calicov1.IPPool)
-	err = r.cli.Get(ctx, req.NamespacedName, pool)
+	changed, err := r.syncPodCIDRs(ctx, info)
 	if err != nil {
-		if !errors.IsNotFound(err) {
-			return err
-		}
-		deleted = true
+		return err
 	}
-	deleted = deleted || !pool.GetDeletionTimestamp().IsZero()
-
-	if deleted {
-		log.Info("delete event of CalicoIPPool", "delete", req.Name)
-		if _, ok := info.Status.PodCIDR[req.Name]; ok {
-			delete(info.Status.PodCIDR, req.Name)
-			err := r.cli.Status().Update(ctx, info)
-			if err != nil {
-				return fmt.Errorf("failed to update EgressClusterInfo when delete CalicoIPPool(%s) event: %w", pool.Name, err)
-			}
-		}
-	} else {
-		log.Info("update event of CalicoIPPool", "update", req.Name)
-		ipv4, ipv6 := getCalicoIPPoolList(pool)
-
-		if info.Status.PodCIDR == nil {
-			info.Status.PodCIDR = make(map[string]egressv1.IPListPair)
-		}
-
-		if val, ok := info.Status.PodCIDR[req.Name]; ok {
-			// diff info.Status.PodCIDR[req.Name].IPv4 == ipv4
-			// diff info.Status.PodCIDR[req.Name].IPv6 == ipv6
-			if !utils.EqualStringSlice(val.IPv4, ipv4) ||
-				!utils.EqualStringSlice(val.IPv6, ipv6) {
-				// then update info.Status.PodCIDR[req.Name]
-				info.Status.PodCIDR[req.Name] = egressv1.IPListPair{
-					IPv4: ipv4,
-					IPv6: ipv6,
-				}
-				err := r.cli.Status().Update(ctx, info)
-				if err != nil {
-					return fmt.Errorf("failed to update EgressClusterInfo when update CalicoIPPool(%s) event: %w", pool.Name, err)
-				}
-			}
-		} else {
-			info.Status.PodCIDR[req.Name] = egressv1.IPListPair{
-				IPv4: ipv4,
-				IPv6: ipv6,
-			}
-			err := r.cli.Status().Update(ctx, info)
-			if err != nil {
-				return fmt.Errorf("failed to update EgressClusterInfo when update CalicoIPPool(%s) event: %w", pool.Name, err)
-			}
+	if changed {
+		if err := r.cli.Status().Update(ctx, info); err != nil {
+			return fmt.Errorf("failed to update EgressClusterInfo when reconciling CalicoIPPool(%s): %w", req.Name, err)
 		}
 	}
 
@@ -309,15 +273,121 @@ func (r *clusterInfo) reconcileInfo(ctx context.Context, req reconcile.Request, 
 		}
 
 		log.Info("update event of EgressClusterInfo", "update", req.Name)
+		changed := false
 		if !utils.EqualStringSlice(info.Spec.ExtraCidr, info.Status.ExtraCidr) {
 			info.Status.ExtraCidr = info.Spec.ExtraCidr
+			changed = true
+		}
+
+		podCIDRChanged, err := r.syncPodCIDRs(ctx, info)
+		if err != nil {
+			return err
+		}
+		changed = changed || podCIDRChanged
+
+		if changed {
 			err := r.cli.Status().Update(ctx, info)
 			if err != nil {
-				return fmt.Errorf("failed to update EgressClusterInfo when update ExtraCidr: %w", err)
+				return fmt.Errorf("failed to update EgressClusterInfo status: %w", err)
 			}
 		}
 	}
 	return nil
+}
+
+func (r *clusterInfo) syncPodCIDRs(ctx context.Context, info *egressv1.EgressClusterInfo) (bool, error) {
+	mode, podCIDRs, err := r.resolvePodCIDRs(ctx, info.Spec.AutoDetect.PodCidrMode)
+	if err != nil {
+		return false, err
+	}
+
+	changed := false
+	if info.Status.PodCidrMode != mode {
+		info.Status.PodCidrMode = mode
+		changed = true
+	}
+	if !equalIPListPairMap(info.Status.PodCIDR, podCIDRs) {
+		info.Status.PodCIDR = podCIDRs
+		changed = true
+	}
+
+	return changed, nil
+}
+
+func (r *clusterInfo) resolvePodCIDRs(ctx context.Context, configuredMode egressv1.PodCidrMode) (egressv1.PodCidrMode, map[string]egressv1.IPListPair, error) {
+	switch configuredMode {
+	case egressv1.CniTypeEmpty:
+		return egressv1.CniTypeEmpty, nil, nil
+	case egressv1.CniTypeK8s:
+		podCIDRs, err := r.listK8sPodCIDRs(ctx)
+		return egressv1.CniTypeK8s, podCIDRs, err
+	case egressv1.CniTypeCalico:
+		podCIDRs, _, err := r.listCalicoPodCIDRs(ctx)
+		return egressv1.CniTypeCalico, podCIDRs, err
+	case egressv1.CniTypeAuto:
+		podCIDRs, poolCount, err := r.listCalicoPodCIDRs(ctx)
+		if err == nil && poolCount > 0 {
+			return egressv1.CniTypeCalico, podCIDRs, nil
+		}
+		if err != nil && !meta.IsNoMatchError(err) {
+			return egressv1.CniTypeEmpty, nil, fmt.Errorf("failed to auto-detect Calico Pod CIDRs: %w", err)
+		}
+
+		podCIDRs, err = r.listK8sPodCIDRs(ctx)
+		return egressv1.CniTypeK8s, podCIDRs, err
+	default:
+		return egressv1.CniTypeEmpty, nil, fmt.Errorf("unsupported Pod CIDR mode %q", configuredMode)
+	}
+}
+
+func (r *clusterInfo) listK8sPodCIDRs(ctx context.Context) (map[string]egressv1.IPListPair, error) {
+	nodes := new(corev1.NodeList)
+	if err := r.cli.List(ctx, nodes); err != nil {
+		return nil, fmt.Errorf("failed to list nodes when updating Kubernetes Pod CIDRs: %w", err)
+	}
+
+	podCIDRs := make(map[string]egressv1.IPListPair)
+	for i := range nodes.Items {
+		node := &nodes.Items[i]
+		ipv4, ipv6 := getNodePodCIDRList(node)
+		if len(ipv4) == 0 && len(ipv6) == 0 {
+			continue
+		}
+		podCIDRs[node.Name] = egressv1.IPListPair{IPv4: ipv4, IPv6: ipv6}
+	}
+	return podCIDRs, nil
+}
+
+func (r *clusterInfo) listCalicoPodCIDRs(ctx context.Context) (map[string]egressv1.IPListPair, int, error) {
+	pools := new(calicov1.IPPoolList)
+	if err := r.cli.List(ctx, pools); err != nil {
+		return nil, 0, err
+	}
+
+	podCIDRs := make(map[string]egressv1.IPListPair)
+	for i := range pools.Items {
+		pool := &pools.Items[i]
+		ipv4, ipv6 := getCalicoIPPoolList(pool)
+		if len(ipv4) == 0 && len(ipv6) == 0 {
+			continue
+		}
+		podCIDRs[pool.Name] = egressv1.IPListPair{IPv4: ipv4, IPv6: ipv6}
+	}
+	return podCIDRs, len(pools.Items), nil
+}
+
+func equalIPListPairMap(a, b map[string]egressv1.IPListPair) bool {
+	if len(a) != len(b) {
+		return false
+	}
+	for name, aPair := range a {
+		bPair, ok := b[name]
+		if !ok || !utils.EqualStringSlice(aPair.IPv4, bPair.IPv4) ||
+			!utils.EqualStringSlice(aPair.IPv6, bPair.IPv6) {
+			return false
+		}
+	}
+	return true
 }
 
 func (r *clusterInfo) updateK8sServiceCIDR(ctx context.Context) error {
@@ -373,7 +443,12 @@ func (p nodePredicate) Update(updateEvent event.UpdateEvent) bool {
 
 	oldV4, oldV6 := getNodeIPList(oldObj)
 	newV4, newV6 := getNodeIPList(newObj)
-	if utils.EqualStringSlice(oldV4, newV4) && utils.EqualStringSlice(oldV6, newV6) {
+	oldPodV4, oldPodV6 := getNodePodCIDRList(oldObj)
+	newPodV4, newPodV6 := getNodePodCIDRList(newObj)
+	if utils.EqualStringSlice(oldV4, newV4) &&
+		utils.EqualStringSlice(oldV6, newV6) &&
+		utils.EqualStringSlice(oldPodV4, newPodV4) &&
+		utils.EqualStringSlice(oldPodV6, newPodV6) {
 		return false
 	}
 	return true
