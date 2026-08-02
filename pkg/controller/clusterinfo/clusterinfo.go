@@ -146,8 +146,10 @@ func (r *clusterInfo) reconcileNode(ctx context.Context, req reconcile.Request, 
 		log.Info("not found default EgressClusterInfo")
 		return nil
 	}
-	// skip if not enable detect node
-	if !info.Spec.AutoDetect.NodeIP {
+	detectNodeIP := info.Spec.AutoDetect.NodeIP
+	detectK8sPodCIDR := info.Spec.AutoDetect.PodCidrMode == egressv1.CniTypeK8s ||
+		info.Spec.AutoDetect.PodCidrMode == egressv1.CniTypeAuto
+	if !detectNodeIP && !detectK8sPodCIDR {
 		return nil
 	}
 
@@ -161,51 +163,71 @@ func (r *clusterInfo) reconcileNode(ctx context.Context, req reconcile.Request, 
 		deleted = true
 	}
 	deleted = deleted || !node.GetDeletionTimestamp().IsZero()
+	changed := false
 
 	if deleted {
 		log.Info("delete event of node", "delete", req.Name)
-		if _, ok := info.Status.NodeIP[req.Name]; ok {
-			delete(info.Status.NodeIP, req.Name)
-			err := r.cli.Status().Update(ctx, info)
-			if err != nil {
-				return fmt.Errorf("failed to update EgressClusterInfo when delete node(%s) event: %w", node.Name, err)
+		if detectNodeIP {
+			if _, ok := info.Status.NodeIP[req.Name]; ok {
+				delete(info.Status.NodeIP, req.Name)
+				changed = true
+			}
+		}
+		if detectK8sPodCIDR {
+			if _, ok := info.Status.PodCIDR[req.Name]; ok {
+				delete(info.Status.PodCIDR, req.Name)
+				changed = true
 			}
 		}
 	} else {
 		log.Info("update event of node", "update", req.Name)
-		ipv4, ipv6 := getNodeIPList(node)
-
-		if info.Status.NodeIP == nil {
-			info.Status.NodeIP = make(map[string]egressv1.IPListPair)
+		if detectNodeIP {
+			ipv4, ipv6 := getNodeIPList(node)
+			if info.Status.NodeIP == nil {
+				info.Status.NodeIP = make(map[string]egressv1.IPListPair)
+			}
+			if updateIPListPair(info.Status.NodeIP, req.Name, ipv4, ipv6) {
+				changed = true
+			}
 		}
 
-		if val, ok := info.Status.NodeIP[req.Name]; ok {
-			// diff info.Status.NodeIP[req.Name].IPv4 == ipv4
-			// diff info.Status.NodeIP[req.Name].IPv6 == ipv6
-			if !utils.EqualStringSlice(val.IPv4, ipv4) ||
-				!utils.EqualStringSlice(val.IPv6, ipv6) {
-				// then update info.Status.NodeIP[req.Name]
-				info.Status.NodeIP[req.Name] = egressv1.IPListPair{
-					IPv4: ipv4,
-					IPv6: ipv6,
-				}
-				err := r.cli.Status().Update(ctx, info)
-				if err != nil {
-					return fmt.Errorf("failed to update EgressClusterInfo when update node(%s) event: %w", node.Name, err)
-				}
+		if detectK8sPodCIDR {
+			ipv4, ipv6 := getNodePodCIDRList(node)
+			if info.Status.PodCIDR == nil {
+				info.Status.PodCIDR = make(map[string]egressv1.IPListPair)
 			}
-		} else {
-			info.Status.NodeIP[req.Name] = egressv1.IPListPair{
-				IPv4: ipv4,
-				IPv6: ipv6,
-			}
-			err := r.cli.Status().Update(ctx, info)
-			if err != nil {
-				return fmt.Errorf("failed to update EgressClusterInfo when update node(%s) event: %w", node.Name, err)
+			if len(ipv4) == 0 && len(ipv6) == 0 {
+				if _, ok := info.Status.PodCIDR[req.Name]; ok {
+					delete(info.Status.PodCIDR, req.Name)
+					changed = true
+				}
+			} else if updateIPListPair(info.Status.PodCIDR, req.Name, ipv4, ipv6) {
+				changed = true
 			}
 		}
 	}
+
+	if changed {
+		err := r.cli.Status().Update(ctx, info)
+		if err != nil {
+			return fmt.Errorf("failed to update EgressClusterInfo when reconciling node(%s): %w", req.Name, err)
+		}
+	}
 	return nil
+}
+
+func updateIPListPair(items map[string]egressv1.IPListPair, name string, ipv4, ipv6 []string) bool {
+	if val, ok := items[name]; ok {
+		if utils.EqualStringSlice(val.IPv4, ipv4) && utils.EqualStringSlice(val.IPv6, ipv6) {
+			return false
+		}
+	}
+
+	items[name] = egressv1.IPListPair{
+		IPv4: ipv4,
+		IPv6: ipv6,
+	}
+	return true
 }
 
 func (r *clusterInfo) reconcileCalicoIPPool(ctx context.Context, req reconcile.Request, log logr.Logger) error {
@@ -373,7 +395,12 @@ func (p nodePredicate) Update(updateEvent event.UpdateEvent) bool {
 
 	oldV4, oldV6 := getNodeIPList(oldObj)
 	newV4, newV6 := getNodeIPList(newObj)
-	if utils.EqualStringSlice(oldV4, newV4) && utils.EqualStringSlice(oldV6, newV6) {
+	oldPodV4, oldPodV6 := getNodePodCIDRList(oldObj)
+	newPodV4, newPodV6 := getNodePodCIDRList(newObj)
+	if utils.EqualStringSlice(oldV4, newV4) &&
+		utils.EqualStringSlice(oldV6, newV6) &&
+		utils.EqualStringSlice(oldPodV4, newPodV4) &&
+		utils.EqualStringSlice(oldPodV6, newPodV6) {
 		return false
 	}
 	return true
