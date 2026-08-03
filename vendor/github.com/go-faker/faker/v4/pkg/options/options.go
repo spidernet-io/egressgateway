@@ -3,8 +3,10 @@ package options
 import (
 	"errors"
 	"fmt"
+	"math/rand"
 	"reflect"
 	"sync/atomic"
+	"time"
 	"unsafe"
 
 	fakerErrors "github.com/go-faker/faker/v4/pkg/errors"
@@ -35,8 +37,12 @@ type Options struct {
 	IgnoreFields map[string]struct{}
 	// FieldProviders used for storing the custom provider function
 	FieldProviders map[string]interfaces.CustomProviderFunction
-	// MaxDepthOption used for configuring the max depth of nested struct for faker
+	// StructTypeProviders used for storing the struct type of custom provider function
+	StructTypeProviders map[reflect.Type]interfaces.CustomProviderFunction
+	// MaxDepthOption used for configuring the max depth of nested identical structs for faker
 	MaxDepthOption *MaxDepthOption
+	// MaxFieldDepthOption used for configuring the max depth of fields that are filled for a struct
+	MaxFieldDepthOption int
 	// IgnoreInterface used for ignoring any interface field
 	IgnoreInterface bool
 	// StringLanguage used for setting the language for any string in faker
@@ -61,6 +67,21 @@ type Options struct {
 	RandomFloatBoundary *interfaces.RandomFloatBoundary
 	// SetTagName sets the tag name that should be used
 	TagName string
+	// CustomDomain is used for specifying a custom domain when generating email
+	CustomDomain *string
+	// OnlyZeroFields skips any field that already holds a non-zero value, leaving it unchanged
+	OnlyZeroFields bool
+	// RandomNestedMaxSliceSize controls the max size for slices/maps that are nested inside
+	// another slice or map. When set, this prevents exponential memory growth when generating
+	// large outer slices containing structs with nested slice/map fields.
+	// If unset (0), RandomMaxSliceSize applies at all depths (original behavior).
+	RandomNestedMaxSliceSize int
+	// RandomNestedMinSliceSize controls the min size for slices/maps nested inside another
+	// slice or map. Pair with RandomNestedMaxSliceSize.
+	RandomNestedMinSliceSize int
+	// sliceDepth tracks the current nesting depth of slice/map generation.
+	// Access via IsNested() and Nested(); do not read or write this field directly.
+	sliceDepth int
 }
 
 // MaxDepthOption used for configuring the max depth of nested struct for faker
@@ -81,6 +102,24 @@ func (o *MaxDepthOption) RecursionOutOfLimit(t reflect.Type) bool {
 	return o.typeSeen[t] > o.recursionMaxDepth
 }
 
+// IsNested reports whether faker is currently generating elements inside an outer
+// slice, array, or map. Used by randomSliceAndMapSize to pick nested sizes.
+func (o Options) IsNested() bool {
+	return o.sliceDepth > 0
+}
+
+// Nested returns a copy of o with the nesting depth incremented by one.
+// Call this before recursing into the elements of a slice, array, or map.
+//
+// The value receiver is intentional: Go copies o on entry, so incrementing
+// sliceDepth and returning that copy leaves the caller's Options unchanged.
+// A pointer receiver would mutate the original and corrupt depth tracking
+// across sibling iterations.
+func (o Options) Nested() Options {
+	o.sliceDepth++
+	return o
+}
+
 // BuildOptions build all option functions into one option
 func BuildOptions(optFuncs []OptionFunc) *Options {
 	ops := DefaultOption()
@@ -95,10 +134,15 @@ func BuildOptions(optFuncs []OptionFunc) *Options {
 // DefaultOption build the default option
 func DefaultOption() *Options {
 	ops := &Options{}
+	ops.StructTypeProviders = make(map[reflect.Type]interfaces.CustomProviderFunction)
+	ops.StructTypeProviders[reflect.TypeFor[time.Time]()] = func() (any, error) {
+		return time.Now().Add(time.Duration(rand.Int63())), nil
+	}
 	ops.MaxDepthOption = &MaxDepthOption{
 		typeSeen:          make(map[reflect.Type]int, 1),
 		recursionMaxDepth: 1,
 	}
+	ops.MaxFieldDepthOption = -1
 	ops.GenerateUniqueValues = generateUniqueValues.Load().(bool)
 	ops.IgnoreInterface = ignoreInterface.Load().(bool)
 	ops.StringLanguage = (*interfaces.LangRuneBoundary)(atomic.LoadPointer(&lang))
@@ -127,6 +171,13 @@ func WithFieldsToIgnore(fieldNames ...string) OptionFunc {
 	}
 }
 
+// WithCustomDomain is used to set a custom domain for generating fake email
+func WithCustomDomain(domain string) OptionFunc {
+	return func(oo *Options) {
+		oo.CustomDomain = &domain
+	}
+}
+
 // WithCustomFieldProvider used for storing the custom provider function
 func WithCustomFieldProvider(fieldName string, provider interfaces.CustomProviderFunction) OptionFunc {
 	return func(oo *Options) {
@@ -147,6 +198,23 @@ func WithRecursionMaxDepth(depth uint) OptionFunc {
 			}
 		}
 		oo.MaxDepthOption.recursionMaxDepth = int(depth)
+	}
+}
+
+// WithMaxFieldDepthOption used for configuring the max depth of fields that are filled for a struct
+func WithMaxFieldDepthOption(depth int) OptionFunc {
+	return func(oo *Options) {
+		oo.MaxFieldDepthOption = depth
+	}
+}
+
+// WithStructTypeProviders used for configuring the custom provider of struct type
+func WithStructTypeProviders(t any, provider interfaces.CustomProviderFunction) OptionFunc {
+	if reflect.TypeOf(t).Kind() != reflect.Struct {
+		panic(fakerErrors.ErrOnlyStructTypeSupported)
+	}
+	return func(oo *Options) {
+		oo.StructTypeProviders[reflect.TypeOf(t)] = provider
 	}
 }
 
@@ -196,6 +264,30 @@ func WithRandomMapAndSliceMinSize(size uint) OptionFunc {
 	}
 }
 
+// WithNestedRandomMapAndSliceSize sets the min and max size for slices and maps that are
+// generated as fields inside the elements of an outer slice or map. Use this together with
+// WithRandomMapAndSliceMaxSize to avoid exponential memory growth when the generated struct
+// contains nested slice/map fields.
+//
+// Example: generate 1000 users where each user's nested slices stay small:
+//
+//	faker.FakeData(&users,
+//	    options.WithRandomMapAndSliceMaxSize(1000),
+//	    options.WithNestedRandomMapAndSliceSize(1, 5),
+//	)
+func WithNestedRandomMapAndSliceSize(minSize, maxSize uint) OptionFunc {
+	if maxSize < 1 {
+		panic(fmt.Errorf(fakerErrors.ErrSmallerThanOne, maxSize))
+	}
+	if minSize > maxSize {
+		panic(errors.New(fakerErrors.ErrStartValueBiggerThanEnd))
+	}
+	return func(oo *Options) {
+		oo.RandomNestedMinSliceSize = int(minSize)
+		oo.RandomNestedMaxSliceSize = int(maxSize)
+	}
+}
+
 // WithMaxGenerateStringRetries set how much tries for generating random string
 func WithMaxGenerateStringRetries(retries uint) OptionFunc {
 	return func(oo *Options) {
@@ -236,6 +328,14 @@ func WithRandomFloatBoundaries(boundary interfaces.RandomFloatBoundary) OptionFu
 	}
 	return func(oo *Options) {
 		oo.RandomFloatBoundary = &boundary
+	}
+}
+
+// WithOnlyZeroFields makes faker skip any field that already holds a non-zero value.
+// Useful for partially pre-initializing a struct before passing it to faker.
+func WithOnlyZeroFields() OptionFunc {
+	return func(oo *Options) {
+		oo.OnlyZeroFields = true
 	}
 }
 
