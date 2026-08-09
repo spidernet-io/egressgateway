@@ -42,6 +42,8 @@ for i in $(seq 1 120); do
   echo "  ${i}s: CRD not found yet..."
   sleep 1
 done
+echo "waiting for FelixConfiguration CRD to be established..."
+kubectl wait --for=condition=established --timeout=120s crd/felixconfigurations.crd.projectcalico.org
 
 # set chainInsertMode=Append upfront so calico-node picks it up on first start
 echo "applying FelixConfiguration chainInsertMode=Append..."
