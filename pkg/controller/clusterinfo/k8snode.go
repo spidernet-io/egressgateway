@@ -26,3 +26,26 @@ func getNodeIPList(node *v1.Node) (nodeIPv4, nodeIPv6 []string) {
 	}
 	return
 }
+
+func getNodePodCIDRList(node *v1.Node) (podIPv4, podIPv6 []string) {
+	if node == nil {
+		return
+	}
+
+	podCIDRs := node.Spec.PodCIDRs
+	if len(podCIDRs) == 0 && node.Spec.PodCIDR != "" {
+		podCIDRs = []string{node.Spec.PodCIDR}
+	}
+
+	for _, cidr := range podCIDRs {
+		if isV4, err := ip.IsIPv4Cidr(cidr); err == nil && isV4 {
+			podIPv4 = append(podIPv4, cidr)
+			continue
+		}
+		if isV6, err := ip.IsIPv6Cidr(cidr); err == nil && isV6 {
+			podIPv6 = append(podIPv6, cidr)
+		}
+	}
+
+	return
+}
