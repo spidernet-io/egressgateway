@@ -25,8 +25,8 @@ type Set[T any] interface {
 }
 
 var (
-	StopIteration = errors.New("stop iteration")
-	RemoveItem    = errors.New("remove item")
+	ErrStopIteration = errors.New("stop iteration")
+	ErrRemoveItem    = errors.New("remove item")
 )
 
 type v struct{}

@@ -280,7 +280,7 @@ func ConvertIPsToIPRanges(version constant.IPVersion, ips []net.IP) ([]string, e
 		set[ip.String()] = struct{}{}
 	}
 
-	ips = ips[0:0]
+	ips = ips[:0]
 	for v := range set {
 		ips = append(ips, net.ParseIP(v))
 	}
@@ -290,12 +290,9 @@ func ConvertIPsToIPRanges(version constant.IPVersion, ips []net.IP) ([]string, e
 	})
 
 	var ipRanges []string
-	var start, end int
-	for {
-		if start == len(ips) {
-			break
-		}
+	start, end := 0, 0
 
+	for start < len(ips) {
 		if end+1 < len(ips) && ips[end+1].Equal(NextIP(ips[end])) {
 			end++
 			continue

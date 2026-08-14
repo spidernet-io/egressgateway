@@ -12,7 +12,6 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"k8s.io/apimachinery/pkg/api/errors"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
@@ -112,7 +111,7 @@ func UpdateEgressGateway(ctx context.Context, cli client.Client, gateway *egress
 		default:
 			err := cli.Update(ctx, gateway)
 			if err != nil {
-				if !errors.IsConflict(err) {
+				if !apierrors.IsConflict(err) {
 					return err
 				}
 				time.Sleep(time.Second / 2)

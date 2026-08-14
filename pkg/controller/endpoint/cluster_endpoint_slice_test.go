@@ -6,11 +6,13 @@ package endpoint
 import (
 	"context"
 	"errors"
+	"fmt"
 	"testing"
 	"time"
 
 	"github.com/agiledragon/gomonkey/v2"
 	"github.com/go-logr/logr"
+	"github.com/google/uuid"
 	"github.com/spidernet-io/egressgateway/pkg/coalescing"
 	"github.com/spidernet-io/egressgateway/pkg/config"
 	"k8s.io/apimachinery/pkg/types"
@@ -652,7 +654,7 @@ func TestNewEgressClusterEpSliceController(t *testing.T) {
 			},
 		},
 	}
-	log := logger.NewLogger(cfg.EnvConfig.Logger)
+	log := logger.NewLogger(cfg.Logger)
 	mgr, err := ctrl.NewManager(cfg.KubeConfig, mgrOpts)
 	if err != nil {
 		t.Fatal(err)
@@ -735,7 +737,7 @@ func Test_NewEgressClusterEpSliceController(t *testing.T) {
 					},
 				},
 			}
-			log := logger.NewLogger(cfg.EnvConfig.Logger)
+			log := logger.NewLogger(cfg.Logger)
 			mgr, err := ctrl.NewManager(cfg.KubeConfig, mgrOpts)
 			if err != nil {
 				t.Fatal(err)
@@ -870,7 +872,7 @@ func Test_Reconcile(t *testing.T) {
 				},
 			}
 
-			log := logger.NewLogger(cfg.EnvConfig.Logger)
+			log := logger.NewLogger(cfg.Logger)
 			mgr, err := ctrl.NewManager(cfg.KubeConfig, mgrOpts)
 			if err != nil {
 				t.Fatal(err)
@@ -1351,12 +1353,13 @@ func mock_NewEgressClusterEpSliceController_NewRequestCache_err(t *testing.T, r 
 }
 
 func mock_NewEgressClusterEpSliceController_New_err(t *testing.T, r reconcile.Reconciler, mgr manager.Manager, log logr.Logger) []gomonkey.Patches {
+	errForMock := fmt.Errorf("mock error")
 	patch1 := gomonkey.ApplyFuncReturn(controller.New, nil, errForMock)
 	return []gomonkey.Patches{*patch1}
 }
 
 func mock_NewEgressClusterEpSliceController_Watch_pod_err(t *testing.T, r reconcile.Reconciler, mgr manager.Manager, log logr.Logger) []gomonkey.Patches {
-	name := "test-controller"
+	name := "test-cluster-epslice-controller-pod" + uuid.NewString()
 	cache, err := coalescing.NewRequestCache(time.Second)
 	assert.NoError(t, err)
 	reduce := coalescing.NewReconciler(r, cache, log)
@@ -1369,7 +1372,7 @@ func mock_NewEgressClusterEpSliceController_Watch_pod_err(t *testing.T, r reconc
 }
 
 func mock_NewEgressClusterEpSliceController_Watch_namespace_err(t *testing.T, r reconcile.Reconciler, mgr manager.Manager, log logr.Logger) []gomonkey.Patches {
-	name := "test-controller"
+	name := "test-controller" + uuid.NewString()
 	cache, err := coalescing.NewRequestCache(time.Second)
 	assert.NoError(t, err)
 	reduce := coalescing.NewReconciler(r, cache, log)
@@ -1377,6 +1380,7 @@ func mock_NewEgressClusterEpSliceController_Watch_namespace_err(t *testing.T, r 
 	c, err := controller.New(name, mgr, controller.Options{Reconciler: reduce})
 	assert.NoError(t, err)
 	patch1 := gomonkey.ApplyFuncReturn(controller.New, c, nil)
+	errForMock := fmt.Errorf("mock error")
 	patch2 := gomonkey.ApplyMethodSeq(c, "Watch", []gomonkey.OutputCell{
 		{Values: gomonkey.Params{nil}, Times: 1},
 		{Values: gomonkey.Params{errForMock}, Times: 1},
@@ -1385,7 +1389,7 @@ func mock_NewEgressClusterEpSliceController_Watch_namespace_err(t *testing.T, r 
 }
 
 func mock_NewEgressClusterEpSliceController_Watch_clusterpolicy_err(t *testing.T, r reconcile.Reconciler, mgr manager.Manager, log logr.Logger) []gomonkey.Patches {
-	name := "test-controller"
+	name := "test-controller-cluster-policy" + uuid.NewString()
 	cache, err := coalescing.NewRequestCache(time.Second)
 	assert.NoError(t, err)
 	reduce := coalescing.NewReconciler(r, cache, log)
@@ -1402,7 +1406,7 @@ func mock_NewEgressClusterEpSliceController_Watch_clusterpolicy_err(t *testing.T
 }
 
 func mock_NewEgressClusterEpSliceController_Watch_clusterendpointslice_err(t *testing.T, r reconcile.Reconciler, mgr manager.Manager, log logr.Logger) []gomonkey.Patches {
-	name := "test-controller"
+	name := "test-controller-cluster-endpoint-slice" + uuid.NewString()
 	cache, err := coalescing.NewRequestCache(time.Second)
 	assert.NoError(t, err)
 	reduce := coalescing.NewReconciler(r, cache, log)
@@ -1410,6 +1414,7 @@ func mock_NewEgressClusterEpSliceController_Watch_clusterendpointslice_err(t *te
 	c, err := controller.New(name, mgr, controller.Options{Reconciler: reduce})
 	assert.NoError(t, err)
 	patch1 := gomonkey.ApplyFuncReturn(controller.New, c, nil)
+	errForMock := fmt.Errorf("mock error")
 	patch2 := gomonkey.ApplyMethodSeq(c, "Watch", []gomonkey.OutputCell{
 		{Values: gomonkey.Params{nil}, Times: 1},
 		{Values: gomonkey.Params{nil}, Times: 1},

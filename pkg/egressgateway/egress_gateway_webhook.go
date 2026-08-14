@@ -12,7 +12,6 @@ import (
 	"time"
 
 	admissionv1 "k8s.io/api/admission/v1"
-	v1 "k8s.io/api/admission/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -38,7 +37,7 @@ type patchOperation struct {
 var egressGatewayFinalizers = "egressgateway.spidernet.io/egressgateway"
 
 func (egw *EgressGatewayWebhook) EgressGatewayValidate(ctx context.Context, req webhook.AdmissionRequest) webhook.AdmissionResponse {
-	if req.Operation == v1.Delete {
+	if req.Operation == admissionv1.Delete {
 		return webhook.Allowed("checked")
 	}
 
@@ -147,7 +146,7 @@ func (egw *EgressGatewayWebhook) EgressGatewayValidate(ctx context.Context, req 
 	}
 
 	// only for update
-	if req.Operation == v1.Update {
+	if req.Operation == admissionv1.Update {
 		oldEgressGateway := new(egress.EgressGateway)
 		err = egw.Client.Get(ctx, types.NamespacedName{Name: req.Name, Namespace: req.Namespace}, oldEgressGateway)
 		if err != nil {
@@ -327,7 +326,7 @@ func (egw *EgressGatewayWebhook) EgressGatewayMutate(ctx context.Context, req we
 }
 
 func getEgressGatewayFinalizerPatch(req webhook.AdmissionRequest, finalizer []string) *patchOperation {
-	if req.Operation == v1.Create {
+	if req.Operation == admissionv1.Create {
 		return &patchOperation{
 			Op:    "add",
 			Path:  "/metadata/finalizers",
