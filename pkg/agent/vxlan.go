@@ -551,7 +551,7 @@ func (r *vxlanReconciler) initTunnelPeerMap() error {
 		if item.Status.Phase == egressv1.EgressTunnelReady {
 			vtep := r.parseVTEP(item.Status)
 			if vtep != nil {
-				r.peerMap.Store(r.cfg.EnvConfig.NodeName, *vtep)
+				r.peerMap.Store(item.Name, *vtep)
 			}
 		}
 	}

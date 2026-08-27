@@ -84,6 +84,15 @@ func TestDiffLink(t *testing.T) {
 			l2:          &netlink.Vxlan{Port: 1235},
 			expConflict: true,
 		},
+		"case9 hardware address": {
+			l1: &netlink.Vxlan{LinkAttrs: netlink.LinkAttrs{
+				HardwareAddr: net.HardwareAddr{0x66, 0x00, 0x00, 0x00, 0x00, 0x01},
+			}},
+			l2: &netlink.Vxlan{LinkAttrs: netlink.LinkAttrs{
+				HardwareAddr: net.HardwareAddr{0x66, 0x00, 0x00, 0x00, 0x00, 0x02},
+			}},
+			expConflict: true,
+		},
 	}
 
 	for name, linkCase := range cases {
