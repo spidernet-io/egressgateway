@@ -4,6 +4,7 @@
 package vxlan
 
 import (
+	"bytes"
 	"fmt"
 	"io"
 	"net"
@@ -265,6 +266,10 @@ func diffLink(l1, l2 netlink.Link) *conflictAttr {
 
 	v1 := l1.(*netlink.Vxlan)
 	v2 := l2.(*netlink.Vxlan)
+
+	if !bytes.Equal(v1.HardwareAddr, v2.HardwareAddr) {
+		return &conflictAttr{name: "hardware address", got: v1.HardwareAddr, exp: v2.HardwareAddr}
+	}
 
 	if v1.VxlanId != v2.VxlanId {
 		return &conflictAttr{name: "vni", got: v1.VxlanId, exp: v2.VxlanId}
