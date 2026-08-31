@@ -174,16 +174,16 @@ github.com/gorilla/handlers
 # github.com/gorilla/websocket v1.5.3
 ## explicit; go 1.12
 github.com/gorilla/websocket
-# github.com/grafana/pyroscope-go v1.2.0
-## explicit; go 1.17
+# github.com/grafana/pyroscope-go v1.4.2
+## explicit; go 1.25.0
 github.com/grafana/pyroscope-go
-github.com/grafana/pyroscope-go/internal/flameql
+github.com/grafana/pyroscope-go/internal/labelset
 github.com/grafana/pyroscope-go/internal/pprof
-github.com/grafana/pyroscope-go/internal/sortedmap
+github.com/grafana/pyroscope-go/internal/semconv
 github.com/grafana/pyroscope-go/upstream
 github.com/grafana/pyroscope-go/upstream/remote
-# github.com/grafana/pyroscope-go/godeltaprof v0.1.8
-## explicit; go 1.18
+# github.com/grafana/pyroscope-go/godeltaprof v0.1.11
+## explicit; go 1.25.0
 github.com/grafana/pyroscope-go/godeltaprof
 github.com/grafana/pyroscope-go/godeltaprof/internal/pprof
 # github.com/hashicorp/golang-lru v1.0.2
@@ -223,14 +223,15 @@ github.com/josharian/native
 # github.com/json-iterator/go v1.1.12
 ## explicit; go 1.12
 github.com/json-iterator/go
-# github.com/klauspost/compress v1.17.11
-## explicit; go 1.21
+# github.com/klauspost/compress v1.18.7
+## explicit; go 1.24
 github.com/klauspost/compress
 github.com/klauspost/compress/flate
 github.com/klauspost/compress/fse
 github.com/klauspost/compress/gzip
 github.com/klauspost/compress/huff0
 github.com/klauspost/compress/internal/cpuinfo
+github.com/klauspost/compress/internal/le
 github.com/klauspost/compress/internal/snapref
 github.com/klauspost/compress/zstd
 github.com/klauspost/compress/zstd/internal/xxhash
@@ -416,7 +417,7 @@ github.com/spf13/viper/internal/encoding/json
 github.com/spf13/viper/internal/encoding/toml
 github.com/spf13/viper/internal/encoding/yaml
 github.com/spf13/viper/internal/features
-# github.com/stretchr/testify v1.10.0
+# github.com/stretchr/testify v1.11.1
 ## explicit; go 1.17
 github.com/stretchr/testify/assert
 github.com/stretchr/testify/assert/yaml
