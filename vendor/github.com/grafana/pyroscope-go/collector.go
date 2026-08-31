@@ -2,7 +2,7 @@ package pyroscope
 
 import (
 	"bytes"
-	"fmt"
+	"errors"
 	"io"
 	"time"
 
@@ -50,12 +50,14 @@ func newEvent(typ eventType) event {
 
 func (e event) send(c chan<- event) error {
 	c <- e
+
 	return <-e.done
 }
 
 func newStartEvent(w io.Writer) event {
 	e := newEvent(startEvent)
 	e.w = w
+
 	return e
 }
 
@@ -66,6 +68,7 @@ func newCPUProfileCollector(
 	period time.Duration,
 ) *cpuProfileCollector {
 	buf := bytes.NewBuffer(make([]byte, 0, 1<<10))
+
 	return &cpuProfileCollector{
 		name:      name,
 		dur:       period,
@@ -105,6 +108,7 @@ func (c *cpuProfileCollector) Start() {
 					d = c.dur
 				}
 				t.Reset(d)
+
 				continue
 			}
 			t.Reset(c.dur)
@@ -125,6 +129,7 @@ func (c *cpuProfileCollector) Start() {
 			c.collector.StopCPUProfile()
 			c.upload()
 			close(c.done)
+
 			return
 
 		case e := <-c.events:
@@ -145,7 +150,7 @@ func (c *cpuProfileCollector) handleEvent(e event) {
 		if c.started { // Misuse.
 			// Just to avoid interruption of the background
 			// profiling that will fail immediately.
-			err = fmt.Errorf("cpu profiling already started")
+			err = errAlreadyStarted
 		} else {
 			err = c.reset(e.w)
 			c.started = err == nil
@@ -161,7 +166,7 @@ func (c *cpuProfileCollector) handleEvent(e event) {
 		if c.started {
 			// Flush can't be done if StartCPUProfile is called,
 			// as we'd need stopping the foreground collector first.
-			err = fmt.Errorf("flush rejected: cpu profiling is in progress")
+			err = errFlushRejected
 		} else {
 			err = c.reset(nil)
 		}
@@ -184,6 +189,7 @@ func (c *cpuProfileCollector) Stop() {
 
 func (c *cpuProfileCollector) StartCPUProfile(w io.Writer) error {
 	c.logger.Debugf("cpu profile collector interrupted with StartCPUProfile")
+
 	return newStartEvent(w).send(c.events)
 }
 
@@ -206,12 +212,15 @@ func (c *cpuProfileCollector) reset(w io.Writer) error {
 		d = io.MultiWriter(d, w)
 	}
 	c.timeStarted = time.Now()
+
 	if err := c.collector.StartCPUProfile(d); err != nil {
 		c.logger.Errorf("failed to start CPU profiling: %v", err)
 		c.timeStarted = time.Time{}
 		c.buf.Reset()
+
 		return err
 	}
+
 	return nil
 }
 
@@ -236,3 +245,8 @@ func (c *cpuProfileCollector) upload() {
 	})
 	c.buf.Reset()
 }
+
+var (
+	errAlreadyStarted = errors.New("cpu profiling already started")
+	errFlushRejected  = errors.New("flush rejected: cpu profiling is in progress")
+)
