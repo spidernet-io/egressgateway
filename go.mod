@@ -9,7 +9,7 @@ require (
 	github.com/go-faker/faker/v4 v4.4.2
 	github.com/go-logr/logr v1.4.3
 	github.com/go-swagger/go-swagger v0.30.4
-	github.com/google/gops v0.3.27
+	github.com/google/gops v0.3.29
 	github.com/google/uuid v1.6.0
 	github.com/gorilla/websocket v1.5.3
 	github.com/grafana/pyroscope-go v1.2.0
@@ -24,7 +24,7 @@ require (
 	github.com/prometheus/client_golang v1.21.0
 	github.com/sasha-s/go-deadlock v0.3.5
 	github.com/sirupsen/logrus v1.9.3
-	github.com/spf13/cobra v1.8.1
+	github.com/spf13/cobra v1.9.1
 	github.com/spf13/viper v1.19.0
 	github.com/stretchr/testify v1.10.0
 	github.com/tigera/operator v1.35.0
@@ -118,7 +118,7 @@ require (
 	github.com/sourcegraph/conc v0.3.0 // indirect
 	github.com/spf13/afero v1.11.0 // indirect
 	github.com/spf13/cast v1.6.0 // indirect
-	github.com/spf13/pflag v1.0.5 // indirect
+	github.com/spf13/pflag v1.0.6 // indirect
 	github.com/subosito/gotenv v1.6.0 // indirect
 	github.com/tigera/api v0.0.0-20230406222214-ca74195900cb // indirect
 	github.com/toqueteos/webbrowser v1.2.0 // indirect
