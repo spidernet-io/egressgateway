@@ -9,21 +9,23 @@ import (
 
 // Dowser provides interfaces to generate random logical Names with their initials
 type Dowser interface {
-	TitleMale(v reflect.Value) (interface{}, error)
-	TitleFeMale(v reflect.Value) (interface{}, error)
-	FirstName(v reflect.Value) (interface{}, error)
-	FirstNameMale(v reflect.Value) (interface{}, error)
-	FirstNameFemale(v reflect.Value) (interface{}, error)
-	LastName(v reflect.Value) (interface{}, error)
-	Name(v reflect.Value) (interface{}, error)
-	Gender(v reflect.Value) (interface{}, error)
-	ChineseFirstName(v reflect.Value) (interface{}, error)
-	ChineseLastName(v reflect.Value) (interface{}, error)
-	ChineseName(v reflect.Value) (interface{}, error)
-	RussianFirstNameMale(v reflect.Value) (interface{}, error)
-	RussianFirstNameFemale(v reflect.Value) (interface{}, error)
-	RussianLastNameMale(v reflect.Value) (interface{}, error)
-	RussianLastNameFemale(v reflect.Value) (interface{}, error)
+	TitleMale(v reflect.Value) (any, error)
+	TitleFeMale(v reflect.Value) (any, error)
+	FirstName(v reflect.Value) (any, error)
+	FirstNameMale(v reflect.Value) (any, error)
+	FirstNameFemale(v reflect.Value) (any, error)
+	LastName(v reflect.Value) (any, error)
+	Name(v reflect.Value) (any, error)
+	Gender(v reflect.Value) (any, error)
+	ChineseFirstName(v reflect.Value) (any, error)
+	ChineseLastName(v reflect.Value) (any, error)
+	ChineseName(v reflect.Value) (any, error)
+	RussianFirstNameMale(v reflect.Value) (any, error)
+	RussianMiddleNameMale(v reflect.Value) (any, error)
+	RussianLastNameMale(v reflect.Value) (any, error)
+	RussianFirstNameFemale(v reflect.Value) (any, error)
+	RussianMiddleNameFemale(v reflect.Value) (any, error)
+	RussianLastNameFemale(v reflect.Value) (any, error)
 }
 
 var titlesMale = []string{
@@ -193,47 +195,27 @@ var russianFirstNamesMale = []string{
 	"Феоктист", "Филат", "Филимон", "Филипп", "Фирс", "Фока", "Фома", "Фотий", "Фрол", "Харитон", "Хрисанф", "Христофор",
 	"Эдуард", "Эраст", "Юлиан", "Юрий", "Юстин", "Яков", "Якун", "Ярослав", "Иосиф",
 }
-var russianFirstNamesFemale = []string{
-	"Ава", "Августа", "Августина", "Авдотья", "Аврора", "Агапия", "Агата", "Агафья", "Аглая", "Агния", "Агунда", "Ада",
-	"Аделаида", "Аделина", "Адель", "Адиля", "Адриана", "Аза", "Азалия", "Азиза", "Аида", "Аиша", "Ай", "Айару", "Айгерим",
-	"Айгуль", "Айлин", "Айнагуль", "Айнур", "Айсель", "Айсун", "Айсылу", "Аксинья", "Алана", "Алевтина", "Александра",
-	"Алексия", "Алеста", "Алина", "Алиса", "Алия", "Алла", "Алсу", "Алтын", "Альба", "Альбина", "Альфия", "Аля", "Алёна",
-	"Амалия", "Амаль", "Амина", "Амира", "Анабель", "Анаит", "Анастасия", "Ангелина", "Анжела", "Анжелика", "Анисья", "Анита",
-	"Анна", "Антонина", "Анфиса", "Аполлинария", "Арабелла", "Ариадна", "Ариана", "Арианда", "Арина", "Ария", "Асель", "Асия",
-	"Астрид", "Ася", "Афина", "Аэлита", "Ая", "Аяна", "Бажена", "Беатрис", "Бела", "Белинда", "Белла", "Берта", "Богдана",
-	"Божена", "Бьянка", "Бэлла", "Валентина", "Валерия", "Ванда", "Ванесса", "Варвара", "Василина", "Василиса", "Венера",
-	"Вера", "Вероника", "Веста", "Вета", "Викторина", "Виктория", "Вилена", "Виола", "Виолетта", "Вита", "Виталина", "Виталия",
-	"Влада", "Владана", "Владислава", "Габриэлла", "Галина", "Галия", "Гаяна", "Гаянэ", "Генриетта", "Глафира", "Гоар",
-	"Грета", "Гульзира", "Гульмира", "Гульназ", "Гульнара", "Гульшат", "Гюзель", "Далида", "Дамира", "Дана", "Даниэла",
-	"Дания", "Дара", "Дарина", "Дарья", "Даяна", "Джамиля", "Дженна", "Дженнифер", "Джессика", "Джиневра", "Диана", "Дильназ",
-	"Дильнара", "Диля", "Дилярам", "Дина", "Динара", "Долорес", "Доминика", "Домна", "Домника", "Ева", "Евангелина",
-	"Евгения", "Евдокия", "Екатерина", "Елена", "Елизавета", "Есения", "Ея", "Жаклин", "Жанна", "Жансая", "Жасмин", "Жозефина",
-	"Жоржина", "Забава", "Заира", "Залина", "Замира", "Зара", "Зарема", "Зарина", "Земфира", "Зинаида", "Зита", "Злата",
-	"Златослава", "Зоряна", "Зоя", "Зульфия", "Зухра", "Ивета", "Иветта", "Изабелла", "Илина", "Иллирика", "Илона", "Ильзира",
-	"Илюза", "Инга", "Индира", "Инесса", "Инна", "Иоанна", "Ира", "Ирада", "Ираида", "Ирина", "Ирма", "Искра", "Ия", "Камила",
-	"Камилла", "Кара", "Каре", "Карима", "Карина", "Каролина", "Кира", "Клавдия", "Клара", "Констанция", "Кора", "Корнелия",
-	"Кристина", "Ксения", "Лада", "Лана", "Лара", "Лариса", "Лаура", "Лейла", "Леона", "Лера", "Леся", "Лета", "Лиана", "Лидия",
-	"Лиза", "Лика", "Лили", "Лилиана", "Лилит", "Лилия", "Лина", "Линда", "Лиора", "Лира", "Лия", "Лола", "Лолита", "Лора",
-	"Луиза", "Лукерья", "Лукия", "Луна", "Любава", "Любовь", "Людмила", "Люсиль", "Люсьена", "Люция", "Люче", "Ляйсан", "Ляля",
-	"Мавиле", "Мавлюда", "Магда", "Магдалeна", "Мадина", "Мадлен", "Майя", "Макария", "Малика", "Мара", "Маргарита", "Марианна",
-	"Марика", "Марина", "Мария", "Мариям", "Марта", "Марфа", "Мелания", "Мелисса", "Мехри", "Мика", "Мила", "Милада", "Милана",
-	"Милен", "Милена", "Милица", "Милослава", "Мина", "Мира", "Мирослава", "Мирра", "Михримах", "Мишель", "Мия", "Моника",
-	"Муза", "Надежда", "Наиля", "Наима", "Нана", "Наоми", "Наргиза", "Наталья", "Нелли", "Нея", "Ника", "Николь", "Нина",
-	"Нинель", "Номина", "Нонна", "Нора", "Нурия", "Одетта", "Оксана", "Октябрина", "Олеся", "Оливия", "Ольга", "Офелия",
-	"Павлина", "Памела", "Патриция", "Паула", "Пейтон", "Пелагея", "Перизат", "Платонида", "Полина", "Прасковья", "Равшана",
-	"Рада", "Разина", "Раиля", "Раиса", "Раифа", "Ралина", "Рамина", "Раяна", "Ребекка", "Регина", "Резеда", "Рена", "Рената",
-	"Риана", "Рианна", "Рикарда", "Римма", "Рина", "Рита", "Роберта", "Рогнеда", "Роза", "Роксана", "Роксолана", "Рузалия",
-	"Рузанна", "Русалина", "Руслана", "Руфина", "Руфь", "Сабина", "Сабрина", "Сажида", "Саида", "Салима", "Саломея", "Сальма",
-	"Самира", "Сандра", "Сания", "Сара", "Сати", "Сауле", "Сафия", "Сафура", "Саяна", "Светлана", "Севара", "Селена", "Сельма",
-	"Серафима", "Сесилия", "Сиара", "Сильвия", "Симона", "Снежана", "Соня", "Софья", "Стелла", "Стефания", "Сусанна", "Таисия",
-	"Тамара", "Тамила", "Тара", "Татьяна", "Тая", "Таяна", "Теона", "Тереза", "Тея", "Тина", "Тиффани", "Томирис", "Тора",
-	"Тэмми", "Ульяна", "Ума", "Урсула", "Устинья", "Фазиля", "Фаина", "Фарида", "Фариза", "Фатима", "Федора", "Фелисити",
-	"Фелиция", "Феруза", "Физалия", "Фируза", "Флора", "Флоренс", "Флорентина", "Флоренция", "Флориана", "Фредерика",
-	"Фрида", "Фёкла", "Хадия", "Хилари", "Хлоя", "Хюррем", "Цагана", "Цветана", "Цецилия", "Циара", "Челси", "Чеслава",
-	"Чулпан", "Шакира", "Шарлотта", "Шахина", "Шейла", "Шелли", "Шерил", "Эвелина", "Эвита", "Элеонора", "Элиана", "Элиза",
-	"Элина", "Элла", "Эльвина", "Эльвира", "Эльмира", "Эльнара", "Эля", "Эмили", "Эмилия", "Эмма", "Энже", "Эрика", "Эрмина",
-	"Эсмеральда", "Эсмира", "Эстер", "Этель", "Этери", "Юлианна", "Юлия", "Юна", "Юния", "Юнона", "Ядвига", "Яна", "Янина",
-	"Ярина", "Ярослава", "Ясмина"}
+
+var russianMiddleNamesMale = []string{
+	"Авдеевич", "Авксентиевич", "Агафонович", "Акакиевич", "Александрович", "Алексеевич", "Альбертович", "Альвианович", "Анатольевич", "Андреевич", "Аникитич",
+	"Антонович", "Антонинович", "Анфимович", "Аристархович", "Аркадьевич", "Арсеньевич", "Артёмович", "Артемьевич", "Артурович", "Архипович", "Афанасьевич", "Богданович",
+	"Борисович", "Вавилович", "Вадимович", "Валентинович", "Валерьевич", "Валерьянович", "Варламович", "Варсонофиевич", "Варфоломеевич", "Васильевич", "Венедиктович",
+	"Вениаминович", "Викентьевич", "Викторович", "Виссарионович", "Витальевич", "Владимирович", "Владиславович", "Владленович", "Власович", "Всеволодович",
+	"Вячеславович", "Гавриилович", "Галактионович", "Геласиевич", "Геннадьевич", "Георгиевич", "Герасимович", "Германович", "Глебович", "Гордеевич",
+	"Григорьевич", "Данактович", "Даниилович", "Демидович", "Демьянович", "Денисович", "Дмитриевич", "Добрынич", "Донатович", "Дорофеевич", "Евгеньевич",
+	"Евграфович", "Евдокимович", "Евсеевич", "Евстафьевич", "Егорович", "Емельянович", "Еремеевич", "Ермолаевич", "Ерофеевич", "Ефимович", "Ефремович", "Жданович",
+	"Зиновьевич", "Иакинфович", "Иванович", "Игнатович", "Игоревич", "Ильич", "Иннокентьевич", "Ираклиевич", "Иринеевич", "Исидорович", "Иудич", "Иулианович",
+	"Капитонович", "Кимович", "Кирович", "Кириллович", "Климентович", "Кондратович", "Кононович", "Константинович", "Корнилиевич", "Кузьмич", "Куприянович",
+	"Лаврентиевич", "Львович", "Леонидович", "Леонтьевич", "Логгинович", "Лукич", "Лукиевич", "Лукьянович", "Магистрианович", "Макарович", "Максимович", "Маркович",
+	"Мартынович", "Матвеевич", "Мелентиевич", "Минич", "Миронович", "Мирославович", "Митрофанович", "Михайлович", "Мстиславович", "Назарович", "Несторович",
+	"Никанорович", "Никитич", "Никифорович", "Никодимович", "Николаевич", "Никонович", "Олегович", "Онисимович", "Онуфриевич", "Павлович", "Паисиевич", "Панкратиевич",
+	"Пантелеймонович", "Парфеньевич", "Пафнутиевич", "Пахомиевич", "Петрович", "Платонович", "Поликарпович", "Порфирьевич", "Потапович", "Прович", "Прокопьевич",
+	"Протасиевич", "Прохорович", "Родионович", "Родославович", "Романович", "Ростиславович", "Русланович", "Саввич", "Савельевич", "Самуилович", "Святополкович",
+	"Святославович", "Севастьянович", "Семёнович", "Серафимович", "Сергеевич", "Силыч", "Сильвестрович", "Созонович", "Софронович", "Спиридонович", "Станиславович",
+	"Степанович", "Тарасович", "Тимофеевич", "Тимурович", "Титович", "Тихонович", "Трифонович", "Трофимович", "Фаддеевич", "Фёдорович", "Федосеевич", "Федотович", "Феликсович",
+	"Феоктистович", "Филатович", "Филимонович", "Филиппович", "Фирсович", "Фокич", "Фомич", "Фотичевич", "Фролович", "Харитонович", "Хрисанович", "Христофорович",
+	"Эдуардович", "Эрастович", "Юлианович", "Юрьевич", "Юстинович", "Яковлевич", "Якунович", "Ярославович", "Иосифович",
+}
 
 var russianLastNamesMale = []string{
 	"Абакумов", "Абдуллаев", "Абрамов", "Абрикосов", "Абросимов", "Абузяров", "Авакумов", "Аввакум", "Авдеев", "Авдеенко",
@@ -416,6 +398,69 @@ var russianLastNamesMale = []string{
 	"Яськов", "Яхин",
 }
 
+var russianFirstNamesFemale = []string{
+	"Ава", "Августа", "Августина", "Авдотья", "Аврора", "Агапия", "Агата", "Агафья", "Аглая", "Агния", "Агунда", "Ада",
+	"Аделаида", "Аделина", "Адель", "Адиля", "Адриана", "Аза", "Азалия", "Азиза", "Аида", "Аиша", "Ай", "Айару", "Айгерим",
+	"Айгуль", "Айлин", "Айнагуль", "Айнур", "Айсель", "Айсун", "Айсылу", "Аксинья", "Алана", "Алевтина", "Александра",
+	"Алексия", "Алеста", "Алина", "Алиса", "Алия", "Алла", "Алсу", "Алтын", "Альба", "Альбина", "Альфия", "Аля", "Алёна",
+	"Амалия", "Амаль", "Амина", "Амира", "Анабель", "Анаит", "Анастасия", "Ангелина", "Анжела", "Анжелика", "Анисья", "Анита",
+	"Анна", "Антонина", "Анфиса", "Аполлинария", "Арабелла", "Ариадна", "Ариана", "Арианда", "Арина", "Ария", "Асель", "Асия",
+	"Астрид", "Ася", "Афина", "Аэлита", "Ая", "Аяна", "Бажена", "Беатрис", "Бела", "Белинда", "Белла", "Берта", "Богдана",
+	"Божена", "Бьянка", "Бэлла", "Валентина", "Валерия", "Ванда", "Ванесса", "Варвара", "Василина", "Василиса", "Венера",
+	"Вера", "Вероника", "Веста", "Вета", "Викторина", "Виктория", "Вилена", "Виола", "Виолетта", "Вита", "Виталина", "Виталия",
+	"Влада", "Владана", "Владислава", "Габриэлла", "Галина", "Галия", "Гаяна", "Гаянэ", "Генриетта", "Глафира", "Гоар",
+	"Грета", "Гульзира", "Гульмира", "Гульназ", "Гульнара", "Гульшат", "Гюзель", "Далида", "Дамира", "Дана", "Даниэла",
+	"Дания", "Дара", "Дарина", "Дарья", "Даяна", "Джамиля", "Дженна", "Дженнифер", "Джессика", "Джиневра", "Диана", "Дильназ",
+	"Дильнара", "Диля", "Дилярам", "Дина", "Динара", "Долорес", "Доминика", "Домна", "Домника", "Ева", "Евангелина",
+	"Евгения", "Евдокия", "Екатерина", "Елена", "Елизавета", "Есения", "Ея", "Жаклин", "Жанна", "Жансая", "Жасмин", "Жозефина",
+	"Жоржина", "Забава", "Заира", "Залина", "Замира", "Зара", "Зарема", "Зарина", "Земфира", "Зинаида", "Зита", "Злата",
+	"Златослава", "Зоряна", "Зоя", "Зульфия", "Зухра", "Ивета", "Иветта", "Изабелла", "Илина", "Иллирика", "Илона", "Ильзира",
+	"Илюза", "Инга", "Индира", "Инесса", "Инна", "Иоанна", "Ира", "Ирада", "Ираида", "Ирина", "Ирма", "Искра", "Ия", "Камила",
+	"Камилла", "Кара", "Каре", "Карима", "Карина", "Каролина", "Кира", "Клавдия", "Клара", "Констанция", "Кора", "Корнелия",
+	"Кристина", "Ксения", "Лада", "Лана", "Лара", "Лариса", "Лаура", "Лейла", "Леона", "Лера", "Леся", "Лета", "Лиана", "Лидия",
+	"Лиза", "Лика", "Лили", "Лилиана", "Лилит", "Лилия", "Лина", "Линда", "Лиора", "Лира", "Лия", "Лола", "Лолита", "Лора",
+	"Луиза", "Лукерья", "Лукия", "Луна", "Любава", "Любовь", "Людмила", "Люсиль", "Люсьена", "Люция", "Люче", "Ляйсан", "Ляля",
+	"Мавиле", "Мавлюда", "Магда", "Магдалена", "Мадина", "Мадлен", "Майя", "Макария", "Малика", "Мара", "Маргарита", "Марианна",
+	"Марика", "Марина", "Мария", "Мариям", "Марта", "Марфа", "Мелания", "Мелисса", "Мехри", "Мика", "Мила", "Милада", "Милана",
+	"Милен", "Милена", "Милица", "Милослава", "Мина", "Мира", "Мирослава", "Мирра", "Михримах", "Мишель", "Мия", "Моника",
+	"Муза", "Надежда", "Наиля", "Наима", "Нана", "Наоми", "Наргиза", "Наталья", "Нелли", "Нея", "Ника", "Николь", "Нина",
+	"Нинель", "Номина", "Нонна", "Нора", "Нурия", "Одетта", "Оксана", "Октябрина", "Олеся", "Оливия", "Ольга", "Офелия",
+	"Павлина", "Памела", "Патриция", "Паула", "Пейтон", "Пелагея", "Перизат", "Платонида", "Полина", "Прасковья", "Равшана",
+	"Рада", "Разина", "Раиля", "Раиса", "Раифа", "Ралина", "Рамина", "Раяна", "Ребекка", "Регина", "Резеда", "Рена", "Рената",
+	"Риана", "Рианна", "Рикарда", "Римма", "Рина", "Рита", "Роберта", "Рогнеда", "Роза", "Роксана", "Роксолана", "Рузалия",
+	"Рузанна", "Русалина", "Руслана", "Руфина", "Руфь", "Сабина", "Сабрина", "Сажида", "Саида", "Салима", "Саломея", "Сальма",
+	"Самира", "Сандра", "Сания", "Сара", "Сати", "Сауле", "Сафия", "Сафура", "Саяна", "Светлана", "Севара", "Селена", "Сельма",
+	"Серафима", "Сесилия", "Сиара", "Сильвия", "Симона", "Снежана", "Соня", "Софья", "Стелла", "Стефания", "Сусанна", "Таисия",
+	"Тамара", "Тамила", "Тара", "Татьяна", "Тая", "Таяна", "Теона", "Тереза", "Тея", "Тина", "Тиффани", "Томирис", "Тора",
+	"Тэмми", "Ульяна", "Ума", "Урсула", "Устинья", "Фазиля", "Фаина", "Фарида", "Фариза", "Фатима", "Федора", "Фелисити",
+	"Фелиция", "Феруза", "Физалия", "Фируза", "Флора", "Флоренс", "Флорентина", "Флоренция", "Флориана", "Фредерика",
+	"Фрида", "Фёкла", "Хадия", "Хилари", "Хлоя", "Хюррем", "Цагана", "Цветана", "Цецилия", "Циара", "Челси", "Чеслава",
+	"Чулпан", "Шакира", "Шарлотта", "Шахина", "Шейла", "Шелли", "Шерил", "Эвелина", "Эвита", "Элеонора", "Элиана", "Элиза",
+	"Элина", "Элла", "Эльвина", "Эльвира", "Эльмира", "Эльнара", "Эля", "Эмили", "Эмилия", "Эмма", "Энже", "Эрика", "Эрмина",
+	"Эсмеральда", "Эсмира", "Эстер", "Этель", "Этери", "Юлианна", "Юлия", "Юна", "Юния", "Юнона", "Ядвига", "Яна", "Янина",
+	"Ярина", "Ярослава", "Ясмина"}
+
+var russianMiddleNamesFemale = []string{
+	"Авдеевна", "Авксентиевна", "Агафоновна", "Акакиевна", "Александровна", "Алексеевна", "Альбертовна", "Альвиановна", "Анатольевна", "Андреевна", "Аникитична",
+	"Антоновна", "Антониновна", "Анфим", "Аристарховна", "Аркадьевна", "Арсеньевна", "Артёмовна", "Артемьевна", "Артуровна", "Архиповна", "Афанасьевна", "Богдановна",
+	"Борисовна", "Вавиловна", "Вадимовна", "Валентиновна", "Валерьевна", "Валерьяновна", "Варламовна", "Варсонофиевна", "Варфоломеевна", "Васильевна", "Венедиктовна",
+	"Вениаминовна", "Викентьевна", "Викторовна", "Виссарионовна", "Витальевна", "Владимировна", "Владиславовна", "Владленовна", "Власовна", "Всеволодовна",
+	"Вячеславовна", "Гаврииловна", "Галактионовна", "Геласиевна", "Геннадьевна", "Георгиевна", "Герасимовна", "Германовна", "Глебовна", "Гордеевна",
+	"Григорьевна", "Данактовна", "Данииловна", "Демидовна", "Демьяновна", "Денисовна", "Дмитриевна", "Добрыневна", "Донатовна", "Дорофеевна", "Евгеньевна",
+	"Евграфовна", "Евдокимовна", "Евсеевна", "Евстафьевна", "Егоровна", "Емельяновна", "Еремеевна", "Ермолаевна", "Ерофеевна", "Ефимовна", "Ефремовна", "Ждановна",
+	"Зиновьевна", "Иакинфовна", "Ивановна", "Игнатовна", "Игорьевна", "Ильинична", "Иннокентьевна", "Ираклиевна", "Иринеевна", "Исидоровна", "Иудична", "Иулиановна",
+	"Капитоновна", "Кимовна", "Кировна", "Кирилловна", "Климентовна", "Кондратовна", "Кононовна", "Константиновна", "Корнилиевна", "Кузьминична", "Куприяновна",
+	"Лаврентиевна", "Львовна", "Леонидовна", "Леонтьевна", "Логгиновна", "Лукинична", "Лукиевна", "Лукьянновна", "Магистриановна", "Макаровна", "Максимовна", "Марковна",
+	"Мартыновна", "Матвеевна", "Мелентиевна", "Минична", "Мироновна", "Мирославовна", "Митрофановна", "Михайловна", "Мстиславовна", "Назаровна", "Несторовна",
+	"Никаноровна", "Никитична", "Никифоровна", "Никодимовна", "Николаевна", "Никоновна", "Олеговна", "Онисимовна", "Онуфриевна", "Павловна", "Паисиевна", "Панкратовна",
+	"Пантелеймоновна", "Парфеньевна", "Пафнутьевна", "Пахомиевна", "Петровна", "Платоновна", "Поликарповна", "Порфирьевна", "Потаповна", "Провна", "Прокопьевна",
+	"Протасиевна", "Прохоровна", "Родионович", "Родославовна", "Романовна", "Ростиславовна", "Руслановна", "Саввична", "Савельевна", "Самуиловна", "Святополковна",
+	"Святославовна", "Севастьяновна", "Семёновна", "Серафимовна", "Сергеевна", "Силовна", "Сильвестровна", "Созоновна", "Софроновна", "Спиридоновна", "Станиславовна",
+	"Степановна", "Тарасовна", "Тимофеевна", "Тимуровна", "Титовна", "Тихоновна", "Трифоновна", "Трофимовна", "Фаддеевна", "Фёдоровна", "Федосеевна", "Федотовна", "Феликсовна",
+	"Феоктистовна", "Филатовна", "Филимоновна", "Филипповна", "Фирсовна", "Фокична", "Фомична", "Фотичевна", "Фроловна", "Харитоновна", "Хрисановна", "Христофоровна",
+	"Эдуардовна", "Эрастовна", "Юлиановна", "Юрьевна", "Юстиновна", "Яковлевна", "Якуновна", "Ярославовна", "Иосифовна",
+}
+
 var russianLastNamesFemale = []string{
 	"Абакумова", "Абдуллаева", "Абрамова", "Абрикосова", "Абросимова", "Абузярова", "Авакумова", "Авдеева", "Авдиева",
 	"Аверкиева", "Аверкова", "Авилина", "Авилова", "Авксентьева", "Аврамова", "Авсеева", "Агапеева", "Агапова", "Агапьева",
@@ -592,13 +637,13 @@ func (p Person) titlemale() string {
 }
 
 // TitleMale generates random titles for males
-func (p Person) TitleMale(v reflect.Value) (interface{}, error) {
+func (p Person) TitleMale(v reflect.Value) (any, error) {
 	return p.titlemale(), nil
 }
 
 // TitleMale get a title male randomly in string ("Mr.", "Dr.", "Prof.", "Lord", "King", "Prince")
 func TitleMale(opts ...options.OptionFunc) string {
-	return singleFakeData(TitleMaleTag, func() interface{} {
+	return singleFakeData(TitleMaleTag, func() any {
 		p := Person{}
 		return p.titlemale()
 	}, opts...).(string)
@@ -609,13 +654,13 @@ func (p Person) titleFemale() string {
 }
 
 // TitleFeMale generates random titles for females
-func (p Person) TitleFeMale(v reflect.Value) (interface{}, error) {
+func (p Person) TitleFeMale(v reflect.Value) (any, error) {
 	return p.titleFemale(), nil
 }
 
 // TitleFemale get a title female randomly in string ("Mrs.", "Ms.", "Miss", "Dr.", "Prof.", "Lady", "Queen", "Princess")
 func TitleFemale(opts ...options.OptionFunc) string {
-	return singleFakeData(TitleFemaleTag, func() interface{} {
+	return singleFakeData(TitleFemaleTag, func() any {
 		p := Person{}
 		return p.titleFemale()
 	}, opts...).(string)
@@ -626,13 +671,13 @@ func (p Person) firstname() string {
 }
 
 // FirstName returns first names
-func (p Person) FirstName(v reflect.Value) (interface{}, error) {
+func (p Person) FirstName(v reflect.Value) (any, error) {
 	return p.firstname(), nil
 }
 
 // FirstName get fake firstname
 func FirstName(opts ...options.OptionFunc) string {
-	return singleFakeData(FirstNameTag, func() interface{} {
+	return singleFakeData(FirstNameTag, func() any {
 		p := Person{}
 		return p.firstname()
 	}, opts...).(string)
@@ -643,13 +688,13 @@ func (p Person) firstnamemale() string {
 }
 
 // FirstNameMale returns first names for males
-func (p Person) FirstNameMale(v reflect.Value) (interface{}, error) {
+func (p Person) FirstNameMale(v reflect.Value) (any, error) {
 	return p.firstnamemale(), nil
 }
 
 // FirstNameMale get fake firstname for male
 func FirstNameMale(opts ...options.OptionFunc) string {
-	return singleFakeData(FirstNameMaleTag, func() interface{} {
+	return singleFakeData(FirstNameMaleTag, func() any {
 		p := Person{}
 		return p.firstnamemale()
 	}, opts...).(string)
@@ -660,13 +705,13 @@ func (p Person) firstnamefemale() string {
 }
 
 // FirstNameFemale returns first names for females
-func (p Person) FirstNameFemale(v reflect.Value) (interface{}, error) {
+func (p Person) FirstNameFemale(v reflect.Value) (any, error) {
 	return p.firstnamefemale(), nil
 }
 
 // FirstNameFemale get fake firstname for female
 func FirstNameFemale(opts ...options.OptionFunc) string {
-	return singleFakeData(FirstNameFemaleTag, func() interface{} {
+	return singleFakeData(FirstNameFemaleTag, func() any {
 		p := Person{}
 		return p.firstnamefemale()
 	}, opts...).(string)
@@ -677,13 +722,13 @@ func (p Person) lastname() string {
 }
 
 // LastName returns last name
-func (p Person) LastName(v reflect.Value) (interface{}, error) {
+func (p Person) LastName(v reflect.Value) (any, error) {
 	return p.lastname(), nil
 }
 
 // LastName get fake lastname
 func LastName(opts ...options.OptionFunc) string {
-	return singleFakeData(LastNameTag, func() interface{} {
+	return singleFakeData(LastNameTag, func() any {
 		p := Person{}
 		return p.lastname()
 	}, opts...).(string)
@@ -697,20 +742,20 @@ func (p Person) name() string {
 }
 
 // Name returns a random name
-func (p Person) Name(v reflect.Value) (interface{}, error) {
+func (p Person) Name(v reflect.Value) (any, error) {
 	return p.name(), nil
 }
 
 // Name get fake name
 func Name(opts ...options.OptionFunc) string {
-	return singleFakeData(NAME, func() interface{} {
+	return singleFakeData(NAME, func() any {
 		p := Person{}
 		return p.name()
 	}, opts...).(string)
 }
 
 // Gender returns a random gender
-func (p Person) Gender(v reflect.Value) (interface{}, error) {
+func (p Person) Gender(v reflect.Value) (any, error) {
 	return p.gender(), nil
 }
 
@@ -720,14 +765,14 @@ func (p Person) gender() string {
 
 // Gender get fake gender
 func Gender(opts ...options.OptionFunc) string {
-	return singleFakeData(GENDER, func() interface{} {
+	return singleFakeData(GENDER, func() any {
 		p := Person{}
 		return p.gender()
 	}, opts...).(string)
 }
 
 // ChineseFirstName returns a random chinese first name
-func (p Person) ChineseFirstName(v reflect.Value) (interface{}, error) {
+func (p Person) ChineseFirstName(v reflect.Value) (any, error) {
 	return p.chineseFirstName(), nil
 }
 
@@ -737,14 +782,14 @@ func (p Person) chineseFirstName() string {
 
 // ChineseFirstName get chinese first name
 func ChineseFirstName(opts ...options.OptionFunc) string {
-	return singleFakeData(ChineseFirstNameTag, func() interface{} {
+	return singleFakeData(ChineseFirstNameTag, func() any {
 		p := Person{}
 		return p.chineseFirstName()
 	}, opts...).(string)
 }
 
 // ChineseLastName returns a random chinese last name
-func (p Person) ChineseLastName(v reflect.Value) (interface{}, error) {
+func (p Person) ChineseLastName(v reflect.Value) (any, error) {
 	return p.chineseLastName(), nil
 }
 
@@ -754,14 +799,14 @@ func (p Person) chineseLastName() string {
 
 // ChineseLastName get chinese lsst name
 func ChineseLastName(opts ...options.OptionFunc) string {
-	return singleFakeData(ChineseLastNameTag, func() interface{} {
+	return singleFakeData(ChineseLastNameTag, func() any {
 		p := Person{}
 		return p.chineseLastName()
 	}, opts...).(string)
 }
 
 // ChineseName returns a random nhinese name
-func (p Person) ChineseName(v reflect.Value) (interface{}, error) {
+func (p Person) ChineseName(v reflect.Value) (any, error) {
 	return p.chineseName(), nil
 }
 
@@ -771,7 +816,7 @@ func (p Person) chineseName() string {
 
 // ChineseName get chinese lsst name
 func ChineseName(opts ...options.OptionFunc) string {
-	return singleFakeData(ChineseNameTag, func() interface{} {
+	return singleFakeData(ChineseNameTag, func() any {
 		p := Person{}
 		return p.chineseName()
 	}, opts...).(string)
@@ -779,6 +824,10 @@ func ChineseName(opts ...options.OptionFunc) string {
 
 func (p Person) russianFirstNameMale() string {
 	return randomElementFromSliceString(russianFirstNamesMale)
+}
+
+func (p Person) russianMiddleNameMale() string {
+	return randomElementFromSliceString(russianMiddleNamesMale)
 }
 
 func (p Person) russianLastNameMale() string {
@@ -789,26 +838,40 @@ func (p Person) russianFirstNameFemale() string {
 	return randomElementFromSliceString(russianFirstNamesFemale)
 }
 
+func (p Person) russianMiddleNameFemale() string {
+	return randomElementFromSliceString(russianMiddleNamesFemale)
+}
+
 func (p Person) russianLastNameFemale() string {
 	return randomElementFromSliceString(russianLastNamesFemale)
 }
 
 // RussianFirstNameMale returns russian male firstname
-func (p Person) RussianFirstNameMale(v reflect.Value) (interface{}, error) {
+func (p Person) RussianFirstNameMale(v reflect.Value) (any, error) {
 	return p.russianFirstNameMale(), nil
 }
 
-// RussianFirstNameFemale returns russian female firstname
-func (p Person) RussianFirstNameFemale(v reflect.Value) (interface{}, error) {
-	return p.russianFirstNameFemale(), nil
+// RussianMiddleNameMale returns russian male middlename
+func (p Person) RussianMiddleNameMale(v reflect.Value) (any, error) {
+	return p.russianMiddleNameMale(), nil
 }
 
 // RussianLastNameMale returns russian male lastname
-func (p Person) RussianLastNameMale(v reflect.Value) (interface{}, error) {
+func (p Person) RussianLastNameMale(v reflect.Value) (any, error) {
 	return p.russianLastNameMale(), nil
 }
 
+// RussianFirstNameFemale returns russian female firstname
+func (p Person) RussianFirstNameFemale(v reflect.Value) (any, error) {
+	return p.russianFirstNameFemale(), nil
+}
+
+// RussianMiddleNameFemale returns russian female middlename
+func (p Person) RussianMiddleNameFemale(v reflect.Value) (any, error) {
+	return p.russianMiddleNameFemale(), nil
+}
+
 // RussianLastNameFemale returns russian female lastname
-func (p Person) RussianLastNameFemale(v reflect.Value) (interface{}, error) {
+func (p Person) RussianLastNameFemale(v reflect.Value) (any, error) {
 	return p.russianLastNameFemale(), nil
 }
