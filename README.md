@@ -49,6 +49,10 @@ Please refer to the [installation guide](docs/usage/Install.en.md).
 
 We welcome contributions in any kind. If you have any questions about contributions, please consult the [contribution documentation](docs/develop/Contribute.en.md).
 
+## Origin
+
+EgressGateway was founded by [DaoCloud](https://www.daocloud.io/) and is developed with the open-source community. See the [project history](https://github.com/spidernet-io/egressgateway/commits/main/) for its development and contributions.
+
 ## License
 
 EgressGateway is licensed under the Apache License, Version 2.0. See [LICENSE](https://github.com/spidernet-io/spiderpool/blob/main/LICENSE) for the full license text.

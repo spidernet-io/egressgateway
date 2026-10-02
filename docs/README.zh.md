@@ -37,6 +37,10 @@
 
 我们欢迎任何形式的贡献。如果您有任何有关贡献方面的疑问，请参阅[贡献指南](develop/Contribute.en.md)。
 
+## 项目起源
+
+EgressGateway 由 [DaoCloud（道客）](https://www.daocloud.io/) 创立，并与开源社区共同开发。有关项目的发展和贡献，请参阅[项目历史](https://github.com/spidernet-io/egressgateway/commits/main/)。
+
 ## License
 
 EgressGateway 基于 Apache License，Version 2.0。详细参考 [LICENSE](https://github.com/spidernet-io/spiderpool/blob/main/LICENSE) 查看完整 LICENSE 内容。
